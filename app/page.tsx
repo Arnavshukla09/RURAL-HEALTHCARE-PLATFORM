@@ -34,7 +34,6 @@ export default function Page() {
     <LandingPage
       setCurrentPage={setCurrentPage}
       language={language}
-      setLanguage={setLanguage}
     />
   )
 }
