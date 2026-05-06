@@ -13,7 +13,7 @@ interface UseOfflineDataOptions {
 }
 
 export function useOfflineData({ fetchFn, table, key, onSuccess, onError }: UseOfflineDataOptions) {
-  const [data, setData] = useState<any>(null)
+  const [data, setData] = useState<any[]>([])   // ✅ FIXED
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<Error | null>(null)
 
@@ -23,14 +23,12 @@ export function useOfflineData({ fetchFn, table, key, onSuccess, onError }: UseO
         setLoading(true)
 
         if (isOnline()) {
-          // Fetch from server
           const result = await fetchFn()
-          setData(result)
-          cacheData(key, result) // Cache for offline use
+          setData(result || [])   // ✅ safety
+          cacheData(key, result)
           setError(null)
           onSuccess?.(result)
         } else {
-          // Use cached data
           const cached = getCachedData(key)
           if (cached) {
             setData(cached)
@@ -43,7 +41,6 @@ export function useOfflineData({ fetchFn, table, key, onSuccess, onError }: UseO
         const error = err instanceof Error ? err : new Error("Unknown error")
         setError(error)
 
-        // Fall back to cached data
         const cached = getCachedData(key)
         if (cached) {
           setData(cached)
@@ -66,8 +63,7 @@ export function useOfflineData({ fetchFn, table, key, onSuccess, onError }: UseO
         data: operation,
       })
       if (op) {
-        // Update local data optimistically
-        setData((prev) => [...(prev || []), op.data])
+        setData((prev) => [...prev, op.data])   // ✅ safe now
       }
     },
     [table],
@@ -80,8 +76,12 @@ export function useOfflineData({ fetchFn, table, key, onSuccess, onError }: UseO
         type: "UPDATE",
         data: { id, ...updates },
       })
-      // Update local data optimistically
-      setData((prev) => prev.map((item: any) => (item.id === id ? { ...item, ...updates } : item)))
+
+      setData((prev) =>
+        prev.map((item: any) =>
+          item.id === id ? { ...item, ...updates } : item
+        )
+      )
     },
     [table],
   )
@@ -93,7 +93,8 @@ export function useOfflineData({ fetchFn, table, key, onSuccess, onError }: UseO
         type: "DELETE",
         data: { id },
       })
-      // Update local data optimistically
+
+      // ✅ FIX ADDED
       setData((prev) => prev.filter((item: any) => item.id !== id))
     },
     [table],
