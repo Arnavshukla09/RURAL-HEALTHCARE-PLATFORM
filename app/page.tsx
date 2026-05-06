@@ -1,4 +1,4 @@
-import App from "@/src/App"
+import LandingPage from "@/components/LandingPage"
 
 export const metadata = {
   title: "Rural Healthcare Platform",
@@ -6,5 +6,5 @@ export const metadata = {
 }
 
 export default function Page() {
-  return <App />
+  return <LandingPage />
 }
