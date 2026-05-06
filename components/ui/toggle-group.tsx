@@ -32,7 +32,8 @@ function ToggleGroup({
 }: ToggleGroupProps ) {
   return (
     <ToggleGroupPrimitive.Root
-      type={type}
+      {...(props as any)}
+      type={type as "single"}
       data-slot="toggle-group"
       data-variant={variant}
       data-size={size}
@@ -40,7 +41,6 @@ function ToggleGroup({
         "group/toggle-group flex w-fit items-center rounded-md data-[variant=outline]:shadow-xs",
         className,
       )}
-      {...props}
     >
       <ToggleGroupContext.Provider value={{ variant, size }}>
         {children}
