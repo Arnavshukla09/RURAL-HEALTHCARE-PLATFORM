@@ -1,0 +1,15 @@
+# env files
+.env*
+!.env.example
+
+# next.js
+.next/
+
+# node modules
+node_modules/
+
+# system
+.DS_Store
+
+# vscode
+.vscode/
