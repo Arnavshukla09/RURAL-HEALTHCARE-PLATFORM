@@ -1,10 +1,11 @@
-import LandingPage from "@/components/LandingPage"
+'use client'
 
-export const metadata = {
-  title: "Rural Healthcare Platform",
-  description: "Connecting rural communities with healthcare services",
-}
+import { useState } from 'react'
+import { LandingPage } from "@/components/LandingPage"
 
 export default function Page() {
-  return <LandingPage />
+  const [currentPage, setCurrentPage] = useState('home')
+  const [language, setLanguage] = useState('en')
+
+  return <LandingPage setCurrentPage={setCurrentPage} language={language} />
 }
