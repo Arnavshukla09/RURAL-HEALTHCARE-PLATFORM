@@ -75,15 +75,30 @@ export function ConsultationPortal({ language, user, setCurrentPage }: Consultat
         .eq('user_id', authUser.id)
         .single()
 
-      // Get provider ID (first available if none selected)
+      // Auto-create patient row if missing (handles OAuth users)
+      let patientId = patient?.id
+      if (!patientId) {
+        const name = authUser.user_metadata?.full_name || authUser.user_metadata?.name || authUser.email?.split('@')[0] || 'User'
+        const { data: created } = await supabase
+          .from('patients')
+          .upsert(
+            { user_id: authUser.id, first_name: name.split(' ')[0], last_name: name.split(' ').slice(1).join(' ') || '', email: authUser.email, role: 'patient', phone: '' },
+            { onConflict: 'user_id' }
+          )
+          .select('id')
+          .single()
+        patientId = created?.id
+      }
+
+      // Get provider ID — data is in healthcare_providers table
       let provId = selectedProvider
       if (!provId) {
-        const { data: provList } = await supabase.from('providers').select('id').eq('is_verified', true).limit(1)
+        const { data: provList } = await supabase.from('healthcare_providers').select('id').eq('is_verified', true).limit(1)
         provId = provList?.[0]?.id
       }
 
-      if (!patient?.id || !provId) {
-        setError(en ? "Account setup incomplete. Please contact support." : "खाता सेटअप अधूरा है।")
+      if (!patientId || !provId) {
+        setError(en ? "Unable to complete booking. Please try again." : "बुकिंग पूरी नहीं हो सकी।")
         setLoading(false)
         return
       }
@@ -92,7 +107,7 @@ export function ConsultationPortal({ language, user, setCurrentPage }: Consultat
       const roomId = `ruralhealth-${authUser.id.slice(0, 8)}-${Date.now()}`
 
       const { error: dbError } = await supabase.from('appointments').insert({
-        patient_id: patient.id,
+        patient_id: patientId,
         provider_id: provId,
         appointment_date: appointmentDate,
         duration_minutes: 30,

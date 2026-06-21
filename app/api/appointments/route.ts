@@ -30,20 +30,35 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const status = searchParams.get("status")
 
-    // Get the patient ID for this user
-    const { data: patient } = await supabase
+    // Get the patient ID — auto-create row for OAuth users
+    let { data: patient } = await supabase
       .from("patients")
       .select("id, role")
       .eq("user_id", user.id)
       .single()
 
+    if (!patient) {
+      // First login via OAuth — create patient row
+      const name = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split("@")[0] || "User"
+      const { data: created } = await supabase
+        .from("patients")
+        .upsert(
+          { user_id: user.id, first_name: name.split(" ")[0], last_name: name.split(" ").slice(1).join(" ") || "", email: user.email, role: "patient", phone: "" },
+          { onConflict: "user_id" }
+        )
+        .select("id, role")
+        .single()
+      patient = created
+    }
+
     let query = supabase.from("appointments").select("*").order("appointment_date", { ascending: false })
 
-    // If doctor/admin, show all appointments; if patient, show only own
-    if (patient?.role === "doctor" || patient?.role === "admin") {
-      // Doctors and admins can see all appointments
-    } else if (patient?.id) {
+    // Patients see only their own appointments
+    if (patient?.id) {
       query = query.eq("patient_id", patient.id)
+    } else {
+      // No patient row could be created — return empty
+      return NextResponse.json([])
     }
 
     if (status) {
@@ -89,11 +104,25 @@ export async function POST(request: NextRequest) {
     }
 
     // SECURITY: Always derive patient_id from the authenticated session
-    const { data: patient } = await supabase
+    // Auto-create row for OAuth users who don't have one yet
+    let { data: patient } = await supabase
       .from("patients")
       .select("id")
       .eq("user_id", user.id)
       .single()
+
+    if (!patient?.id) {
+      const name = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split("@")[0] || "User"
+      const { data: created } = await supabase
+        .from("patients")
+        .upsert(
+          { user_id: user.id, first_name: name.split(" ")[0], last_name: name.split(" ").slice(1).join(" ") || "", email: user.email, role: "patient", phone: "" },
+          { onConflict: "user_id" }
+        )
+        .select("id")
+        .single()
+      patient = created
+    }
 
     if (!patient?.id) {
       return NextResponse.json(

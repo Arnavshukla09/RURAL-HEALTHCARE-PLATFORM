@@ -114,19 +114,31 @@ export function AppointmentManager({ user, language, setCurrentPage, setJitsiRoo
         .eq('user_id', authUser.id)
         .single()
 
-      // Get provider record (first verified provider if none selected)
+      // Auto-create patient row if missing (handles OAuth users on first booking)
+      let patientId = patientRecord?.id
+      if (!patientId) {
+        const name = authUser.user_metadata?.full_name || authUser.user_metadata?.name || authUser.email?.split('@')[0] || 'User'
+        const { data: created } = await supabase
+          .from('patients')
+          .upsert({ user_id: authUser.id, first_name: name.split(' ')[0], last_name: name.split(' ').slice(1).join(' ') || '', email: authUser.email, role: 'patient', phone: '' }, { onConflict: 'user_id' })
+          .select('id')
+          .single()
+        patientId = created?.id
+      }
+
+      // Get provider (seeded data is in healthcare_providers table)
       let provId = bookingForm.provider_id
       if (!provId) {
         const { data: providerList } = await supabase
-          .from('providers')
+          .from('healthcare_providers')
           .select('id')
           .eq('is_verified', true)
           .limit(1)
         provId = providerList?.[0]?.id
       }
 
-      if (!patientRecord?.id || !provId) {
-        setBookingError(en ? "Unable to find patient or provider record" : "मरीज़ या प्रदाता रिकॉर्ड नहीं मिला")
+      if (!patientId || !provId) {
+        setBookingError(en ? "Unable to complete booking. Please try again." : "बुकिंग पूरी नहीं हो सकी। कृपया पुनः प्रयास करें।")
         setBookingLoading(false)
         return
       }
@@ -135,7 +147,7 @@ export function AppointmentManager({ user, language, setCurrentPage, setJitsiRoo
       const roomId = `ruralhealth-${authUser.id.slice(0, 8)}-${Date.now()}`
 
       const { error } = await supabase.from('appointments').insert({
-        patient_id: patientRecord.id,
+        patient_id: patientId,
         provider_id: provId,
         appointment_date: appointmentDate,
         duration_minutes: 30,

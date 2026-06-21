@@ -103,11 +103,41 @@ export default function Page() {
 
     const fetchUserWithRole = async (sessionUser: any) => {
       // Always fetch role + phone from DB — never from user_metadata
-      const { data: patient } = await supabase
+      let { data: patient } = await supabase
         .from("patients")
         .select("role, first_name, last_name, phone")
         .eq("user_id", sessionUser.id)
         .single()
+
+      // AUTO-CREATE patient row for OAuth users (Google sign-in)
+      // who don't have a patients record yet
+      if (!patient) {
+        const fullName =
+          sessionUser.user_metadata?.full_name ||
+          sessionUser.user_metadata?.name ||
+          sessionUser.email?.split("@")[0] ||
+          "User"
+        const firstName = fullName.split(" ")[0]
+        const lastName = fullName.split(" ").slice(1).join(" ") || ""
+
+        const { data: newPatient } = await supabase
+          .from("patients")
+          .upsert(
+            {
+              user_id: sessionUser.id,
+              first_name: firstName,
+              last_name: lastName,
+              email: sessionUser.email,
+              role: "patient",
+              phone: sessionUser.user_metadata?.phone || "",
+            },
+            { onConflict: "user_id" }
+          )
+          .select("role, first_name, last_name, phone")
+          .single()
+
+        patient = newPatient
+      }
 
       return {
         id: sessionUser.id,

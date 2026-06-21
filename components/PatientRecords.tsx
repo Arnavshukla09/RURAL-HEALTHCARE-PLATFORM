@@ -89,12 +89,25 @@ export function PatientRecords({ language }: PatientRecordsProps) {
           return;
         }
 
-        // Get patient ID
-        const { data: patient } = await supabase
+        // Get patient ID — auto-create for OAuth users on first load
+        let { data: patient } = await supabase
           .from('patients')
           .select('id')
           .eq('user_id', user.id)
           .single();
+
+        if (!patient?.id) {
+          const name = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'User';
+          const { data: created } = await supabase
+            .from('patients')
+            .upsert(
+              { user_id: user.id, first_name: name.split(' ')[0], last_name: name.split(' ').slice(1).join(' ') || '', email: user.email, role: 'patient', phone: '' },
+              { onConflict: 'user_id' }
+            )
+            .select('id')
+            .single();
+          patient = created;
+        }
 
         if (patient?.id) {
           // Fetch medical records
