@@ -18,6 +18,7 @@ import { AppointmentManager } from "@/components/AppointmentManager"
 import { ConsultationPortal } from "@/components/ConsultationPortal"
 import { MapView } from "@/components/MapView"
 import { JitsiMeeting } from "@/components/JitsiMeeting"
+import { FloatingChat } from "@/components/FloatingChat"
 
 // ── Donation (free, no Stripe) ─────────────────────────────────
 function DonationSection({ language }: { language: string }) {
@@ -255,6 +256,8 @@ export default function Page() {
       <Footer setCurrentPage={setCurrentPage} language={language} />
       {/* Mobile bottom tab bar — only when logged in */}
       {user && <BottomTabBar currentPage={currentPage} setCurrentPage={setCurrentPage} language={language} />}
+      {/* Gemini AI floating chat */}
+      <FloatingChat language={language} setCurrentPage={setCurrentPage} />
     </div>
   )
 }
