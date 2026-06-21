@@ -49,14 +49,6 @@ export function HealthInfoHub({ language, symptomResult, setCurrentPage }: Healt
     { icon: "💧", name: "Typhoid", hi: "टाइफाइड", symptoms: "Sustained fever, weakness, stomach pain, headache", prevention: "Clean water, hygienic food, handwashing", severity: "moderate" },
     { icon: "🫁", name: "Pneumonia", hi: "निमोनिया", symptoms: "Cough, fever, difficulty breathing, chest pain", prevention: "Vaccination, nutrition, avoid smoking", severity: "severe" },
     { icon: "🩸", name: "Anemia", hi: "एनीमिया", symptoms: "Fatigue, weakness, pale skin, breathlessness", prevention: "Iron-rich foods, supplements, treat infections", severity: "moderate" },
-  ]
-  const diseases = [
-    { icon: "🦟", name: "Malaria", hi: "मलेरिया", symptoms: "Fever, chills, sweating, headache, body aches", prevention: "Mosquito nets, repellent, drain stagnant water", severity: "moderate" },
-    { icon: "🦟", name: "Dengue", hi: "डेंगू", symptoms: "High fever, severe headache, joint/muscle pain, rash", prevention: "Remove stagnant water, use repellent, wear long sleeves", severity: "severe" },
-    { icon: "🫁", name: "Tuberculosis", hi: "क्षय रोग", symptoms: "Persistent cough >2 weeks, weight loss, night sweats", prevention: "BCG vaccine, ventilation, avoid close contact", severity: "severe" },
-    { icon: "💧", name: "Typhoid", hi: "टाइफाइड", symptoms: "Sustained fever, weakness, stomach pain, headache", prevention: "Clean water, hygienic food, handwashing", severity: "moderate" },
-    { icon: "🫁", name: "Pneumonia", hi: "निमोनिया", symptoms: "Cough, fever, difficulty breathing, chest pain", prevention: "Vaccination, nutrition, avoid smoking", severity: "severe" },
-    { icon: "🩸", name: "Anemia", hi: "एनीमिया", symptoms: "Fatigue, weakness, pale skin, breathlessness", prevention: "Iron-rich foods, supplements, treat infections", severity: "moderate" },
 
     { icon: "🫀", name: "Hypertension", hi: "उच्च रक्तचाप", symptoms: "Headache, dizziness, blurred vision, often no symptoms", prevention: "Reduce salt, exercise, maintain healthy weight", severity: "moderate" },
     { icon: "🍬", name: "Diabetes", hi: "मधुमेह", symptoms: "Frequent urination, excessive thirst, fatigue, weight loss", prevention: "Healthy diet, exercise, regular checkups", severity: "severe" },
