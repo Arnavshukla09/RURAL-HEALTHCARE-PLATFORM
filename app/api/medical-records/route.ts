@@ -1,15 +1,36 @@
 import { createClient } from "@/lib/supabase/server"
 import { type NextRequest, NextResponse } from "next/server"
-import { z } from "zod"   // ✅ ADD
+import { z } from "zod"
 import { rateLimit } from "@/lib/rate-limit"
 
-// ✅ Define schema (adjust fields to match your DB)
 const MedicalRecordSchema = z.object({
-  patient_id: z.string().uuid(),
   record_type: z.enum(['diagnosis', 'prescription', 'lab_result', 'vaccination', 'other']),
   content: z.string().min(1),
   file_url: z.string().url().optional(),
 })
+
+// Helper: get or create patient row for current user
+async function getOrCreatePatient(supabase: any, user: any) {
+  let { data: patient } = await supabase
+    .from("patients")
+    .select("id")
+    .eq("user_id", user.id)
+    .single()
+
+  if (!patient?.id) {
+    const name = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split("@")[0] || "User"
+    const { data: created } = await supabase
+      .from("patients")
+      .upsert(
+        { user_id: user.id, first_name: name.split(" ")[0], last_name: name.split(" ").slice(1).join(" ") || "", email: user.email, role: "patient", phone: "" },
+        { onConflict: "user_id" }
+      )
+      .select("id")
+      .single()
+    patient = created
+  }
+  return patient
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -19,30 +40,22 @@ export async function GET(request: NextRequest) {
     }
 
     const supabase = await createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
+    const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { searchParams } = new URL(request.url)
-    const patientId = searchParams.get("patientId")
-
-    let query = supabase.from("medical_records").select("*")
-
-    // ✅ Optional validation for query param
-    if (patientId) {
-      const isValidUUID = z.string().uuid().safeParse(patientId)
-      if (!isValidUUID.success) {
-        return NextResponse.json({ error: "Invalid patientId" }, { status: 400 })
-      }
-
-      query = query.eq("patient_id", patientId)
+    const patient = await getOrCreatePatient(supabase, user)
+    if (!patient?.id) {
+      return NextResponse.json([])
     }
 
-    const { data, error } = await query
+    const { data, error } = await supabase
+      .from("medical_records")
+      .select("*")
+      .eq("patient_id", patient.id)
+      .order("created_at", { ascending: false })
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 })
@@ -62,17 +75,13 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = await createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
+    const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     const body = await request.json()
-
-    // ✅ VALIDATION
     const parsed = MedicalRecordSchema.safeParse(body)
 
     if (!parsed.success) {
@@ -82,10 +91,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // ✅ Use validated data
+    // SECURITY: Always derive patient_id from authenticated session
+    const patient = await getOrCreatePatient(supabase, user)
+    if (!patient?.id) {
+      return NextResponse.json({ error: "Could not resolve patient profile" }, { status: 404 })
+    }
+
     const { data, error } = await supabase
       .from("medical_records")
-      .insert([{ ...parsed.data }])
+      .insert([{ patient_id: patient.id, ...parsed.data }])
       .select()
 
     if (error) {

@@ -233,13 +233,6 @@ export function Footer({ setCurrentPage, language }: FooterProps) {
         </div>
       </div>
 
-      {/* Floating Help Button */}
-      <Button
-        className="fixed bottom-6 right-6 rounded-full w-14 h-14 bg-blue-600 hover:bg-blue-700 shadow-lg z-50"
-        onClick={() => alert(language === 'en' ? 'Help chat would open here' : 'यहाँ सहायता चैट खुलेगी')}
-      >
-        <MessageCircle className="h-6 w-6" />
-      </Button>
     </footer>
   );
 }
