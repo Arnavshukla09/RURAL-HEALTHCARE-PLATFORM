@@ -5,8 +5,6 @@ import { createClient } from "@/lib/supabase/client"
 import { LandingPage } from "@/components/LandingPage"
 import { Authentication } from "@/components/Authentication"
 import { Dashboard } from "@/components/Dashboard"
-import { DoctorDashboard } from "@/components/DoctorDashboard"
-import { AdminDashboard } from "@/components/AdminDashboard"
 import { Header } from "@/components/Header"
 import { Footer } from "@/components/Footer"
 import { SymptomChecker } from "@/components/SymptomChecker"
@@ -15,7 +13,6 @@ import { EmergencyModule } from "@/components/EmergencyModule"
 import { Directory } from "@/components/Directory"
 import { CampLocations } from "@/components/CampLocations"
 import { AccessibilityBar } from "@/components/AccessibilityBar"
-import { AIConsultationChat } from "@/components/AIConsultationChat"
 import { HealthInfoHub } from "@/components/HealthInfoHub"
 import { AppointmentManager } from "@/components/AppointmentManager"
 import { ConsultationPortal } from "@/components/ConsultationPortal"
@@ -67,6 +64,30 @@ function DonationSection({ language }: { language: string }) {
   )
 }
 
+// ── Mobile Bottom Tab Bar ──────────────────────────────────────
+function BottomTabBar({ currentPage, setCurrentPage, language }: { currentPage: string; setCurrentPage: (p: string) => void; language: string }) {
+  const en = language === "en"
+  const tabs = [
+    { key: "dashboard", icon: "🏠", label: en ? "Home" : "होम" },
+    { key: "symptom-checker", icon: "🩺", label: en ? "Symptoms" : "लक्षण" },
+    { key: "appointments", icon: "📅", label: en ? "Bookings" : "बुकिंग" },
+    { key: "emergency", icon: "🆘", label: en ? "Emergency" : "आपातकाल" },
+  ]
+  return (
+    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 flex md:hidden safe-bottom">
+      {tabs.map(tab => (
+        <button key={tab.key} onClick={() => setCurrentPage(tab.key)}
+          className={`flex-1 flex flex-col items-center py-2 text-xs transition-colors ${
+            currentPage === tab.key ? "text-teal-600 font-semibold" : "text-gray-500 hover:text-gray-700"
+          }`}>
+          <span className="text-xl leading-tight">{tab.icon}</span>
+          <span className="mt-0.5">{tab.label}</span>
+        </button>
+      ))}
+    </div>
+  )
+}
+
 // ── Main Page ──────────────────────────────────────────────────
 export default function Page() {
   const [currentPage, setCurrentPage] = useState("home")
@@ -74,41 +95,57 @@ export default function Page() {
   const [language, setLanguage] = useState("en")
   const [loading, setLoading] = useState(true)
   const [jitsiRoom, setJitsiRoom] = useState<string | null>(null)
+  // Symptom checker result — gates HealthInfoHub
+  const [symptomCheckResult, setSymptomCheckResult] = useState<any>(null)
 
   useEffect(() => {
     const supabase = createClient()
-    
+
     const fetchUserWithRole = async (sessionUser: any) => {
-      // Always fetch role from the patients table in DB — never from user_metadata
+      // Always fetch role + phone from DB — never from user_metadata
       const { data: patient } = await supabase
-        .from('patients')
-        .select('role, first_name, last_name')
-        .eq('user_id', sessionUser.id)
+        .from("patients")
+        .select("role, first_name, last_name, phone")
+        .eq("user_id", sessionUser.id)
         .single()
-      
+
       return {
         id: sessionUser.id,
-        name: patient?.first_name || sessionUser.user_metadata?.full_name || sessionUser.user_metadata?.first_name || sessionUser.email?.split("@")[0] || "User",
+        name:
+          patient?.first_name ||
+          sessionUser.user_metadata?.full_name ||
+          sessionUser.user_metadata?.first_name ||
+          sessionUser.email?.split("@")[0] ||
+          "User",
         email: sessionUser.email,
         role: patient?.role || "patient",
+        phone: patient?.phone || "",
       }
     }
-    
+
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user) {
         const userData = await fetchUserWithRole(session.user)
         setUser(userData)
+        // If OAuth user just landed, take them to dashboard
+        if (window.location.hash.includes("access_token")) {
+          setCurrentPage("dashboard")
+        }
       }
       setLoading(false)
     })
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
         const userData = await fetchUserWithRole(session.user)
         setUser(userData)
+        // SIGN_IN event → navigate to dashboard
+        if (_event === "SIGNED_IN") setCurrentPage("dashboard")
       } else {
         setUser(null)
       }
     })
+
     return () => subscription.unsubscribe()
   }, [])
 
@@ -136,15 +173,20 @@ export default function Page() {
       case "home":
         return <LandingPage setCurrentPage={setCurrentPage} language={language} />
       case "dashboard":
-        if (user?.role === "doctor") return <DoctorDashboard user={user} setCurrentPage={setCurrentPage} language={language} setJitsiRoom={setJitsiRoom} />
-        if (user?.role === "admin") return <AdminDashboard user={user} setCurrentPage={setCurrentPage} language={language} />
         return <Dashboard user={user || { name: "Guest", role: "patient" }} setCurrentPage={setCurrentPage} language={language} />
       case "symptom-checker":
-        return <SymptomChecker setCurrentPage={setCurrentPage} language={language} />
-      case "ai-chat":
-        return <AIConsultationChat language={language} setCurrentPage={setCurrentPage} />
+        return (
+          <SymptomChecker
+            setCurrentPage={setCurrentPage}
+            language={language}
+            onComplete={(result: any) => {
+              setSymptomCheckResult(result)
+              setCurrentPage("health-info")
+            }}
+          />
+        )
       case "consultation":
-        return <ConsultationPortal language={language} />
+        return <ConsultationPortal user={user} language={language} setCurrentPage={setCurrentPage} />
       case "appointments":
         return <AppointmentManager user={user} language={language} setCurrentPage={setCurrentPage} setJitsiRoom={setJitsiRoom} />
       case "records":
@@ -160,7 +202,7 @@ export default function Page() {
       case "donation":
         return <DonationSection language={language} />
       case "health-info":
-        return <HealthInfoHub language={language} />
+        return <HealthInfoHub language={language} symptomResult={symptomCheckResult} setCurrentPage={setCurrentPage} />
       default:
         return <Dashboard user={user || { name: "Guest", role: "patient" }} setCurrentPage={setCurrentPage} language={language} />
     }
@@ -177,10 +219,12 @@ export default function Page() {
         language={language}
         setLanguage={setLanguage}
       />
-      <main className="flex-1">
+      <main className="flex-1 pb-16 md:pb-0">
         {renderPage()}
       </main>
       <Footer setCurrentPage={setCurrentPage} language={language} />
+      {/* Mobile bottom tab bar — only when logged in */}
+      {user && <BottomTabBar currentPage={currentPage} setCurrentPage={setCurrentPage} language={language} />}
     </div>
   )
 }

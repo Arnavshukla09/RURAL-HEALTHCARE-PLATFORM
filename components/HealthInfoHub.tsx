@@ -5,11 +5,18 @@ import { Button } from "./ui/button"
 import { Badge } from "./ui/badge"
 import { Search, Syringe, Heart, Shield, BookOpen, AlertTriangle } from "lucide-react"
 
-interface HealthInfoHubProps { language: string }
+interface HealthInfoHubProps {
+  language: string
+  symptomResult?: any | null
+  setCurrentPage?: (page: string) => void
+}
 
-export function HealthInfoHub({ language }: HealthInfoHubProps) {
+export function HealthInfoHub({ language, symptomResult, setCurrentPage }: HealthInfoHubProps) {
   const en = language === "en"
-  const [tab, setTab] = useState<"vaccines" | "firstaid" | "diseases" | "awareness">("vaccines")
+  const hasRelevantDiseases = (symptomResult?.relevantDiseases?.length ?? 0) > 0
+  const [tab, setTab] = useState<"vaccines" | "firstaid" | "diseases" | "awareness">(
+    hasRelevantDiseases ? "diseases" : "vaccines"
+  )
   const [search, setSearch] = useState("")
 
   const vaccines = [
@@ -52,12 +59,47 @@ export function HealthInfoHub({ language }: HealthInfoHubProps) {
     { key: "awareness", icon: BookOpen, label: en ? "Awareness" : "जागरूकता" },
   ]
 
+  // If no symptom result, show gate screen
+  if (!symptomResult) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-emerald-50/50 to-background flex items-center justify-center p-6">
+        <div className="text-center max-w-sm animate-fade-in">
+          <div className="text-6xl mb-4">🩺</div>
+          <h2 className="text-xl font-bold mb-2">{en ? "Check Your Symptoms First" : "पहले लक्षण जांचें"}</h2>
+          <p className="text-muted-foreground text-sm mb-6">
+            {en
+              ? "Health information is personalized based on your symptom check. Please complete the symptom checker to get relevant information."
+              : "स्वास्थ्य जानकारी आपके लक्षणों के आधार पर व्यक्तिगत होती है। प्रासंगिक जानकारी पाने के लिए पहले लक्षण जांचें।"}
+          </p>
+          {setCurrentPage && (
+            <button onClick={() => setCurrentPage("symptom-checker")}
+              className="gradient-primary text-white px-6 py-3 rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity">
+              {en ? "Start Symptom Checker" : "लक्षण जांचकर्ता शुरू करें"}
+            </button>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  // Filter diseases relevant to symptom result
+  const relevantKeys: string[] = symptomResult?.relevantDiseases || []
+  const filteredDiseases = relevantKeys.length > 0
+    ? diseases.filter(d => relevantKeys.some(k => d.name.toLowerCase().includes(k.toLowerCase()) || k.toLowerCase().includes(d.name.toLowerCase())))
+    : diseases
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-emerald-50/50 to-background p-4 md:p-6">
       <div className="max-w-4xl mx-auto space-y-6 animate-fade-in">
         <div className="text-center">
           <h1 className="text-2xl font-bold">{en ? "Health Information Hub" : "स्वास्थ्य जानकारी केंद्र"}</h1>
-          <p className="text-muted-foreground text-sm">{en ? "Vaccination schedules, first aid guides, and disease prevention" : "टीकाकरण, प्राथमिक उपचार और रोग निवारण"}</p>
+          {symptomResult?.possibleConditions?.length > 0 ? (
+            <p className="text-muted-foreground text-sm mt-1">
+              {en ? `Showing information for: ${symptomResult.possibleConditions.map((c: any) => c.name).slice(0,2).join(', ')}` : `के लिए जानकारी: ${symptomResult.possibleConditions.map((c: any) => c.name).slice(0,2).join(', ')}`}
+            </p>
+          ) : (
+            <p className="text-muted-foreground text-sm">{en ? "Personalized health information based on your symptoms" : "आपके लक्षणों के आधार पर स्वास्थ्य जानकारी"}</p>
+          )}
         </div>
 
         {/* Tab Bar */}
@@ -118,7 +160,7 @@ export function HealthInfoHub({ language }: HealthInfoHubProps) {
         {/* Diseases Tab */}
         {tab === "diseases" && (
           <div className="grid md:grid-cols-2 gap-4">
-            {diseases.filter(d => d.name.toLowerCase().includes(search.toLowerCase())).map(d => (
+            {(filteredDiseases.length > 0 ? filteredDiseases : diseases).filter(d => d.name.toLowerCase().includes(search.toLowerCase())).map(d => (
               <Card key={d.name} className="hover-lift">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between mb-2">
