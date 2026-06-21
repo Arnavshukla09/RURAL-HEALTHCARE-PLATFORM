@@ -50,6 +50,40 @@ export function HealthInfoHub({ language, symptomResult, setCurrentPage }: Healt
     { icon: "🫁", name: "Pneumonia", hi: "निमोनिया", symptoms: "Cough, fever, difficulty breathing, chest pain", prevention: "Vaccination, nutrition, avoid smoking", severity: "severe" },
     { icon: "🩸", name: "Anemia", hi: "एनीमिया", symptoms: "Fatigue, weakness, pale skin, breathlessness", prevention: "Iron-rich foods, supplements, treat infections", severity: "moderate" },
   ]
+  const diseases = [
+    { icon: "🦟", name: "Malaria", hi: "मलेरिया", symptoms: "Fever, chills, sweating, headache, body aches", prevention: "Mosquito nets, repellent, drain stagnant water", severity: "moderate" },
+    { icon: "🦟", name: "Dengue", hi: "डेंगू", symptoms: "High fever, severe headache, joint/muscle pain, rash", prevention: "Remove stagnant water, use repellent, wear long sleeves", severity: "severe" },
+    { icon: "🫁", name: "Tuberculosis", hi: "क्षय रोग", symptoms: "Persistent cough >2 weeks, weight loss, night sweats", prevention: "BCG vaccine, ventilation, avoid close contact", severity: "severe" },
+    { icon: "💧", name: "Typhoid", hi: "टाइफाइड", symptoms: "Sustained fever, weakness, stomach pain, headache", prevention: "Clean water, hygienic food, handwashing", severity: "moderate" },
+    { icon: "🫁", name: "Pneumonia", hi: "निमोनिया", symptoms: "Cough, fever, difficulty breathing, chest pain", prevention: "Vaccination, nutrition, avoid smoking", severity: "severe" },
+    { icon: "🩸", name: "Anemia", hi: "एनीमिया", symptoms: "Fatigue, weakness, pale skin, breathlessness", prevention: "Iron-rich foods, supplements, treat infections", severity: "moderate" },
+
+    { icon: "🫀", name: "Hypertension", hi: "उच्च रक्तचाप", symptoms: "Headache, dizziness, blurred vision, often no symptoms", prevention: "Reduce salt, exercise, maintain healthy weight", severity: "moderate" },
+    { icon: "🍬", name: "Diabetes", hi: "मधुमेह", symptoms: "Frequent urination, excessive thirst, fatigue, weight loss", prevention: "Healthy diet, exercise, regular checkups", severity: "severe" },
+    { icon: "❤️", name: "Heart Disease", hi: "हृदय रोग", symptoms: "Chest pain, shortness of breath, fatigue", prevention: "Healthy lifestyle, avoid smoking, regular exercise", severity: "severe" },
+    { icon: "🧠", name: "Stroke", hi: "स्ट्रोक", symptoms: "Sudden weakness, facial droop, speech difficulty", prevention: "Control blood pressure, healthy lifestyle", severity: "critical" },
+    { icon: "🦠", name: "COVID-19", hi: "कोविड-19", symptoms: "Fever, cough, loss of taste, breathing difficulty", prevention: "Vaccination, hand hygiene, masks when needed", severity: "severe" },
+    { icon: "🤧", name: "Influenza", hi: "फ्लू", symptoms: "Fever, cough, sore throat, body aches", prevention: "Vaccination, handwashing, avoid close contact", severity: "moderate" },
+    { icon: "💩", name: "Cholera", hi: "हैजा", symptoms: "Severe diarrhea, dehydration, vomiting", prevention: "Safe water, sanitation, handwashing", severity: "critical" },
+    { icon: "🧫", name: "Hepatitis B", hi: "हेपेटाइटिस बी", symptoms: "Jaundice, fatigue, abdominal pain", prevention: "Vaccination, safe injections, screened blood", severity: "severe" },
+    { icon: "🫀", name: "Asthma", hi: "अस्थमा", symptoms: "Wheezing, shortness of breath, chest tightness", prevention: "Avoid triggers, regular medication", severity: "moderate" },
+    { icon: "🌬️", name: "COPD", hi: "सीओपीडी", symptoms: "Chronic cough, breathlessness, mucus production", prevention: "Avoid smoking and air pollution", severity: "severe" },
+    { icon: "👁️", name: "Cataract", hi: "मोतियाबिंद", symptoms: "Blurred vision, sensitivity to light", prevention: "Eye protection, regular eye checkups", severity: "moderate" },
+    { icon: "🦴", name: "Osteoporosis", hi: "ऑस्टियोपोरोसिस", symptoms: "Bone weakness, fractures, back pain", prevention: "Calcium, vitamin D, exercise", severity: "moderate" },
+    { icon: "🦴", name: "Arthritis", hi: "गठिया", symptoms: "Joint pain, stiffness, swelling", prevention: "Healthy weight, exercise, injury prevention", severity: "moderate" },
+    { icon: "🩹", name: "Leprosy", hi: "कुष्ठ रोग", symptoms: "Skin patches, numbness, muscle weakness", prevention: "Early diagnosis and treatment", severity: "moderate" },
+    { icon: "🦟", name: "Chikungunya", hi: "चिकनगुनिया", symptoms: "High fever, severe joint pain, rash", prevention: "Mosquito control and repellents", severity: "moderate" },
+    { icon: "🤢", name: "Diarrheal Disease", hi: "दस्त", symptoms: "Loose stools, dehydration, abdominal cramps", prevention: "Clean water, sanitation, handwashing", severity: "moderate" },
+    { icon: "🧒", name: "Measles", hi: "खसरा", symptoms: "Fever, rash, cough, red eyes", prevention: "MMR vaccination", severity: "severe" },
+    { icon: "👂", name: "Ear Infection", hi: "कान का संक्रमण", symptoms: "Ear pain, hearing difficulty, fever", prevention: "Good hygiene, timely treatment", severity: "mild" },
+    { icon: "🧴", name: "Skin Infection", hi: "त्वचा संक्रमण", symptoms: "Redness, itching, swelling, pus", prevention: "Personal hygiene, clean clothing", severity: "mild" },
+    { icon: "🦠", name: "HIV/AIDS", hi: "एचआईवी/एड्स", symptoms: "Weight loss, recurrent infections, fever", prevention: "Safe sex, screened blood, sterile needles", severity: "severe" },
+    { icon: "🧒", name: "Polio", hi: "पोलियो", symptoms: "Fever, muscle weakness, paralysis", prevention: "Polio vaccination", severity: "critical" },
+    { icon: "🩺", name: "Kidney Disease", hi: "गुर्दा रोग", symptoms: "Swelling, fatigue, reduced urine output", prevention: "Control diabetes and blood pressure", severity: "severe" },
+    { icon: "🫀", name: "Liver Disease", hi: "यकृत रोग", symptoms: "Jaundice, fatigue, abdominal swelling", prevention: "Avoid alcohol misuse, vaccination", severity: "severe" },
+    { icon: "🧠", name: "Epilepsy", hi: "मिर्गी", symptoms: "Seizures, loss of consciousness", prevention: "Medication adherence and medical care", severity: "moderate" },
+    { icon: "🦷", name: "Dental Caries", hi: "दंत क्षय", symptoms: "Tooth pain, cavities, sensitivity", prevention: "Brushing, flossing, dental checkups", severity: "mild" }
+  ]
 
   const sevColors: Record<string, string> = { mild: "bg-green-100 text-green-700", moderate: "bg-amber-100 text-amber-700", severe: "bg-red-100 text-red-700" }
   const tabs = [
