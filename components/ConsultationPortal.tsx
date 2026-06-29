@@ -68,26 +68,20 @@ export function ConsultationPortal({ language, user, setCurrentPage }: Consultat
         return
       }
 
-      // Get patient ID
-      const { data: patient } = await supabase
-        .from('patients')
-        .select('id')
-        .eq('user_id', authUser.id)
-        .single()
+      // Ensure patient row exists via server API (bypasses RLS)
+      let patientId: string | null = null
+      try {
+        const ensureRes = await fetch("/api/auth/ensure-patient", { method: "POST" })
+        if (ensureRes.ok) {
+          const ensureData = await ensureRes.json()
+          patientId = ensureData.patient_id
+        }
+      } catch {}
 
-      // Auto-create patient row if missing (handles OAuth users)
-      let patientId = patient?.id
+      // Fallback: try direct DB read
       if (!patientId) {
-        const name = authUser.user_metadata?.full_name || authUser.user_metadata?.name || authUser.email?.split('@')[0] || 'User'
-        const { data: created } = await supabase
-          .from('patients')
-          .upsert(
-            { user_id: authUser.id, first_name: name.split(' ')[0], last_name: name.split(' ').slice(1).join(' ') || '', email: authUser.email, role: 'patient', phone: '' },
-            { onConflict: 'user_id' }
-          )
-          .select('id')
-          .single()
-        patientId = created?.id
+        const { data: p } = await supabase.from('patients').select('id').eq('user_id', authUser.id).single()
+        patientId = p?.id
       }
 
       // Get provider ID — data is in healthcare_providers table

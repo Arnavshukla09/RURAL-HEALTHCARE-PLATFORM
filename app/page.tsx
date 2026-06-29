@@ -103,42 +103,29 @@ export default function Page() {
     const supabase = createClient()
 
     const fetchUserWithRole = async (sessionUser: any) => {
-      // Always fetch role + phone from DB — never from user_metadata
-      let { data: patient } = await supabase
+      // Call server-side API to ensure patient row exists (bypasses RLS)
+      try {
+        const res = await fetch("/api/auth/ensure-patient", { method: "POST" })
+        if (res.ok) {
+          const data = await res.json()
+          return {
+            id: sessionUser.id,
+            name: data.name || sessionUser.user_metadata?.full_name || sessionUser.email?.split("@")[0] || "User",
+            email: sessionUser.email,
+            role: data.role || "patient",
+            phone: data.phone || "",
+          }
+        }
+      } catch (err) {
+        console.error("ensure-patient failed:", err)
+      }
+
+      // Fallback: try direct DB read (works if RLS allows SELECT)
+      const { data: patient } = await supabase
         .from("patients")
         .select("role, first_name, last_name, phone")
         .eq("user_id", sessionUser.id)
         .single()
-
-      // AUTO-CREATE patient row for OAuth users (Google sign-in)
-      // who don't have a patients record yet
-      if (!patient) {
-        const fullName =
-          sessionUser.user_metadata?.full_name ||
-          sessionUser.user_metadata?.name ||
-          sessionUser.email?.split("@")[0] ||
-          "User"
-        const firstName = fullName.split(" ")[0]
-        const lastName = fullName.split(" ").slice(1).join(" ") || ""
-
-        const { data: newPatient } = await supabase
-          .from("patients")
-          .upsert(
-            {
-              user_id: sessionUser.id,
-              first_name: firstName,
-              last_name: lastName,
-              email: sessionUser.email,
-              role: "patient",
-              phone: sessionUser.user_metadata?.phone || "",
-            },
-            { onConflict: "user_id" }
-          )
-          .select("role, first_name, last_name, phone")
-          .single()
-
-        patient = newPatient
-      }
 
       return {
         id: sessionUser.id,
