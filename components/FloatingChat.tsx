@@ -58,57 +58,33 @@ export function FloatingChat({ language, setCurrentPage }: FloatingChatProps) {
     setLoading(true)
 
     try {
-      const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY
-      if (!apiKey) {
-        setMessages(prev => [...prev, {
-          role: "assistant",
-          content: en ? "I'm sorry, the AI service is temporarily unavailable. Please try the Symptom Checker instead." : "क्षमा करें, AI सेवा अभी उपलब्ध नहीं है। कृपया लक्षण जांचकर्ता का उपयोग करें।"
-        }])
+      // Call our server-side AI chat API (keeps API key private, no CORS issues)
+      const response = await fetch("/api/ai-chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: text,
+          history: messages.slice(-8),
+          language,
+        }),
+      })
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}))
+        if (response.status === 429) {
+          setMessages(prev => [...prev, {
+            role: "assistant",
+            content: en ? "Too many requests. Please wait a moment and try again." : "बहुत सारे अनुरोध। कृपया कुछ समय प्रतीक्षा करें।"
+          }])
+        } else {
+          throw new Error(errData.error || "API error")
+        }
         setLoading(false)
         return
       }
 
-      // Build conversation history for context
-      const history = messages.slice(-8).map(m => ({
-        role: m.role === "user" ? "user" : "model",
-        parts: [{ text: m.content }]
-      }))
-
-      const systemPrompt = `You are RuralHealth AI — a compassionate, knowledgeable health assistant for rural India. 
-Rules:
-- Always respond in ${language === "hi" ? "Hindi" : "English"}
-- Keep responses concise (max 150 words) but helpful
-- For serious symptoms (chest pain, difficulty breathing, high fever >103°F), ALWAYS say to call 108 or go to nearest hospital
-- You can suggest users check their symptoms using the Symptom Checker feature
-- You can help explain medical terms, prescriptions, and lab reports in simple language
-- Never diagnose — say "this could be..." and recommend seeing a doctor
-- Be culturally sensitive to rural Indian context
-- For emergencies, provide first aid steps AND tell them to call 108
-- You can suggest booking a consultation for non-emergency issues`
-
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [
-              { role: "user", parts: [{ text: systemPrompt }] },
-              { role: "model", parts: [{ text: "Understood. I am RuralHealth AI assistant." }] },
-              ...history,
-              { role: "user", parts: [{ text }] }
-            ],
-            generationConfig: { temperature: 0.4, maxOutputTokens: 400 },
-          }),
-        }
-      )
-
-      if (!response.ok) throw new Error("API error")
-
       const data = await response.json()
-      const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || (en ? "Sorry, I couldn't process that. Please try again." : "क्षमा करें, मैं इसे संसाधित नहीं कर सका।")
-
-      setMessages(prev => [...prev, { role: "assistant", content: reply }])
+      setMessages(prev => [...prev, { role: "assistant", content: data.reply }])
     } catch {
       setMessages(prev => [...prev, {
         role: "assistant",

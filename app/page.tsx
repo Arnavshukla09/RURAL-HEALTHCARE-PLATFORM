@@ -20,50 +20,6 @@ import { MapView } from "@/components/MapView"
 import { JitsiMeeting } from "@/components/JitsiMeeting"
 import { FloatingChat } from "@/components/FloatingChat"
 
-// ── Donation (free, no Stripe) ─────────────────────────────────
-function DonationSection({ language }: { language: string }) {
-  const amounts = [100, 500, 1000, 2000, 5000]
-  const [sel, setSel] = useState<number | null>(null)
-  const [custom, setCustom] = useState("")
-  const amount = custom ? Number(custom) : sel
-
-  return (
-    <div className="p-6 max-w-2xl mx-auto animate-fade-in">
-      <div className="text-center mb-6">
-        <div className="text-5xl mb-3">❤️</div>
-        <h2 className="text-2xl font-bold">{language === "hi" ? "दान पोर्टल" : "Donation Portal"}</h2>
-        <p className="text-gray-500">{language === "hi" ? "ग्रामीण स्वास्थ्य सेवा का समर्थन करें" : "Support Rural Healthcare"}</p>
-      </div>
-      <div className="grid grid-cols-3 gap-3 mb-4">
-        {amounts.map(a => (
-          <button key={a} onClick={() => { setSel(a); setCustom("") }}
-            className={`border rounded-lg p-3 font-semibold transition-all hover-lift ${sel === a && !custom ? "border-teal-500 bg-teal-50 text-teal-700" : "border-gray-200 hover:border-teal-300"}`}>
-            ₹{a}
-          </button>
-        ))}
-      </div>
-      <div className="mb-4">
-        <label className="text-sm text-gray-600 mb-1 block">{language === "hi" ? "कस्टम राशि (₹)" : "Custom Amount (₹)"}</label>
-        <input type="number" value={custom} onChange={e => { setCustom(e.target.value); setSel(null) }}
-          className="w-full border rounded-lg p-3 focus:outline-none focus:border-teal-500" placeholder="Enter amount" />
-      </div>
-      {amount ? (
-        <div className="bg-gray-50 border rounded-lg p-4 mb-4 text-sm">
-          <p className="font-semibold mb-2">{language === "hi" ? "बैंक विवरण:" : "Bank Transfer Details:"}</p>
-          <p>Account: Rural Healthcare Foundation</p>
-          <p>Account No: 1234567890 | IFSC: SBIN0001234</p>
-          <p>UPI: ruralhealth@upi</p>
-          <p className="mt-2 text-teal-700 font-bold text-base">Amount: ₹{amount}</p>
-        </div>
-      ) : null}
-      <button disabled={!amount}
-        onClick={() => alert(`Please transfer ₹${amount} using the bank details above. Thank you!`)}
-        className="w-full gradient-primary text-white py-3 rounded-lg font-semibold disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
-        {language === "hi" ? `दान करें${amount ? ` ₹${amount}` : ""}` : `Donate${amount ? ` ₹${amount}` : ""}`}
-      </button>
-    </div>
-  )
-}
 
 // ── Mobile Bottom Tab Bar ──────────────────────────────────────
 function BottomTabBar({ currentPage, setCurrentPage, language }: { currentPage: string; setCurrentPage: (p: string) => void; language: string }) {
@@ -217,8 +173,7 @@ export default function Page() {
         return <Directory setCurrentPage={setCurrentPage} language={language} />
       case "camps":
         return <CampLocations setCurrentPage={setCurrentPage} language={language} />
-      case "donation":
-        return <DonationSection language={language} />
+
       case "health-info":
         return <HealthInfoHub language={language} symptomResult={symptomCheckResult} setCurrentPage={setCurrentPage} />
       default:
