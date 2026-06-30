@@ -1,7 +1,7 @@
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Heart, Users, Calendar, Phone, Shield, Globe, Activity, MapPin, AlertTriangle, Stethoscope, Settings } from "lucide-react";
-import { ImageWithFallback } from "./figma/ImageWithFallback";
+import { ImageWithFallback } from "./ImageWithFallback";
 
 interface LandingPageProps {
   setCurrentPage: (page: string) => void;

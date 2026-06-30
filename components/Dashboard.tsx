@@ -18,7 +18,7 @@ import {
   Stethoscope,
   UserCheck
 } from "lucide-react";
-import { ImageWithFallback } from "./figma/ImageWithFallback";
+import { ImageWithFallback } from "./ImageWithFallback";
 import { createClient } from "@/lib/supabase/client";
 
 interface DashboardProps {
