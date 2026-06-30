@@ -1,173 +1,178 @@
 /**
- * seed_mp_facilities.js
- * 
- * Pulls real healthcare facility data for Madhya Pradesh from
- * OpenStreetMap via the Overpass API, classifies each result,
- * and bulk-upserts into Supabase healthcare_facilities table.
- * 
- * Usage:
- *   node scripts/seed_mp_facilities.js
- * 
- * Requires:
- *   - NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in .env.local
- *   - npm install @supabase/supabase-js dotenv
- *   - 006_facilities_postgis.sql already run in Supabase SQL Editor
+ * Seed Madhya Pradesh healthcare facilities into Supabase.
+ *
+ * Sources data from OpenStreetMap's Overpass API, scoped to the
+ * actual administrative boundary of Madhya Pradesh (not a crude
+ * bounding box), across all relevant amenity/healthcare tags.
+ *
+ * Run with:  node scripts/seed_mp_facilities.js
+ *
+ * Requires in .env.local (or exported in shell):
+ *   NEXT_PUBLIC_SUPABASE_URL
+ *   SUPABASE_SERVICE_ROLE_KEY   <-- service role, NOT anon key (bypasses RLS for bulk insert)
  */
 
+/**
+ * Seed Madhya Pradesh healthcare facilities into Supabase.
+ *
+ * IMPORTANT: As of 2025-2026, overpass-api.de and most public mirrors
+ * actively block programmatic/bot-shaped requests with HTTP 406/504
+ * (confirmed: github.com/drolbr/Overpass-API/issues/791, and Overpass's
+ * own robots.txt now disallows automated clients). Running this query
+ * from a Node script directly no longer works reliably.
+ *
+ * Instead, this script reads a GeoJSON file you export manually from
+ * the Overpass Turbo web UI (which works fine in a real browser):
+ *
+ *   1. Go to https://overpass-turbo.eu
+ *   2. Paste the query from QUERY_FOR_OVERPASS_TURBO.txt (next to this file)
+ *   3. Click Run, wait for results
+ *   4. Click Export -> Download as GeoJSON
+ *   5. Save it as ./scripts/mp_facilities.geojson
+ *   6. Run:  node scripts/seed_mp_facilities.js
+ *
+ * Requires in .env.local:
+ *   NEXT_PUBLIC_SUPABASE_URL
+ *   SUPABASE_SERVICE_ROLE_KEY
+ */
+
+const fs = require("fs")
+const path = require("path")
 require("dotenv").config({ path: ".env.local" })
 const { createClient } = require("@supabase/supabase-js")
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
-const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
+const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
+const GEOJSON_PATH = path.join(__dirname, "mp_facilities.geojson")
 
-if (!SUPABASE_URL || !SERVICE_KEY) {
-  console.error("Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in .env.local")
+if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
+  console.error("[SEED] Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in .env.local")
   process.exit(1)
 }
 
-const supabase = createClient(SUPABASE_URL, SERVICE_KEY)
+if (!fs.existsSync(GEOJSON_PATH)) {
+  console.error(`[SEED] File not found: ${GEOJSON_PATH}`)
+  console.error("[SEED] Export it from https://overpass-turbo.eu first — see comment at top of this file.")
+  process.exit(1)
+}
 
-// Overpass QL: query all health-related amenities within MP's admin boundary
-const OVERPASS_QUERY = `
-[out:json][timeout:120];
-area["name"="Madhya Pradesh"]["admin_level"="4"]->.mp;
-(
-  nwr["amenity"~"hospital|clinic|doctors|pharmacy"](area.mp);
-  nwr["healthcare"~"hospital|clinic|doctor|pharmacy|laboratory|centre"](area.mp);
-  nwr["amenity"="health_post"](area.mp);
-  nwr["healthcare"="laboratory"](area.mp);
-);
-out center tags;
-`
+const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
 
-// Map OSM tags to our facility type enum
-function classifyType(tags) {
-  const amenity = tags.amenity || ""
-  const healthcare = tags.healthcare || ""
-  if (amenity === "hospital" || healthcare === "hospital") return "hospital"
-  if (amenity === "clinic" || healthcare === "clinic" || healthcare === "centre") return "clinic"
-  if (amenity === "doctors" || healthcare === "doctor") return "doctors"
-  if (amenity === "pharmacy" || healthcare === "pharmacy") return "pharmacy"
-  if (healthcare === "laboratory") return "lab"
-  if (amenity === "health_post") return "health_post"
+const TYPE_MAP = {
+  hospital: "hospital",
+  clinic: "clinic",
+  doctors: "doctors",
+  pharmacy: "pharmacy",
+  health_post: "health_post",
+}
+
+function classify(props) {
+  if (props.healthcare === "laboratory") return "lab"
+  if (TYPE_MAP[props.amenity]) return TYPE_MAP[props.amenity]
   return "clinic"
 }
 
-function extractName(tags) {
-  return (
-    tags.name ||
-    tags["name:en"] ||
-    tags["name:hi"] ||
-    tags.operator ||
-    tags.brand ||
-    `${classifyType(tags).replace("_", " ")} (unnamed)`
-  )
-}
-
-function extractAddress(tags) {
+function buildAddress(props) {
   const parts = [
-    tags["addr:housename"],
-    tags["addr:housenumber"],
-    tags["addr:street"],
-    tags["addr:suburb"],
-    tags["addr:city"] || tags["addr:village"],
-    tags["addr:district"],
-    tags["addr:postcode"],
+    props["addr:housenumber"],
+    props["addr:street"],
+    props["addr:suburb"],
+    props["addr:city"] || props["addr:town"] || props["addr:village"],
+    props["addr:district"],
   ].filter(Boolean)
-  return parts.length > 0 ? parts.join(", ") : null
+  return parts.length ? parts.join(", ") : null
 }
 
-async function main() {
-  console.log("Querying Overpass API for MP healthcare facilities...")
-  console.log("(this takes 30-90 seconds)\n")
+async function seed() {
+  console.log(`[SEED] Reading ${GEOJSON_PATH}...`)
+  const geojson = JSON.parse(fs.readFileSync(GEOJSON_PATH, "utf8"))
 
-  const res = await fetch("https://overpass-api.de/api/interpreter", {
-    method: "POST",
-    body: `data=${encodeURIComponent(OVERPASS_QUERY)}`,
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-  })
-
-  if (!res.ok) {
-    console.error(`Overpass API error: ${res.status} ${res.statusText}`)
+  if (!geojson.features || geojson.features.length === 0) {
+    console.error("[SEED] No features found in the GeoJSON file.")
     process.exit(1)
   }
 
-  const data = await res.json()
-  const elements = data.elements || []
-  console.log(`Overpass returned ${elements.length} raw elements\n`)
+  console.log(`[SEED] Found ${geojson.features.length} raw features.`)
 
-  const facilities = []
-  const seen = new Set()
+  const rows = []
+  const seenOsmIds = new Set()
 
-  for (const el of elements) {
-    const lat = el.lat ?? el.center?.lat
-    const lon = el.lon ?? el.center?.lon
+  for (const feature of geojson.features) {
+    const props = feature.properties || {}
+    let lon, lat
+
+    if (feature.geometry?.type === "Point") {
+      ;[lon, lat] = feature.geometry.coordinates
+    } else if (feature.geometry?.type === "Polygon") {
+      // Use first vertex as an approximate center for way-based facilities
+      ;[lon, lat] = feature.geometry.coordinates[0][0]
+    } else {
+      continue
+    }
     if (!lat || !lon) continue
 
-    const osmId = el.id
-    if (seen.has(osmId)) continue
-    seen.add(osmId)
+    const osmType = props["@id"]?.split("/")[0] || feature.id?.split("/")[0] || "node"
+    const osmNumId = props["@id"]?.split("/")[1] || feature.id?.split("/")[1] || feature.id
+    const osmId = `${osmType}/${osmNumId}`
+    if (seenOsmIds.has(osmId)) continue
+    seenOsmIds.add(osmId)
 
-    const tags = el.tags || {}
-    facilities.push({
+    const type = classify(props)
+    const name = props.name || props["name:en"] || `Unnamed ${type}`
+
+    rows.push({
       osm_id: osmId,
-      name: extractName(tags),
-      type: classifyType(tags),
-      address: extractAddress(tags),
-      phone: tags.phone || tags["contact:phone"] || null,
-      district: tags["addr:district"] || tags["addr:city"] || null,
-      state: "Madhya Pradesh",
-      lat,
-      lon,
-      tags,
+      name,
+      type,
+      address: buildAddress(props),
+      phone: props.phone || props["contact:phone"] || null,
+      district: props["addr:district"] || props["addr:city"] || null,
+      geom: `SRID=4326;POINT(${lon} ${lat})`,
+      source: "osm",
+      verified: false,
     })
   }
 
-  console.log(`Classified ${facilities.length} unique facilities:`)
-  const counts = {}
-  facilities.forEach(f => { counts[f.type] = (counts[f.type] || 0) + 1 })
-  Object.entries(counts)
-    .sort((a, b) => b[1] - a[1])
-    .forEach(([type, count]) => console.log(`  ${type}: ${count}`))
-  console.log()
+  console.log(`[SEED] ${rows.length} usable facilities after dedup + filtering missing coordinates.`)
 
-  // Batch upsert (500 at a time)
-  const BATCH = 500
+  const BATCH_SIZE = 500
   let inserted = 0
+  let failed = 0
 
-  for (let i = 0; i < facilities.length; i += BATCH) {
-    const batch = facilities.slice(i, i + BATCH).map(f => ({
-      osm_id: f.osm_id,
-      name: f.name,
-      type: f.type,
-      address: f.address,
-      phone: f.phone,
-      district: f.district,
-      state: f.state,
-      lat: f.lat,
-      lon: f.lon,
-      tags: f.tags,
-    }))
-
+  for (let i = 0; i < rows.length; i += BATCH_SIZE) {
+    const batch = rows.slice(i, i + BATCH_SIZE)
     const { error } = await supabase
       .from("healthcare_facilities")
-      .upsert(batch, { onConflict: "osm_id" })
+      .upsert(batch, { onConflict: "osm_id", ignoreDuplicates: false })
 
     if (error) {
-      console.error(`Batch ${Math.floor(i / BATCH) + 1} error:`, error.message)
+      console.error(`[SEED] Batch ${i / BATCH_SIZE + 1} failed:`, error.message)
+      failed += batch.length
     } else {
       inserted += batch.length
-      process.stdout.write(`\rUpserted ${inserted}/${facilities.length}...`)
+      console.log(`[SEED] Batch ${i / BATCH_SIZE + 1}/${Math.ceil(rows.length / BATCH_SIZE)} upserted (${inserted} total so far)`)
     }
   }
 
-  console.log(`\n\nDone! ${inserted} facilities upserted.`)
-  console.log("\nVerify in Supabase SQL Editor:")
-  console.log("  SELECT type, count(*) FROM healthcare_facilities GROUP BY type ORDER BY count(*) DESC;")
-  console.log("  SELECT * FROM nearby_facilities(23.2599, 77.4126, NULL, 25);")
+  console.log(`\n[SEED] Done. Inserted/updated: ${inserted}. Failed: ${failed}.`)
+
+  const byType = rows.reduce((acc, r) => {
+    acc[r.type] = (acc[r.type] || 0) + 1
+    return acc
+  }, {})
+  console.log("[SEED] Breakdown by type:", byType)
 }
 
-main().catch(err => {
-  console.error("Fatal error:", err)
-  process.exit(1)
-})
+seed()
+  .then(() => process.exit(0))
+  .catch((err) => {
+    console.error("[SEED] Fatal error:", err.message)
+    process.exit(1)
+  })
+
+seed()
+  .then(() => process.exit(0))
+  .catch((err) => {
+    console.error("[SEED] Fatal error:", err.message)
+    process.exit(1)
+  })
