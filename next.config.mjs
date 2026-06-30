@@ -25,11 +25,11 @@ const nextConfig = {
         { key: 'Content-Security-Policy', value: [
             "default-src 'self'",
             "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://meet.jit.si https://*.jitsi.net",
-            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com",
             "font-src 'self' https://fonts.gstatic.com",
             "frame-src https://meet.jit.si https://*.jitsi.net",
             "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://generativelanguage.googleapis.com https://meet.jit.si https://*.jitsi.net",
-            "img-src 'self' data: blob: https://*.supabase.co https://tile.openstreetmap.org https://images.unsplash.com https://*.jitsi.net",
+            "img-src 'self' data: blob: https://*.supabase.co https://*.tile.openstreetmap.org https://tile.openstreetmap.org https://unpkg.com https://images.unsplash.com https://*.jitsi.net",
             "media-src 'self' https://meet.jit.si https://*.jitsi.net",
             "worker-src 'self' blob:",
           ].join('; ')
