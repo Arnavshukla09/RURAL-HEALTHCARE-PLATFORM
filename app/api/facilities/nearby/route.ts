@@ -29,24 +29,75 @@ export async function GET(req: NextRequest) {
   }
 
   const { lat, lon, type, radius_km } = parsed.data
-
   const supabase = await createClient()
-  const { data, error } = await supabase.rpc("nearby_facilities", {
+
+  // Try PostGIS RPC first (fast spatial query)
+  const { data: rpcData, error: rpcError } = await supabase.rpc("nearby_facilities", {
     p_lat: lat,
     p_lon: lon,
     p_type: type ?? null,
     p_radius_km: radius_km,
   })
 
-  if (error) {
-    console.error("[api/facilities/nearby] Supabase RPC error:", error.message)
-    return NextResponse.json({ error: "Failed to fetch nearby facilities" }, { status: 500 })
+  if (!rpcError && rpcData) {
+    return NextResponse.json({
+      facilities: rpcData,
+      center: { lat, lon },
+      radius_km,
+      count: rpcData.length,
+    })
   }
 
+  // Fallback: if RPC doesn't exist (PostGIS not set up), do a basic table query
+  // Uses bounding box approximation instead of true distance
+  console.warn("[facilities/nearby] RPC failed, falling back to basic query:", rpcError?.message)
+  
+  const degPerKm = 1 / 111.32 // rough conversion
+  const latMin = lat - (radius_km * degPerKm)
+  const latMax = lat + (radius_km * degPerKm)
+  const lonMin = lon - (radius_km * degPerKm / Math.cos(lat * Math.PI / 180))
+  const lonMax = lon + (radius_km * degPerKm / Math.cos(lat * Math.PI / 180))
+
+  let query = supabase
+    .from("healthcare_facilities")
+    .select("id, name, type, address, phone, district, lat, lon")
+    .gte("lat", latMin)
+    .lte("lat", latMax)
+    .gte("lon", lonMin)
+    .lte("lon", lonMax)
+    .limit(200)
+
+  if (type) query = query.eq("type", type)
+
+  const { data: fallbackData, error: fallbackError } = await query
+
+  if (fallbackError) {
+    // Table doesn't exist either — return empty with helpful message
+    console.error("[facilities/nearby] Fallback query also failed:", fallbackError.message)
+    return NextResponse.json({
+      facilities: [],
+      center: { lat, lon },
+      radius_km,
+      count: 0,
+      note: "Healthcare facilities table not found. Please run 006_facilities_postgis.sql and seed_mp_facilities.js first.",
+    })
+  }
+
+  // Calculate approximate distance for each result
+  const withDistance = (fallbackData || []).map(f => ({
+    ...f,
+    distance_km: Math.round(
+      Math.sqrt(
+        Math.pow((f.lat - lat) * 111.32, 2) +
+        Math.pow((f.lon - lon) * 111.32 * Math.cos(lat * Math.PI / 180), 2)
+      ) * 10
+    ) / 10,
+  })).sort((a, b) => a.distance_km - b.distance_km)
+
   return NextResponse.json({
-    facilities: data ?? [],
+    facilities: withDistance,
     center: { lat, lon },
     radius_km,
-    count: data?.length || 0,
+    count: withDistance.length,
   })
 }
