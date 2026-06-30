@@ -11,7 +11,8 @@
  * (leaflet's CSS is loaded via CDN link below — no build step needed)
  */
 
-import { useEffect, useState, useMemo } from "react"
+import { useEffect, useState, useMemo, useRef } from "react"
+import type { ReactNode } from "react"
 import dynamic from "next/dynamic"
 import { Card, CardContent } from "./ui/card"
 import { Button } from "./ui/button"
@@ -53,6 +54,42 @@ const TYPE_CONFIG: Record<Facility["type"], { color: string; en: string; hi: str
 
 // Default center: Bhopal, MP — used until we get real GPS / a search
 const MP_CENTER = { lat: 23.2599, lng: 77.4126 }
+
+// Wrapper that prevents "Map container is already initialized" in React 18 Strict Mode.
+// Strict Mode double-mounts effects, but Leaflet's _leaflet_id on the DOM node persists.
+// Fix: use a ref to clear the flag on unmount, and a unique key to force fresh DOM nodes.
+function LeafletMap({ children, center, zoom }: { children: ReactNode; center: [number, number]; zoom: number }) {
+  const [mounted, setMounted] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [mapKey, setMapKey] = useState(0)
+
+  useEffect(() => {
+    // Delay mount by one frame to let any previous instance fully clean up
+    const id = requestAnimationFrame(() => setMounted(true))
+    return () => {
+      cancelAnimationFrame(id)
+      setMounted(false)
+      // Clear Leaflet's internal flag from the container DOM node
+      if (containerRef.current) {
+        const el = containerRef.current.querySelector(".leaflet-container") as any
+        if (el && el._leaflet_id) {
+          delete el._leaflet_id
+        }
+      }
+      // Force a new key on next mount so React creates a fresh DOM node
+      setMapKey(k => k + 1)
+    }
+  }, [])
+
+  if (!mounted) return <div ref={containerRef} className="h-full w-full bg-gray-100 animate-pulse" />
+  return (
+    <div ref={containerRef} className="h-full w-full">
+      <MapContainer key={`map-${mapKey}-${center[0]}-${center[1]}`} center={center} zoom={zoom} style={{ height: "100%", width: "100%" }}>
+        {children}
+      </MapContainer>
+    </div>
+  )
+}
 
 export function MapView({ language, userLocation }: MapViewProps) {
   const en = language === "en"
@@ -160,7 +197,7 @@ export function MapView({ language, userLocation }: MapViewProps) {
       {/* Map */}
       <div className="rounded-xl overflow-hidden border shadow-sm" style={{ height: 420 }}>
         {leafletReady && (
-          <MapContainer center={[center.lat, center.lng]} zoom={11} style={{ height: "100%", width: "100%" }}>
+          <LeafletMap center={[center.lat, center.lng]} zoom={11}>
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -179,7 +216,7 @@ export function MapView({ language, userLocation }: MapViewProps) {
                 </Popup>
               </Marker>
             ))}
-          </MapContainer>
+          </LeafletMap>
         )}
       </div>
 
