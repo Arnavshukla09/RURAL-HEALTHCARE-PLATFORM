@@ -97,17 +97,27 @@ export default function Page() {
       }
     }
 
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session?.user) {
-        const userData = await fetchUserWithRole(session.user)
-        setUser(userData)
-        // If OAuth user just landed, take them to dashboard
-        if (window.location.hash.includes("access_token")) {
-          setCurrentPage("dashboard")
-        }
-      }
-      setLoading(false)
-    })
+const timeoutId = setTimeout(() => setLoading(false), 5000) // failsafe: never hang forever
+
+supabase.auth.getSession()
+  .then(({ data: { session } }) => {
+    clearTimeout(timeoutId)
+    if (session?.user) {
+      setUser({
+        id: session.user.id,
+        name: session.user.user_metadata?.full_name ||
+              session.user.email?.split("@")[0] || "User",
+        email: session.user.email,
+        role: "patient",
+      })
+    }
+    setLoading(false)
+  })
+  .catch((err) => {
+    clearTimeout(timeoutId)
+    console.error("Session error:", err)
+    setLoading(false) // never hang on error
+  })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
