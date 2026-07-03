@@ -64,11 +64,51 @@ const TYPE_MAP = {
   doctors: "doctors",
   pharmacy: "pharmacy",
   health_post: "health_post",
+  nursing_home: "hospital",
 }
 
+const HEALTHCARE_TAG_MAP = {
+  hospital: "hospital",
+  centre: "clinic",
+  clinic: "clinic",
+  doctor: "doctors",
+  pharmacy: "pharmacy",
+  laboratory: "lab",
+  community_health_centre: "health_post",
+}
+
+// Name-based rural facility detection — catches PHCs, CHCs, Sub-Centres,
+// ASHA posts, Anganwadi, and Jan Aushadhi stores that OSM taggers often
+// added with just a name and no amenity/healthcare tag at all.
+const RURAL_NAME_PATTERNS = [
+  { pattern: /PHC|Primary Health|प्राथमिक स्वास्थ्य|Primary Health Cent/i, type: "health_post" },
+  { pattern: /CHC|Community Health/i, type: "hospital" },
+  { pattern: /Sub.?Cent|उप स्वास्थ्य|Upa Swasthya/i, type: "health_post" },
+  { pattern: /ASHA/i, type: "health_post" },
+  { pattern: /Anganwadi/i, type: "health_post" },
+  { pattern: /Jan Aushadhi|Aushadhalaya|Aushadhi Store/i, type: "pharmacy" },
+  { pattern: /Swasthya Kendra|स्वास्थ्य केंद्र/i, type: "clinic" },
+  { pattern: /Dispensary|Dispensari/i, type: "clinic" },
+  { pattern: /Nursing Home/i, type: "hospital" },
+  { pattern: /Maternity|Prasuti/i, type: "hospital" },
+  { pattern: /Ayurvedic|Ayush|Homeopathic/i, type: "clinic" },
+]
+
 function classify(props) {
-  if (props.healthcare === "laboratory") return "lab"
-  if (TYPE_MAP[props.amenity]) return TYPE_MAP[props.amenity]
+  // 1. Check healthcare= tag first (most specific)
+  if (props.healthcare && HEALTHCARE_TAG_MAP[props.healthcare]) {
+    return HEALTHCARE_TAG_MAP[props.healthcare]
+  }
+  // 2. Check amenity= tag
+  if (props.amenity && TYPE_MAP[props.amenity]) {
+    return TYPE_MAP[props.amenity]
+  }
+  // 3. Fall back to name-based detection for rural facilities
+  const name = props.name || props["name:en"] || props["name:hi"] || ""
+  for (const { pattern, type } of RURAL_NAME_PATTERNS) {
+    if (pattern.test(name)) return type
+  }
+  // 4. Default
   return "clinic"
 }
 

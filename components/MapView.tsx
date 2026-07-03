@@ -1,29 +1,18 @@
 "use client"
 
-/**
- * MapView — Free, no-API-key facility locator for Madhya Pradesh.
- *
- * Uses Leaflet + free OpenStreetMap tiles for rendering, and queries
- * /api/facilities/nearby (backed by PostGIS ST_DWithin) for real
- * hospital/clinic/pharmacy/lab data seeded from OSM.
- *
- * Requires: npm install leaflet react-leaflet
- * (leaflet's CSS is loaded via CDN link below — no build step needed)
- */
-
 import { useEffect, useState, useMemo, useRef } from "react"
 import type { ReactNode } from "react"
 import dynamic from "next/dynamic"
 import { Card, CardContent } from "./ui/card"
 import { Button } from "./ui/button"
-import { MapPin, Navigation, Phone, Loader2, LocateFixed } from "lucide-react"
+import { Navigation, Phone, Loader2, LocateFixed, Star } from "lucide-react"
 
-// react-leaflet must be loaded client-side only (it touches `window`)
+// All react-leaflet components loaded client-side only
 const MapContainer = dynamic(() => import("react-leaflet").then(m => m.MapContainer), { ssr: false })
-const TileLayer = dynamic(() => import("react-leaflet").then(m => m.TileLayer), { ssr: false })
-const Marker = dynamic(() => import("react-leaflet").then(m => m.Marker), { ssr: false })
-const Popup = dynamic(() => import("react-leaflet").then(m => m.Popup), { ssr: false })
-const Circle = dynamic(() => import("react-leaflet").then(m => m.Circle), { ssr: false })
+const TileLayer    = dynamic(() => import("react-leaflet").then(m => m.TileLayer), { ssr: false })
+const Marker       = dynamic(() => import("react-leaflet").then(m => m.Marker), { ssr: false })
+const Popup        = dynamic(() => import("react-leaflet").then(m => m.Popup), { ssr: false })
+const Circle       = dynamic(() => import("react-leaflet").then(m => m.Circle), { ssr: false })
 
 interface Facility {
   id: string
@@ -39,69 +28,124 @@ interface Facility {
 
 interface MapViewProps {
   language: string
-  userLocation?: { lat: number; lng: number } | null
+  userLocation?: any
   camps?: any[]
 }
 
-const TYPE_CONFIG: Record<Facility["type"], { color: string; en: string; hi: string; icon: string }> = {
-  hospital:    { color: "#dc2626", en: "Hospital",        hi: "अस्पताल",        icon: "🏥" },
-  clinic:      { color: "#1d4ed8", en: "Clinic",          hi: "क्लिनिक",        icon: "🩺" },
-  doctors:     { color: "#7c3aed", en: "Doctor",          hi: "डॉक्टर",         icon: "👨‍⚕️" },
-  pharmacy:    { color: "#15803d", en: "Pharmacy",        hi: "फार्मेसी",       icon: "💊" },
-  health_post: { color: "#b45309", en: "Health Post",     hi: "स्वास्थ्य केंद्र", icon: "⛑️" },
-  lab:         { color: "#0d9488", en: "Lab",             hi: "लैब",            icon: "🧪" },
+const TYPE_CONFIG: Record<string, { color: string; en: string; hi: string; icon: string; markerColor: string }> = {
+  hospital:    { color: "#dc2626", en: "Hospital",       hi: "अस्पताल",         icon: "🏥", markerColor: "#dc2626" },
+  clinic:      { color: "#1d4ed8", en: "Clinic",         hi: "क्लिनिक",         icon: "🩺", markerColor: "#1d4ed8" },
+  doctors:     { color: "#7c3aed", en: "Doctor",         hi: "डॉक्टर",          icon: "👨‍⚕️", markerColor: "#7c3aed" },
+  pharmacy:    { color: "#15803d", en: "Pharmacy",       hi: "फार्मेसी",        icon: "💊", markerColor: "#15803d" },
+  health_post: { color: "#b45309", en: "Health Post/PHC",hi: "PHC/स्वास्थ्य केंद्र", icon: "⛑️", markerColor: "#b45309" },
+  lab:         { color: "#0d9488", en: "Lab",            hi: "लैब",             icon: "🧪", markerColor: "#0d9488" },
 }
 
-// Default center: Bhopal, MP — used until we get real GPS / a search
 const MP_CENTER = { lat: 23.2599, lng: 77.4126 }
 
-// Wrapper that prevents "Map container is already initialized" in React 18 Strict Mode.
-// Strict Mode double-mounts effects, but Leaflet's _leaflet_id on the DOM node persists.
-// Fix: use a ref to clear the flag on unmount, and a unique key to force fresh DOM nodes.
+// Leaflet wrapper that prevents "Map container is already initialized" in
+// React 18 Strict Mode (dev double-mount issue). Uses requestAnimationFrame
+// to delay first mount and an incrementing key to force fresh DOM on re-mount.
 function LeafletMap({ children, center, zoom }: { children: ReactNode; center: [number, number]; zoom: number }) {
-  const [mounted, setMounted] = useState(false)
-  const containerRef = useRef<HTMLDivElement>(null)
+  const [ready, setReady] = useState(false)
   const [mapKey, setMapKey] = useState(0)
+  const mountedRef = useRef(false)
 
   useEffect(() => {
-    // Delay mount by one frame to let any previous instance fully clean up
-    const id = requestAnimationFrame(() => setMounted(true))
+    if (mountedRef.current) {
+      // Second mount (Strict Mode remount) — increment key to get fresh DOM
+      setMapKey(k => k + 1)
+    } else {
+      mountedRef.current = true
+    }
+    const id = requestAnimationFrame(() => setReady(true))
     return () => {
       cancelAnimationFrame(id)
-      setMounted(false)
-      // Clear Leaflet's internal flag from the container DOM node
-      if (containerRef.current) {
-        const el = containerRef.current.querySelector(".leaflet-container") as any
-        if (el && el._leaflet_id) {
-          delete el._leaflet_id
-        }
-      }
-      // Force a new key on next mount so React creates a fresh DOM node
-      setMapKey(k => k + 1)
+      setReady(false)
     }
   }, [])
 
-  if (!mounted) return <div ref={containerRef} className="h-full w-full bg-gray-100 animate-pulse" />
+  if (!ready) {
+    return (
+      <div className="h-full w-full bg-gradient-to-br from-blue-50 to-teal-50 flex items-center justify-center">
+        <div className="text-center text-gray-400">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
+          <p className="text-sm">Loading map...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div ref={containerRef} className="h-full w-full">
-      <MapContainer key={`map-${mapKey}-${center[0]}-${center[1]}`} center={center} zoom={zoom} style={{ height: "100%", width: "100%" }}>
-        {children}
-      </MapContainer>
-    </div>
+    <MapContainer
+      key={`map-${mapKey}-${center[0].toFixed(4)}-${center[1].toFixed(4)}`}
+      center={center}
+      zoom={zoom}
+      style={{ height: "100%", width: "100%" }}
+    >
+      {children}
+    </MapContainer>
   )
 }
 
-export function MapView({ language, userLocation }: MapViewProps) {
+// Creates a colored SVG circle marker for Leaflet using divIcon
+function makeIcon(color: string, isTop10: boolean, isUser = false) {
+  if (typeof window === "undefined") return undefined
+  try {
+    const L = require("leaflet")
+    if (isUser) {
+      return L.divIcon({
+        className: "",
+        html: `<div style="
+          width:20px;height:20px;
+          background:#1d4ed8;
+          border:3px solid white;
+          border-radius:50%;
+          box-shadow:0 0 0 3px #1d4ed8,0 2px 8px rgba(0,0,0,0.4);
+          animation:pulse 1.5s infinite;
+        "></div>
+        <style>@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}</style>`,
+        iconSize: [20, 20],
+        iconAnchor: [10, 10],
+      })
+    }
+    const size = isTop10 ? 14 : 10
+    const border = isTop10 ? "2px solid white" : "1.5px solid white"
+    const shadow = isTop10 ? "0 2px 6px rgba(0,0,0,0.4)" : "0 1px 3px rgba(0,0,0,0.3)"
+    const zIndex = isTop10 ? 1000 : 500
+    return L.divIcon({
+      className: "",
+      html: `<div style="
+        width:${size}px;height:${size}px;
+        background:${color};
+        border:${border};
+        border-radius:50%;
+        box-shadow:${shadow};
+        z-index:${zIndex};
+        position:relative;
+        ${isTop10 ? `outline:2px solid ${color};outline-offset:2px;` : ""}
+      "></div>`,
+      iconSize: [size, size],
+      iconAnchor: [size / 2, size / 2],
+    })
+  } catch {
+    return undefined
+  }
+}
+
+export function MapView({ language }: MapViewProps) {
   const en = language === "en"
-  const [center, setCenter] = useState(userLocation ?? MP_CENTER)
+  const [center, setCenter] = useState(MP_CENTER)
+  const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null)
   const [facilities, setFacilities] = useState<Facility[]>([])
   const [loading, setLoading] = useState(false)
+  const [locating, setLocating] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [filter, setFilter] = useState<Facility["type"] | "all">("all")
   const [radiusKm, setRadiusKm] = useState(25)
   const [leafletReady, setLeafletReady] = useState(false)
 
-  // Load Leaflet's CSS once (avoids needing a CSS import pipeline change)
+  // Load Leaflet CSS once
   useEffect(() => {
     if (!document.getElementById("leaflet-css")) {
       const link = document.createElement("link")
@@ -113,47 +157,70 @@ export function MapView({ language, userLocation }: MapViewProps) {
     setLeafletReady(true)
   }, [])
 
-  const fetchFacilities = async (lat: number, lon: number) => {
+  const fetchFacilities = async (lat: number, lon: number, type?: string, km?: number) => {
     setLoading(true)
     setError(null)
     try {
       const params = new URLSearchParams({
         lat: String(lat),
         lon: String(lon),
-        radius_km: String(radiusKm),
+        radius_km: String(km ?? radiusKm),
       })
-      if (filter !== "all") params.set("type", filter)
-
+      if (type && type !== "all") params.set("type", type)
       const res = await fetch(`/api/facilities/nearby?${params}`)
-      if (!res.ok) throw new Error("Failed to load facilities")
+      if (!res.ok) throw new Error(`API error ${res.status}`)
       const json = await res.json()
+      if (json.error) throw new Error(json.error)
       setFacilities(json.facilities ?? [])
     } catch (err: any) {
-      setError(en ? "Could not load nearby facilities. Please try again." : "निकटतम सुविधाएं लोड नहीं हो सकीं। कृपया पुनः प्रयास करें।")
+      setError(en
+        ? "Could not load facilities. Please try again."
+        : "सुविधाएं लोड नहीं हो सकीं। कृपया पुनः प्रयास करें।")
     } finally {
       setLoading(false)
     }
   }
 
+  // Initial load — Bhopal as default center
   useEffect(() => {
-    fetchFacilities(center.lat, center.lng)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filter, radiusKm])
+    fetchFacilities(MP_CENTER.lat, MP_CENTER.lng)
+  }, [])
 
   const useMyLocation = () => {
     if (!navigator.geolocation) {
-      alert(en ? "Geolocation not supported by your browser." : "आपका ब्राउज़र स्थान सेवा समर्थित नहीं करता।")
+      alert(en ? "Geolocation not supported." : "स्थान सेवा समर्थित नहीं है।")
       return
     }
+    setLocating(true)
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        const next = { lat: pos.coords.latitude, lng: pos.coords.longitude }
-        setCenter(next)
-        fetchFacilities(next.lat, next.lng)
+        const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude }
+        setUserCoords(coords)
+        setCenter(coords)
+        fetchFacilities(coords.lat, coords.lng, filter !== "all" ? filter : undefined, radiusKm)
+        setLocating(false)
       },
-      () => alert(en ? "Location access denied." : "स्थान की अनुमति अस्वीकृत।")
+      () => {
+        alert(en ? "Location access denied." : "स्थान की अनुमति अस्वीकृत।")
+        setLocating(false)
+      },
+      { timeout: 10000, maximumAge: 60000 }
     )
   }
+
+  const handleFilterChange = (f: typeof filter) => {
+    setFilter(f)
+    fetchFacilities(center.lat, center.lng, f !== "all" ? f : undefined, radiusKm)
+  }
+
+  const handleRadiusChange = (km: number) => {
+    setRadiusKm(km)
+    fetchFacilities(center.lat, center.lng, filter !== "all" ? filter : undefined, km)
+  }
+
+  // Sort by distance, top 10 are "nearest"
+  const sorted = useMemo(() => [...facilities].sort((a, b) => a.distance_km - b.distance_km), [facilities])
+  const top10Ids = useMemo(() => new Set(sorted.slice(0, 10).map(f => f.id)), [sorted])
 
   const counts = useMemo(() => {
     const c: Record<string, number> = { all: facilities.length }
@@ -164,104 +231,230 @@ export function MapView({ language, userLocation }: MapViewProps) {
   return (
     <div className="p-4 md:p-6 max-w-5xl mx-auto space-y-4">
       <div>
-        <h2 className="text-2xl font-bold mb-1">{en ? "Nearby Health Facilities" : "निकटतम स्वास्थ्य सुविधाएं"}</h2>
-        <p className="text-gray-500 text-sm">
-          {en ? "Real hospitals, clinics, pharmacies & labs across Madhya Pradesh — free, open data" : "मध्य प्रदेश के वास्तविक अस्पताल, क्लिनिक, फार्मेसी और लैब — निःशुल्क खुला डेटा"}
+        <h2 className="text-2xl font-bold mb-1">
+          {en ? "Nearby Health Facilities" : "निकटतम स्वास्थ्य सुविधाएं"}
+        </h2>
+        <p className="text-sm text-gray-500">
+          {en
+            ? "Hospitals, PHCs, clinics, pharmacies & labs across Madhya Pradesh — real OSM data"
+            : "मध्य प्रदेश के अस्पताल, PHC, क्लिनिक, फार्मेसी और लैब — वास्तविक डेटा"}
         </p>
       </div>
 
-      {/* Controls */}
+      {/* Controls row */}
       <div className="flex flex-wrap gap-2 items-center">
-        <Button size="sm" variant="outline" onClick={useMyLocation} className="gap-1.5">
-          <LocateFixed className="h-4 w-4" />
-          {en ? "Use My Location" : "मेरा स्थान उपयोग करें"}
+        <Button size="sm" variant="outline" onClick={useMyLocation}
+          disabled={locating}
+          className="gap-1.5 shrink-0">
+          {locating
+            ? <Loader2 className="h-4 w-4 animate-spin" />
+            : <LocateFixed className="h-4 w-4" />}
+          {en ? "Use My Location" : "मेरा स्थान"}
         </Button>
-        {(["all", "hospital", "clinic", "doctors", "pharmacy", "lab", "health_post"] as const).map(t => (
-          <button key={t} onClick={() => setFilter(t)}
+
+        {(["all", "hospital", "health_post", "clinic", "pharmacy", "lab", "doctors"] as const).map(t => (
+          <button key={t} onClick={() => handleFilterChange(t)}
             className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
-              filter === t ? "bg-blue-600 text-white border-blue-600" : "bg-white text-gray-600 border-gray-200 hover:border-blue-300"
+              filter === t
+                ? "bg-blue-600 text-white border-blue-600"
+                : "bg-white text-gray-600 border-gray-200 hover:border-blue-300"
             }`}>
-            {t === "all" ? (en ? "All" : "सभी") : `${TYPE_CONFIG[t].icon} ${en ? TYPE_CONFIG[t].en : TYPE_CONFIG[t].hi}`}
-            {counts[t] ? ` (${counts[t]})` : ""}
+            {t === "all"
+              ? (en ? `All (${counts.all ?? 0})` : `सभी (${counts.all ?? 0})`)
+              : `${TYPE_CONFIG[t].icon} ${en ? TYPE_CONFIG[t].en : TYPE_CONFIG[t].hi}${counts[t] ? ` (${counts[t]})` : ""}`}
           </button>
         ))}
-        <select
-          value={radiusKm}
-          onChange={(e) => setRadiusKm(Number(e.target.value))}
-          className="text-xs border rounded-full px-3 py-1.5 bg-white"
-        >
-          {[10, 25, 50, 100].map(km => <option key={km} value={km}>{km} km</option>)}
+
+        <select value={radiusKm}
+          onChange={e => handleRadiusChange(Number(e.target.value))}
+          className="text-xs border rounded-full px-3 py-1.5 bg-white ml-auto">
+          {[10, 25, 50, 100].map(km => (
+            <option key={km} value={km}>{km} km</option>
+          ))}
         </select>
       </div>
 
       {/* Map */}
-      <div className="rounded-xl overflow-hidden border shadow-sm" style={{ height: 420 }}>
+      <div className="rounded-xl overflow-hidden border shadow-sm" style={{ height: 440 }}>
         {leafletReady && (
-          <LeafletMap center={[center.lat, center.lng]} zoom={11}>
+          <LeafletMap center={[center.lat, center.lng]} zoom={userCoords ? 13 : 11}>
             <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
-            <Circle center={[center.lat, center.lng]} radius={radiusKm * 1000} pathOptions={{ color: "#1d4ed8", fillOpacity: 0.05 }} />
-            {facilities.map(f => (
-              <Marker key={f.id} position={[f.lat, f.lon]}>
-                <Popup>
-                  <div className="text-sm">
-                    <p className="font-semibold">{TYPE_CONFIG[f.type].icon} {f.name}</p>
-                    <p className="text-gray-600">{en ? TYPE_CONFIG[f.type].en : TYPE_CONFIG[f.type].hi}</p>
-                    {f.address && <p className="text-gray-500 mt-1">{f.address}</p>}
-                    <p className="text-blue-700 font-medium mt-1">{f.distance_km} km {en ? "away" : "दूर"}</p>
-                    {f.phone && <a href={`tel:${f.phone}`} className="text-blue-600 underline block mt-1">{f.phone}</a>}
-                  </div>
-                </Popup>
-              </Marker>
-            ))}
+
+            {/* User location pin with pulsing blue dot */}
+            {userCoords && (
+              <>
+                <Marker
+                  position={[userCoords.lat, userCoords.lng]}
+                  icon={makeIcon("", false, true) as any}
+                >
+                  <Popup>
+                    <p className="font-semibold text-blue-700">
+                      📍 {en ? "Your Location" : "आपका स्थान"}
+                    </p>
+                  </Popup>
+                </Marker>
+                <Circle
+                  center={[userCoords.lat, userCoords.lng]}
+                  radius={radiusKm * 1000}
+                  pathOptions={{ color: "#1d4ed8", fillOpacity: 0.04, dashArray: "6 4" }}
+                />
+              </>
+            )}
+
+            {/* All facility markers — top 10 are larger and outlined */}
+            {sorted.map(f => {
+              const cfg = TYPE_CONFIG[f.type] ?? TYPE_CONFIG.clinic
+              const isTop = top10Ids.has(f.id)
+              return (
+                <Marker
+                  key={f.id}
+                  position={[f.lat, f.lon]}
+                  icon={makeIcon(cfg.markerColor, isTop) as any}
+                  zIndexOffset={isTop ? 1000 : 0}
+                >
+                  <Popup minWidth={200}>
+                    <div className="text-sm space-y-1">
+                      <div className="flex items-start gap-1.5">
+                        <span className="text-lg">{cfg.icon}</span>
+                        <div>
+                          <p className="font-semibold leading-tight">{f.name}</p>
+                          <p className="text-xs" style={{ color: cfg.color }}>
+                            {en ? cfg.en : cfg.hi}
+                          </p>
+                        </div>
+                      </div>
+                      {isTop && (
+                        <p className="text-xs font-semibold text-amber-600 flex items-center gap-1">
+                          <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                          {en ? "Top 10 Nearest" : "10 निकटतम में से"}
+                        </p>
+                      )}
+                      {f.address && <p className="text-xs text-gray-500">{f.address}</p>}
+                      {f.district && <p className="text-xs text-gray-400">{f.district}</p>}
+                      <p className="text-blue-700 font-medium text-xs">
+                        {f.distance_km} km {en ? "away" : "दूर"}
+                      </p>
+                      {f.phone && (
+                        <a href={`tel:${f.phone}`}
+                          className="text-blue-600 underline text-xs flex items-center gap-1">
+                          <Phone className="h-3 w-3" />{f.phone}
+                        </a>
+                      )}
+                      <a href={`https://www.openstreetmap.org/?mlat=${f.lat}&mlon=${f.lon}&zoom=17`}
+                        target="_blank" rel="noreferrer"
+                        className="text-gray-500 underline text-xs block">
+                        {en ? "Open in OpenStreetMap ↗" : "OpenStreetMap में देखें ↗"}
+                      </a>
+                    </div>
+                  </Popup>
+                </Marker>
+              )
+            })}
           </LeafletMap>
         )}
       </div>
 
       {loading && (
-        <div className="flex items-center justify-center gap-2 text-gray-500 text-sm py-2">
-          <Loader2 className="h-4 w-4 animate-spin" /> {en ? "Loading facilities..." : "सुविधाएं लोड हो रही हैं..."}
+        <div className="flex items-center justify-center gap-2 text-gray-400 text-sm py-1">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          {en ? "Fetching facilities..." : "सुविधाएं खोजी जा रही हैं..."}
         </div>
       )}
-      {error && <p className="text-red-600 text-sm text-center">{error}</p>}
+      {error && <p className="text-red-500 text-sm text-center">{error}</p>}
 
-      {/* Facility list */}
-      <div className="grid md:grid-cols-2 gap-3">
-        {facilities.map(f => (
-          <Card key={f.id} className="hover:shadow-md transition-shadow">
-            <CardContent className="p-4 flex items-start gap-3">
-              <div className="h-10 w-10 rounded-lg bg-gray-50 flex items-center justify-center flex-shrink-0 text-xl">
-                {TYPE_CONFIG[f.type].icon}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-sm truncate">{f.name}</p>
-                <p className="text-xs font-medium" style={{ color: TYPE_CONFIG[f.type].color }}>
-                  {en ? TYPE_CONFIG[f.type].en : TYPE_CONFIG[f.type].hi}
-                </p>
-                <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
-                  <span className="flex items-center gap-1"><Navigation className="h-3 w-3" />{f.distance_km} km</span>
-                  {f.phone && <span className="flex items-center gap-1"><Phone className="h-3 w-3" />{f.phone}</span>}
-                </div>
-              </div>
-              <Button size="sm" variant="outline" className="text-xs h-8 flex-shrink-0"
-                onClick={() => window.open(`https://www.openstreetmap.org/?mlat=${f.lat}&mlon=${f.lon}&zoom=17`, "_blank")}>
-                {en ? "View" : "देखें"}
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
-        {!loading && facilities.length === 0 && !error && (
-          <div className="col-span-2 text-center py-10 text-gray-400">
-            <MapPin className="h-10 w-10 mx-auto mb-2 opacity-30" />
-            <p className="text-sm">{en ? "No facilities found in this radius. Try increasing the search distance." : "इस दूरी में कोई सुविधा नहीं मिली। खोज दूरी बढ़ाने का प्रयास करें।"}</p>
+      {/* Top 10 highlighted list */}
+      {sorted.length > 0 && (
+        <>
+          <div>
+            <h3 className="font-semibold text-base mb-2 flex items-center gap-2">
+              <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+              {en ? "Top 10 Nearest Facilities" : "10 निकटतम सुविधाएं"}
+            </h3>
+            <div className="grid md:grid-cols-2 gap-2">
+              {sorted.slice(0, 10).map((f, idx) => {
+                const cfg = TYPE_CONFIG[f.type] ?? TYPE_CONFIG.clinic
+                return (
+                  <Card key={f.id}
+                    className="border-2 hover:shadow-md transition-shadow"
+                    style={{ borderColor: cfg.color + "40" }}>
+                    <CardContent className="p-3 flex items-start gap-3">
+                      <div className="flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
+                        style={{ background: cfg.color }}>
+                        {idx + 1}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-sm truncate">{f.name}</p>
+                        <p className="text-xs" style={{ color: cfg.color }}>
+                          {cfg.icon} {en ? cfg.en : cfg.hi}
+                        </p>
+                        <div className="flex items-center gap-3 mt-0.5 text-xs text-gray-500">
+                          <span className="flex items-center gap-0.5">
+                            <Navigation className="h-3 w-3" />{f.distance_km} km
+                          </span>
+                          {f.phone && (
+                            <a href={`tel:${f.phone}`} className="flex items-center gap-0.5 text-blue-600">
+                              <Phone className="h-3 w-3" />{f.phone}
+                            </a>
+                          )}
+                        </div>
+                        {f.address && <p className="text-xs text-gray-400 truncate mt-0.5">{f.address}</p>}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )
+              })}
+            </div>
           </div>
-        )}
-      </div>
+
+          {/* Rest of results */}
+          {sorted.length > 10 && (
+            <div>
+              <h3 className="font-semibold text-base mb-2 text-gray-600">
+                {en ? `Other ${sorted.length - 10} Facilities` : `अन्य ${sorted.length - 10} सुविधाएं`}
+              </h3>
+              <div className="grid md:grid-cols-2 gap-2">
+                {sorted.slice(10).map(f => {
+                  const cfg = TYPE_CONFIG[f.type] ?? TYPE_CONFIG.clinic
+                  return (
+                    <Card key={f.id} className="hover:shadow-sm transition-shadow border">
+                      <CardContent className="p-3 flex items-center gap-3">
+                        <span className="text-xl">{cfg.icon}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate">{f.name}</p>
+                          <div className="flex items-center gap-2 text-xs text-gray-500">
+                            <span style={{ color: cfg.color }}>{en ? cfg.en : cfg.hi}</span>
+                            <span>·</span>
+                            <span>{f.distance_km} km</span>
+                            {f.phone && <><span>·</span><a href={`tel:${f.phone}`} className="text-blue-600">{f.phone}</a></>}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {!loading && facilities.length === 0 && !error && (
+        <div className="text-center py-12 text-gray-400">
+          <p className="text-sm">
+            {en
+              ? "No facilities found. Try increasing the radius or use your GPS location."
+              : "कोई सुविधा नहीं मिली। दूरी बढ़ाएं या GPS का उपयोग करें।"}
+          </p>
+        </div>
+      )}
 
       <p className="text-xs text-center text-gray-400 pb-2">
-        {en ? "Data: OpenStreetMap contributors · Map tiles: OpenStreetMap · 100% free, no API key" : "डेटा: OpenStreetMap योगदानकर्ता · निःशुल्क"}
+        {en
+          ? "Data: OpenStreetMap contributors · 100% free, no API key"
+          : "डेटा: OpenStreetMap योगदानकर्ता · 100% निःशुल्क"}
       </p>
     </div>
   )
