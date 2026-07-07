@@ -52,8 +52,8 @@ export function Directory({ setCurrentPage, language }: DirectoryProps) {
             name: d.name,
             specialty: (d.specialization || '').toLowerCase().replace(/[& ]/g, '-').replace('obstetrics-&-gynecology','gynecology'),
             specialtyName: d.specialization || 'General',
-            experience: Math.floor(Math.random() * 15) + 5,
-            rating: (4.0 + Math.random() * 0.9).toFixed(1),
+            experience: d.experience_years || null,
+            rating: d.rating || null,
             location: d.location || '',
             phone: d.phone || '',
             available: true,
@@ -203,11 +203,7 @@ export function Directory({ setCurrentPage, language }: DirectoryProps) {
   };
 
   const handleConsultation = (doctor: any, type: string) => {
-    alert(
-      language === 'en' 
-        ? `${type} consultation booked with ${doctor.name}` 
-        : `${doctor.name} के साथ ${type} परामर्श बुक किया गया`
-    );
+    setCurrentPage('consultation');
   };
 
   return (

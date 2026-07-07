@@ -294,6 +294,7 @@ export function MapView({ language }: MapViewProps) {
                     <p className="font-semibold text-blue-700">
                       📍 {en ? "Your Location" : "आपका स्थान"}
                     </p>
+                    
                   </Popup>
                 </Marker>
                 <Circle

@@ -1,9 +1,15 @@
 import { createClient } from "@/lib/supabase/server"
 import { type NextRequest, NextResponse } from "next/server"
+import { rateLimit } from "@/lib/rate-limit"
 import { z } from "zod"   // ✅ ADD (for query validation)
 
 export async function GET(request: NextRequest) {
   try {
+    const ip = request.headers.get('x-forwarded-for') ?? '127.0.0.1'
+    if (!rateLimit(ip)) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+    }
+
     const supabase = await createClient()
 
     const { searchParams } = new URL(request.url)
@@ -26,7 +32,7 @@ export async function GET(request: NextRequest) {
     const specialization = parsed.data
 
     let query = supabase
-      .from("providers")
+      .from("healthcare_providers")
       .select("*")
       .eq("is_verified", true)
 

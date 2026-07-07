@@ -1,6 +1,7 @@
+import { useState } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import { Heart, Mail, Phone, MapPin, Facebook, Youtube, MessageCircle } from "lucide-react";
+import { Heart, Mail, Phone, MapPin, Facebook, Youtube, MessageCircle, ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
 
 interface FooterProps {
   setCurrentPage: (page: string) => void;
@@ -47,23 +48,42 @@ export function Footer({ setCurrentPage, language }: FooterProps) {
 
   const t = content[language as keyof typeof content];
 
-  const handleSocialClick = (platform: string) => {
-    // In a real app, these would be actual social media links
-    alert(language === 'en' 
-      ? `Opening ${platform} page...` 
-      : `${platform} पेज खोला जा रहा है...`);
+  const [expandedSection, setExpandedSection] = useState<string | null>(null);
+  const [email, setEmail] = useState("");
+  const [subscribed, setSubscribed] = useState(false);
+
+  const socialLinks: Record<string, string> = {
+    GitHub: 'https://github.com/Arnavshukla09/RURAL-HEALTHCARE-PLATFORM',
+    WhatsApp: 'https://wa.me/?text=Check%20out%20RuralHealth%20Platform',
+    YouTube: 'https://youtube.com',
   };
 
   const handleSubscribe = () => {
-    alert(language === 'en' 
-      ? 'Thank you for subscribing to our newsletter!' 
-      : 'हमारे न्यूज़लेटर की सदस्यता के लिए धन्यवाद!');
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      alert(language === 'en' ? 'Please enter a valid email address' : 'कृपया एक वैध ईमेल दर्ज करें');
+      return;
+    }
+    setSubscribed(true);
+    setEmail("");
   };
 
-  const handleFeedback = () => {
-    alert(language === 'en' 
-      ? 'Feedback form would open here' 
-      : 'यहाँ प्रतिक्रिया फॉर्म खुलेगा');
+  const toggleSection = (section: string) => {
+    setExpandedSection(expandedSection === section ? null : section);
+  };
+
+  const sectionContent: Record<string, string> = {
+    about: language === 'en'
+      ? 'RuralHealth is a digital platform connecting rural communities in Madhya Pradesh to quality healthcare. We provide AI-powered symptom checking, teleconsultation, facility mapping, and health records — all free and accessible.'
+      : 'ग्रामीण स्वास्थ्य एक डिजिटल प्लेटफ़ॉर्म है जो मध्य प्रदेश के ग्रामीण समुदायों को गुणवत्तापूर्ण स्वास्थ्य सेवा से जोड़ता है।',
+    faq: language === 'en'
+      ? '• Is this platform free? — Yes, completely free for all users.\n• How do I book a consultation? — Register, then use the Book Consultation feature.\n• Is my health data secure? — Yes, all data is encrypted and stored securely with Supabase.\n• Can I use this offline? — Basic features work offline; data syncs when you reconnect.'
+      : '• क्या यह प्लेटफ़ॉर्म मुफ़्त है? — हाँ, सभी उपयोगकर्ताओं के लिए पूरी तरह से मुफ़्त।\n• मैं परामर्श कैसे बुक करूँ? — पंजीकरण करें, फिर परामर्श बुक करें।\n• क्या मेरा डेटा सुरक्षित है? — हाँ, सभी डेटा एन्क्रिप्टेड है।',
+    privacy: language === 'en'
+      ? 'Your privacy is important to us. We collect only essential health data needed to provide services. Your data is never sold or shared with third parties. All medical records are encrypted and accessible only to you and your healthcare providers.'
+      : 'आपकी गोपनीयता हमारे लिए महत्वपूर्ण है। हम केवल सेवाएं प्रदान करने के लिए आवश्यक डेटा एकत्र करते हैं।',
+    contact: language === 'en'
+      ? 'Email: support@ruralhealth.in\nPhone: 1800-123-4567 (Toll Free)\nAddress: Village Health Initiative, District Health Department, Bhopal, MP'
+      : 'ईमेल: support@ruralhealth.in\nफोन: 1800-123-4567 (टोल फ्री)\nपता: ग्राम स्वास्थ्य पहल, जिला स्वास्थ्य विभाग, भोपाल, मप्र',
   };
 
   return (
@@ -126,7 +146,7 @@ export function Footer({ setCurrentPage, language }: FooterProps) {
                 {language === 'en' ? 'Directory' : 'निर्देशिका'}
               </button>
               <button 
-                onClick={() => setCurrentPage('campaigns')}
+                onClick={() => setCurrentPage('camps')}
                 className="block text-gray-300 hover:text-white transition-colors text-sm"
               >
                 {language === 'en' ? 'Campaigns' : 'अभियान'}
@@ -144,24 +164,28 @@ export function Footer({ setCurrentPage, language }: FooterProps) {
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">{language === 'en' ? 'Support' : 'सहायता'}</h3>
             <div className="space-y-2">
-              <button className="block text-gray-300 hover:text-white transition-colors text-sm">
-                {t.about}
-              </button>
-              <button className="block text-gray-300 hover:text-white transition-colors text-sm">
-                {t.faq}
-              </button>
-              <button className="block text-gray-300 hover:text-white transition-colors text-sm">
-                {t.privacy}
-              </button>
-              <button className="block text-gray-300 hover:text-white transition-colors text-sm">
-                {t.contact}
-              </button>
-              <button 
-                onClick={handleFeedback}
+              {(['about', 'faq', 'privacy', 'contact'] as const).map(key => (
+                <div key={key}>
+                  <button
+                    onClick={() => toggleSection(key)}
+                    className="flex items-center gap-1 text-gray-300 hover:text-white transition-colors text-sm"
+                  >
+                    {t[key]}
+                    {expandedSection === key ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                  </button>
+                  {expandedSection === key && (
+                    <p className="text-xs text-gray-400 mt-1 pl-2 border-l border-gray-700 whitespace-pre-line">
+                      {sectionContent[key]}
+                    </p>
+                  )}
+                </div>
+              ))}
+              <a
+                href="mailto:support@ruralhealth.in?subject=Feedback"
                 className="block text-gray-300 hover:text-white transition-colors text-sm"
               >
-                {t.feedback}
-              </button>
+                {t.feedback} <ExternalLink className="inline h-3 w-3" />
+              </a>
             </div>
           </div>
 
@@ -173,46 +197,44 @@ export function Footer({ setCurrentPage, language }: FooterProps) {
                 ? 'Get health tips and campaign updates' 
                 : 'स्वास्थ्य सुझाव और अभियान अपडेट पाएं'}
             </p>
-            <div className="flex space-x-2">
-              <Input 
-                placeholder={t.emailPlaceholder}
-                className="bg-gray-800 border-gray-700 text-white placeholder-gray-400"
-              />
-              <Button 
-                onClick={handleSubscribe}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                {t.subscribe}
-              </Button>
-            </div>
+            {subscribed ? (
+              <p className="text-green-400 text-sm">✅ {language === 'en' ? 'Subscribed! Thank you.' : 'सब्सक्राइब हो गया! धन्यवाद।'}</p>
+            ) : (
+              <div className="flex space-x-2">
+                <Input 
+                  placeholder={t.emailPlaceholder}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="bg-gray-800 border-gray-700 text-white placeholder-gray-400"
+                  type="email"
+                />
+                <Button 
+                  onClick={handleSubscribe}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  {t.subscribe}
+                </Button>
+              </div>
+            )}
             
             <div className="space-y-2">
               <h4 className="font-medium">{t.followUs}</h4>
               <div className="flex space-x-3">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="border-gray-600 hover:bg-gray-800"
-                  onClick={() => handleSocialClick('WhatsApp')}
-                >
-                  <MessageCircle className="h-4 w-4" />
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="border-gray-600 hover:bg-gray-800"
-                  onClick={() => handleSocialClick('Facebook')}
-                >
-                  <Facebook className="h-4 w-4" />
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="border-gray-600 hover:bg-gray-800"
-                  onClick={() => handleSocialClick('YouTube')}
-                >
-                  <Youtube className="h-4 w-4" />
-                </Button>
+                <a href={socialLinks.WhatsApp} target="_blank" rel="noopener noreferrer">
+                  <Button size="sm" variant="outline" className="border-gray-600 hover:bg-gray-800">
+                    <MessageCircle className="h-4 w-4" />
+                  </Button>
+                </a>
+                <a href={socialLinks.GitHub} target="_blank" rel="noopener noreferrer">
+                  <Button size="sm" variant="outline" className="border-gray-600 hover:bg-gray-800">
+                    <ExternalLink className="h-4 w-4" />
+                  </Button>
+                </a>
+                <a href={socialLinks.YouTube} target="_blank" rel="noopener noreferrer">
+                  <Button size="sm" variant="outline" className="border-gray-600 hover:bg-gray-800">
+                    <Youtube className="h-4 w-4" />
+                  </Button>
+                </a>
               </div>
             </div>
           </div>

@@ -27,12 +27,24 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    // Look up the patient record for this authenticated user
+    const { data: patient, error: patientError } = await supabase
+      .from("patients")
+      .select("id")
+      .eq("user_id", user.id)
+      .single()
+
+    if (patientError || !patient) {
+      return NextResponse.json({ error: "Patient record not found" }, { status: 404 })
+    }
+
     const { searchParams } = new URL(request.url)
     const dataType = searchParams.get("dataType")
 
     let query = supabase
       .from("health_data")
       .select("*")
+      .eq("patient_id", patient.id)
       .order("recorded_at", { ascending: false })
 
     if (dataType) {

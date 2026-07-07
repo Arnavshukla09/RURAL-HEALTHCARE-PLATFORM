@@ -235,8 +235,7 @@ export function CampLocations({ setCurrentPage, language }: CampLocationsProps) 
   }
 
   const getDirections = (camp: CampLocation) => {
-    // In a real app, this would open maps with directions
-    alert(language === "en" ? `Opening directions to ${camp.name}...` : `${camp.name} के लिए दिशा निर्देश खोले जा रहे हैं...`)
+    window.open(`https://www.google.com/maps/dir/?api=1&destination=${camp.coordinates.lat},${camp.coordinates.lng}`, '_blank')
   }
 
   const callCamp = (camp: CampLocation) => {
@@ -244,7 +243,7 @@ export function CampLocations({ setCurrentPage, language }: CampLocationsProps) 
   }
 
   const registerForCamp = (camp: CampLocation) => {
-    alert(language === "en" ? `Registration for ${camp.name} initiated!` : `${camp.name} के लिए पंजीकरण शुरू किया गया!`)
+    setCurrentPage('consultation')
   }
 
   const getStatusColor = (status: string) => {
@@ -526,9 +525,7 @@ export function CampLocations({ setCurrentPage, language }: CampLocationsProps) 
               </Button>
               <Button
                 variant="outline"
-                onClick={() =>
-                  alert(language === "en" ? "Emergency services contacted!" : "आपातकालीन सेवाओं से संपर्क किया गया!")
-                }
+                onClick={() => window.open('tel:108')}
                 className="h-16 flex flex-col items-center justify-center space-y-2 text-red-600 border-red-200 hover:bg-red-50"
               >
                 <Phone className="h-6 w-6" />

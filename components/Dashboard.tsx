@@ -79,7 +79,7 @@ export function Dashboard({ user, setCurrentPage, language }: DashboardProps) {
 
   // State for real data
   const [notifications, setNotifications] = useState<any[]>([]);
-  const [userStats, setUserStats] = useState({ consultations: 0, campaigns: 5 });
+  const [userStats, setUserStats] = useState({ consultations: 0, campaigns: 0 });
 
   // Fetch real notifications and stats
   useEffect(() => {
@@ -256,7 +256,7 @@ export function Dashboard({ user, setCurrentPage, language }: DashboardProps) {
                   
                   <Button 
                     variant="outline"
-                    onClick={() => setCurrentPage('campaigns')}
+                    onClick={() => setCurrentPage('camps')}
                     className="h-16 flex items-center justify-center space-x-2"
                   >
                     <Calendar className="h-5 w-5" />
@@ -278,7 +278,7 @@ export function Dashboard({ user, setCurrentPage, language }: DashboardProps) {
                     variant="destructive" 
                     size="lg"
                     className="w-full"
-                    onClick={() => alert(language === 'en' ? 'Emergency services contacted!' : 'आपातकालीन सेवाओं से संपर्क किया गया!')}
+                    onClick={() => setCurrentPage('emergency')}
                   >
                     <AlertCircle className="h-5 w-5 mr-2" />
                     {t.emergencyContact}
@@ -291,7 +291,7 @@ export function Dashboard({ user, setCurrentPage, language }: DashboardProps) {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>{t.upcomingCampaigns}</CardTitle>
-                <Button variant="outline" size="sm" onClick={() => setCurrentPage('campaigns')}>
+                <Button variant="outline" size="sm" onClick={() => setCurrentPage('camps')}>
                   {t.viewAll}
                 </Button>
               </CardHeader>
@@ -380,7 +380,7 @@ export function Dashboard({ user, setCurrentPage, language }: DashboardProps) {
                     ? 'Join our comprehensive health screening program' 
                     : 'हमारे व्यापक स्वास्थ्य जांच कार्यक्रम में शामिल हों'}
                 </p>
-                <Button size="sm" onClick={() => setCurrentPage('campaigns')}>
+                <Button size="sm" onClick={() => setCurrentPage('camps')}>
                   {language === 'en' ? 'Learn More' : 'और जानें'}
                 </Button>
               </CardContent>

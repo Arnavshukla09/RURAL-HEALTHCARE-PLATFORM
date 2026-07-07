@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
       .single()
 
     const { data: provider } = await supabase
-      .from("providers")
+      .from("healthcare_providers")
       .select("*")
       .eq("user_id", user.id)
       .single()
@@ -86,7 +86,7 @@ export async function PUT(request: NextRequest) {
 
     const { profileType, ...data } = parsed.data
 
-    const table = profileType === "provider" ? "providers" : "patients"
+    const table = profileType === "provider" ? "healthcare_providers" : "patients"
 
     const { data: updated, error } = await supabase
       .from(table)

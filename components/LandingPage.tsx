@@ -190,20 +190,20 @@ export function LandingPage({ setCurrentPage, language }: LandingPageProps) {
               </CardHeader>
             </Card>
 
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setCurrentPage('lhf')}>
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setCurrentPage('directory')}>
               <CardHeader className="text-center pb-4">
                 <Stethoscope className="h-10 w-10 text-primary mx-auto mb-2" />
                 <CardTitle className="text-sm">
-                  {language === 'en' ? 'Health Worker' : 'स्वास्थ्य कार्यकर्ता'}
+                  {language === 'en' ? 'Find Doctors' : 'डॉक्टर खोजें'}
                 </CardTitle>
               </CardHeader>
             </Card>
 
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setCurrentPage('admin')}>
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setCurrentPage('records')}>
               <CardHeader className="text-center pb-4">
                 <Settings className="h-10 w-10 text-primary mx-auto mb-2" />
                 <CardTitle className="text-sm">
-                  {language === 'en' ? 'Admin Dashboard' : 'प्रशासन डैशबोर्ड'}
+                  {language === 'en' ? 'Health Records' : 'स्वास्थ्य रिकॉर्ड'}
                 </CardTitle>
               </CardHeader>
             </Card>

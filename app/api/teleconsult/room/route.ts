@@ -50,11 +50,24 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Appointment not found" }, { status: 404 })
     }
 
+    // 👉 Look up the user's patient and provider records
+    const { data: patient } = await supabase
+      .from("patients")
+      .select("id")
+      .eq("user_id", user.id)
+      .single()
+
+    const { data: provider } = await supabase
+      .from("healthcare_providers")
+      .select("id")
+      .eq("user_id", user.id)
+      .single()
+
     // 👉 ensure user is part of this appointment
-    if (
-      appointment.patient_id !== user.id &&
-      appointment.provider_id !== user.id
-    ) {
+    const isPatient = patient && appointment.patient_id === patient.id
+    const isProvider = provider && appointment.provider_id === provider.id
+
+    if (!isPatient && !isProvider) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 

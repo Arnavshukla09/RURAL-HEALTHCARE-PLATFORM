@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { type NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
+import { rateLimit } from "@/lib/rate-limit"
 
 // ✅ Allowed tables (VERY IMPORTANT)
 const allowedTables = [
@@ -25,6 +26,11 @@ const SyncSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    const ip = request.headers.get('x-forwarded-for') ?? '127.0.0.1'
+    if (!rateLimit(ip)) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+    }
+
     const supabase = await createClient()
 
     const {

@@ -88,7 +88,25 @@ export function EmergencyModule({ setCurrentPage, language }: EmergencyModulePro
                 <MapPin className="mr-2 h-5 w-5" />
                 {t.findHospital}
               </Button>
-              <Button size="lg" variant="outline" className="h-20 bg-transparent">
+              <Button size="lg" variant="outline" className="h-20 bg-transparent"
+                onClick={() => {
+                  if (!navigator.geolocation) {
+                    alert(language === 'en' ? 'Geolocation not supported by your browser' : 'आपका ब्राउज़र लोकेशन सपोर्ट नहीं करता')
+                    return
+                  }
+                  navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                      const url = `https://maps.google.com/?q=${pos.coords.latitude},${pos.coords.longitude}`
+                      navigator.clipboard.writeText(url).then(() => {
+                        alert(language === 'en' ? 'Location link copied to clipboard! Share it with emergency contacts.' : 'लोकेशन लिंक कॉपी हो गया! आपातकालीन संपर्कों के साथ साझा करें।')
+                      }).catch(() => {
+                        prompt(language === 'en' ? 'Copy this location link:' : 'यह लिंक कॉपी करें:', url)
+                      })
+                    },
+                    () => alert(language === 'en' ? 'Location access denied' : 'लोकेशन अनुमति अस्वीकृत')
+                  )
+                }}
+              >
                 <Share2 className="mr-2 h-5 w-5" />
                 {t.shareLocation}
               </Button>
