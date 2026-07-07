@@ -8,8 +8,10 @@
 -- 1. Enable PostGIS extension (safe to re-run)
 CREATE EXTENSION IF NOT EXISTS postgis;
 
--- 2. Create the healthcare_facilities table
-CREATE TABLE IF NOT EXISTS healthcare_facilities (
+-- 2. Create the healthcare_facilities table (Drop first to ensure clean schema)
+DROP TABLE IF EXISTS healthcare_facilities CASCADE;
+
+CREATE TABLE healthcare_facilities (
   id          uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   osm_id      bigint UNIQUE,                       -- OpenStreetMap node/way ID (dedup key)
   name        text NOT NULL,
