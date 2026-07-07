@@ -47,6 +47,7 @@ CREATE INDEX IF NOT EXISTS idx_facilities_geom ON healthcare_facilities USING GI
 CREATE INDEX IF NOT EXISTS idx_facilities_type ON healthcare_facilities (type);
 
 -- 5. Proximity search function — returns facilities within radius_km of a point
+DROP FUNCTION IF EXISTS nearby_facilities(double precision, double precision, text, double precision);
 CREATE OR REPLACE FUNCTION nearby_facilities(
   p_lat double precision,
   p_lon double precision,
