@@ -19,3 +19,17 @@ Whenever asked for documentation:
 - **If something is ambiguous, mention it** instead of guessing.
 
 All documentation should be written as if another developer is joining the project for the first time.
+
+## Execution & Code Modification Rules
+Before writing any code:
+- **Read every document inside the `docs/` folder.**
+- **Inspect the repository.** Assume the repository is the source of truth; do not make assumptions.
+- **Explain your understanding** of the current architecture.
+- **Identify inconsistencies** if any.
+- **Only after** that should you begin implementing new features.
+
+Whenever you modify code:
+- **Update documentation** if needed.
+- **Preserve coding conventions.**
+- **Avoid unnecessary refactoring.**
+- **Keep architecture consistent.**
