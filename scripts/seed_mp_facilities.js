@@ -160,16 +160,18 @@ async function seed() {
     const type = classify(props)
     const name = props.name || props["name:en"] || `Unnamed ${type}`
 
+    // Only use the numeric part of osmId for the bigint column
+    const numericOsmId = parseInt(osmNumId, 10)
+
     rows.push({
-      osm_id: osmId,
+      osm_id: isNaN(numericOsmId) ? null : numericOsmId,
       name,
       type,
       address: buildAddress(props),
       phone: props.phone || props["contact:phone"] || null,
       district: props["addr:district"] || props["addr:city"] || null,
-      geom: `SRID=4326;POINT(${lon} ${lat})`,
-      source: "osm",
-      verified: false,
+      lat: parseFloat(lat),
+      lon: parseFloat(lon),
     })
   }
 
@@ -210,9 +212,3 @@ seed()
     process.exit(1)
   })
 
-seed()
-  .then(() => process.exit(0))
-  .catch((err) => {
-    console.error("[SEED] Fatal error:", err.message)
-    process.exit(1)
-  })
