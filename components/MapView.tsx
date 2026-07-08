@@ -289,12 +289,25 @@ export function MapView({ language }: MapViewProps) {
                 <Marker
                   position={[userCoords.lat, userCoords.lng]}
                   icon={makeIcon("", false, true) as any}
+                  draggable={true}
+                  eventHandlers={{
+                    dragend: (e) => {
+                      const marker = e.target
+                      const position = marker.getLatLng()
+                      const newCoords = { lat: position.lat, lng: position.lng }
+                      setUserCoords(newCoords)
+                      setCenter(newCoords)
+                      fetchFacilities(newCoords.lat, newCoords.lng, filter !== "all" ? filter : undefined, radiusKm)
+                    }
+                  }}
                 >
                   <Popup>
-                    <p className="font-semibold text-blue-700">
+                    <p className="font-semibold text-blue-700 mb-1">
                       📍 {en ? "Your Location" : "आपका स्थान"}
                     </p>
-                    
+                    <p className="text-xs text-gray-500">
+                      {en ? "(Drag marker to change location)" : "(स्थान बदलने के लिए मार्कर खींचें)"}
+                    </p>
                   </Popup>
                 </Marker>
                 <Circle
