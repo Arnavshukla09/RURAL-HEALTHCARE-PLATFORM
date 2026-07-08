@@ -281,7 +281,7 @@ Supabase Postgres serves as the primary backend. Business logic is executed in N
 
 ## 12. AI Components
 
-- **Symptom Checker:** Collects structured data (body part, duration, severity) and uses a highly constrained Gemini prompt to return top 3 possible conditions with triage recommendations.
+- **Symptom Checker:** Collects structured data (body part, duration, severity) and uses a highly constrained Gemini prompt to return triage recommendations and seamlessly launches an inline AI chat for diagnosis follow-up.
 - **Floating Chat:** A persistent context-aware Gemini chat agent that has access to the user's platform context (e.g., advising them on how to book an appointment).
 
 ---

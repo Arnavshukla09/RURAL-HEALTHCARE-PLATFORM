@@ -9,10 +9,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [Unreleased] - Current Sprint
 
 ### Added
+- **Inline Symptom Chat:** Replaced the static symptom checker end screen with an interactive embedded AI chat for contextual follow-up questions.
+- **Top-Level Health Hub:** Moved the Health Information Hub to the main Navbar and removed the symptom-check prerequisite gate, allowing free exploration of static medical data.
 - **Master Documentation Suite:** Generated production-grade documentation across `docs/` (`PROJECT_CONTEXT.md`, `ARCHITECTURE.md`, `API_REFERENCE.md`, `DATABASE.md`, `COMPONENTS.md`, `ROADMAP.md`).
 - **Agent Rules:** Created `.agents/AGENTS.md` to strictly govern AI coding assistant behavior regarding project documentation integrity.
 
 ### Fixed
+- **Patient Profile Creation RLS:** Fixed a Row-Level Security bug preventing manual records from saving by utilizing `createAdminClient()` (Service Role) to bypass RLS during patient auto-creation.
+- **Gemini Context Sequence Bug:** Fixed a `400 Bad Request` API connection error by preventing sequential `user` messages in the Gemini chat history.
 - **PostGIS Seeding Script:** Fixed `scripts/seed_mp_facilities.js` to correctly pass `lat`/`lon` to the database instead of manually passing `geom` and non-existent `source` columns.
 - **SQL Migration Conflicts:** Updated `006_facilities_postgis.sql` to explicitly `DROP TABLE IF EXISTS` and `DROP FUNCTION IF EXISTS` to prevent schema mismatch errors during deployment on existing Supabase instances.
 

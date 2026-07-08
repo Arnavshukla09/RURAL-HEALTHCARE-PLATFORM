@@ -61,7 +61,7 @@ This document catalogs the domain-specific React components used throughout the 
 - **Files Where Used:** `app/page.tsx`
 
 ### 2.2 `SymptomChecker.tsx`
-- **Purpose:** Multi-step wizard collecting symptoms and querying the Gemini AI triage API.
+- **Purpose:** Multi-step wizard collecting symptoms and querying the Gemini AI triage API. Now features an embedded inline AI Chat interface for diagnosis follow-up.
 - **Props:**
   ```typescript
   {
@@ -87,6 +87,20 @@ This document catalogs the domain-specific React components used throughout the 
 - **Dependencies:** Calls `/api/ai-chat` using Server-Sent Events (streaming).
 - **Styling:** Fixed positioning (`bottom-4 right-4`), absolute max height with internal scroll.
 - **Files Where Used:** `app/page.tsx` (rendered outside the main content conditional logic).
+
+### 2.4 `HealthInfoHub.tsx`
+- **Purpose:** A static medical encyclopedia allowing users to browse vaccines, first aid procedures, and disease awareness information. Accessible via the main navigation menu.
+- **Props:**
+  ```typescript
+  {
+    language: string;
+    setCurrentPage?: (page: string) => void;
+  }
+  ```
+- **State:** `activeTab` (string).
+- **Dependencies:** `lucide-react`, `shadcn/ui`.
+- **Styling:** Clean tabbed interface with collapsible accordions.
+- **Files Where Used:** `app/page.tsx`
 
 ---
 
