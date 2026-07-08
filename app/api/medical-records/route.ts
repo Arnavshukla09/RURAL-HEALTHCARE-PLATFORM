@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { type NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 import { rateLimit } from "@/lib/rate-limit"
@@ -19,15 +20,22 @@ async function getOrCreatePatient(supabase: any, user: any) {
 
   if (!patient?.id) {
     const name = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split("@")[0] || "User"
-    const { data: created } = await supabase
-      .from("patients")
-      .upsert(
-        { user_id: user.id, first_name: name.split(" ")[0], last_name: name.split(" ").slice(1).join(" ") || "", email: user.email, role: "patient", phone: "" },
-        { onConflict: "user_id" }
-      )
-      .select("id")
-      .single()
-    patient = created
+    try {
+      const adminSupabase = createAdminClient()
+      const { data: created, error } = await adminSupabase
+        .from("patients")
+        .upsert(
+          { user_id: user.id, first_name: name.split(" ")[0], last_name: name.split(" ").slice(1).join(" ") || "", email: user.email, role: "patient", phone: "" },
+          { onConflict: "user_id" }
+        )
+        .select("id")
+        .single()
+      
+      if (error) console.error("Admin patient upsert error:", error)
+      patient = created
+    } catch (err) {
+      console.error("Admin client failed:", err)
+    }
   }
   return patient
 }
