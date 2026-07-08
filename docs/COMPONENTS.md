@@ -107,7 +107,7 @@ This document catalogs the domain-specific React components used throughout the 
 ## 3. Telemedicine & Maps
 
 ### 3.1 `MapView.tsx`
-- **Purpose:** Renders the interactive Leaflet map to show nearby healthcare facilities.
+- **Purpose:** Renders the interactive Leaflet map to show nearby healthcare facilities. Features a draggable user pointer for custom location queries.
 - **Props:**
   ```typescript
   {

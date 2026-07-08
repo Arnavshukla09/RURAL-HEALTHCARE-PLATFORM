@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Added
 - **Inline Symptom Chat:** Replaced the static symptom checker end screen with an interactive embedded AI chat for contextual follow-up questions.
 - **Top-Level Health Hub:** Moved the Health Information Hub to the main Navbar and removed the symptom-check prerequisite gate, allowing free exploration of static medical data.
+- **Draggable Map Pointer:** Made the user's location marker draggable in the Leaflet map, automatically refetching and re-centering nearby facilities upon dropping the pin.
 - **Master Documentation Suite:** Generated production-grade documentation across `docs/` (`PROJECT_CONTEXT.md`, `ARCHITECTURE.md`, `API_REFERENCE.md`, `DATABASE.md`, `COMPONENTS.md`, `ROADMAP.md`).
 - **Agent Rules:** Created `.agents/AGENTS.md` to strictly govern AI coding assistant behavior regarding project documentation integrity.
 
