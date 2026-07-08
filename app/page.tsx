@@ -163,10 +163,6 @@ supabase.auth.getSession()
           <SymptomChecker
             setCurrentPage={setCurrentPage}
             language={language}
-            onComplete={(result: any) => {
-              setSymptomCheckResult(result)
-              setCurrentPage("health-info")
-            }}
           />
         )
       case "consultation":
