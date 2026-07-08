@@ -1,6 +1,6 @@
 "use client"
 import { Button } from "./ui/button"
-import { Menu, X, Heart, AlertTriangle, Activity, ChevronDown, LogOut, User } from "lucide-react"
+import { Menu, X, Heart, AlertTriangle, Activity, ChevronDown, LogOut, User, BookOpen } from "lucide-react"
 import { useState, useRef, useEffect } from "react"
 import { createClient } from "@/lib/supabase/client"
 
@@ -78,6 +78,15 @@ export function Header({ currentPage, setCurrentPage, user, setUser, language, s
               }`}>
               <Activity className="h-4 w-4" />
               {en ? "Symptoms" : "लक्षण"}
+            </button>
+
+            {/* Health Info */}
+            <button onClick={() => go("health-info")}
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                isActive("health-info") ? "bg-teal-600 text-white" : "text-gray-600 hover:bg-gray-100"
+              }`}>
+              <BookOpen className="h-4 w-4" />
+              {en ? "Health Info" : "स्वास्थ्य जानकारी"}
             </button>
 
             {/* My Care dropdown (only when logged in) */}
@@ -171,6 +180,10 @@ export function Header({ currentPage, setCurrentPage, user, setUser, language, s
             <button onClick={() => go("symptom-checker")}
               className={`w-full flex items-center gap-2 px-4 py-3 text-sm rounded-lg transition-colors ${isActive("symptom-checker") ? "bg-teal-50 text-teal-700 font-medium" : "text-gray-700 hover:bg-gray-50"}`}>
               <Activity className="h-4 w-4" /> {en ? "Symptom Checker" : "लक्षण जांचकर्ता"}
+            </button>
+            <button onClick={() => go("health-info")}
+              className={`w-full flex items-center gap-2 px-4 py-3 text-sm rounded-lg transition-colors ${isActive("health-info") ? "bg-teal-50 text-teal-700 font-medium" : "text-gray-700 hover:bg-gray-50"}`}>
+              <BookOpen className="h-4 w-4" /> {en ? "Health Info" : "स्वास्थ्य जानकारी"}
             </button>
             <button onClick={() => go("emergency")}
               className={`w-full flex items-center gap-2 px-4 py-3 text-sm rounded-lg transition-colors ${isActive("emergency") ? "bg-red-50 text-red-700 font-medium" : "text-red-600 hover:bg-red-50"}`}>

@@ -6,13 +6,12 @@ import { Badge } from "./ui/badge"
 import {
   Activity, AlertTriangle, ArrowLeft, ArrowRight, CheckCircle,
   Brain, Eye, Ear, Heart, Wind, Droplet, Thermometer, User,
-  Loader2, Stethoscope, Home, MapPin
+  Loader2, Stethoscope, Home, MapPin, Send, Bot
 } from "lucide-react"
 
 interface SymptomCheckerProps {
   setCurrentPage: (page: string) => void
   language: string
-  onComplete?: (result: any) => void
 }
 
 // ── Expanded body-part symptom database ────────────────────────
@@ -66,7 +65,7 @@ const URGENCY_STYLES: Record<string, { bg: string; border: string; icon: string;
   low:       { bg: "bg-green-50", border: "border-green-400", icon: "✅", iconClass: "text-green-600" },
 }
 
-export function SymptomChecker({ setCurrentPage, language, onComplete }: SymptomCheckerProps) {
+export function SymptomChecker({ setCurrentPage, language }: SymptomCheckerProps) {
   const en = language === "en"
 
   // Step state
@@ -77,6 +76,11 @@ export function SymptomChecker({ setCurrentPage, language, onComplete }: Symptom
   const [aiResult, setAiResult] = useState<any>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+
+  // Inline chat state
+  const [chatInput, setChatInput] = useState("")
+  const [chatMessages, setChatMessages] = useState<{role: "user" | "assistant", content: string}[]>([])
+  const [chatLoading, setChatLoading] = useState(false)
 
   const symptomList = selectedBodyPart ? SYMPTOM_DB[selectedBodyPart] || [] : []
 
@@ -112,17 +116,48 @@ export function SymptomChecker({ setCurrentPage, language, onComplete }: Symptom
     }
   }
 
-  const handleViewHealthInfo = () => {
-    if (onComplete && aiResult) {
-      onComplete(aiResult)
-    } else {
-      setCurrentPage("health-info")
-    }
-  }
 
   const reset = () => {
     setStep(1); setSelectedBodyPart(null); setSelectedSymptoms([])
     setAiResult(null); setError(""); setPatientInfo({ age: "", gender: "male", temperature: "", tempUnit: "F", daysSick: "1" })
+    setChatMessages([]); setChatInput("")
+  }
+
+  const handleChat = async () => {
+    const text = chatInput.trim()
+    if (!text || chatLoading) return
+
+    const userMsg = { role: "user" as const, content: text }
+    const newHistory = [...chatMessages, userMsg]
+    setChatMessages(newHistory)
+    setChatInput("")
+    setChatLoading(true)
+
+    try {
+      const response = await fetch("/api/ai-chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: text,
+          history: chatMessages.length === 0 ? [
+            { role: "user", content: `Context: My symptom analysis result was: ${JSON.stringify({ urgency: aiResult.urgency, conditions: aiResult.possibleConditions })}. Please answer my follow up question:` },
+            ...newHistory
+          ] : newHistory,
+          language,
+        }),
+      })
+
+      if (!response.ok) throw new Error("API error")
+      const data = await response.json()
+      setChatMessages(prev => [...prev, { role: "assistant", content: data.reply }])
+    } catch {
+      setChatMessages(prev => [...prev, {
+        role: "assistant",
+        content: en ? "Connection error. Please try again." : "कनेक्शन त्रुटि। कृपया पुनः प्रयास करें।"
+      }])
+    } finally {
+      setChatLoading(false)
+    }
   }
 
   const urgencyStyle = aiResult ? URGENCY_STYLES[aiResult.urgency] || URGENCY_STYLES.low : URGENCY_STYLES.low
@@ -316,60 +351,50 @@ export function SymptomChecker({ setCurrentPage, language, onComplete }: Symptom
                   </div>
                 </div>
 
-                {/* Possible conditions */}
-                {aiResult.possibleConditions?.length > 0 && (
-                  <div className="mb-4">
-                    <h3 className="text-sm font-semibold mb-2">{en ? "Possible Conditions:" : "संभावित स्थितियां:"}</h3>
-                    <div className="space-y-2">
-                      {aiResult.possibleConditions.slice(0, 3).map((c: any, i: number) => (
-                        <div key={i} className="flex items-center justify-between bg-white/70 rounded-lg px-3 py-2">
-                          <span className="text-sm font-medium">{c.name}</span>
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-gray-500">{c.probability}</span>
-                            <Badge className="text-xs">{c.probability}</Badge>
+                {/* Inline Chat Interface */}
+                <div className="mt-6 border-t pt-4">
+                  <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                    <Bot className="h-5 w-5 text-teal-600" />
+                    {en ? "Discuss your symptoms with AI" : "AI के साथ अपने लक्षणों पर चर्चा करें"}
+                  </h3>
+                  
+                  <div className="bg-gray-50 rounded-xl p-3 h-64 overflow-y-auto mb-3 flex flex-col gap-3">
+                    {chatMessages.length === 0 ? (
+                      <p className="text-sm text-gray-500 text-center mt-auto mb-auto">
+                        {en ? "Ask any questions about your condition, home remedies, or next steps." : "अपनी स्थिति, घरेलू उपचार, या अगले कदमों के बारे में कोई भी प्रश्न पूछें।"}
+                      </p>
+                    ) : (
+                      chatMessages.map((msg, i) => (
+                        <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                          <div className={`max-w-[85%] rounded-xl px-3 py-2 text-sm ${msg.role === "user" ? "bg-teal-600 text-white rounded-tr-none" : "bg-white border rounded-tl-none text-gray-800 shadow-sm"}`}>
+                            {msg.content}
                           </div>
                         </div>
-                      ))}
-                    </div>
+                      ))
+                    )}
+                    {chatLoading && (
+                      <div className="flex justify-start">
+                        <div className="bg-white border rounded-xl rounded-tl-none px-3 py-2 shadow-sm">
+                          <Loader2 className="h-4 w-4 animate-spin text-teal-600" />
+                        </div>
+                      </div>
+                    )}
                   </div>
-                )}
-
-                {/* Immediate actions */}
-                {aiResult.immediateActions?.length > 0 && (
-                  <div className="mb-3">
-                    <h3 className="text-sm font-semibold mb-2">{en ? "Immediate Actions:" : "तत्काल कदम:"}</h3>
-                    <ul className="space-y-1.5">
-                      {aiResult.immediateActions.map((action: string, i: number) => (
-                        <li key={i} className="flex items-start gap-2 text-sm">
-                          <CheckCircle className="h-4 w-4 text-teal-600 mt-0.5 flex-shrink-0" />
-                          {action}
-                        </li>
-                      ))}
-                    </ul>
+                  
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={chatInput}
+                      onChange={(e) => setChatInput(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleChat()}
+                      placeholder={en ? "Type your question..." : "अपना प्रश्न टाइप करें..."}
+                      className="flex-1 border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-teal-500"
+                    />
+                    <Button onClick={handleChat} disabled={!chatInput.trim() || chatLoading} className="gradient-primary text-white">
+                      <Send className="h-4 w-4" />
+                    </Button>
                   </div>
-                )}
-
-                {/* Home care tips */}
-                {aiResult.homeCare?.length > 0 && (
-                  <div>
-                    <h3 className="text-sm font-semibold mb-2">{en ? "Home Care:" : "घरेलू देखभाल:"}</h3>
-                    <ul className="space-y-1.5">
-                      {aiResult.homeCare.map((tip: string, i: number) => (
-                        <li key={i} className="flex items-start gap-2 text-sm opacity-80">
-                          <span className="mt-0.5">•</span>{tip}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {/* When to go hospital */}
-                {aiResult.whenToGoToHospital && (
-                  <div className="mt-3 p-3 bg-white/60 rounded-lg text-sm">
-                    <span className="font-semibold">{en ? "When to visit hospital: " : "अस्पताल कब जाएं: "}</span>
-                    {aiResult.whenToGoToHospital}
-                  </div>
-                )}
+                </div>
               </CardContent>
             </Card>
 
@@ -383,11 +408,6 @@ export function SymptomChecker({ setCurrentPage, language, onComplete }: Symptom
               <Button size="lg" className="w-full gradient-primary text-white" onClick={() => setCurrentPage("consultation")}>
                 <Stethoscope className="mr-2 h-4 w-4" />{en ? "Book Consultation" : "परामर्श बुक करें"}
               </Button>
-              {aiResult.relevantDiseases?.length > 0 && (
-                <Button variant="outline" size="lg" className="w-full" onClick={handleViewHealthInfo}>
-                  <CheckCircle className="mr-2 h-4 w-4" />{en ? "Learn About Your Condition →" : "अपनी स्थिति के बारे में जानें →"}
-                </Button>
-              )}
               <Button variant="outline" size="lg" onClick={() => setCurrentPage("locations")}>
                 <MapPin className="mr-2 h-4 w-4" />{en ? "Find Nearest Hospital" : "निकटतम अस्पताल खोजें"}
               </Button>
