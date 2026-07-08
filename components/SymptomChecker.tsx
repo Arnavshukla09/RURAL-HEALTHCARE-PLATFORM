@@ -71,7 +71,7 @@ export function SymptomChecker({ setCurrentPage, language, onComplete }: Symptom
 
   // Step state
   const [step, setStep] = useState(1)
-  const [patientInfo, setPatientInfo] = useState({ age: "", gender: "male", temperature: "", daysSick: "1" })
+  const [patientInfo, setPatientInfo] = useState({ age: "", gender: "male", temperature: "", tempUnit: "F", daysSick: "1" })
   const [selectedBodyPart, setSelectedBodyPart] = useState<string | null>(null)
   const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([])
   const [aiResult, setAiResult] = useState<any>(null)
@@ -94,6 +94,7 @@ export function SymptomChecker({ setCurrentPage, language, onComplete }: Symptom
           age: patientInfo.age || "unknown",
           gender: patientInfo.gender,
           temperature: patientInfo.temperature,
+          tempUnit: patientInfo.tempUnit,
           daysSick: patientInfo.daysSick,
           bodyPart: selectedBodyPart,
           symptoms: selectedSymptoms,
@@ -165,7 +166,12 @@ export function SymptomChecker({ setCurrentPage, language, onComplete }: Symptom
                   <label className="text-sm font-medium block mb-1">{en ? "Age" : "उम्र"}</label>
                   <input type="number" min="1" max="120"
                     value={patientInfo.age}
-                    onChange={e => setPatientInfo(p => ({ ...p, age: e.target.value }))}
+                    onChange={e => {
+                      const val = e.target.value;
+                      if (val === "" || Number(val) > 0) {
+                        setPatientInfo(p => ({ ...p, age: val }));
+                      }
+                    }}
                     placeholder={en ? "e.g. 35" : "जैसे 35"}
                     className="w-full border rounded-lg p-2.5 text-sm focus:outline-none focus:border-teal-500" />
                 </div>
@@ -182,11 +188,22 @@ export function SymptomChecker({ setCurrentPage, language, onComplete }: Symptom
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium block mb-1">{en ? "Temperature (°F)" : "तापमान (°F)"}</label>
-                  <input type="number" step="0.1" min="95" max="110"
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="text-sm font-medium block">{en ? "Temperature" : "तापमान"}</label>
+                    <div className="flex gap-1 text-xs">
+                      <button type="button" onClick={() => setPatientInfo(p => ({...p, tempUnit: 'C'}))} className={`px-2 rounded ${patientInfo.tempUnit === 'C' ? 'bg-teal-600 text-white' : 'bg-gray-200'}`}>°C</button>
+                      <button type="button" onClick={() => setPatientInfo(p => ({...p, tempUnit: 'F'}))} className={`px-2 rounded ${patientInfo.tempUnit === 'F' ? 'bg-teal-600 text-white' : 'bg-gray-200'}`}>°F</button>
+                    </div>
+                  </div>
+                  <input type="number" step="0.1"
                     value={patientInfo.temperature}
-                    onChange={e => setPatientInfo(p => ({ ...p, temperature: e.target.value }))}
-                    placeholder={en ? "e.g. 101.5" : "जैसे 101.5"}
+                    onChange={e => {
+                      const val = e.target.value;
+                      if (val === "" || Number(val) > 0) {
+                        setPatientInfo(p => ({ ...p, temperature: val }));
+                      }
+                    }}
+                    placeholder={patientInfo.tempUnit === "F" ? (en ? "e.g. 101.5" : "जैसे 101.5") : (en ? "e.g. 38.5" : "जैसे 38.5")}
                     className="w-full border rounded-lg p-2.5 text-sm focus:outline-none focus:border-teal-500" />
                 </div>
                 <div>

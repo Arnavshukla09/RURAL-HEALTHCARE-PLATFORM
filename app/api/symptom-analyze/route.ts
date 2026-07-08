@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json()
-    const { age, gender, temperature, daysSick, bodyPart, symptoms, language } = body
+    const { age, gender, temperature, tempUnit, daysSick, bodyPart, symptoms, language } = body
 
     if (!symptoms || symptoms.length === 0) {
       return NextResponse.json({ error: "No symptoms provided" }, { status: 400 })
@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
 Patient Details:
 - Age: ${age || "unknown"}
 - Gender: ${gender || "unknown"}
-- Temperature: ${temperature ? temperature + "°F" : "not measured"}
+- Temperature: ${temperature ? temperature + "°" + (tempUnit || "F") : "not measured"}
 - Duration of symptoms: ${daysSick} day(s)
 - Body part affected: ${bodyPart || "general"}
 - Reported symptoms: ${symptoms.join(", ")}
@@ -42,7 +42,7 @@ Analyze these symptoms and respond ONLY with valid JSON (no markdown, no code bl
   "homeCare": ["tip 1", "tip 2", "tip 3"],
   "whenToGoToHospital": "describe when to seek emergency care",
   "specialistNeeded": "General Physician|Cardiologist|Pediatrician|etc",
-  "relevantDiseases": ["malaria", "dengue", "typhoid"],
+  "relevantDiseases": ["disease_key_1", "disease_key_2"],
   "language": "${lang}"
 }
 
@@ -51,8 +51,8 @@ Rules:
 - urgency=high: high fever + 3+ symptoms, severe pain, rapid deterioration
 - urgency=medium: moderate symptoms persisting 2+ days, requires doctor visit
 - urgency=low: mild symptoms, manageable at home
-- possibleConditions: 2-4 most likely conditions given the symptoms in rural Indian context
-- relevantDiseases: list 1-3 disease keys for health education (use lowercase English names)
+- possibleConditions: For mild symptoms, DO NOT list severe diseases (fake reports). List simple conditions like 'Common Cold', 'Mild Dehydration', or leave empty. Only list 2-4 actual diseases if symptoms strongly match.
+- relevantDiseases: list 1-3 disease keys ONLY from this exact list: [malaria, dengue, tuberculosis, typhoid, pneumonia, anemia, hypertension, diabetes, heart disease, stroke, covid-19, influenza, cholera, hepatitis b, asthma, copd, cataract, osteoporosis, arthritis, leprosy, chikungunya, diarrheal disease, measles, ear infection, skin infection, hiv/aids, polio, kidney disease, liver disease, epilepsy, dental caries]. If none apply, return an empty array [].
 - Keep responses culturally appropriate for rural India
 - ${language === "hi" ? "Provide immediateActions and homeCare in Hindi" : "Provide responses in English"}`
 
