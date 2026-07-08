@@ -122,7 +122,7 @@ export function SymptomChecker({ setCurrentPage, language, onComplete }: Symptom
 
   const reset = () => {
     setStep(1); setSelectedBodyPart(null); setSelectedSymptoms([])
-    setAiResult(null); setError(""); setPatientInfo({ age: "", gender: "male", temperature: "", daysSick: "1" })
+    setAiResult(null); setError(""); setPatientInfo({ age: "", gender: "male", temperature: "", tempUnit: "F", daysSick: "1" })
   }
 
   const urgencyStyle = aiResult ? URGENCY_STYLES[aiResult.urgency] || URGENCY_STYLES.low : URGENCY_STYLES.low
