@@ -133,16 +133,21 @@ export function SymptomChecker({ setCurrentPage, language }: SymptomCheckerProps
     setChatInput("")
     setChatLoading(true)
 
+    const apiMessage = chatMessages.length === 0
+      ? `Context: My symptom analysis result was: ${JSON.stringify({ urgency: aiResult?.urgency, conditions: aiResult?.possibleConditions })}. Please answer my follow up question: ${text}`
+      : text
+
+    const apiHistory = chatMessages.map((msg, i) => 
+      i === 0 ? { ...msg, content: `Context: My symptom analysis result was: ${JSON.stringify({ urgency: aiResult?.urgency, conditions: aiResult?.possibleConditions })}. Please answer my follow up question: ${msg.content}` } : msg
+    )
+
     try {
       const response = await fetch("/api/ai-chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          message: text,
-          history: chatMessages.length === 0 ? [
-            { role: "user", content: `Context: My symptom analysis result was: ${JSON.stringify({ urgency: aiResult.urgency, conditions: aiResult.possibleConditions })}. Please answer my follow up question:` },
-            ...newHistory
-          ] : newHistory,
+          message: apiMessage,
+          history: apiHistory,
           language,
         }),
       })

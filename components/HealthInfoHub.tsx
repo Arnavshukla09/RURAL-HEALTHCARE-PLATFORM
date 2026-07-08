@@ -85,28 +85,6 @@ export function HealthInfoHub({ language, symptomResult, setCurrentPage }: Healt
     { key: "awareness", icon: BookOpen, label: en ? "Awareness" : "जागरूकता" },
   ]
 
-  // If no symptom result, show gate screen
-  if (!symptomResult) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-emerald-50/50 to-background flex items-center justify-center p-6">
-        <div className="text-center max-w-sm animate-fade-in">
-          <div className="text-6xl mb-4">🩺</div>
-          <h2 className="text-xl font-bold mb-2">{en ? "Check Your Symptoms First" : "पहले लक्षण जांचें"}</h2>
-          <p className="text-muted-foreground text-sm mb-6">
-            {en
-              ? "Health information is personalized based on your symptom check. Please complete the symptom checker to get relevant information."
-              : "स्वास्थ्य जानकारी आपके लक्षणों के आधार पर व्यक्तिगत होती है। प्रासंगिक जानकारी पाने के लिए पहले लक्षण जांचें।"}
-          </p>
-          {setCurrentPage && (
-            <button onClick={() => setCurrentPage("symptom-checker")}
-              className="gradient-primary text-white px-6 py-3 rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity">
-              {en ? "Start Symptom Checker" : "लक्षण जांचकर्ता शुरू करें"}
-            </button>
-          )}
-        </div>
-      </div>
-    )
-  }
 
   // Filter diseases relevant to symptom result
   const relevantKeys: string[] = symptomResult?.relevantDiseases || []
