@@ -35,10 +35,10 @@ export async function GET(req: NextRequest) {
   const supabase = await createClient()
 
   const { data, error } = await supabase.rpc("nearby_facilities", {
-    user_lat: lat,
-    user_lon: lon,
-    facility_type: type ?? null,
-    radius_km,
+    p_lat: lat,
+    p_lon: lon,
+    p_type: type ?? null,
+    p_radius_km: radius_km,
   })
 
   if (error) {

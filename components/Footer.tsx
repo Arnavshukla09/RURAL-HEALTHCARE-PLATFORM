@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Heart, Mail, Phone, MapPin, Facebook, Youtube, MessageCircle, ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
+import { Heart, Mail, Phone, MapPin, ChevronDown, ChevronUp, ExternalLink, Linkedin } from "lucide-react";
 
 interface FooterProps {
   setCurrentPage: (page: string) => void;
@@ -49,22 +48,11 @@ export function Footer({ setCurrentPage, language }: FooterProps) {
   const t = content[language as keyof typeof content];
 
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
-  const [email, setEmail] = useState("");
-  const [subscribed, setSubscribed] = useState(false);
 
-  const socialLinks: Record<string, string> = {
+  const socialLinks = {
     GitHub: 'https://github.com/Arnavshukla09/RURAL-HEALTHCARE-PLATFORM',
-    WhatsApp: 'https://wa.me/?text=Check%20out%20RuralHealth%20Platform',
-    YouTube: 'https://youtube.com',
-  };
-
-  const handleSubscribe = () => {
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      alert(language === 'en' ? 'Please enter a valid email address' : 'कृपया एक वैध ईमेल दर्ज करें');
-      return;
-    }
-    setSubscribed(true);
-    setEmail("");
+    LinkedIn: 'https://www.linkedin.com/in/arnav-shukla-19615128a/',
+    Email: 'mailto:support@ruralhealth.in',
   };
 
   const toggleSection = (section: string) => {
@@ -189,53 +177,25 @@ export function Footer({ setCurrentPage, language }: FooterProps) {
             </div>
           </div>
 
-          {/* Newsletter & Social */}
+          {/* Connect */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">{t.newsletter}</h3>
-            <p className="text-gray-300 text-sm">
-              {language === 'en' 
-                ? 'Get health tips and campaign updates' 
-                : 'स्वास्थ्य सुझाव और अभियान अपडेट पाएं'}
-            </p>
-            {subscribed ? (
-              <p className="text-green-400 text-sm">✅ {language === 'en' ? 'Subscribed! Thank you.' : 'सब्सक्राइब हो गया! धन्यवाद।'}</p>
-            ) : (
-              <div className="flex space-x-2">
-                <Input 
-                  placeholder={t.emailPlaceholder}
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="bg-gray-800 border-gray-700 text-white placeholder-gray-400"
-                  type="email"
-                />
-                <Button 
-                  onClick={handleSubscribe}
-                  className="bg-blue-600 hover:bg-blue-700"
-                >
-                  {t.subscribe}
+            <h3 className="text-lg font-semibold">{language === 'en' ? 'Connect' : 'जुड़ें'}</h3>
+            <div className="flex space-x-3">
+              <a href={socialLinks.GitHub} target="_blank" rel="noopener noreferrer">
+                <Button size="sm" variant="outline" className="border-gray-600 hover:bg-gray-800">
+                  <ExternalLink className="h-4 w-4 mr-1.5" /> GitHub
                 </Button>
-              </div>
-            )}
-            
-            <div className="space-y-2">
-              <h4 className="font-medium">{t.followUs}</h4>
-              <div className="flex space-x-3">
-                <a href={socialLinks.WhatsApp} target="_blank" rel="noopener noreferrer">
-                  <Button size="sm" variant="outline" className="border-gray-600 hover:bg-gray-800">
-                    <MessageCircle className="h-4 w-4" />
-                  </Button>
-                </a>
-                <a href={socialLinks.GitHub} target="_blank" rel="noopener noreferrer">
-                  <Button size="sm" variant="outline" className="border-gray-600 hover:bg-gray-800">
-                    <ExternalLink className="h-4 w-4" />
-                  </Button>
-                </a>
-                <a href={socialLinks.YouTube} target="_blank" rel="noopener noreferrer">
-                  <Button size="sm" variant="outline" className="border-gray-600 hover:bg-gray-800">
-                    <Youtube className="h-4 w-4" />
-                  </Button>
-                </a>
-              </div>
+              </a>
+              <a href={socialLinks.LinkedIn} target="_blank" rel="noopener noreferrer">
+                <Button size="sm" variant="outline" className="border-gray-600 hover:bg-gray-800">
+                  <Linkedin className="h-4 w-4 mr-1.5" /> LinkedIn
+                </Button>
+              </a>
+              <a href={socialLinks.Email}>
+                <Button size="sm" variant="outline" className="border-gray-600 hover:bg-gray-800">
+                  <Mail className="h-4 w-4 mr-1.5" /> Email
+                </Button>
+              </a>
             </div>
           </div>
         </div>
