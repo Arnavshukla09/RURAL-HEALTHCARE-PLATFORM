@@ -9,7 +9,7 @@
 -- PostgreSQL evaluates the policy for the patients table.
 
 -- 1. Create a SECURITY DEFINER function to safely check user role
-CREATE OR REPLACE FUNCTION auth.get_user_role()
+CREATE OR REPLACE FUNCTION public.get_user_role()
 RETURNS text
 LANGUAGE sql
 SECURITY DEFINER
@@ -27,16 +27,16 @@ DROP POLICY IF EXISTS "doctor_read_all_appointments" ON appointments;
 -- 3. Recreate them using the safe function
 CREATE POLICY "admin_read_all_patients" ON patients
   FOR SELECT
-  USING ( auth.get_user_role() = 'admin' );
+  USING ( public.get_user_role() = 'admin' );
 
 CREATE POLICY "admin_read_all_appointments" ON appointments
   FOR SELECT
-  USING ( auth.get_user_role() = 'admin' );
+  USING ( public.get_user_role() = 'admin' );
 
 CREATE POLICY "admin_read_all_medical_records" ON medical_records
   FOR SELECT
-  USING ( auth.get_user_role() = 'admin' );
+  USING ( public.get_user_role() = 'admin' );
 
 CREATE POLICY "doctor_read_all_appointments" ON appointments
   FOR SELECT
-  USING ( auth.get_user_role() = 'doctor' );
+  USING ( public.get_user_role() = 'doctor' );
