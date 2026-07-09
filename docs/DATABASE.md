@@ -176,6 +176,9 @@ Database schema changes are tracked in `scripts/` and must be executed in the Su
 | `005_indexes.sql` | Performance indexing. |
 | `006_facilities_postgis.sql` | PostGIS setup, spatial RPC function `nearby_facilities`. |
 | `007_security_hardening.sql` | Patches for auth checking in offline tables. |
+| `008_oauth_patient_rls.sql` | Allow OAuth users to insert their patient record. |
+| `009_fix_rls_recursion.sql` | Fixes infinite recursion in admin/doctor RLS policies via SECURITY DEFINER function. |
+| `010_make_provider_optional.sql` | Drops NOT NULL constraint on `medical_records.provider_id` for patient uploads. |
 | `seed_mp_facilities.js` | Node.js script to hydrate `healthcare_facilities` with raw GeoJSON. |
 
 ---
