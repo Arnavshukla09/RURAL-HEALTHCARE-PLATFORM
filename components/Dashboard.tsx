@@ -80,6 +80,7 @@ export function Dashboard({ user, setCurrentPage, language }: DashboardProps) {
   // State for real data
   const [notifications, setNotifications] = useState<any[]>([]);
   const [userStats, setUserStats] = useState({ consultations: 0, campaigns: 0 });
+  const [registeredCamps, setRegisteredCamps] = useState<any[]>([]);
 
   // Fetch real notifications and stats
   useEffect(() => {
@@ -121,6 +122,37 @@ export function Dashboard({ user, setCurrentPage, language }: DashboardProps) {
             .eq('patient_id', patient.id);
           
           setUserStats(prev => ({ ...prev, consultations: count || 0 }));
+
+          // Fetch registered camps from medical records
+          const { data: records } = await supabase
+            .from('medical_records')
+            .select('*')
+            .eq('patient_id', patient.id)
+            .eq('record_type', 'other')
+            .like('content', '[Camp Registration]%')
+            .order('created_at', { ascending: false });
+
+          if (records) {
+            setUserStats(prev => ({ ...prev, campaigns: records.length }));
+            setRegisteredCamps(records.map(r => {
+              // Parse the string: "[Camp Registration] Name — Address on Date at Time. Contact: X"
+              const content = r.content;
+              const titleMatch = content.match(/\[Camp Registration\] (.*?) —/);
+              const locMatch = content.match(/— (.*?) on/);
+              const dateMatch = content.match(/on (.*?) at/);
+              const timeMatch = content.match(/at (.*?)\. Contact:/);
+              
+              return {
+                id: r.id,
+                title: titleMatch ? titleMatch[1] : 'Camp',
+                location: locMatch ? locMatch[1] : 'Unknown',
+                date: dateMatch ? dateMatch[1] : '',
+                time: timeMatch ? timeMatch[1] : '',
+                type: 'checkup',
+                participants: 1 // just themselves
+              };
+            }));
+          }
         }
       } catch (err) {
         console.error('Failed to fetch dashboard data:', err);
@@ -139,12 +171,8 @@ export function Dashboard({ user, setCurrentPage, language }: DashboardProps) {
     return `${diffDays} ${language === 'en' ? 'days ago' : 'दिन पहले'}`;
   };
 
-  // Static campaign data (no campaigns table in DB)
-  const upcomingCampaigns = [
-    { id: 1, title: language === 'en' ? 'Blood Donation Drive' : 'रक्तदान अभियान', date: '2026-07-16', time: '09:00 AM', location: language === 'en' ? 'Community Center' : 'सामुदायिक केंद्र', type: 'blood-donation', participants: 45 },
-    { id: 2, title: language === 'en' ? 'Free Health Checkup' : 'मुफ्त स्वास्थ्य जांच', date: '2026-07-18', time: '10:00 AM', location: language === 'en' ? 'Village Health Center' : 'ग्राम स्वास्थ्य केंद्र', type: 'checkup', participants: 23 },
-    { id: 3, title: language === 'en' ? 'COVID Vaccination' : 'कोविड टीकाकरण', date: '2026-07-20', time: '08:30 AM', location: language === 'en' ? 'District Hospital' : 'जिला अस्पताल', type: 'vaccination', participants: 67 },
-  ];
+  // Replaced with dynamic registeredCamps
+  // const upcomingCampaigns = [...];
 
   const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
@@ -297,7 +325,12 @@ export function Dashboard({ user, setCurrentPage, language }: DashboardProps) {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {upcomingCampaigns.slice(0, 3).map((campaign) => (
+                  {registeredCamps.length === 0 ? (
+                    <div className="text-center p-4 text-gray-500">
+                      {language === 'en' ? 'No registered campaigns yet.' : 'अभी तक कोई पंजीकृत अभियान नहीं है।'}
+                    </div>
+                  ) : (
+                    registeredCamps.slice(0, 3).map((campaign) => (
                     <div key={campaign.id} className="flex items-center space-x-4 p-4 border rounded-lg">
                       <div className="flex-shrink-0">
                         {campaign.type === 'blood-donation' && <Heart className="h-8 w-8 text-red-500" />}
@@ -321,7 +354,8 @@ export function Dashboard({ user, setCurrentPage, language }: DashboardProps) {
                         <Badge variant="secondary">{campaign.participants} {language === 'en' ? 'joined' : 'शामिल'}</Badge>
                       </div>
                     </div>
-                  ))}
+                  ))
+                  )}
                 </div>
               </CardContent>
             </Card>
