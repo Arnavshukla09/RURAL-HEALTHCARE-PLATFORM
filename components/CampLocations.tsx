@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { createClient } from "@/lib/supabase/client"
 import { Button } from "./ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
 import { Input } from "./ui/input"
@@ -8,13 +9,11 @@ import { Badge } from "./ui/badge"
 import {
   MapPin,
   Navigation,
-  Clock,
   Calendar,
   Users,
   Phone,
   Search,
   Locate,
-  Compass,
   Heart,
   Stethoscope,
   Activity,
@@ -34,7 +33,6 @@ interface CampLocation {
   address: string
   landmark: string
   coordinates: { lat: number; lng: number }
-  distance: number
   date: string
   time: string
   contact: string
@@ -49,6 +47,10 @@ export function CampLocations({ setCurrentPage, language }: CampLocationsProps) 
   const [selectedType, setSelectedType] = useState<string>("all")
   const [sortBy, setSortBy] = useState<"distance" | "date">("distance")
   const [showMap, setShowMap] = useState(false)
+  const [registering, setRegistering] = useState<number | null>(null)
+  const [registeredCamps, setRegisteredCamps] = useState<Set<number>>(new Set())
+
+  const currentYear = new Date().getFullYear()
 
   const content = {
     en: {
@@ -61,13 +63,13 @@ export function CampLocations({ setCurrentPage, language }: CampLocationsProps) 
       filterBlood: "Blood Donation",
       filterCheckup: "Health Checkup",
       filterVaccination: "Vaccination",
-      sortDistance: "Nearest First",
+      sortDistance: "By Location",
       sortDate: "Upcoming First",
       getDirections: "Get Directions",
       callCamp: "Call Camp",
       registerNow: "Register Now",
       shareLocation: "Share Location",
-      kmAway: "km away",
+
       today: "Today",
       tomorrow: "Tomorrow",
       active: "Active Now",
@@ -81,8 +83,7 @@ export function CampLocations({ setCurrentPage, language }: CampLocationsProps) 
       healthCheckup: "Free Health Checkup",
       vaccination: "COVID Vaccination",
       viewOnMap: "View on Map",
-      travelTime: "Travel Time",
-      minutes: "mins",
+
     },
     hi: {
       title: "निकटतम शिविर स्थान",
@@ -94,13 +95,13 @@ export function CampLocations({ setCurrentPage, language }: CampLocationsProps) 
       filterBlood: "रक्तदान",
       filterCheckup: "स्वास्थ्य जांच",
       filterVaccination: "टीकाकरण",
-      sortDistance: "निकटतम पहले",
+      sortDistance: "स्थान अनुसार",
       sortDate: "आगामी पहले",
       getDirections: "दिशा निर्देश पाएं",
       callCamp: "शिविर पर कॉल करें",
       registerNow: "अभी पंजीकरण करें",
       shareLocation: "स्थान साझा करें",
-      kmAway: "किमी दूर",
+
       today: "आज",
       tomorrow: "कल",
       active: "अभी सक्रिय",
@@ -114,8 +115,7 @@ export function CampLocations({ setCurrentPage, language }: CampLocationsProps) 
       healthCheckup: "मुफ्त स्वास्थ्य जांच",
       vaccination: "कोविड टीकाकरण",
       viewOnMap: "मानचित्र पर देखें",
-      travelTime: "यात्रा समय",
-      minutes: "मिनट",
+
     },
   }
 
@@ -130,8 +130,7 @@ export function CampLocations({ setCurrentPage, language }: CampLocationsProps) 
       address: language === "en" ? "CHC Berasia, Bhopal District" : "CHC बैरसिया, भोपाल जिला",
       landmark: language === "en" ? "Near Berasia Bus Stand" : "बैरसिया बस स्टैंड के पास",
       coordinates: { lat: 23.6352, lng: 77.4325 },
-      distance: 12.5,
-      date: "2025-08-15",
+      date: `${currentYear}-08-15`,
       time: "09:00 AM",
       contact: "+91 755-2770491",
       participants: 150,
@@ -145,8 +144,7 @@ export function CampLocations({ setCurrentPage, language }: CampLocationsProps) 
       address: language === "en" ? "PHC Sehore, Sehore District" : "PHC सीहोर, सीहोर जिला",
       landmark: language === "en" ? "Near District Collectorate" : "जिला कलेक्ट्रेट के पास",
       coordinates: { lat: 23.2050, lng: 77.0851 },
-      distance: 38,
-      date: "2025-08-01",
+      date: `${currentYear}-08-01`,
       time: "08:00 AM",
       contact: "+91 7562-224430",
       participants: 200,
@@ -160,8 +158,7 @@ export function CampLocations({ setCurrentPage, language }: CampLocationsProps) 
       address: language === "en" ? "Govt Higher Secondary School, Vidisha" : "राजकीय उच्चतर माध्यमिक विद्यालय, विदिशा",
       landmark: language === "en" ? "Vidisha Old City" : "विदिशा पुराना शहर",
       coordinates: { lat: 23.5252, lng: 77.8081 },
-      distance: 55,
-      date: "2025-08-20",
+      date: `${currentYear}-08-20`,
       time: "10:00 AM",
       contact: "+91 7592-234567",
       participants: 300,
@@ -175,8 +172,7 @@ export function CampLocations({ setCurrentPage, language }: CampLocationsProps) 
       address: language === "en" ? "Jan Aushadhi Kendra, Hoshangabad Rd, Bhopal" : "जन औषधि केंद्र, होशंगाबाद रोड, भोपाल",
       landmark: language === "en" ? "Near Habibganj Railway Station" : "हबीबगंज रेलवे स्टेशन के पास",
       coordinates: { lat: 23.2295, lng: 77.4382 },
-      distance: 3.5,
-      date: "2025-08-10",
+      date: `${currentYear}-08-10`,
       time: "10:00 AM",
       contact: "+91 1800-180-8080",
       participants: 80,
@@ -190,8 +186,7 @@ export function CampLocations({ setCurrentPage, language }: CampLocationsProps) 
       address: language === "en" ? "Red Cross Bhawan, TT Nagar, Bhopal" : "रेड क्रॉस भवन, टीटी नगर, भोपाल",
       landmark: language === "en" ? "Opposite TT Nagar Stadium" : "टीटी नगर स्टेडियम के सामने",
       coordinates: { lat: 23.2330, lng: 77.4020 },
-      distance: 5.0,
-      date: "2025-08-14",
+      date: `${currentYear}-08-14`,
       time: "09:00 AM",
       contact: "+91 755-2661491",
       participants: 120,
@@ -205,8 +200,7 @@ export function CampLocations({ setCurrentPage, language }: CampLocationsProps) 
       address: language === "en" ? "Anganwadi Centre, Raisen District" : "आंगनवाड़ी केंद्र, रायसेन जिला",
       landmark: language === "en" ? "Near Raisen Fort Road" : "रायसेन किला रोड के पास",
       coordinates: { lat: 23.3315, lng: 77.7874 },
-      distance: 42,
-      date: "2025-08-25",
+      date: `${currentYear}-08-25`,
       time: "08:00 AM",
       contact: "+91 7482-222333",
       participants: 250,
@@ -220,8 +214,7 @@ export function CampLocations({ setCurrentPage, language }: CampLocationsProps) 
       address: language === "en" ? "Sub-Centre, Obedullaganj, Raisen" : "उप-केंद्र, ओबेदुल्लागंज, रायसेन",
       landmark: language === "en" ? "Near Govt School" : "सरकारी स्कूल के पास",
       coordinates: { lat: 23.4052, lng: 77.5903 },
-      distance: 28,
-      date: "2025-08-05",
+      date: `${currentYear}-08-05`,
       time: "09:30 AM",
       contact: "+91 7480-255444",
       participants: 60,
@@ -235,8 +228,7 @@ export function CampLocations({ setCurrentPage, language }: CampLocationsProps) 
       address: language === "en" ? "District TB Centre, Hamidia Hospital, Bhopal" : "जिला TB केंद्र, हमीदिया अस्पताल, भोपाल",
       landmark: language === "en" ? "Inside Hamidia Hospital Campus" : "हमीदिया अस्पताल परिसर के अंदर",
       coordinates: { lat: 23.2688, lng: 77.4126 },
-      distance: 2.0,
-      date: "2025-08-12",
+      date: `${currentYear}-08-12`,
       time: "10:00 AM",
       contact: "+91 755-2540222",
       participants: 90,
@@ -246,13 +238,17 @@ export function CampLocations({ setCurrentPage, language }: CampLocationsProps) 
   ]
 
   const filteredCamps = campLocations.filter((camp) => {
-    if (selectedType === "all") return true
-    return camp.type === selectedType
+    const matchesType = selectedType === "all" || camp.type === selectedType
+    const matchesLocation = !userLocation.trim() || 
+      camp.address.toLowerCase().includes(userLocation.toLowerCase()) ||
+      camp.landmark.toLowerCase().includes(userLocation.toLowerCase()) ||
+      camp.name.toLowerCase().includes(userLocation.toLowerCase())
+    return matchesType && matchesLocation
   })
 
   const sortedCamps = [...filteredCamps].sort((a, b) => {
     if (sortBy === "distance") {
-      return a.distance - b.distance
+      return a.address.localeCompare(b.address)
     } else {
       return new Date(a.date).getTime() - new Date(b.date).getTime()
     }
@@ -285,8 +281,40 @@ export function CampLocations({ setCurrentPage, language }: CampLocationsProps) 
     window.open(`tel:${camp.contact}`)
   }
 
-  const registerForCamp = (camp: CampLocation) => {
-    setCurrentPage('consultation')
+  const registerForCamp = async (camp: CampLocation) => {
+    setRegistering(camp.id)
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        alert(language === "en" 
+          ? "Please login first to register for this camp." 
+          : "इस शिविर के लिए पंजीकरण करने हेतु पहले लॉगिन करें।")
+        setRegistering(null)
+        return
+      }
+      const res = await fetch('/api/medical-records', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          record_type: 'other',
+          content: `[Camp Registration] ${camp.name} — ${camp.address} on ${camp.date} at ${camp.time}. Contact: ${camp.contact}`,
+        }),
+      })
+      if (res.ok) {
+        setRegisteredCamps(prev => new Set(prev).add(camp.id))
+        alert(language === "en"
+          ? "Successfully registered! Check your Medical Records for details."
+          : "सफलतापूर्वक पंजीकृत! विवरण के लिए अपने मेडिकल रिकॉर्ड देखें।")
+      } else {
+        const err = await res.json()
+        alert(err.error || (language === "en" ? "Registration failed. Please try again." : "पंजीकरण विफल। कृपया पुनः प्रयास करें।"))
+      }
+    } catch {
+      alert(language === "en" ? "Network error. Please try again." : "नेटवर्क त्रुटि। कृपया पुनः प्रयास करें।")
+    } finally {
+      setRegistering(null)
+    }
   }
 
   const getStatusColor = (status: string) => {
@@ -315,12 +343,7 @@ export function CampLocations({ setCurrentPage, language }: CampLocationsProps) 
     }
   }
 
-  const getTravelTime = (distance: number) => {
-    // Rough calculation: 30 km/h average speed in rural areas
-    const timeInHours = distance / 30
-    const timeInMinutes = Math.round(timeInHours * 60)
-    return timeInMinutes
-  }
+
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
@@ -432,18 +455,11 @@ export function CampLocations({ setCurrentPage, language }: CampLocationsProps) 
         </Card>
 
         {/* Camp Locations List */}
-        {!userLocation ? (
+        {sortedCamps.length === 0 ? (
           <Card>
             <CardContent className="p-12 text-center">
               <MapPin className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500">{t.noLocation}</p>
-            </CardContent>
-          </Card>
-        ) : sortedCamps.length === 0 ? (
-          <Card>
-            <CardContent className="p-12 text-center">
-              <MapPin className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500">{t.noCamps}</p>
+              <p className="text-gray-500">{userLocation.trim() ? t.noCamps : t.noLocation}</p>
             </CardContent>
           </Card>
         ) : (
@@ -478,12 +494,6 @@ export function CampLocations({ setCurrentPage, language }: CampLocationsProps) 
                             <Navigation className="h-4 w-4 mr-2" />
                             <span>{camp.landmark}</span>
                           </div>
-                          <div className="flex items-center">
-                            <Compass className="h-4 w-4 mr-2" />
-                            <span className="font-medium text-blue-600">
-                              {camp.distance} {t.kmAway}
-                            </span>
-                          </div>
                         </div>
 
                         <div className="space-y-2">
@@ -491,12 +501,9 @@ export function CampLocations({ setCurrentPage, language }: CampLocationsProps) 
                             <Calendar className="h-4 w-4 mr-2" />
                             <span>
                               {formatDate(camp.date)} at {camp.time}
-                            </span>
-                          </div>
-                          <div className="flex items-center">
-                            <Clock className="h-4 w-4 mr-2" />
-                            <span>
-                              {t.travelTime}: ~{getTravelTime(camp.distance)} {t.minutes}
+                              <span className="text-xs text-amber-600 ml-1">
+                                ({language === "en" ? "Tentative — Annual" : "अस्थायी — वार्षिक"})
+                              </span>
                             </span>
                           </div>
                           <div className="flex items-center">
@@ -526,8 +533,17 @@ export function CampLocations({ setCurrentPage, language }: CampLocationsProps) 
                       </div>
 
                       {camp.status !== "completed" && (
-                        <Button variant="secondary" onClick={() => registerForCamp(camp)} className="w-full">
-                          {t.registerNow}
+                        <Button 
+                          variant="secondary" 
+                          onClick={() => registerForCamp(camp)} 
+                          className="w-full"
+                          disabled={registering === camp.id || registeredCamps.has(camp.id)}
+                        >
+                          {registering === camp.id 
+                            ? (language === "en" ? "Registering..." : "पंजीकरण हो रहा है...")
+                            : registeredCamps.has(camp.id)
+                              ? (language === "en" ? "✓ Registered" : "✓ पंजीकृत")
+                              : t.registerNow}
                         </Button>
                       )}
 

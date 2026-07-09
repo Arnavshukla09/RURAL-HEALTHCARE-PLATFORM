@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Input } from "./ui/input";
@@ -19,10 +19,9 @@ import {
   Building,
   Calendar,
   Video,
-  MessageCircle,
-  Loader2
+  MessageCircle
 } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
+
 
 interface DirectoryProps {
   setCurrentPage: (page: string) => void;
@@ -32,45 +31,23 @@ interface DirectoryProps {
 export function Directory({ setCurrentPage, language }: DirectoryProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSpecialty, setSelectedSpecialty] = useState('all');
-  const [doctors, setDoctors] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  // Fetch real doctors from healthcare_providers table
-  useEffect(() => {
-    const fetchDoctors = async () => {
-      try {
-        const supabase = createClient();
-        const { data, error } = await supabase
-          .from('healthcare_providers')
-          .select('*')
-          .eq('is_verified', true)
-          .order('name');
-        
-        if (data && !error) {
-          setDoctors(data.map(d => ({
-            id: d.id,
-            name: d.name,
-            specialty: (d.specialization || '').toLowerCase().replace(/[& ]/g, '-').replace('obstetrics-&-gynecology','gynecology'),
-            specialtyName: d.specialization || 'General',
-            experience: d.experience_years || null,
-            rating: d.rating || null,
-            location: d.location || '',
-            phone: d.phone || '',
-            available: true,
-            verified: d.is_verified,
-            consultationFee: 0,
-            image: d.avatar_url || '',
-            bio: d.bio || ''
-          })));
-        }
-      } catch (err) {
-        console.error('Failed to fetch providers:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchDoctors();
-  }, []);
+  const [doctors] = useState([
+    { id: '1', name: 'Dr. Ajay Goenka', specialty: 'general', specialtyName: 'General Medicine', experience: 22, rating: 4.6, location: 'AIIMS Bhopal, Saket Nagar', phone: '+91 755-2672355', available: true, verified: true, consultationFee: 0, image: '', bio: 'Senior Consultant, Dept. of General Medicine, AIIMS Bhopal' },
+    { id: '2', name: 'Dr. Sanjeev Sharma', specialty: 'cardiology', specialtyName: 'Cardiology', experience: 18, rating: 4.7, location: 'Hamidia Hospital, Bhopal', phone: '+91 755-2540222', available: true, verified: true, consultationFee: 0, image: '', bio: 'Head of Cardiology, Hamidia Hospital (Gandhi Medical College)' },
+    { id: '3', name: 'Dr. Priya Verma', specialty: 'pediatrics', specialtyName: 'Pediatrics', experience: 15, rating: 4.8, location: 'Kamla Nehru Hospital, Bhopal', phone: '+91 755-2540570', available: true, verified: true, consultationFee: 0, image: '', bio: 'Associate Professor, Pediatrics, Kamla Nehru Hospital' },
+    { id: '4', name: 'Dr. Rakesh Malviya', specialty: 'orthopedics', specialtyName: 'Orthopedics', experience: 20, rating: 4.5, location: 'BMHRC, Bhopal', phone: '+91 755-2742612', available: true, verified: true, consultationFee: 0, image: '', bio: 'Senior Orthopedic Surgeon, Bhopal Memorial Hospital & Research Centre' },
+    { id: '5', name: 'Dr. Nidhi Gupta', specialty: 'gynecology', specialtyName: 'Obstetrics & Gynecology', experience: 16, rating: 4.9, location: 'Sultania Zanana Hospital, Bhopal', phone: '+91 755-2540333', available: true, verified: true, consultationFee: 0, image: '', bio: 'Consultant Gynecologist, Sultania Zanana Hospital' },
+    { id: '6', name: 'Dr. Vivek Saraswat', specialty: 'cardiology', specialtyName: 'Cardiology', experience: 25, rating: 4.8, location: 'Bansal Hospital, Bhopal', phone: '+91 755-4082222', available: true, verified: true, consultationFee: 500, image: '', bio: 'Director — Cardiology & Interventional Cardiology, Bansal Hospital' },
+    { id: '7', name: 'Dr. Asha Bhandari', specialty: 'general', specialtyName: 'General Medicine', experience: 12, rating: 4.4, location: 'District Hospital, Sehore', phone: '+91 7562-224430', available: true, verified: true, consultationFee: 0, image: '', bio: 'Medical Officer, District Hospital Sehore' },
+    { id: '8', name: 'Dr. Rajesh Patel', specialty: 'pediatrics', specialtyName: 'Pediatrics', experience: 14, rating: 4.6, location: 'MY Hospital, Indore', phone: '+91 731-2527383', available: true, verified: true, consultationFee: 0, image: '', bio: 'Pediatrics Department, Maharaja Yeshwantrao Hospital, Indore' },
+    { id: '9', name: 'Dr. Meena Joshi', specialty: 'gynecology', specialtyName: 'Obstetrics & Gynecology', experience: 19, rating: 4.7, location: 'Chirayu Medical College, Bhopal', phone: '+91 755-6679100', available: true, verified: true, consultationFee: 300, image: '', bio: 'Professor & HOD, OB-GYN, Chirayu Medical College & Hospital' },
+    { id: '10', name: 'Dr. Sunil Jain', specialty: 'orthopedics', specialtyName: 'Orthopedics', experience: 23, rating: 4.5, location: 'CHL Hospital, Indore', phone: '+91 731-4710000', available: true, verified: true, consultationFee: 400, image: '', bio: 'Senior Orthopedic & Joint Replacement Surgeon, CHL Hospital Indore' },
+    { id: '11', name: 'Dr. Kavita Sharma', specialty: 'general', specialtyName: 'General Medicine', experience: 10, rating: 4.3, location: 'CHC Berasia, Bhopal', phone: '+91 755-2770491', available: true, verified: true, consultationFee: 0, image: '', bio: 'Medical Officer, Community Health Centre Berasia' },
+    { id: '12', name: 'Dr. Arun Dubey', specialty: 'cardiology', specialtyName: 'Cardiology', experience: 17, rating: 4.6, location: 'Bombay Hospital, Indore', phone: '+91 731-2558866', available: true, verified: true, consultationFee: 600, image: '', bio: 'Consultant Cardiologist, Bombay Hospital & Research Centre, Indore' },
+    { id: '13', name: 'Dr. Sunita Rawat', specialty: 'pediatrics', specialtyName: 'Pediatrics', experience: 11, rating: 4.5, location: 'District Hospital, Vidisha', phone: '+91 7592-234567', available: true, verified: true, consultationFee: 0, image: '', bio: 'Pediatrician, District Hospital Vidisha' },
+    { id: '14', name: 'Dr. Manish Tiwari', specialty: 'general', specialtyName: 'General Medicine', experience: 28, rating: 4.9, location: 'AIIMS Bhopal, Saket Nagar', phone: '+91 755-2672355', available: true, verified: true, consultationFee: 0, image: '', bio: 'Professor & Head, Dept. of General Medicine, AIIMS Bhopal' },
+    { id: '15', name: 'Dr. Pooja Singh', specialty: 'gynecology', specialtyName: 'Obstetrics & Gynecology', experience: 9, rating: 4.4, location: 'PHC Obedullaganj, Raisen', phone: '+91 7480-255444', available: true, verified: true, consultationFee: 0, image: '', bio: 'Medical Officer (OB-GYN), Primary Health Centre Obedullaganj' },
+  ]);
 
   const content = {
     en: {
@@ -133,47 +110,111 @@ export function Directory({ setCurrentPage, language }: DirectoryProps) {
 
   const t = content[language as keyof typeof content];
 
-  // Mock data for hospitals (kept — no hospitals table in DB)
   const hospitals = [
     {
       id: 1,
-      name: language === 'en' ? 'District General Hospital' : 'जिला सामान्य अस्पताल',
+      name: language === 'en' ? 'AIIMS Bhopal' : 'एम्स भोपाल',
       type: 'government',
-      location: language === 'en' ? 'Main Road, District Center' : 'मुख्य सड़क, जिला केंद्र',
-      phone: '+91 1234567890',
+      location: language === 'en' ? 'Saket Nagar, Bhopal' : 'साकेत नगर, भोपाल',
+      phone: '+91 755-2672355',
       emergency: true,
-      beds: 150,
-      availableBeds: 23,
-      rating: 4.2,
-      services: ['Emergency', 'Surgery', 'ICU', 'Maternity'],
+      beds: 900,
+      availableBeds: 78,
+      rating: 4.7,
+      services: ['Emergency', 'Surgery', 'Cardiology', 'Neurology', 'Oncology', 'Pediatrics', 'Trauma Centre'],
       image: ''
     },
     {
       id: 2,
-      name: language === 'en' ? 'Rural Health Center' : 'ग्रामीण स्वास्थ्य केंद्र',
+      name: language === 'en' ? 'Hamidia Hospital (GMC)' : 'हमीदिया अस्पताल (जीएमसी)',
       type: 'government',
-      location: language === 'en' ? 'Village Square' : 'ग्राम चौक',
-      phone: '+91 1234567891',
-      emergency: false,
-      beds: 20,
-      availableBeds: 8,
-      rating: 4.0,
-      services: ['General Medicine', 'Pediatrics', 'Pharmacy'],
+      location: language === 'en' ? 'Royal Market, Bhopal' : 'रॉयल मार्केट, भोपाल',
+      phone: '+91 755-2540222',
+      emergency: true,
+      beds: 1100,
+      availableBeds: 120,
+      rating: 4.2,
+      services: ['Emergency', 'General Medicine', 'Surgery', 'Orthopedics', 'TB Centre', 'ICU'],
       image: ''
     },
     {
       id: 3,
-      name: language === 'en' ? 'Sunrise Medical Center' : 'सनराइज मेडिकल सेंटर',
-      type: 'private',
-      location: language === 'en' ? 'Medical Complex, City' : 'मेडिकल कॉम्प्लेक्स, शहर',
-      phone: '+91 1234567892',
+      name: language === 'en' ? 'Kamla Nehru Hospital' : 'कमला नेहरू अस्पताल',
+      type: 'government',
+      location: language === 'en' ? 'Arera Hills, Bhopal' : 'अरेरा हिल्स, भोपाल',
+      phone: '+91 755-2540570',
       emergency: true,
-      beds: 80,
-      availableBeds: 12,
-      rating: 4.5,
-      services: ['Cardiology', 'Orthopedics', 'Radiology', 'Lab'],
+      beds: 350,
+      availableBeds: 40,
+      rating: 4.3,
+      services: ['Maternity', 'Pediatrics', 'Gynecology', 'NICU', 'General Medicine'],
       image: ''
-    }
+    },
+    {
+      id: 4,
+      name: language === 'en' ? 'Bansal Hospital' : 'बंसल अस्पताल',
+      type: 'private',
+      location: language === 'en' ? 'C-Sector, Shahpura, Bhopal' : 'सी-सेक्टर, शाहपुरा, भोपाल',
+      phone: '+91 755-4082222',
+      emergency: true,
+      beds: 300,
+      availableBeds: 25,
+      rating: 4.5,
+      services: ['Cardiology', 'Neurosurgery', 'Orthopedics', 'Cancer Centre', 'ICU', 'Dialysis'],
+      image: ''
+    },
+    {
+      id: 5,
+      name: language === 'en' ? 'Chirayu Medical College & Hospital' : 'चिरायु मेडिकल कॉलेज एवं अस्पताल',
+      type: 'private',
+      location: language === 'en' ? 'Bhopal-Indore Highway, Bhopal' : 'भोपाल-इंदौर हाईवे, भोपाल',
+      phone: '+91 755-6679100',
+      emergency: true,
+      beds: 550,
+      availableBeds: 45,
+      rating: 4.4,
+      services: ['Emergency', 'Surgery', 'Cardiology', 'Orthopedics', 'Radiology', 'Pathology'],
+      image: ''
+    },
+    {
+      id: 6,
+      name: language === 'en' ? 'MY Hospital (Indore)' : 'एम.वाय. अस्पताल (इंदौर)',
+      type: 'government',
+      location: language === 'en' ? 'MY Hospital Road, Indore' : 'एम.वाय. अस्पताल रोड, इंदौर',
+      phone: '+91 731-2527383',
+      emergency: true,
+      beds: 1000,
+      availableBeds: 95,
+      rating: 4.1,
+      services: ['Emergency', 'General Medicine', 'Surgery', 'Pediatrics', 'Gynecology', 'Trauma'],
+      image: ''
+    },
+    {
+      id: 7,
+      name: language === 'en' ? 'Bombay Hospital, Indore' : 'बॉम्बे अस्पताल, इंदौर',
+      type: 'private',
+      location: language === 'en' ? 'Ring Road, Indore' : 'रिंग रोड, इंदौर',
+      phone: '+91 731-2558866',
+      emergency: true,
+      beds: 500,
+      availableBeds: 30,
+      rating: 4.6,
+      services: ['Cardiology', 'Oncology', 'Nephrology', 'Neurology', 'Joint Replacement', 'ICU'],
+      image: ''
+    },
+    {
+      id: 8,
+      name: language === 'en' ? 'District Hospital, Sehore' : 'जिला अस्पताल, सीहोर',
+      type: 'government',
+      location: language === 'en' ? 'Civil Lines, Sehore' : 'सिविल लाइन्स, सीहोर',
+      phone: '+91 7562-224430',
+      emergency: true,
+      beds: 120,
+      availableBeds: 18,
+      rating: 3.8,
+      services: ['Emergency', 'General Medicine', 'Maternity', 'Pharmacy'],
+      image: ''
+    },
   ];
 
   const specialties = [
