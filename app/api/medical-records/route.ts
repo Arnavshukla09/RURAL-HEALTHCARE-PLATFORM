@@ -105,7 +105,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Could not resolve patient profile" }, { status: 404 })
     }
 
-    const { data, error } = await supabase
+    const adminSupabase = createAdminClient()
+    const { data, error } = await adminSupabase
       .from("medical_records")
       .insert([{ patient_id: patient.id, ...parsed.data }])
       .select()
