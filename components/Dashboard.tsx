@@ -16,7 +16,9 @@ import {
   AlertCircle,
   Activity,
   Stethoscope,
-  UserCheck
+  UserCheck,
+  ShieldCheck,
+  IndianRupee
 } from "lucide-react";
 import { ImageWithFallback } from "./ImageWithFallback";
 import { createClient } from "@/lib/supabase/client";
@@ -311,6 +313,34 @@ export function Dashboard({ user, setCurrentPage, language }: DashboardProps) {
                     <AlertCircle className="h-5 w-5 mr-2" />
                     {t.emergencyContact}
                   </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Government Schemes */}
+            <Card className="border-green-200 bg-green-50">
+              <CardHeader>
+                <CardTitle className="flex items-center text-green-800">
+                  <ShieldCheck className="h-5 w-5 mr-2" />
+                  {language === 'en' ? 'Government Schemes & Support' : 'सरकारी योजनाएं एवं सहायता'}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="grid md:grid-cols-2 gap-4">
+                <div className="bg-white p-4 rounded-lg shadow-sm border border-green-100">
+                  <h4 className="font-bold text-green-700 mb-2">JSSK (Free Delivery)</h4>
+                  <ul className="text-sm space-y-2 text-gray-700">
+                    <li className="flex items-start"><Heart className="h-4 w-4 text-green-500 mr-2 shrink-0 mt-0.5" />100% Free delivery & C-Section</li>
+                    <li className="flex items-start"><Heart className="h-4 w-4 text-green-500 mr-2 shrink-0 mt-0.5" />Free drugs and consumables</li>
+                    <li className="flex items-start"><Heart className="h-4 w-4 text-green-500 mr-2 shrink-0 mt-0.5" />Free diet during stay</li>
+                  </ul>
+                </div>
+                <div className="bg-white p-4 rounded-lg shadow-sm border border-green-100">
+                  <h4 className="font-bold text-green-700 mb-2">JSY (Cash Incentive)</h4>
+                  <ul className="text-sm space-y-2 text-gray-700">
+                    <li className="flex items-start"><IndianRupee className="h-4 w-4 text-green-500 mr-2 shrink-0 mt-0.5" />₹1400 for Rural Mothers</li>
+                    <li className="flex items-start"><IndianRupee className="h-4 w-4 text-green-500 mr-2 shrink-0 mt-0.5" />₹1000 for Urban Mothers</li>
+                    <li className="flex items-start"><Heart className="h-4 w-4 text-green-500 mr-2 shrink-0 mt-0.5" />Promotes institutional delivery</li>
+                  </ul>
                 </div>
               </CardContent>
             </Card>

@@ -8,6 +8,11 @@ export const metadata: Metadata = {
   title: "RuralHealth — Quality Healthcare for Everyone",
   description: "AI-powered rural healthcare platform with specialist consultations, symptom checking, health information, and facility locator for rural India.",
   keywords: "rural healthcare, telemedicine, AI health, India healthcare, symptom checker",
+  manifest: "/manifest.json",
+}
+
+export const viewport = {
+  themeColor: "#0ea5e9",
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

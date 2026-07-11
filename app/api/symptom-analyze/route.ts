@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No symptoms provided" }, { status: 400 })
     }
 
-    const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY
+    const apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY
     if (!apiKey) {
       // Fallback: rule-based triage when no key configured
       return NextResponse.json(buildFallback(symptoms, language))

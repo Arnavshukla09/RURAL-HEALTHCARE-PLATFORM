@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
 import { Button } from "./ui/button"
-import { Phone, MapPin, Share2, AlertTriangle, Truck } from "lucide-react"
+import { Phone, MapPin, Share2, AlertTriangle, Truck, MessageSquare, MessageCircle, Baby, Scissors, Activity } from "lucide-react"
 
 interface EmergencyModuleProps {
   setCurrentPage: (page: string) => void
@@ -29,6 +29,12 @@ export function EmergencyModule({ setCurrentPage, language }: EmergencyModulePro
         "Follow operator instructions",
         "Do not move injured person unless necessary",
       ],
+      smsFallback: "SMS Emergency SOS",
+      waFallback: "WhatsApp SOS",
+      firstAid: "Visual First-Aid Guide",
+      faWarmth: "Warmth: Skin-to-skin contact (Kangaroo Care)",
+      faSanitation: "Sanitation: NEVER use unsterile blades on cord",
+      faHemorrhage: "Bleeding: Uterine/Fundal Massage",
     },
     hi: {
       title: "आपातकालीन सेवाएं",
@@ -48,6 +54,12 @@ export function EmergencyModule({ setCurrentPage, language }: EmergencyModulePro
         "ऑपरेटर के निर्देशों का पालन करें",
         "आवश्यक न होने पर घायल व्यक्ति को न हिलाएं",
       ],
+      smsFallback: "एसएमएस आपातकालीन एसओएस",
+      waFallback: "व्हाट्सएप एसओएस",
+      firstAid: "प्राथमिक चिकित्सा दृश्य मार्गदर्शिका",
+      faWarmth: "गर्मी: त्वचा से त्वचा संपर्क (कंगारू देखभाल)",
+      faSanitation: "स्वच्छता: गर्भनाल पर कभी भी बिना उबले ब्लेड का उपयोग न करें",
+      faHemorrhage: "रक्तस्राव नियंत्रण: गर्भाशय/फंडल मालिश",
     },
   }
 
@@ -77,6 +89,25 @@ export function EmergencyModule({ setCurrentPage, language }: EmergencyModulePro
               <Phone className="mr-2 h-8 w-8" />
               {t.call108}
             </Button>
+            
+            <div className="grid md:grid-cols-2 gap-4">
+              <Button
+                variant="outline"
+                className="w-full border-red-200 text-red-600 hover:bg-red-50"
+                onClick={() => window.open("sms:108?body=EMERGENCY! I need immediate maternal health assistance at my location.")}
+              >
+                <MessageSquare className="mr-2 h-5 w-5" />
+                {t.smsFallback}
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full border-green-200 text-green-600 hover:bg-green-50"
+                onClick={() => window.open("https://wa.me/91108?text=EMERGENCY!%20I%20need%20immediate%20maternal%20health%20assistance.")}
+              >
+                <MessageCircle className="mr-2 h-5 w-5" />
+                {t.waFallback}
+              </Button>
+            </div>
 
             <div className="grid md:grid-cols-2 gap-4">
               <Button
@@ -166,6 +197,41 @@ export function EmergencyModule({ setCurrentPage, language }: EmergencyModulePro
             </CardContent>
           </Card>
         </div>
+
+        {/* Visual First-Aid Guide for Zero-Literacy */}
+        <Card className="border-orange-200 bg-orange-50">
+          <CardHeader>
+            <CardTitle className="flex items-center text-orange-800">
+              <Activity className="h-6 w-6 mr-2" />
+              {t.firstAid}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid md:grid-cols-3 gap-6">
+              <div className="bg-white p-6 rounded-xl shadow-sm text-center border-t-4 border-orange-400">
+                <div className="bg-orange-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Baby className="h-8 w-8 text-orange-600" />
+                </div>
+                <p className="font-bold text-gray-800 text-lg leading-tight">{t.faWarmth}</p>
+              </div>
+              <div className="bg-white p-6 rounded-xl shadow-sm text-center border-t-4 border-red-500 relative overflow-hidden">
+                <div className="absolute inset-0 opacity-5">
+                  <AlertTriangle className="w-full h-full text-red-500" />
+                </div>
+                <div className="bg-red-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 relative z-10">
+                  <Scissors className="h-8 w-8 text-red-600 line-through" />
+                </div>
+                <p className="font-bold text-gray-800 text-lg leading-tight relative z-10">{t.faSanitation}</p>
+              </div>
+              <div className="bg-white p-6 rounded-xl shadow-sm text-center border-t-4 border-blue-500">
+                <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Activity className="h-8 w-8 text-blue-600" />
+                </div>
+                <p className="font-bold text-gray-800 text-lg leading-tight">{t.faHemorrhage}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   )

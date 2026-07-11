@@ -31,6 +31,7 @@ interface DirectoryProps {
 export function Directory({ setCurrentPage, language }: DirectoryProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSpecialty, setSelectedSpecialty] = useState('all');
+  const [showOnlyFRU, setShowOnlyFRU] = useState(false);
   const [doctors] = useState([
     { id: '1', name: 'Dr. Ajay Goenka', specialty: 'general', specialtyName: 'General Medicine', experience: 22, rating: 4.6, location: 'AIIMS Bhopal, Saket Nagar', phone: '+91 755-2672355', available: true, verified: true, consultationFee: 0, image: '', bio: 'Senior Consultant, Dept. of General Medicine, AIIMS Bhopal' },
     { id: '2', name: 'Dr. Sanjeev Sharma', specialty: 'cardiology', specialtyName: 'Cardiology', experience: 18, rating: 4.7, location: 'Hamidia Hospital, Bhopal', phone: '+91 755-2540222', available: true, verified: true, consultationFee: 0, image: '', bio: 'Head of Cardiology, Hamidia Hospital (Gandhi Medical College)' },
@@ -128,26 +129,28 @@ export function Directory({ setCurrentPage, language }: DirectoryProps) {
       id: 2,
       name: language === 'en' ? 'Hamidia Hospital (GMC)' : 'हमीदिया अस्पताल (जीएमसी)',
       type: 'government',
+      isFRU: true,
       location: language === 'en' ? 'Royal Market, Bhopal' : 'रॉयल मार्केट, भोपाल',
       phone: '+91 755-2540222',
       emergency: true,
       beds: 1100,
       availableBeds: 120,
       rating: 4.2,
-      services: ['Emergency', 'General Medicine', 'Surgery', 'Orthopedics', 'TB Centre', 'ICU'],
+      services: ['Emergency', 'Obstetrics & Gynecology (FRU)', 'Surgery', 'Orthopedics', 'Blood Bank', 'ICU'],
       image: ''
     },
     {
       id: 3,
       name: language === 'en' ? 'Kamla Nehru Hospital' : 'कमला नेहरू अस्पताल',
       type: 'government',
+      isFRU: true,
       location: language === 'en' ? 'Arera Hills, Bhopal' : 'अरेरा हिल्स, भोपाल',
       phone: '+91 755-2540570',
       emergency: true,
       beds: 350,
       availableBeds: 40,
       rating: 4.3,
-      services: ['Maternity', 'Pediatrics', 'Gynecology', 'NICU', 'General Medicine'],
+      services: ['Maternity (FRU)', 'Pediatrics', 'Gynecology', 'Blood Bank', 'NICU', 'General Medicine'],
       image: ''
     },
     {
@@ -206,13 +209,14 @@ export function Directory({ setCurrentPage, language }: DirectoryProps) {
       id: 8,
       name: language === 'en' ? 'District Hospital, Sehore' : 'जिला अस्पताल, सीहोर',
       type: 'government',
+      isFRU: true,
       location: language === 'en' ? 'Civil Lines, Sehore' : 'सिविल लाइन्स, सीहोर',
       phone: '+91 7562-224430',
       emergency: true,
       beds: 120,
       availableBeds: 18,
       rating: 3.8,
-      services: ['Emergency', 'General Medicine', 'Maternity', 'Pharmacy'],
+      services: ['Emergency', 'General Medicine', 'Maternity (FRU)', 'Blood Storage', 'Pharmacy'],
       image: ''
     },
   ];
@@ -235,8 +239,10 @@ export function Directory({ setCurrentPage, language }: DirectoryProps) {
   });
 
   const filteredHospitals = hospitals.filter(hospital => {
-    return hospital.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-           hospital.location.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = hospital.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          hospital.location.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesFRU = showOnlyFRU ? (hospital as any).isFRU === true : true;
+    return matchesSearch && matchesFRU;
   });
 
   const getInitials = (name: string) => {
@@ -402,6 +408,16 @@ export function Directory({ setCurrentPage, language }: DirectoryProps) {
           </TabsContent>
 
           <TabsContent value="hospitals" className="space-y-4">
+            <div className="flex justify-end mb-4">
+              <Button 
+                variant={showOnlyFRU ? "default" : "outline"}
+                onClick={() => setShowOnlyFRU(!showOnlyFRU)}
+                className="flex items-center text-sm"
+              >
+                <Heart className="h-4 w-4 mr-2" />
+                {language === 'en' ? 'Show Only FRUs (First Referral Units)' : 'केवल प्रथम रेफरल इकाइयाँ (FRU) दिखाएँ'}
+              </Button>
+            </div>
             {filteredHospitals.length > 0 ? (
               filteredHospitals.map((hospital) => (
                 <Card key={hospital.id} className="hover:shadow-lg transition-shadow">
