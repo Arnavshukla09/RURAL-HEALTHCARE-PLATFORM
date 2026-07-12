@@ -140,9 +140,9 @@ export function Dashboard({ user, setCurrentPage, language }: DashboardProps) {
               // Parse the string: "[Camp Registration] Name — Address on Date at Time. Contact: X"
               const content = r.content;
               const titleMatch = content.match(/\[Camp Registration\] (.*?) —/);
-              const locMatch = content.match(/— (.*?) on/);
-              const dateMatch = content.match(/on (.*?) at/);
-              const timeMatch = content.match(/at (.*?)\. Contact:/);
+              const locMatch = content.match(/— (.*?) on /);
+              const dateMatch = content.match(/ on (.*?) at /);
+              const timeMatch = content.match(/ at (.*?)\. Contact:/);
               
               return {
                 id: r.id,

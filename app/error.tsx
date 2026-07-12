@@ -1,7 +1,5 @@
 "use client"
-
 import { useEffect } from "react"
-import { AlertTriangle, RefreshCw, Home } from "lucide-react"
 
 export default function Error({
   error,
@@ -11,31 +9,37 @@ export default function Error({
   reset: () => void
 }) {
   useEffect(() => {
-    console.error("Application error:", error)
+    console.error("[RuralHealth Error]", error)
   }, [error])
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-red-50/50 to-white p-6 text-center">
-      <div className="h-16 w-16 rounded-full bg-red-100 flex items-center justify-center mb-4">
-        <AlertTriangle className="h-8 w-8 text-red-600" />
-      </div>
-      <h2 className="text-xl font-bold text-gray-900 mb-2">Something went wrong</h2>
-      <p className="text-sm text-gray-500 mb-6 max-w-md">
-        An unexpected error occurred. Please try again or return to the home page.
-      </p>
-      <div className="flex gap-3">
-        <button
-          onClick={reset}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-teal-600 text-white text-sm font-medium hover:bg-teal-700 transition-colors"
-        >
-          <RefreshCw className="h-4 w-4" /> Try Again
-        </button>
-        <a
-          href="/"
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50 transition-colors"
-        >
-          <Home className="h-4 w-4" /> Home
-        </a>
+    <div className="min-h-screen flex items-center justify-center p-6 bg-gray-50">
+      <div className="text-center max-w-sm">
+        <div className="text-5xl mb-4">⚠️</div>
+        <h2 className="text-xl font-bold mb-2 text-gray-800">Something went wrong</h2>
+        <p className="text-gray-500 mb-2 text-sm">
+          {error.message || "An unexpected error occurred."}
+        </p>
+        <p className="text-gray-500 mb-6 text-sm">
+          For medical emergencies call{" "}
+          <a href="tel:108" className="text-red-600 font-bold underline">
+            108
+          </a>
+        </p>
+        <div className="flex gap-3 justify-center">
+          <button
+            onClick={reset}
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Try Again
+          </button>
+          <a
+            href="/"
+            className="border border-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-100 transition-colors"
+          >
+            Go Home
+          </a>
+        </div>
       </div>
     </div>
   )
