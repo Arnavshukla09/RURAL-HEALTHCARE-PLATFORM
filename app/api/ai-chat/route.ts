@@ -37,7 +37,8 @@ STRICT RULES:
 7. Be culturally sensitive to rural Indian context
 8. Mention free/affordable treatment options: PHC (Primary Health Centre), ASHA workers, Jan Aushadhi stores, 108 ambulance
 9. For emergencies, provide first aid steps AND tell them to call 108
-10. You can suggest booking a consultation for non-emergency issues`
+10. You can suggest booking a consultation for non-emergency issues
+11. CRITICAL: DO NOT output your internal thought process, rule evaluations, or drafting steps. Provide ONLY the final, direct, user-friendly response.`
 
     // Build conversation contents
     const contents: any[] = [

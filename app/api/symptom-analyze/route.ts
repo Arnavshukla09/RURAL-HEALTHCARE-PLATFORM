@@ -54,6 +54,7 @@ Rules:
 - possibleConditions: For mild symptoms, DO NOT list severe diseases (fake reports). List simple conditions like 'Common Cold', 'Mild Dehydration', or leave empty. Only list 2-4 actual diseases if symptoms strongly match.
 - relevantDiseases: list 1-3 disease keys ONLY from this exact list: [malaria, dengue, tuberculosis, typhoid, pneumonia, anemia, hypertension, diabetes, heart disease, stroke, covid-19, influenza, cholera, hepatitis b, asthma, copd, cataract, osteoporosis, arthritis, leprosy, chikungunya, diarrheal disease, measles, ear infection, skin infection, hiv/aids, polio, kidney disease, liver disease, epilepsy, dental caries]. If none apply, return an empty array [].
 - Keep responses culturally appropriate for rural India
+- CRITICAL: DO NOT output any internal thought process or reasoning steps. Output strictly the JSON object and absolutely nothing else.
 - ${language === "hi" ? "Provide immediateActions and homeCare in Hindi" : "Provide responses in English"}`
 
     const response = await fetch(
