@@ -43,10 +43,17 @@ Guidelines for your medical advice:
 5. For serious symptoms, tell them to call 108 or go to the hospital immediately.
 6. Mention free/affordable options: PHC, ASHA workers, Jan Aushadhi stores, 108 ambulance.`
 
-    // Build conversation contents
+    // Provide a few-shot example to force the model to mimic the exact output format
+    // without outputting any rule evaluations or checklists.
     const contents: any[] = [
-      { role: "user", parts: [{ text: systemPrompt }] },
-      { role: "model", parts: [{ text: "Understood. I am RuralHealth AI, a health-only assistant for rural India. I will only answer health questions." }] },
+      { 
+        role: "user", 
+        parts: [{ text: systemPrompt + "\n\nUser: My symptoms are: Headache, fever 101F, duration 2 days. Urgency: medium. What should I do?" }] 
+      },
+      { 
+        role: "model", 
+        parts: [{ text: "This could be a viral infection.\n\n• Drink plenty of water and rest.\n• Take a light diet.\n• Visit your nearest Primary Health Centre (PHC) or speak with your local ASHA worker for a proper check-up.\n• If your fever rises above 103°F or you experience severe pain, call 108 immediately." }] 
+      },
     ]
 
     // Add conversation history (last 8 messages)
