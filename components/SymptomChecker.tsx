@@ -109,6 +109,12 @@ export function SymptomChecker({ setCurrentPage, language }: SymptomCheckerProps
       if (data.error) throw new Error(data.error)
       setAiResult(data)
       setStep(4)
+      
+      const promptText = en 
+        ? `My symptoms are: ${selectedSymptoms.join(", ")}. Temperature: ${patientInfo.temperature ? patientInfo.temperature + "°" + patientInfo.tempUnit : 'normal'}. Duration: ${patientInfo.daysSick} days. The analysis urgency is '${data.urgency}'. What are the best home remedies, and what exact steps should I take based on this severity?`
+        : `मेरे लक्षण हैं: ${selectedSymptoms.map(s => SYMPTOM_HI[s] || s).join(", ")}। तापमान: ${patientInfo.temperature ? patientInfo.temperature + "°" + patientInfo.tempUnit : 'सामान्य'}। अवधि: ${patientInfo.daysSick} दिन। विश्लेषण की गंभीरता '${data.urgency === 'emergency' ? 'आपातकालीन' : data.urgency === 'high' ? 'उच्च' : data.urgency === 'medium' ? 'मध्यम' : 'कम'}' है। सबसे अच्छे घरेलू उपचार क्या हैं, और मुझे क्या कदम उठाने चाहिए?`
+      
+      setChatInput(promptText)
     } catch (e: any) {
       setError(e.message || "Analysis failed. Please try again.")
     } finally {
