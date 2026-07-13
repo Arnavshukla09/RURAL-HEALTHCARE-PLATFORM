@@ -145,15 +145,8 @@ export function MapView({ language }: MapViewProps) {
   const [radiusKm, setRadiusKm] = useState(25)
   const [leafletReady, setLeafletReady] = useState(false)
 
-  // Load Leaflet CSS once
+  // Leaflet CSS is now imported globally in layout.tsx
   useEffect(() => {
-    if (!document.getElementById("leaflet-css")) {
-      const link = document.createElement("link")
-      link.id = "leaflet-css"
-      link.rel = "stylesheet"
-      link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-      document.head.appendChild(link)
-    }
     setLeafletReady(true)
   }, [])
 
