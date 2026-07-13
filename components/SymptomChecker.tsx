@@ -377,7 +377,7 @@ export function SymptomChecker({ setCurrentPage, language }: SymptomCheckerProps
                     ) : (
                       chatMessages.map((msg, i) => (
                         <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-                          <div className={`max-w-[85%] rounded-xl px-3 py-2 text-sm ${msg.role === "user" ? "bg-teal-600 text-white rounded-tr-none" : "bg-white border rounded-tl-none text-gray-800 shadow-sm"}`}>
+                          <div className={`whitespace-pre-wrap max-w-[85%] rounded-xl px-3 py-2 text-sm ${msg.role === "user" ? "bg-teal-600 text-white rounded-tr-none" : "bg-white border rounded-tl-none text-gray-800 shadow-sm"}`}>
                             {msg.content}
                           </div>
                         </div>
