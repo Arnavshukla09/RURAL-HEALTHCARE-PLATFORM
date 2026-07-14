@@ -1,12 +1,12 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
 import { Button } from "./ui/button"
 import { Badge } from "./ui/badge"
 import {
   Activity, AlertTriangle, ArrowLeft, ArrowRight, CheckCircle,
   Brain, Eye, Ear, Heart, Wind, Droplet, Thermometer, User,
-  Loader2, Stethoscope, Home, MapPin, Send, Bot
+  Loader2, Stethoscope, Home, MapPin, Send, Bot, Mic, MicOff, Languages
 } from "lucide-react"
 
 interface SymptomCheckerProps {
@@ -82,6 +82,53 @@ export function SymptomChecker({ setCurrentPage, language }: SymptomCheckerProps
   const [chatMessages, setChatMessages] = useState<{role: "user" | "assistant", content: string}[]>([])
   const [chatLoading, setChatLoading] = useState(false)
 
+  // Speech Recognition state
+  const [isListening, setIsListening] = useState(false)
+  const [recognition, setRecognition] = useState<any>(null)
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+      if (SpeechRecognition) {
+        const rec = new SpeechRecognition()
+        rec.continuous = false
+        rec.interimResults = false
+        rec.lang = language === 'en' ? 'en-US' : 'hi-IN'
+        
+        rec.onresult = (event: any) => {
+          const transcript = event.results[0][0].transcript
+          setChatInput((prev) => prev ? prev + ' ' + transcript : transcript)
+          setIsListening(false)
+        }
+        
+        rec.onerror = (event: any) => {
+          console.error('Speech recognition error', event.error)
+          setIsListening(false)
+        }
+        
+        rec.onend = () => {
+          setIsListening(false)
+        }
+        
+        setRecognition(rec)
+      }
+    }
+  }, [language])
+
+  const toggleListen = () => {
+    if (isListening) {
+      recognition?.stop()
+      setIsListening(false)
+    } else {
+      if (recognition) {
+        recognition.start()
+        setIsListening(true)
+      } else {
+        alert(en ? "Speech recognition is not supported in this browser." : "इस ब्राउज़र में स्पीच रिकग्निशन समर्थित नहीं है।")
+      }
+    }
+  }
+
   const symptomList = selectedBodyPart ? SYMPTOM_DB[selectedBodyPart] || [] : []
 
   const toggleSymptom = (s: string) =>
@@ -122,21 +169,20 @@ export function SymptomChecker({ setCurrentPage, language }: SymptomCheckerProps
     }
   }
 
-
   const reset = () => {
     setStep(1); setSelectedBodyPart(null); setSelectedSymptoms([])
     setAiResult(null); setError(""); setPatientInfo({ age: "", gender: "male", temperature: "", tempUnit: "F", daysSick: "1" })
     setChatMessages([]); setChatInput("")
   }
 
-  const handleChat = async () => {
-    const text = chatInput.trim()
+  const handleChat = async (overrideText?: string) => {
+    const text = overrideText || chatInput.trim()
     if (!text || chatLoading) return
 
     const userMsg = { role: "user" as const, content: text }
     const newHistory = [...chatMessages, userMsg]
     setChatMessages(newHistory)
-    setChatInput("")
+    if (!overrideText) setChatInput("")
     setChatLoading(true)
 
     const apiMessage = chatMessages.length === 0
@@ -364,10 +410,24 @@ export function SymptomChecker({ setCurrentPage, language }: SymptomCheckerProps
 
                 {/* Inline Chat Interface */}
                 <div className="mt-6 border-t pt-4">
-                  <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                    <Bot className="h-5 w-5 text-teal-600" />
-                    {en ? "Discuss your symptoms with AI" : "AI के साथ अपने लक्षणों पर चर्चा करें"}
-                  </h3>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-semibold flex items-center gap-2">
+                      <Bot className="h-5 w-5 text-teal-600" />
+                      {en ? "Discuss your symptoms with AI" : "AI के साथ अपने लक्षणों पर चर्चा करें"}
+                    </h3>
+                    {chatMessages.length > 0 && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => handleChat(en ? "Please translate your previous response to Hindi." : "कृपया अपने पिछले उत्तर का अंग्रेजी में अनुवाद करें।")}
+                        disabled={chatLoading}
+                        className="text-xs h-7 text-teal-700 hover:text-teal-800 hover:bg-teal-50"
+                      >
+                        <Languages className="h-3 w-3 mr-1" />
+                        {en ? "Translate to Hindi" : "Translate to English"}
+                      </Button>
+                    )}
+                  </div>
                   
                   <div className="bg-gray-50 rounded-xl p-3 h-64 overflow-y-auto mb-3 flex flex-col gap-3">
                     {chatMessages.length === 0 ? (
@@ -393,15 +453,25 @@ export function SymptomChecker({ setCurrentPage, language }: SymptomCheckerProps
                   </div>
                   
                   <div className="flex gap-2">
+                    <Button 
+                      type="button"
+                      variant={isListening ? "destructive" : "outline"}
+                      size="icon"
+                      onClick={toggleListen}
+                      className={isListening ? "animate-pulse" : ""}
+                      title={en ? "Use voice input" : "आवाज़ का प्रयोग करें"}
+                    >
+                      {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                    </Button>
                     <input
                       type="text"
                       value={chatInput}
                       onChange={(e) => setChatInput(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && handleChat()}
-                      placeholder={en ? "Type your question..." : "अपना प्रश्न टाइप करें..."}
+                      placeholder={en ? (isListening ? "Listening..." : "Type your question...") : (isListening ? "सुन रहा हूँ..." : "अपना प्रश्न टाइप करें...")}
                       className="flex-1 border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-teal-500"
                     />
-                    <Button onClick={handleChat} disabled={!chatInput.trim() || chatLoading} className="gradient-primary text-white">
+                    <Button onClick={() => handleChat()} disabled={!chatInput.trim() || chatLoading} className="gradient-primary text-white">
                       <Send className="h-4 w-4" />
                     </Button>
                   </div>
