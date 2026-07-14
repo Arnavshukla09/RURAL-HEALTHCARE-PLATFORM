@@ -166,7 +166,7 @@ supabase.auth.getSession()
           />
         )
       case "consultation":
-        return <ConsultationPortal user={user} language={language} setCurrentPage={setCurrentPage} />
+        return <ConsultationPortal user={user} language={language} setCurrentPage={setCurrentPage} symptomResult={symptomCheckResult} />
       case "appointments":
         return <AppointmentManager user={user} language={language} setCurrentPage={setCurrentPage} setJitsiRoom={setJitsiRoom} />
       case "records":
