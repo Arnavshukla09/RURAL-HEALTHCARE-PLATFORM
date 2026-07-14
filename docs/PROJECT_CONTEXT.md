@@ -404,4 +404,9 @@ Optimized for **Vercel** deployment.
 2. `ALTER TABLE patients ADD COLUMN IF NOT EXISTS role TEXT NOT NULL DEFAULT 'patient';`
 3. Full content of `scripts/009_fix_audit_trigger.sql`
 4. Full content of `scripts/006_seed_real_data.sql` (MP doctors seed)
-5. `INSERT INTO storage.buckets (id, name, public) VALUES ('medical-records', 'medical-records', FALSE) ON CONFLICT (id) DO NOTHING;`
+5. `UPDATE storage.buckets SET public = TRUE WHERE id = 'medical-records';` (Fixed 404 Bucket not found issue for downloads)
+
+### Final UI, Performance, and Security Polish
+- **Security / GitHistory:** Revoked an exposed Google Gemini API key and scrubbed `test-*.js` files from Git history using `git filter-branch`. Removed `NEXT_PUBLIC_GEMINI_API_KEY` from environment variables to prevent client-side exposure.
+- **AI Symptom Checker:** Added Speech-to-Text (Voice Dictation) capability using the Web Speech API (`SymptomChecker.tsx`). Added a one-click "Translate to Hindi / English" button inside the AI chat interface.
+- **Map View Performance:** Switched the Leaflet map tile provider from default OpenStreetMap to **CartoDB Voyager** CDN (`MapView.tsx`). This resolves the slow/grey tile loading issue due to OSM rate limits. Added `*.basemaps.cartocdn.com` to the `img-src` Content-Security-Policy in `next.config.mjs` to allow tiles to render.
