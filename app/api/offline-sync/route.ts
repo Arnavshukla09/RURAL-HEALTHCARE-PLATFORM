@@ -55,7 +55,11 @@ export async function POST(request: NextRequest) {
 
     const { operations } = parsed.data
 
-    // ✅ Log operations
+    // ✅ Log operations (guard: user.id must be non-null)
+    if (!user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
     const syncLog = operations.map((op) => ({
       user_id: user.id,
       table_name: op.table,

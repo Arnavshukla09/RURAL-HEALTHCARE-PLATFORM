@@ -16,7 +16,7 @@ A full-stack healthcare platform built for rural Indian communities, providing A
 | **Language** | TypeScript |
 | **Styling** | Tailwind CSS + shadcn/ui |
 | **Database** | Supabase (PostgreSQL + Auth + Storage + RLS) |
-| **AI** | Google Gemini 1.5 Flash |
+| **AI** | Google Gemini Flash Lite (Optimized for stability & zero CoT) |
 | **Teleconsultation** | Jitsi Meet (embedded iframe) |
 | **Maps** | OpenStreetMap via Leaflet |
 | **Deployment** | Vercel (auto-deploy from GitHub) |
@@ -88,28 +88,38 @@ A full-stack healthcare platform built for rural Indian communities, providing A
 ### 2. AI-Powered Symptom Checker
 - 4-step guided flow: select body area → choose symptoms → AI analysis → personalized results
 - 12 body regions with symptom mapping
-- Powered by Gemini 1.5 Flash via `/api/symptom-analyze`
+- Powered by Gemini Flash Lite via `/api/symptom-analyze`
 - Urgency classification: Low / Medium / High / Emergency
 - Results link to relevant disease information in HealthInfoHub
+- Seamless AI Hand-off: Automatically pre-fills the chatbot with the user's selected symptoms and analysis results, prompting for exact home remedies and next steps.
 
 ### 3. Floating AI Health Assistant
 - Gemini-powered chatbot accessible from every page (bottom-right button)
 - Health-only conversation mode — refuses non-health questions
 - Conversational memory (last 8 messages)
+- Powered by `gemini-flash-lite-latest` with few-shot prompt engineering to guarantee clean, direct patient communication (suppressing internal reasoning/CoT).
 - Quick action buttons: "Check my symptoms", "Find nearest hospital", etc.
-- Bilingual (English/Hindi)
+- Bilingual (English/Hindi) preserving line breaks and bullet formatting.
 - Server-side API (`/api/ai-chat`) keeps API key private
 
-### 4. Health Information Hub
+### 4. Healthcare Directory & Maps
+- **15 real Madhya Pradesh doctors** listed with verified hospitals, phone numbers, and specializations (AIIMS Bhopal, Hamidia Hospital, MY Hospital Indore, Bansal Hospital, etc.)
+- **8 real MP hospitals** with bed counts, available services, and FRU (First Referral Unit) tags
+- Integration with OpenStreetMap via React-Leaflet
+- Leaflet CSS bundled globally to eliminate tile-rendering race conditions (gray-map bug fixed)
+
+### 5. Health Information Hub
 - **Gated access** — only accessible after completing symptom checker
 - Auto-filters diseases relevant to the user's symptoms
 - 25+ diseases common in rural India (Malaria, Dengue, TB, Typhoid, etc.)
 - Vaccination schedules (children + adults)
 - Each disease card: causes, symptoms, treatment, prevention
 
-### 5. Consultation Booking
+### 6. Consultation Booking
 - Three types: Video, Audio, Chat consultation (all free)
-- Provider selection from real database (healthcare_providers table)
+- **Occupation-based smart pre-fill** — select your occupation (Farmer, Construction Worker, Teacher, Housewife, Student, etc.) to auto-generate a relevant symptom description and doctor request
+- **15 real MP doctors** shown as static fallback if Supabase `healthcare_providers` table is empty
+- Graceful fallback: if no DB provider ID is available, the consultation request is saved as a Medical Record automatically
 - Appointment stored in DB with teleconsult room ID
 - Jitsi Meet integration for video calls
 
@@ -125,6 +135,7 @@ A full-stack healthcare platform built for rural Indian communities, providing A
 - **File upload** — JPG, PNG, PDF upload to Supabase Storage
 - Latest vitals display: BP, Temperature, Pulse, Blood Sugar, SpO₂, Weight
 - Records fetched via secure server API
+- **Fixed:** `offline_sync_log` null `user_id` constraint violation — added explicit null guard before DB insert in `/api/offline-sync`
 
 ### 8. Healthcare Directory
 - Browse verified healthcare providers
@@ -133,10 +144,11 @@ A full-stack healthcare platform built for rural Indian communities, providing A
 - Data from `healthcare_providers` table (seeded with real Indian facilities)
 
 ### 9. Emergency Module
-- One-tap emergency numbers (108 ambulance, 112 police)
-- Nearest hospital finder
-- First aid quick reference
-- Emergency contact management
+- One-tap emergency numbers (108 ambulance, 112 police, 101 fire)
+- Nearest hospital finder (links to MapView)
+- **First-Aid Guide redesigned** — 8 clickable cards (Cuts, Burns, Snake Bite, Choking, Heart Attack, High Fever, Dehydration, Electric Shock) that redirect directly to the Health Info Hub's First Aid tab for full step-by-step instructions
+- Bilingual (English / Hindi) across all content
+- SMS and WhatsApp emergency SOS buttons
 
 ### 10. Health Camps & Campaigns
 - Upcoming vaccination drives, checkup camps, blood donation events
