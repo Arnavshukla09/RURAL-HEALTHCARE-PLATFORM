@@ -348,16 +348,60 @@ Optimized for **Vercel** deployment.
 
 ---
 
-## 20. Future Improvements & Roadmap
+## 21. Change Log — July 2026 Sprint
 
-**Short Term (Month 1):**
-- Migrate to Native Next.js Routing.
-- Implement comprehensive unit and E2E tests (Playwright/Vitest).
+### Bug Fixes
 
-**Medium Term (Months 2-3):**
-- Full PWA conversion: Implement `manifest.json` and a Service Worker for aggressive caching, allowing the app to install to Android home screens and load UI instantly offline.
-- Provider Portal: Build out the dedicated UI for doctors to manage schedules, view aggregated patient records, and emit prescriptions.
+#### `offline_sync_log` NULL `user_id` Constraint Violation (RESOLVED)
+- **Root Cause:** `scripts/007_security_hardening.sql` defines a PostgreSQL trigger `medical_records_audit` that fires on every INSERT/UPDATE/DELETE on `medical_records`. The trigger inserts into `offline_sync_log` using `auth.uid()`. When the API uses the admin service-role client (`adminSupabase`), `auth.uid()` returns `NULL`, violating the `NOT NULL` constraint.
+- **Code Fix:** `app/api/offline-sync/route.ts` — added hard `if (!user?.id)` guard and made the audit-log insert non-blocking (wrapped in try/catch, failures console-only). Also fixed `op.data ?? {}` for DELETE operations to avoid NULL JSONB violation.
+- **DB Fix (Required):** Run `scripts/009_fix_audit_trigger.sql` in Supabase SQL Editor. This replaces the trigger function with a NULL-safe version that skips the log entry when `auth.uid()` is NULL (service-role inserts).
 
-**Long Term (Months 4+):**
-- Real-time chat (Supabase Realtime) between patient and provider.
-- IoT device ingestion for remote health monitoring (blood pressure cuffs, glucose monitors).
+#### `medical_records.provider_id` NOT NULL Constraint (RESOLVED)
+- **Root Cause:** Original schema had `provider_id NOT NULL`, blocking patient manual-save of prescriptions without a provider.
+- **DB Fix:** `ALTER TABLE medical_records ALTER COLUMN provider_id DROP NOT NULL;`
+
+### New Features
+
+#### Emergency Module — First-Aid Cards Redesign (`components/EmergencyModule.tsx`)
+- Replaced 3 static neonatal info cards with 8 interactive first-aid topic cards (Cuts, Burns, Snake Bite, Choking, Heart Attack, High Fever, Dehydration, Electric Shock).
+- Each card navigates to `health-info` page via `setCurrentPage("health-info")`.
+- Fully bilingual (EN/HI), colour-coded per topic.
+
+#### Consultation Portal — Full Redesign (`components/ConsultationPortal.tsx`)
+- **Removed:** Occupation-based template system.
+- **Added:**
+  - Specialty filter pills (All / General Medicine / Cardiology / Pediatrics / OB-GYN / Orthopedics).
+  - 15 static real Madhya Pradesh doctors as reliable fallback (no dependency on empty `healthcare_providers` DB table).
+  - 7-day date strip with deterministic slot availability per doctor+date.
+  - Morning / Afternoon / Evening slot grid; unavailable slots shown crossed out.
+  - Symptom text box pre-filled from `symptomResult` prop (wired from `app/page.tsx` via `symptomCheckResult` state).
+  - Booking summary card shown before confirm.
+  - Graceful fallback: saves consultation as a Medical Record if DB appointment insert fails.
+
+#### Directory (`components/Directory.tsx`)
+- 15 real Madhya Pradesh doctors (AIIMS Bhopal, Hamidia Hospital, MY Hospital Indore, Bansal Hospital, etc.)
+- 8 real MP hospitals with bed counts, services, and FRU (First Referral Unit) tags.
+- Search filters by name, specialty, and location.
+
+#### Leaflet Map — Gray Map Fix (`app/layout.tsx`, `components/MapView.tsx`)
+- Moved `leaflet/dist/leaflet.css` import to `app/layout.tsx` globally.
+- Removed dynamic CSS injection from `MapView.tsx` that caused tile rendering race conditions.
+
+#### Camp Locations (`components/CampLocations.tsx`)
+- Fixed search/filter bugs (now filters by both type and search query).
+- Removed deprecated `distance` field calculations.
+- Registration persisted to DB via `/api/medical-records`.
+
+### Infrastructure
+
+#### Scripts
+- `scripts/009_fix_audit_trigger.sql` — Replaces `audit_medical_records` Postgres trigger with NULL-safe version.
+- `scripts/006_seed_real_data.sql` — Seeded with 15 real MP doctors and 8 MP hospitals.
+
+### Required Supabase SQL (Run in Order)
+1. `ALTER TABLE medical_records ALTER COLUMN provider_id DROP NOT NULL;`
+2. `ALTER TABLE patients ADD COLUMN IF NOT EXISTS role TEXT NOT NULL DEFAULT 'patient';`
+3. Full content of `scripts/009_fix_audit_trigger.sql`
+4. Full content of `scripts/006_seed_real_data.sql` (MP doctors seed)
+5. `INSERT INTO storage.buckets (id, name, public) VALUES ('medical-records', 'medical-records', FALSE) ON CONFLICT (id) DO NOTHING;`
