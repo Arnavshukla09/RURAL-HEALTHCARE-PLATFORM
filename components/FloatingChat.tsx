@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { MessageCircle, X, Send, Loader2, Bot, User, Minimize2 } from "lucide-react"
+import { MessageCircle, X, Send, Loader2, Bot, User, Minimize2, Map, Stethoscope, Calendar, FileText, AlertTriangle, Heart, Home, Info } from "lucide-react"
 
 interface FloatingChatProps {
   language: string
@@ -11,6 +11,66 @@ interface FloatingChatProps {
 interface ChatMessage {
   role: "user" | "assistant"
   content: string
+  navButtons?: NavButton[]
+}
+
+interface NavButton {
+  label: string
+  page?: string
+  action?: string
+  icon?: string
+}
+
+// Navigation keywords → page mapping
+const NAV_KEYWORDS: Record<string, { page: string; label: string }> = {
+  symptom: { page: "symptom-checker", label: "Symptom Checker" },
+  symptoms: { page: "symptom-checker", label: "Symptom Checker" },
+  लक्षण: { page: "symptom-checker", label: "लक्षण जांचक" },
+  hospital: { page: "locations", label: "Find Hospitals" },
+  hospitals: { page: "locations", label: "Find Hospitals" },
+  clinic: { page: "locations", label: "Find Clinics" },
+  map: { page: "locations", label: "Health Facilities Map" },
+  facility: { page: "locations", label: "Health Facilities" },
+  अस्पताल: { page: "locations", label: "अस्पताल खोजें" },
+  appointment: { page: "appointments", label: "Book Appointment" },
+  appointments: { page: "appointments", label: "My Appointments" },
+  book: { page: "consultation", label: "Book Consultation" },
+  consult: { page: "consultation", label: "Consult a Doctor" },
+  doctor: { page: "consultation", label: "Find Doctor" },
+  doctors: { page: "directory", label: "Doctor Directory" },
+  अपॉइंटमेंट: { page: "appointments", label: "अपॉइंटमेंट" },
+  record: { page: "records", label: "Medical Records" },
+  records: { page: "records", label: "Medical Records" },
+  prescription: { page: "records", label: "My Records" },
+  रिकॉर्ड: { page: "records", label: "मेडिकल रिकॉर्ड" },
+  emergency: { page: "emergency", label: "Emergency Services" },
+  आपातकाल: { page: "emergency", label: "आपातकालीन सेवाएं" },
+  camp: { page: "camps", label: "Health Camps" },
+  camps: { page: "camps", label: "Health Camps" },
+  health: { page: "health-info", label: "Health Information" },
+  information: { page: "health-info", label: "Health Info Hub" },
+  dashboard: { page: "dashboard", label: "My Dashboard" },
+  home: { page: "dashboard", label: "Go Home" },
+}
+
+const SITE_GUIDE_PAGES = [
+  { icon: "🏠", label: "Dashboard", labelHi: "डैशबोर्ड", page: "dashboard" },
+  { icon: "🩺", label: "Symptom Checker", labelHi: "लक्षण जांचक", page: "symptom-checker" },
+  { icon: "👨‍⚕️", label: "Book a Doctor", labelHi: "डॉक्टर बुक करें", page: "consultation" },
+  { icon: "📅", label: "My Appointments", labelHi: "मेरी अपॉइंटमेंट", page: "appointments" },
+  { icon: "📋", label: "Medical Records", labelHi: "मेडिकल रिकॉर्ड", page: "records" },
+  { icon: "🗺️", label: "Nearby Hospitals", labelHi: "निकटतम अस्पताल", page: "locations" },
+  { icon: "⛺", label: "Health Camps", labelHi: "स्वास्थ्य शिविर", page: "camps" },
+  { icon: "📚", label: "Health Info", labelHi: "स्वास्थ्य जानकारी", page: "health-info" },
+  { icon: "🆘", label: "Emergency", labelHi: "आपातकाल", page: "emergency" },
+]
+
+function detectNavIntent(text: string): { page: string; label: string } | null {
+  const lower = text.toLowerCase()
+  for (const [kw, nav] of Object.entries(NAV_KEYWORDS)) {
+    if (lower.includes(kw)) return nav
+  }
+  return null
 }
 
 export function FloatingChat({ language, setCurrentPage }: FloatingChatProps) {
@@ -18,6 +78,7 @@ export function FloatingChat({ language, setCurrentPage }: FloatingChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState("")
   const [loading, setLoading] = useState(false)
+  const [showGuide, setShowGuide] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const en = language === "en"
@@ -28,8 +89,14 @@ export function FloatingChat({ language, setCurrentPage }: FloatingChatProps) {
       setMessages([{
         role: "assistant",
         content: en
-          ? "👋 Hi! I'm your RuralHealth AI assistant. I can help you with:\n\n• Understanding your symptoms\n• Finding nearby doctors & hospitals\n• Explaining medical reports\n• First aid guidance\n• Vaccination schedules\n\nHow can I help you today?"
-          : "👋 नमस्ते! मैं आपका ग्रामीण स्वास्थ्य AI सहायक हूं। मैं इनमें मदद कर सकता हूं:\n\n• लक्षण समझना\n• डॉक्टर और अस्पताल खोजना\n• चिकित्सा रिपोर्ट समझाना\n• प्राथमिक उपचार\n• टीकाकरण शेड्यूल\n\nआज मैं कैसे मदद कर सकता हूं?"
+          ? "👋 Hi! I'm your **RuralHealth Guide**. I can:\n\n• Navigate you to any section of this website\n• Answer health questions in real-time\n• Explain your symptoms\n• Find nearby hospitals\n\nTap a quick action below or ask me anything!"
+          : "👋 नमस्ते! मैं आपका **ग्रामीण स्वास्थ्य गाइड** हूं। मैं कर सकता हूं:\n\n• वेबसाइट के किसी भी भाग में नेविगेट करना\n• स्वास्थ्य प्रश्नों का उत्तर देना\n• लक्षण समझाना\n• निकटतम अस्पताल खोजना\n\nनीचे त्वरित विकल्प चुनें या कुछ पूछें!",
+        navButtons: [
+          { label: en ? "🗺️ Navigate Site" : "🗺️ साइट गाइड", action: "show_guide" },
+          { label: en ? "🩺 Check Symptoms" : "🩺 लक्षण जांचें", page: "symptom-checker" },
+          { label: en ? "🆘 Emergency" : "🆘 आपातकाल", page: "emergency" },
+          { label: en ? "👨‍⚕️ Book Doctor" : "👨‍⚕️ डॉक्टर बुक करें", page: "consultation" },
+        ]
       }])
     }
   }, [open, en])
@@ -39,7 +106,7 @@ export function FloatingChat({ language, setCurrentPage }: FloatingChatProps) {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
     }
-  }, [messages])
+  }, [messages, showGuide])
 
   // Focus input when chat opens
   useEffect(() => {
@@ -48,17 +115,86 @@ export function FloatingChat({ language, setCurrentPage }: FloatingChatProps) {
     }
   }, [open])
 
+  const navigateTo = (page: string, label: string) => {
+    setCurrentPage?.(page)
+    setMessages(prev => [
+      ...prev,
+      { role: "user", content: en ? `Take me to ${label}` : `मुझे ${label} पर ले जाएं` },
+      {
+        role: "assistant",
+        content: en
+          ? `✅ Opening **${label}** for you now! Let me know if you need anything else.`
+          : `✅ **${label}** खोल रहा हूं! कुछ और चाहिए तो बताएं।`,
+        navButtons: [
+          { label: en ? "🏠 Back to Home" : "🏠 होम पर जाएं", page: "dashboard" },
+          { label: en ? "🗺️ More Options" : "🗺️ और विकल्प", action: "show_guide" },
+        ]
+      }
+    ])
+    setShowGuide(false)
+  }
+
+  const handleButtonClick = (btn: NavButton) => {
+    if (btn.action === "show_guide") {
+      setShowGuide(true)
+      setMessages(prev => [
+        ...prev,
+        { role: "user", content: en ? "Show me the site guide" : "साइट गाइड दिखाएं" },
+        {
+          role: "assistant",
+          content: en
+            ? "Here's everything available on RuralHealth. Tap any option to go there instantly!"
+            : "RuralHealth पर उपलब्ध सभी विकल्प यहां हैं। किसी भी विकल्प पर टैप करें!",
+        }
+      ])
+    } else if (btn.page) {
+      const pageLabels: Record<string, string> = {
+        "symptom-checker": en ? "Symptom Checker" : "लक्षण जांचक",
+        consultation: en ? "Book Consultation" : "परामर्श बुक करें",
+        appointments: en ? "Appointments" : "अपॉइंटमेंट",
+        records: en ? "Medical Records" : "मेडिकल रिकॉर्ड",
+        locations: en ? "Health Facilities" : "स्वास्थ्य केंद्र",
+        camps: en ? "Health Camps" : "स्वास्थ्य शिविर",
+        "health-info": en ? "Health Info" : "स्वास्थ्य जानकारी",
+        emergency: en ? "Emergency" : "आपातकाल",
+        dashboard: en ? "Dashboard" : "डैशबोर्ड",
+        directory: en ? "Doctor Directory" : "डॉक्टर डायरेक्टरी",
+      }
+      navigateTo(btn.page, pageLabels[btn.page] || btn.page)
+    }
+  }
+
   const handleSend = async () => {
     const text = input.trim()
     if (!text || loading) return
 
+    setInput("")
+
+    // Check for navigation intent
+    const navIntent = detectNavIntent(text)
+
     const userMsg: ChatMessage = { role: "user", content: text }
     setMessages(prev => [...prev, userMsg])
-    setInput("")
+    setShowGuide(false)
+
+    if (navIntent) {
+      setMessages(prev => [...prev, {
+        role: "assistant",
+        content: en
+          ? `Sure! Taking you to **${navIntent.label}** right now. 🚀`
+          : `ज़रूर! **${navIntent.label}** पर ले जा रहा हूं। 🚀`,
+        navButtons: [
+          { label: `→ ${navIntent.label}`, page: navIntent.page },
+          { label: en ? "🗺️ More Options" : "🗺️ और विकल्प", action: "show_guide" },
+        ]
+      }])
+      setTimeout(() => setCurrentPage?.(navIntent.page), 600)
+      return
+    }
+
     setLoading(true)
 
     try {
-      // Call our server-side AI chat API (keeps API key private, no CORS issues)
       const response = await fetch("/api/ai-chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -84,11 +220,22 @@ export function FloatingChat({ language, setCurrentPage }: FloatingChatProps) {
       }
 
       const data = await response.json()
-      setMessages(prev => [...prev, { role: "assistant", content: data.reply }])
+
+      // Check if AI response mentions navigating somewhere
+      const aiNavIntent = detectNavIntent(data.reply)
+      const navBtns: NavButton[] = aiNavIntent
+        ? [{ label: `→ ${aiNavIntent.label}`, page: aiNavIntent.page }]
+        : []
+
+      setMessages(prev => [...prev, {
+        role: "assistant",
+        content: data.reply,
+        navButtons: navBtns.length > 0 ? navBtns : undefined
+      }])
     } catch {
       setMessages(prev => [...prev, {
         role: "assistant",
-        content: en ? "Connection error. Please check your internet and try again." : "कनेक्शन त्रुटि। कृपया इंटरनेट जांचें और पुनः प्रयास करें।"
+        content: en ? "Connection error. Please check your internet and try again." : "कनेक्शन त्रुटि। कृपया इंटरनेट जांचें।"
       }])
     } finally {
       setLoading(false)
@@ -96,8 +243,8 @@ export function FloatingChat({ language, setCurrentPage }: FloatingChatProps) {
   }
 
   const quickActions = en
-    ? ["Check my symptoms", "Find nearest hospital", "First aid for burns", "Explain my prescription"]
-    : ["मेरे लक्षण जांचें", "निकटतम अस्पताल", "जलने की प्राथमिक चिकित्सा", "प्रिस्क्रिप्शन समझाएं"]
+    ? ["Check my symptoms", "Find nearest hospital", "I need emergency help", "Book an appointment"]
+    : ["मेरे लक्षण जांचें", "निकटतम अस्पताल खोजें", "मुझे आपातकालीन मदद चाहिए", "अपॉइंटमेंट बुक करें"]
 
   return (
     <>
@@ -105,18 +252,17 @@ export function FloatingChat({ language, setCurrentPage }: FloatingChatProps) {
       {!open && (
         <button
           onClick={() => setOpen(true)}
-          className="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-50 w-14 h-14 rounded-full bg-gradient-to-br from-teal-500 to-emerald-600 text-white shadow-xl hover:shadow-2xl hover:scale-105 transition-all flex items-center justify-center group"
+          className="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-50 w-14 h-14 rounded-full bg-gradient-to-br from-teal-500 to-emerald-600 text-white shadow-xl hover:shadow-2xl hover:scale-105 transition-all flex items-center justify-center"
           aria-label="Open health assistant chat"
         >
           <MessageCircle className="h-6 w-6" />
-          {/* Pulse dot */}
           <span className="absolute -top-0.5 -right-0.5 h-3.5 w-3.5 bg-red-500 rounded-full border-2 border-white animate-pulse" />
         </button>
       )}
 
       {/* Chat Panel */}
       {open && (
-        <div className="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-50 w-[calc(100vw-2rem)] sm:w-96 max-h-[70vh] bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden animate-fade-in">
+        <div className="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-50 w-[calc(100vw-2rem)] sm:w-96 max-h-[80vh] bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden animate-fade-in">
           {/* Header */}
           <div className="bg-gradient-to-r from-teal-600 to-emerald-600 text-white px-4 py-3 flex items-center justify-between flex-shrink-0">
             <div className="flex items-center gap-2.5">
@@ -125,36 +271,86 @@ export function FloatingChat({ language, setCurrentPage }: FloatingChatProps) {
               </div>
               <div>
                 <h3 className="text-sm font-semibold leading-tight">
-                  {en ? "Health Assistant" : "स्वास्थ्य सहायक"}
+                  {en ? "RuralHealth Guide" : "स्वास्थ्य गाइड"}
                 </h3>
-                <p className="text-[10px] opacity-80">
-                  {en ? "Powered by Gemini AI" : "Gemini AI द्वारा संचालित"}
+                <p className="text-[10px] opacity-80 flex items-center gap-1">
+                  <span className="h-1.5 w-1.5 bg-green-300 rounded-full" />
+                  {en ? "AI + Navigation Assistant" : "AI + नेविगेशन सहायक"}
                 </p>
               </div>
             </div>
-            <button onClick={() => setOpen(false)} className="p-1.5 hover:bg-white/20 rounded-lg transition-colors">
-              <Minimize2 className="h-4 w-4" />
-            </button>
+            <div className="flex gap-1">
+              <button
+                onClick={() => { setShowGuide(s => !s) }}
+                className="p-1.5 hover:bg-white/20 rounded-lg transition-colors text-[10px] font-medium"
+                title={en ? "Site map" : "साइट मैप"}
+              >
+                <Map className="h-4 w-4" />
+              </button>
+              <button onClick={() => setOpen(false)} className="p-1.5 hover:bg-white/20 rounded-lg transition-colors">
+                <Minimize2 className="h-4 w-4" />
+              </button>
+            </div>
           </div>
+
+          {/* Site Guide Panel (slide-in) */}
+          {showGuide && (
+            <div className="bg-gray-50 border-b border-gray-200 p-3 flex-shrink-0">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-semibold text-gray-700">{en ? "📍 Navigate to..." : "📍 नेविगेट करें..."}</p>
+                <button onClick={() => setShowGuide(false)} className="text-gray-400 hover:text-gray-600">
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+              <div className="grid grid-cols-3 gap-1.5">
+                {SITE_GUIDE_PAGES.map(p => (
+                  <button
+                    key={p.page}
+                    onClick={() => navigateTo(p.page, en ? p.label : p.labelHi)}
+                    className="flex flex-col items-center gap-1 p-2 rounded-xl bg-white border border-gray-200 hover:border-teal-300 hover:bg-teal-50 transition-all text-center"
+                  >
+                    <span className="text-lg">{p.icon}</span>
+                    <span className="text-[10px] font-medium text-gray-700 leading-tight">{en ? p.label : p.labelHi}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Messages */}
           <div ref={scrollRef} className="flex-1 overflow-y-auto p-3 space-y-3 min-h-0" style={{ maxHeight: "45vh" }}>
             {messages.map((msg, i) => (
-              <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-                <div className={`flex items-start gap-2 max-w-[85%] ${msg.role === "user" ? "flex-row-reverse" : ""}`}>
-                  <div className={`h-6 w-6 rounded-full flex items-center justify-center flex-shrink-0 ${
-                    msg.role === "user" ? "bg-teal-100 text-teal-700" : "bg-emerald-100 text-emerald-700"
-                  }`}>
-                    {msg.role === "user" ? <User className="h-3.5 w-3.5" /> : <Bot className="h-3.5 w-3.5" />}
-                  </div>
-                  <div className={`rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
-                    msg.role === "user"
-                      ? "bg-teal-600 text-white rounded-tr-sm"
-                      : "bg-gray-100 text-gray-800 rounded-tl-sm"
-                  }`}>
-                    <div className="whitespace-pre-wrap">{msg.content}</div>
+              <div key={i}>
+                <div className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                  <div className={`flex items-start gap-2 max-w-[88%] ${msg.role === "user" ? "flex-row-reverse" : ""}`}>
+                    <div className={`h-6 w-6 rounded-full flex items-center justify-center flex-shrink-0 ${
+                      msg.role === "user" ? "bg-teal-100 text-teal-700" : "bg-emerald-100 text-emerald-700"
+                    }`}>
+                      {msg.role === "user" ? <User className="h-3.5 w-3.5" /> : <Bot className="h-3.5 w-3.5" />}
+                    </div>
+                    <div className={`rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
+                      msg.role === "user"
+                        ? "bg-teal-600 text-white rounded-tr-sm"
+                        : "bg-gray-100 text-gray-800 rounded-tl-sm"
+                    }`}>
+                      <div className="whitespace-pre-wrap">{msg.content}</div>
+                    </div>
                   </div>
                 </div>
+                {/* Navigation buttons attached to message */}
+                {msg.navButtons && msg.navButtons.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mt-2 ml-8">
+                    {msg.navButtons.map((btn, bi) => (
+                      <button
+                        key={bi}
+                        onClick={() => handleButtonClick(btn)}
+                        className="text-xs bg-white text-teal-700 px-3 py-1.5 rounded-full border border-teal-200 hover:bg-teal-50 hover:border-teal-400 transition-all shadow-sm font-medium"
+                      >
+                        {btn.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
 
@@ -173,11 +369,11 @@ export function FloatingChat({ language, setCurrentPage }: FloatingChatProps) {
               </div>
             )}
 
-            {/* Quick actions (only when few messages) */}
+            {/* Quick action chips — first message only */}
             {messages.length <= 1 && !loading && (
               <div className="flex flex-wrap gap-1.5 pt-1">
                 {quickActions.map((action, i) => (
-                  <button key={i} onClick={() => { setInput(action); setTimeout(handleSend, 50) }}
+                  <button key={i} onClick={() => { setInput(action); setTimeout(() => handleSend(), 50) }}
                     className="text-xs bg-teal-50 text-teal-700 px-3 py-1.5 rounded-full border border-teal-200 hover:bg-teal-100 transition-colors">
                     {action}
                   </button>
@@ -194,7 +390,7 @@ export function FloatingChat({ language, setCurrentPage }: FloatingChatProps) {
                 type="text"
                 value={input}
                 onChange={e => setInput(e.target.value)}
-                placeholder={en ? "Ask about your health..." : "अपनी स्वास्थ्य के बारे में पूछें..."}
+                placeholder={en ? "Ask or say 'go to appointments'..." : "पूछें या 'अपॉइंटमेंट पर जाएं'..."}
                 className="flex-1 text-sm border border-gray-200 rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-teal-400 focus:ring-1 focus:ring-teal-100"
                 disabled={loading}
               />
