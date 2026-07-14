@@ -154,65 +154,46 @@ export function ConsultationPortal({ language, user, setCurrentPage, symptomResu
         setLoading(false); return
       }
 
-      // Resolve patient ID
-      let patientId: string | null = null
-      try {
-        const r = await fetch("/api/auth/ensure-patient", { method: "POST" })
-        if (r.ok) patientId = (await r.json()).patient_id
-      } catch {}
-      if (!patientId) {
-        const { data: p } = await supabase.from("patients").select("id").eq("user_id", authUser.id).single()
-        patientId = p?.id ?? null
-      }
-
       const appointmentDate = new Date(`${selectedDate}T${selectedSlot}:00`).toISOString()
-      const roomId = `ruralhealth-${authUser.id.slice(0, 8)}-${Date.now()}`
       const fullNotes = [
         `[${consultType.toUpperCase()} — ${selectedDoctor.name}, ${selectedDoctor.location}]`,
         notes.trim()
-      ].filter(Boolean).join("\n")
+      ].filter(Boolean).join(" | ")
 
-      // Try DB appointment insert first
-      let booked = false
-      if (patientId) {
-        // Get a real provider_id from DB
-        const { data: provList } = await supabase
-          .from("healthcare_providers")
-          .select("id")
-          .eq("is_verified", true)
-          .limit(1)
+      // Insert via API route (handles patient lookup & null provider gracefully)
+      const res = await fetch("/api/appointments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          appointment_date: appointmentDate,
+          consultation_type: consultType,
+          notes: fullNotes,
+        }),
+      })
 
-        const provId = provList?.[0]?.id
-        if (provId) {
-          const { error: dbErr } = await supabase.from("appointments").insert({
-            patient_id: patientId,
-            provider_id: provId,
-            appointment_date: appointmentDate,
-            duration_minutes: 30,
-            status: "scheduled",
-            notes: fullNotes,
-            teleconsult_room_id: roomId,
-          })
-          if (!dbErr) booked = true
-        }
+      if (res.ok) {
+        setSuccess(
+          en
+            ? `Booked! ${selectedDoctor.name} on ${new Date(selectedDate).toLocaleDateString("en-IN",{weekday:"long",day:"numeric",month:"short"})} at ${selectedSlot}. Check Appointments tab.`
+            : `बुक हो गया! ${selectedDoctor.name} — ${selectedDate} ${selectedSlot}। अपॉइंटमेंट में देखें।`
+        )
+        setSelectedDoctor(null); setSelectedSlot(""); setNotes(symptomPreFill)
+        return
       }
 
-      // Fallback: save as a medical record (always works even if appointments table fails)
-      if (!booked) {
-        await fetch("/api/medical-records", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            record_type: "other",
-            content: `[Consultation Request] ${fullNotes} | Slot: ${selectedDate} ${selectedSlot}`,
-          }),
-        })
-      }
-
+      // API failed — fallback to medical record so user doesn't lose their request
+      await fetch("/api/medical-records", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          record_type: "other",
+          content: `[Consultation Request] [${consultType.toUpperCase()} — ${selectedDoctor.name}, ${selectedDoctor.location}] ${notes.trim()} | Slot: ${selectedDate} ${selectedSlot}`,
+        }),
+      })
       setSuccess(
         en
-          ? `Booked! ${selectedDoctor.name} on ${new Date(selectedDate).toLocaleDateString("en-IN",{weekday:"long",day:"numeric",month:"short"})} at ${selectedSlot}. Check Appointments for details.`
-          : `बुक हो गया! ${selectedDoctor.name} — ${selectedDate} ${selectedSlot}। अपॉइंटमेंट में देखें।`
+          ? `Request saved! ${selectedDoctor.name} at ${selectedSlot} on ${selectedDate}. (Appointment system updating — check back soon)`
+          : `अनुरोध सहेजा गया! ${selectedDoctor.name} — ${selectedDate} ${selectedSlot}`
       )
       setSelectedDoctor(null); setSelectedSlot(""); setNotes(symptomPreFill)
     } catch (e: any) {

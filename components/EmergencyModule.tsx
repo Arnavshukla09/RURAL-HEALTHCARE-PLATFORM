@@ -2,23 +2,13 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
 import { Button } from "./ui/button"
-import { Phone, MapPin, Share2, AlertTriangle, Truck, MessageSquare, MessageCircle, Activity, BookOpen } from "lucide-react"
+import { Phone, MapPin, Share2, AlertTriangle, Truck, MessageSquare, MessageCircle } from "lucide-react"
 
 interface EmergencyModuleProps {
   setCurrentPage: (page: string) => void
   language: string
 }
 
-const firstAidItems = [
-  { icon: "🩹", titleEn: "Cuts & Wounds",       titleHi: "कट और घाव",         color: "border-orange-400 bg-orange-50",  iconBg: "bg-orange-100" },
-  { icon: "🔥", titleEn: "Burns",                titleHi: "जलना",              color: "border-red-400 bg-red-50",        iconBg: "bg-red-100"    },
-  { icon: "🐍", titleEn: "Snake Bite",            titleHi: "सांप काटना",        color: "border-green-500 bg-green-50",    iconBg: "bg-green-100"  },
-  { icon: "😮", titleEn: "Choking",               titleHi: "गला घुटना",         color: "border-purple-400 bg-purple-50",  iconBg: "bg-purple-100" },
-  { icon: "❤️", titleEn: "Heart Attack",          titleHi: "दिल का दौरा",       color: "border-rose-500 bg-rose-50",      iconBg: "bg-rose-100"   },
-  { icon: "🌡️", titleEn: "High Fever",            titleHi: "तेज बुखार",         color: "border-amber-400 bg-amber-50",    iconBg: "bg-amber-100"  },
-  { icon: "💧", titleEn: "Dehydration",           titleHi: "निर्जलीकरण",        color: "border-blue-400 bg-blue-50",      iconBg: "bg-blue-100"   },
-  { icon: "⚡", titleEn: "Electric Shock",         titleHi: "बिजली का झटका",     color: "border-yellow-500 bg-yellow-50",  iconBg: "bg-yellow-100" },
-]
 
 export function EmergencyModule({ setCurrentPage, language }: EmergencyModuleProps) {
   const content = {
@@ -205,37 +195,6 @@ export function EmergencyModule({ setCurrentPage, language }: EmergencyModulePro
           </Card>
         </div>
 
-        {/* Visual First-Aid Guide — Each card navigates to Health Info Hub */}
-        <Card className="border-orange-200 bg-orange-50">
-          <CardHeader>
-            <CardTitle className="flex items-center text-orange-800">
-              <Activity className="h-6 w-6 mr-2" />
-              {t.firstAid}
-            </CardTitle>
-            <p className="text-sm text-orange-600 flex items-center gap-1">
-              <BookOpen className="h-3.5 w-3.5" />
-              {t.firstAidSub}
-            </p>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {firstAidItems.map((item) => (
-                <button
-                  key={item.titleEn}
-                  onClick={() => setCurrentPage("health-info")}
-                  className={`${item.color} border-t-4 p-4 rounded-xl shadow-sm text-center transition-all hover:scale-105 hover:shadow-md active:scale-95 cursor-pointer`}
-                >
-                  <div className={`${item.iconBg} w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl`}>
-                    {item.icon}
-                  </div>
-                  <p className="font-semibold text-gray-800 text-sm leading-tight">
-                    {language === "hi" ? item.titleHi : item.titleEn}
-                  </p>
-                </button>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
   )

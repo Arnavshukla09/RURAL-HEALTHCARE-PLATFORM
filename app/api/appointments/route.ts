@@ -23,22 +23,11 @@ export async function GET(req: NextRequest) {
 
   let query = supabase
     .from("appointments")
-    .select("*, providers(first_name, last_name, specialization)")
+    .select("*")
     .order("appointment_date", { ascending: true })
 
-  // Doctors see appointments where they are the provider
-  if (patient.role === "doctor") {
-    const { data: provider } = await supabase
-      .from("providers")
-      .select("id")
-      .eq("user_id", user.id)
-      .single()
-    if (provider) {
-      query = query.eq("provider_id", provider.id)
-    }
-  } else {
-    query = query.eq("patient_id", patient.id)
-  }
+  // All users see their own appointments by patient_id
+  query = query.eq("patient_id", patient.id)
 
   const { data, error } = await query
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })

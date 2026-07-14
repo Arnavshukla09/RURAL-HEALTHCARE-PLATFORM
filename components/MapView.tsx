@@ -273,7 +273,9 @@ export function MapView({ language }: MapViewProps) {
           <LeafletMap center={[center.lat, center.lng]} zoom={userCoords ? 13 : 11}>
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>, &copy; <a href="https://carto.com/">CartoDB</a>'
-              url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+              url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png"
+              subdomains={["a", "b", "c", "d"]}
+              maxZoom={19}
             />
 
             {/* User location pin with pulsing blue dot */}

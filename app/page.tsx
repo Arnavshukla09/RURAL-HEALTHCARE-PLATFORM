@@ -100,16 +100,12 @@ export default function Page() {
 const timeoutId = setTimeout(() => setLoading(false), 5000) // failsafe: never hang forever
 
 supabase.auth.getSession()
-  .then(({ data: { session } }) => {
+  .then(async ({ data: { session } }) => {
     clearTimeout(timeoutId)
     if (session?.user) {
-      setUser({
-        id: session.user.id,
-        name: session.user.user_metadata?.full_name ||
-              session.user.email?.split("@")[0] || "User",
-        email: session.user.email,
-        role: "patient",
-      })
+      // Use fetchUserWithRole so role is read from DB, not hardcoded
+      const userData = await fetchUserWithRole(session.user)
+      setUser(userData)
     }
     setLoading(false)
   })

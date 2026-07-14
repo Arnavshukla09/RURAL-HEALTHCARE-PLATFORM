@@ -30,7 +30,9 @@ export function AppointmentManager({ user, language, setCurrentPage, setJitsiRoo
         const res = await fetch("/api/appointments")
         if (res.ok) {
           const data = await res.json()
-          setAppointments(data || [])
+          // API returns { appointments: [] } — extract the array
+          const arr = Array.isArray(data) ? data : (data.appointments ?? [])
+          setAppointments(arr)
         }
       } catch (err) {
         console.error("Failed to fetch appointments:", err)
