@@ -310,7 +310,7 @@ export function Directory({ setCurrentPage, language }: DirectoryProps) {
                 <Card key={doctor.id} className="hover:shadow-lg transition-shadow">
                   <CardContent className="p-6">
                     <div className="flex flex-col md:flex-row gap-6">
-                      <div className="flex items-start space-x-4">
+                      <div className="flex flex-1 items-start space-x-4">
                         <Avatar className="h-16 w-16">
                           <AvatarImage src={doctor.image} />
                           <AvatarFallback className="bg-blue-100 text-blue-600">
