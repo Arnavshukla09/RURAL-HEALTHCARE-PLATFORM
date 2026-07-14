@@ -5,6 +5,8 @@ import { createClient } from "@/lib/supabase/client"
 import { LandingPage } from "@/components/LandingPage"
 import { Authentication } from "@/components/Authentication"
 import { Dashboard } from "@/components/Dashboard"
+import { DoctorDashboard } from "@/components/DoctorDashboard"
+import { AdminDashboard } from "@/components/AdminDashboard"
 import { Header } from "@/components/Header"
 import { Footer } from "@/components/Footer"
 import { SymptomChecker } from "@/components/SymptomChecker"
@@ -153,6 +155,12 @@ supabase.auth.getSession()
       case "home":
         return <LandingPage setCurrentPage={setCurrentPage} language={language} />
       case "dashboard":
+        if (user?.role === "doctor") {
+          return <DoctorDashboard user={user} setCurrentPage={setCurrentPage} language={language} setJitsiRoom={setJitsiRoom} />
+        }
+        if (user?.role === "admin") {
+          return <AdminDashboard user={user} setCurrentPage={setCurrentPage} language={language} />
+        }
         return <Dashboard user={user || { name: "Guest", role: "patient" }} setCurrentPage={setCurrentPage} language={language} />
       case "symptom-checker":
         return (
