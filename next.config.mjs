@@ -29,7 +29,7 @@ const nextConfig = {
             "font-src 'self' https://fonts.gstatic.com",
             "frame-src https://meet.jit.si https://*.jitsi.net",
             "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://generativelanguage.googleapis.com https://meet.jit.si https://*.jitsi.net",
-            "img-src 'self' data: blob: https://*.supabase.co https://*.tile.openstreetmap.org https://tile.openstreetmap.org https://unpkg.com https://images.unsplash.com https://*.jitsi.net",
+            "img-src 'self' data: blob: https://*.supabase.co https://*.tile.openstreetmap.org https://tile.openstreetmap.org https://*.basemaps.cartocdn.com https://unpkg.com https://images.unsplash.com https://*.jitsi.net",
             "media-src 'self' https://meet.jit.si https://*.jitsi.net",
             "worker-src 'self' blob:",
           ].join('; ')
