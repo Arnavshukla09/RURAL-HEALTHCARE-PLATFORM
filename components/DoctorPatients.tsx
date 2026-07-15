@@ -22,11 +22,11 @@ export function DoctorPatients({ language, setCurrentPage }: DoctorPatientsProps
   useEffect(() => {
     const load = async () => {
       const supabase = createClient()
-      // Load ALL patients from the patients table
+      // Load all patients: role = 'patient' OR role is not set yet
       const { data: allPatients } = await supabase
         .from("patients")
         .select("id, user_id, first_name, last_name, email, phone, created_at, role")
-        .eq("role", "patient")
+        .or("role.eq.patient,role.is.null")
         .order("created_at", { ascending: false })
       setPatients(allPatients ?? [])
       setLoading(false)

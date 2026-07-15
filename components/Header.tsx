@@ -60,8 +60,9 @@ export function Header({ currentPage, setCurrentPage, user, setUser, language, s
   const adminItems = [
     { key: "admin-users", label: en ? "Users" : "उपयोगकर्ता", icon: Users },
     { key: "admin-campaigns", label: en ? "Campaigns" : "अभियान", icon: Megaphone },
+    { key: "admin-appointments", label: en ? "Appointments" : "अपॉइंटमेंट", icon: Calendar },
+    { key: "admin-records", label: en ? "Records" : "रिकॉर्ड", icon: ClipboardList },
     { key: "admin-notifications", label: en ? "Notify" : "सूचनाएं", icon: Bell },
-    { key: "appointments", label: en ? "Appointments" : "अपॉइंटमेंट", icon: Calendar },
   ]
 
   const careItems = [
@@ -228,12 +229,16 @@ export function Header({ currentPage, setCurrentPage, user, setUser, language, s
                       <>
                         <button onClick={() => go("doctor-patients")} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">{en ? "Patient Records" : "मरीज़ रिकॉर्ड"}</button>
                         <button onClick={() => go("doctor-requests")} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">{en ? "Appointment Requests" : "नई अनुरोध"}</button>
+                        <button onClick={() => go("appointments")} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">{en ? "Appointments" : "अपॉइंटमेंट"}</button>
+                        <button onClick={() => go("locations")} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">{en ? "Hospitals" : "अस्पताल"}</button>
                       </>
                     )}
                     {role === "admin" && (
                       <>
                         <button onClick={() => go("admin-users")} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">{en ? "Manage Users" : "उपयोगकर्ता प्रबंधन"}</button>
                         <button onClick={() => go("admin-campaigns")} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">{en ? "Campaigns" : "अभियान"}</button>
+                        <button onClick={() => go("admin-appointments")} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">{en ? "Appointments" : "अपॉइंटमेंट"}</button>
+                        <button onClick={() => go("admin-records")} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">{en ? "Records" : "रिकॉर्ड"}</button>
                         <button onClick={() => go("admin-notifications")} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">{en ? "Send Notifications" : "सूचनाएं भेजें"}</button>
                       </>
                     )}

@@ -48,10 +48,14 @@ export function DoctorAppointmentRequests({ language, setCurrentPage, setJitsiRo
     } finally { setUpdating(null) }
   }
 
+  // Supabase returns joined tables as arrays even for 1:1 relations
+  const getPatient = (a: any) => Array.isArray(a.patients) ? a.patients[0] : a.patients
+
   const filtered = appointments.filter(a => {
+    const p = getPatient(a)
     const matchTab = tab === "all" ? true : tab === "pending" ? a.status === "scheduled" : a.status === "completed"
     const matchSearch = search
-      ? [a.patients?.first_name, a.patients?.last_name, a.patients?.email, a.notes].join(" ").toLowerCase().includes(search.toLowerCase())
+      ? [p?.first_name, p?.last_name, p?.email, a.notes].join(" ").toLowerCase().includes(search.toLowerCase())
       : true
     return matchTab && matchSearch
   })
@@ -122,7 +126,8 @@ export function DoctorAppointmentRequests({ language, setCurrentPage, setJitsiRo
             const isExpanded = expanded === appt.id
             const ct = consultType(appt.notes || "")
             const Icon = ct.icon
-            const patientName = [appt.patients?.first_name, appt.patients?.last_name].filter(Boolean).join(" ") || "Unknown Patient"
+            const p = getPatient(appt)
+            const patientName = [p?.first_name, p?.last_name].filter(Boolean).join(" ") || "Unknown Patient"
             const isToday = d.toDateString() === new Date().toDateString()
             const isPast = d < new Date()
 
@@ -154,7 +159,7 @@ export function DoctorAppointmentRequests({ language, setCurrentPage, setJitsiRo
                           {" · "}
                           {d.toLocaleTimeString(en ? "en-IN" : "hi-IN", { hour: "2-digit", minute: "2-digit" })}
                         </p>
-                        {appt.patients?.email && <p className="text-xs text-gray-400 mt-0.5">{appt.patients.email}</p>}
+                        {p?.email && <p className="text-xs text-gray-400 mt-0.5">{p.email}</p>}
                       </div>
                     </div>
                     <button onClick={() => setExpanded(isExpanded ? null : appt.id)}

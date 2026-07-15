@@ -182,19 +182,26 @@ supabase.auth.getSession()
         return <AppointmentManager user={user} language={language} setCurrentPage={setCurrentPage} setJitsiRoom={setJitsiRoom} />
       // ── Doctor pages ──────────────────────────────
       case "doctor-patients":
+        if (user?.role !== "doctor") return <Dashboard user={user} setCurrentPage={setCurrentPage} language={language} />
         return <DoctorPatients language={language} setCurrentPage={setCurrentPage} />
       case "doctor-requests":
+        if (user?.role !== "doctor") return <Dashboard user={user} setCurrentPage={setCurrentPage} language={language} />
         return <DoctorAppointmentRequests language={language} setCurrentPage={setCurrentPage} setJitsiRoom={setJitsiRoom} />
       // ── Admin pages ──────────────────────────────
       case "admin-users":
+        if (user?.role !== "admin") return <Dashboard user={user} setCurrentPage={setCurrentPage} language={language} />
         return <AdminUserManagement language={language} setCurrentPage={setCurrentPage} />
       case "admin-campaigns":
+        if (user?.role !== "admin") return <Dashboard user={user} setCurrentPage={setCurrentPage} language={language} />
         return <AdminCampaignManager language={language} />
       case "admin-notifications":
+        if (user?.role !== "admin") return <Dashboard user={user} setCurrentPage={setCurrentPage} language={language} />
         return <AdminNotifications language={language} />
       case "admin-appointments":
+        if (user?.role !== "admin") return <Dashboard user={user} setCurrentPage={setCurrentPage} language={language} />
         return <AdminAppointments language={language} />
       case "admin-records":
+        if (user?.role !== "admin") return <Dashboard user={user} setCurrentPage={setCurrentPage} language={language} />
         return <AdminRecords language={language} />
       // ── Shared pages ─────────────────────────────
       case "records":

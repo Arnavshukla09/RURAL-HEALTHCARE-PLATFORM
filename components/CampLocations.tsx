@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "./ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
@@ -27,7 +27,7 @@ interface CampLocationsProps {
 }
 
 interface CampLocation {
-  id: number
+  id: number | string
   name: string
   type: "blood-donation" | "checkup" | "vaccination"
   address: string
@@ -121,8 +121,8 @@ export function CampLocations({ setCurrentPage, language }: CampLocationsProps) 
 
   const t = content[language as keyof typeof content]
 
-  // Real Madhya Pradesh government health programs & camps
-  const campLocations: CampLocation[] = [
+  // Real Madhya Pradesh government health programs & camps (Initial static fallback)
+  const [campLocations, setCampLocations] = useState<CampLocation[]>([
     {
       id: 1,
       name: language === "en" ? "NHM Free Health Checkup Camp" : "NHM मुफ्त स्वास्थ्य जांच शिविर",
@@ -235,7 +235,51 @@ export function CampLocations({ setCurrentPage, language }: CampLocationsProps) 
       status: "upcoming",
       description: language === "en" ? "Free sputum test, chest X-ray, CBNAAT testing under Nikshay Poshan Yojana" : "निक्षय पोषण योजना के तहत मुफ्त बलगम जांच, छाती X-रे, CBNAAT परीक्षण",
     },
-  ]
+  ])
+
+  useEffect(() => {
+    const fetchDBCamps = async () => {
+      const supabase = createClient()
+      const { data, error } = await supabase.from("camps").select("*")
+      if (error || !data) return
+      
+      const mapped = data.map(dbCamp => ({
+        id: dbCamp.id,
+        name: dbCamp.title || "Health Camp",
+        type: (dbCamp.category?.toLowerCase() || "checkup") as any,
+        address: dbCamp.address || "",
+        landmark: dbCamp.location || "",
+        coordinates: { lat: 0, lng: 0 }, // DB camps don't have lat/lng yet
+        date: dbCamp.start_date || "",
+        time: dbCamp.start_time || "",
+        contact: dbCamp.phone || "",
+        participants: dbCamp.participants || 0,
+        status: (dbCamp.status || "upcoming") as any,
+        description: dbCamp.description || "",
+      }))
+      
+      // Merge with initial hardcoded ones (prevent duplicates if seeded)
+      setCampLocations(prev => {
+        const existingNames = new Set(prev.map(c => c.name))
+        const newCamps = mapped.filter(c => !existingNames.has(c.name))
+        return [...prev, ...newCamps]
+      })
+    }
+    fetchDBCamps()
+  }, [])
+
+  // Haversine distance formula (in km)
+  const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    if (!lat1 || !lon1 || !lat2 || !lon2) return Infinity
+    const R = 6371
+    const dLat = (lat2 - lat1) * (Math.PI / 180)
+    const dLon = (lon2 - lon1) * (Math.PI / 180)
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2)
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+    return R * c
+  }
 
   const filteredCamps = campLocations.filter((camp) => {
     const matchesType = selectedType === "all" || camp.type === selectedType
@@ -247,8 +291,12 @@ export function CampLocations({ setCurrentPage, language }: CampLocationsProps) 
   })
 
   const sortedCamps = [...filteredCamps].sort((a, b) => {
-    if (sortBy === "distance") {
-      return a.address.localeCompare(b.address)
+    if (sortBy === "distance" && userCoordinates) {
+      const distA = getDistance(userCoordinates.lat, userCoordinates.lng, a.coordinates?.lat, a.coordinates?.lng)
+      const distB = getDistance(userCoordinates.lat, userCoordinates.lng, b.coordinates?.lat, b.coordinates?.lng)
+      return distA - distB
+    } else if (sortBy === "distance") {
+      return a.address.localeCompare(b.address) // fallback if no GPS
     } else {
       return new Date(a.date).getTime() - new Date(b.date).getTime()
     }
