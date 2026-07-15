@@ -22,40 +22,45 @@ export function DoctorPatients({ language, setCurrentPage }: DoctorPatientsProps
   useEffect(() => {
     const load = async () => {
       const supabase = createClient()
-      // Load all patients (admin-level read via service role isn't available here,
-      // so we read patients whose appointments reference us)
-      const { data: appts } = await supabase
-        .from("appointments")
-        .select("patient_id, patients(id, first_name, last_name, email, phone, created_at)")
-        .order("appointment_date", { ascending: false })
-
-      // Deduplicate patients
-      const seen = new Set<string>()
-      const uniquePatients: any[] = []
-      for (const a of (appts ?? [])) {
-        // Supabase returns joined rows as array — take first element
-        const p = Array.isArray(a.patients) ? a.patients[0] : a.patients
-        if (p && !seen.has(p.id)) {
-          seen.add(p.id)
-          uniquePatients.push(p)
-        }
-      }
-      setPatients(uniquePatients)
+      // Load ALL patients from the patients table
+      const { data: allPatients } = await supabase
+        .from("patients")
+        .select("id, user_id, first_name, last_name, email, phone, created_at, role")
+        .eq("role", "patient")
+        .order("created_at", { ascending: false })
+      setPatients(allPatients ?? [])
       setLoading(false)
     }
     load()
   }, [])
 
-  const loadRecords = async (patientId: string) => {
-    if (records[patientId]) { setExpanded(expanded === patientId ? null : patientId); return }
+  const loadRecords = async (patientId: string, userId?: string) => {
+    if (records[patientId] !== undefined) {
+      setExpanded(expanded === patientId ? null : patientId)
+      return
+    }
     const supabase = createClient()
-    const { data } = await supabase
+    // Try patient_id first (matches patients.id)
+    const { data: byPatientId } = await supabase
       .from("medical_records")
       .select("*")
       .eq("patient_id", patientId)
       .order("created_at", { ascending: false })
-      .limit(10)
-    setRecords(prev => ({ ...prev, [patientId]: data ?? [] }))
+      .limit(20)
+
+    // Also try user_id if patient has it
+    let combined = byPatientId ?? []
+    if (userId && combined.length === 0) {
+      const { data: byUserId } = await supabase
+        .from("medical_records")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(20)
+      combined = byUserId ?? []
+    }
+
+    setRecords(prev => ({ ...prev, [patientId]: combined }))
     setExpanded(patientId)
   }
 
@@ -163,7 +168,7 @@ export function DoctorPatients({ language, setCurrentPage }: DoctorPatientsProps
                       </div>
                     </div>
                     <button
-                      onClick={() => loadRecords(patient.id)}
+                      onClick={() => loadRecords(patient.id, patient.user_id)}
                       className="flex items-center gap-1.5 text-teal-600 hover:text-teal-800 text-sm font-medium px-3 py-1.5 rounded-lg hover:bg-teal-50 transition-colors flex-shrink-0">
                       <Eye className="h-4 w-4" />
                       {en ? "Records" : "रिकॉर्ड"}

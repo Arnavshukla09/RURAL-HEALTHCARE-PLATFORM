@@ -300,7 +300,7 @@ export function AppointmentManager({ user, language, setCurrentPage, setJitsiRoo
         </div>
 
         {!isDoctor && (
-          <Button className="w-full gradient-primary text-white" onClick={() => setShowBooking(!showBooking)}>
+          <Button className="w-full gradient-primary text-white" onClick={() => setCurrentPage("consultation")}>
             <Plus className="h-4 w-4 mr-1.5" />
             {en ? "Book New Appointment" : "नया अपॉइंटमेंट बुक करें"}
           </Button>

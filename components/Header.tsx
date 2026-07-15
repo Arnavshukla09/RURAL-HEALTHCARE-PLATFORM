@@ -3,6 +3,7 @@ import { Button } from "./ui/button"
 import { Menu, X, Heart, AlertTriangle, Activity, ChevronDown, LogOut, User, BookOpen, Users, Bell, Calendar, ClipboardList, MapPin, Megaphone } from "lucide-react"
 import { useState, useRef, useEffect } from "react"
 import { createClient } from "@/lib/supabase/client"
+import { NotificationBell } from "./NotificationBell"
 
 interface HeaderProps {
   currentPage: string
@@ -191,13 +192,17 @@ export function Header({ currentPage, setCurrentPage, user, setUser, language, s
           </nav>
 
           {/* Right */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
+            {/* Language toggle */}
             <button onClick={() => setLanguage(en ? "hi" : "en")}
               className={`hidden sm:flex items-center px-2.5 py-1.5 text-xs font-medium border rounded-md transition-colors ${
                 role !== "patient" ? "border-white/30 text-white hover:bg-white/10" : "border-gray-200 hover:bg-gray-50"
               }`}>
               {en ? "हिं" : "EN"}
             </button>
+
+            {/* Notification Bell — for all logged-in users */}
+            {user && <NotificationBell user={user} language={language} />}
 
             {user ? (
               <div ref={userRef} className="relative hidden sm:block">
