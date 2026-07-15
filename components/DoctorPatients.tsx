@@ -33,9 +33,11 @@ export function DoctorPatients({ language, setCurrentPage }: DoctorPatientsProps
       const seen = new Set<string>()
       const uniquePatients: any[] = []
       for (const a of (appts ?? [])) {
-        if (a.patients && !seen.has(a.patients.id)) {
-          seen.add(a.patients.id)
-          uniquePatients.push(a.patients)
+        // Supabase returns joined rows as array — take first element
+        const p = Array.isArray(a.patients) ? a.patients[0] : a.patients
+        if (p && !seen.has(p.id)) {
+          seen.add(p.id)
+          uniquePatients.push(p)
         }
       }
       setPatients(uniquePatients)
