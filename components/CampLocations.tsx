@@ -47,8 +47,8 @@ export function CampLocations({ setCurrentPage, language }: CampLocationsProps) 
   const [selectedType, setSelectedType] = useState<string>("all")
   const [sortBy, setSortBy] = useState<"distance" | "date">("distance")
   const [showMap, setShowMap] = useState(false)
-  const [registering, setRegistering] = useState<number | null>(null)
-  const [registeredCamps, setRegisteredCamps] = useState<Set<number>>(new Set())
+  const [registering, setRegistering] = useState<number | string | null>(null)
+  const [registeredCamps, setRegisteredCamps] = useState<Set<number | string>>(new Set())
 
   const currentYear = new Date().getFullYear()
 
