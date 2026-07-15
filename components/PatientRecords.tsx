@@ -151,6 +151,21 @@ export function PatientRecords({ language }: PatientRecordsProps) {
     }
   }
 
+  const handleDeleteRecord = async (id: string) => {
+    if (!confirm(en ? 'Are you sure you want to delete this record?' : 'क्या आप वाकई इस रिकॉर्ड को हटाना चाहते हैं?')) return
+    
+    try {
+      const res = await fetch(`/api/medical-records?id=${id}`, {
+        method: 'DELETE'
+      })
+      if (res.ok) {
+        setRecords(records.filter(r => r.id !== id))
+      }
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
   // Upload file + save record
   const handleUploadAndSave = async () => {
     if (!selectedFile) return
@@ -476,11 +491,16 @@ export function PatientRecords({ language }: PatientRecordsProps) {
                       <FileText className="h-5 w-5 text-teal-600" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Badge className={`text-xs ${typeBadgeColors[rec.record_type] || typeBadgeColors.other}`}>
-                          {typeLabels[rec.record_type] || rec.record_type}
-                        </Badge>
-                        {rec.created_at && <span className="text-xs text-muted-foreground">{formatDate(rec.created_at)}</span>}
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <div className="flex items-center gap-2">
+                          <Badge className={`text-xs ${typeBadgeColors[rec.record_type] || typeBadgeColors.other}`}>
+                            {typeLabels[rec.record_type] || rec.record_type}
+                          </Badge>
+                          {rec.created_at && <span className="text-xs text-muted-foreground">{formatDate(rec.created_at)}</span>}
+                        </div>
+                        <button onClick={() => handleDeleteRecord(rec.id)} className="text-red-500 hover:text-red-700 text-xs flex items-center p-1 rounded hover:bg-red-50">
+                          <X className="h-3 w-3 mr-1" /> {en ? 'Delete' : 'हटाएं'}
+                        </button>
                       </div>
                       <p className="text-sm text-gray-700 line-clamp-2">{rec.content}</p>
                       {rec.file_url && (

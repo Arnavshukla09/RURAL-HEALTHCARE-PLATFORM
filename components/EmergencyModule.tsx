@@ -20,10 +20,15 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
       call108: "Call 108 - Ambulance",
       findHospital: "Find Nearest Hospital",
       shareLocation: "Share My Location",
-      emergencyContacts: "Emergency Contacts",
+      emergencyContacts: "Helpline",
       ambulance: "Ambulance",
-      police: "Police",
-      fire: "Fire Department",
+      police: "Police Helpline- DIAL100",
+      fire: "Fire Emergency",
+      cmHelpline: "CM Helpline",
+      childHelpline: "Child Helpline",
+      womenHelpline: "Women Helpline",
+      ayushman: "Ayushman Bharat Helpline",
+      nationalHealth: "National Health Helpline (NHP)",
       instructions: "Emergency Instructions",
       steps: [
         "Stay calm and assess the situation",
@@ -43,10 +48,15 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
       call108: "108 पर कॉल करें - एम्बुलेंस",
       findHospital: "निकटतम अस्पताल खोजें",
       shareLocation: "मेरा स्थान साझा करें",
-      emergencyContacts: "आपातकालीन संपर्क",
+      emergencyContacts: "हेल्पलाइन",
       ambulance: "एम्बुलेंस",
-      police: "पुलिस",
-      fire: "अग्निशमन विभाग",
+      police: "पुलिस हेल्पलाइन- 100",
+      fire: "अग्निशमन आपातकाल",
+      cmHelpline: "सीएम हेल्पलाइन",
+      childHelpline: "चाइल्ड हेल्पलाइन",
+      womenHelpline: "महिला हेल्पलाइन",
+      ayushman: "आयुष्मान भारत हेल्पलाइन",
+      nationalHealth: "राष्ट्रीय स्वास्थ्य हेल्पलाइन",
       instructions: "आपातकालीन निर्देश",
       steps: [
         "शांत रहें और स्थिति का आकलन करें",
@@ -66,9 +76,14 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
   const { toast } = useToast()
 
   const emergencyNumbers = [
-    { service: t.ambulance, number: "108", icon: Truck, color: "red" },
-    { service: t.police, number: "100", icon: AlertTriangle, color: "blue" },
-    { service: t.fire, number: "101", icon: AlertTriangle, color: "orange" },
+    { service: t.cmHelpline, number: "181", icon: Phone, color: "gray" },
+    { service: t.childHelpline, number: "1098", icon: Phone, color: "gray" },
+    { service: t.police, number: "100", icon: Phone, color: "gray" },
+    { service: t.fire, number: "101", icon: Phone, color: "gray" },
+    { service: t.ambulance, number: "108", icon: Phone, color: "gray" },
+    { service: t.womenHelpline, number: "1090", icon: Phone, color: "gray" },
+    { service: t.ayushman, number: "18002332085", icon: Phone, color: "gray" },
+    { service: t.nationalHealth, number: "18001801104", icon: Phone, color: "gray" },
   ]
 
   return (
@@ -94,7 +109,7 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
               <Button
                 variant="outline"
                 className="w-full border-red-200 text-red-600 hover:bg-red-50"
-                onClick={() => window.open("sms:108?body=EMERGENCY! I need immediate maternal health assistance at my location.")}
+                onClick={() => window.open("sms:112?body=EMERGENCY! I need immediate medical assistance at my location.")}
               >
                 <MessageSquare className="mr-2 h-5 w-5" />
                 {t.smsFallback}
@@ -102,7 +117,7 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
               <Button
                 variant="outline"
                 className="w-full border-green-200 text-green-600 hover:bg-green-50"
-                onClick={() => window.open("https://wa.me/91108?text=EMERGENCY!%20I%20need%20immediate%20maternal%20health%20assistance.")}
+                onClick={() => window.open("https://wa.me/91112?text=EMERGENCY!%20I%20need%20immediate%20medical%20assistance.")}
               >
                 <MessageCircle className="mr-2 h-5 w-5" />
                 {t.waFallback}
@@ -145,57 +160,36 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
           </CardContent>
         </Card>
 
-        <div className="grid md:grid-cols-2 gap-6">
+        <div>
           {/* Emergency Contacts */}
-          <Card className="bg-white">
+          <Card className="bg-white overflow-hidden shadow-sm">
             <CardHeader>
               <CardTitle className="flex items-center">
                 <Phone className="h-5 w-5 mr-2 text-primary" />
                 {t.emergencyContacts}
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
-              {emergencyNumbers.map((contact, idx) => {
-                const Icon = contact.icon
-                return (
-                  <div
-                    key={idx}
-                    className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <Icon className={`h-6 w-6 text-${contact.color}-600`} />
-                      <span className="font-medium">{contact.service}</span>
+            <CardContent className="p-0">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-0">
+                {emergencyNumbers.map((contact, idx) => {
+                  const Icon = contact.icon
+                  return (
+                    <div
+                      key={idx}
+                      className="flex flex-col p-4 border bg-white hover:bg-gray-50 transition-colors"
+                    >
+                      <span className="font-semibold text-gray-800 text-sm mb-2">{contact.service}</span>
+                      <div className="flex items-center text-gray-600">
+                        <Icon className="h-4 w-4 mr-2" />
+                        <span className="text-sm cursor-pointer hover:text-blue-600" onClick={() => window.open(`tel:${contact.number}`)}>{contact.number}</span>
+                      </div>
                     </div>
-                    <Button size="sm" onClick={() => window.open(`tel:${contact.number}`)} className="font-bold">
-                      {contact.number}
-                    </Button>
-                  </div>
-                )
-              })}
+                  )
+                })}
+              </div>
             </CardContent>
           </Card>
 
-          {/* Emergency Instructions */}
-          <Card className="bg-white">
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <AlertTriangle className="h-5 w-5 mr-2 text-primary" />
-                {t.instructions}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ol className="space-y-3">
-                {t.steps.map((step, idx) => (
-                  <li key={idx} className="flex items-start gap-3">
-                    <span className="flex-shrink-0 w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-bold">
-                      {idx + 1}
-                    </span>
-                    <span className="text-gray-700">{step}</span>
-                  </li>
-                ))}
-              </ol>
-            </CardContent>
-          </Card>
         </div>
 
       </div>

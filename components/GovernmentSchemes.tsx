@@ -1,7 +1,7 @@
 "use client"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
-import { ShieldCheck, Heart, IndianRupee, Activity, CheckCircle, ArrowLeft } from "lucide-react"
+import { ShieldCheck, Heart, IndianRupee, Activity, CheckCircle, ArrowLeft, Phone, Globe } from "lucide-react"
 
 interface GovernmentSchemesProps {
   language: string
@@ -21,7 +21,9 @@ export function GovernmentSchemes({ language }: GovernmentSchemesProps) {
         ? ["Up to ₹5,000,000 cover per year", "Cashless access to health care", "Covers up to 3 days of pre-hospitalization and 15 days post-hospitalization"]
         : ["प्रति वर्ष ₹5,000,000 तक का कवर", "स्वास्थ्य देखभाल तक कैशलेस पहुंच", "अस्पताल में भर्ती होने से 3 दिन पहले और 15 दिन बाद तक का खर्च"],
       icon: <ShieldCheck className="h-6 w-6 text-green-600" />,
-      color: "border-green-200 bg-green-50"
+      color: "border-green-200 bg-green-50",
+      contactPhone: "14555 / 1800-111-565",
+      contactWeb: "pmjay.gov.in"
     },
     {
       title: en ? "Janani Suraksha Yojana (JSY)" : "जननी सुरक्षा योजना (JSY)",
@@ -32,7 +34,9 @@ export function GovernmentSchemes({ language }: GovernmentSchemesProps) {
         ? ["Cash assistance of ₹1400 for rural mothers", "Cash assistance of ₹1000 for urban mothers", "ASHA worker incentive for facilitating institutional delivery"]
         : ["ग्रामीण माताओं के लिए ₹1400 की नकद सहायता", "शहरी माताओं के लिए ₹1000 की नकद सहायता", "संस्थागत प्रसव की सुविधा के लिए आशा कार्यकर्ता को प्रोत्साहन"],
       icon: <IndianRupee className="h-6 w-6 text-teal-600" />,
-      color: "border-teal-200 bg-teal-50"
+      color: "border-teal-200 bg-teal-50",
+      contactPhone: "104 (Health Helpline)",
+      contactWeb: "nhm.gov.in"
     },
     {
       title: en ? "Janani Shishu Suraksha Karyakaram (JSSK)" : "जननी शिशु सुरक्षा कार्यक्रम (JSSK)",
@@ -43,7 +47,9 @@ export function GovernmentSchemes({ language }: GovernmentSchemesProps) {
         ? ["Absolutely free delivery, including C-section", "Free drugs, consumables, and blood provision", "Free diet during stay in the health institutions"]
         : ["सी-सेक्शन सहित बिल्कुल मुफ्त प्रसव", "मुफ्त दवाएं, उपभोग्य वस्तुएं और रक्त प्रावधान", "स्वास्थ्य संस्थानों में ठहरने के दौरान मुफ्त आहार"],
       icon: <Heart className="h-6 w-6 text-blue-600" />,
-      color: "border-blue-200 bg-blue-50"
+      color: "border-blue-200 bg-blue-50",
+      contactPhone: "104 (Health Helpline)",
+      contactWeb: "nhm.gov.in"
     },
     {
       title: en ? "Mukhyamantri Bal Hridaya Upchar Yojana" : "मुख्यमंत्री बाल हृदय उपचार योजना",
@@ -54,7 +60,9 @@ export function GovernmentSchemes({ language }: GovernmentSchemesProps) {
         ? ["Free heart surgery for eligible children", "Pre and post-operative care covered", "Empanelled private and government hospitals"]
         : ["पात्र बच्चों के लिए मुफ्त हृदय शल्य चिकित्सा", "ऑपरेशन से पहले और बाद की देखभाल शामिल", "सूचीबद्ध निजी और सरकारी अस्पताल"],
       icon: <Activity className="h-6 w-6 text-red-600" />,
-      color: "border-red-200 bg-red-50"
+      color: "border-red-200 bg-red-50",
+      contactPhone: "181 (CM Helpline)",
+      contactWeb: "health.mp.gov.in"
     },
     {
       title: en ? "Deendayal Antyodaya Upchar Yojana" : "दीनदयाल अंत्योदय उपचार योजना",
@@ -65,7 +73,9 @@ export function GovernmentSchemes({ language }: GovernmentSchemesProps) {
         ? ["Free medical investigation and treatment up to ₹20,000", "Available for BPL (Below Poverty Line) cardholders", "Applicable in all government hospitals"]
         : ["₹20,000 तक मुफ्त चिकित्सा जांच और उपचार", "BPL (गरीबी रेखा से नीचे) कार्डधारकों के लिए उपलब्ध", "सभी सरकारी अस्पतालों में लागू"],
       icon: <ShieldCheck className="h-6 w-6 text-purple-600" />,
-      color: "border-purple-200 bg-purple-50"
+      color: "border-purple-200 bg-purple-50",
+      contactPhone: "181 (CM Helpline)",
+      contactWeb: "health.mp.gov.in"
     }
   ]
 
@@ -99,7 +109,7 @@ export function GovernmentSchemes({ language }: GovernmentSchemesProps) {
                     <p className="text-gray-700 leading-relaxed text-sm">{scheme.description}</p>
                     <div className="pt-2">
                       <h4 className="font-semibold text-sm text-gray-900 mb-2">{en ? "Key Benefits:" : "मुख्य लाभ:"}</h4>
-                      <ul className="grid sm:grid-cols-2 gap-2">
+                      <ul className="grid sm:grid-cols-2 gap-2 mb-4">
                         {scheme.benefits.map((benefit, i) => (
                           <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
                             <CheckCircle className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
@@ -107,6 +117,16 @@ export function GovernmentSchemes({ language }: GovernmentSchemesProps) {
                           </li>
                         ))}
                       </ul>
+                      <div className="flex flex-wrap gap-4 border-t pt-3 mt-3 border-gray-100">
+                        <div className="flex items-center text-sm text-gray-600">
+                          <Phone className="h-4 w-4 mr-1.5 text-gray-400" />
+                          <a href={`tel:${scheme.contactPhone.split(" ")[0]}`} className="hover:text-blue-600">{scheme.contactPhone}</a>
+                        </div>
+                        <div className="flex items-center text-sm text-gray-600">
+                          <Globe className="h-4 w-4 mr-1.5 text-gray-400" />
+                          <a href={`https://${scheme.contactWeb}`} target="_blank" rel="noreferrer" className="hover:text-blue-600">{scheme.contactWeb}</a>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>

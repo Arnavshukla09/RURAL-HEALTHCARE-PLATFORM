@@ -120,3 +120,46 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const ip = request.headers.get('x-forwarded-for') ?? '127.0.0.1'
+    if (!(await rateLimit(ip))) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+    }
+
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
+
+    if (!id) {
+      return NextResponse.json({ error: "Missing id" }, { status: 400 })
+    }
+
+    const patient = await getOrCreatePatient(supabase, user)
+    if (!patient?.id) {
+      return NextResponse.json({ error: "Could not resolve patient profile" }, { status: 404 })
+    }
+
+    const adminSupabase = createAdminClient()
+    const { error } = await adminSupabase
+      .from("medical_records")
+      .delete()
+      .eq("id", id)
+      .eq("patient_id", patient.id)
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+  }
+}
