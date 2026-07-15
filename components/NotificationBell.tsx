@@ -95,9 +95,9 @@ export function NotificationBell({ user, language }: NotificationBellProps) {
       <button onClick={handleOpen}
         className="relative p-2 rounded-lg hover:bg-white/10 transition-colors"
         aria-label="Notifications">
-        <Bell className="h-5 w-5 text-white" />
+        <Bell className="h-5 w-5 text-yellow-300 drop-shadow-sm" />
         {unread > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 h-4 w-4 bg-red-500 rounded-full text-white text-[10px] flex items-center justify-center font-bold animate-pulse">
+          <span className="absolute -top-0.5 -right-0.5 h-4 w-4 bg-red-500 rounded-full text-white text-[10px] flex items-center justify-center font-bold">
             {unread > 9 ? "9+" : unread}
           </span>
         )}

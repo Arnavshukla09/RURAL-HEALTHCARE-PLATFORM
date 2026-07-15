@@ -194,10 +194,13 @@ export function AdminDashboard({ user, language, setCurrentPage }: AdminDashboar
           <CardContent>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
-                { label: en ? "All Appointments" : "सभी अपॉइंटमेंट", icon: Calendar, page: "appointments", color: "hover:border-blue-300 hover:bg-blue-50" },
-                { label: en ? "Medical Records" : "मेडिकल रिकॉर्ड", icon: ClipboardList, page: "records", color: "hover:border-teal-300 hover:bg-teal-50" },
-                { label: en ? "Health Facilities" : "स्वास्थ्य केंद्र", icon: TrendingUp, page: "locations", color: "hover:border-green-300 hover:bg-green-50" },
-                { label: en ? "Emergency" : "आपातकाल", icon: AlertTriangle, page: "emergency", color: "hover:border-red-300 hover:bg-red-50" },
+                { label: en ? "All Appointments" : "सभी अपॉइंटमेंट", icon: Calendar,       page: "admin-appointments", color: "hover:border-blue-300 hover:bg-blue-50" },
+                { label: en ? "Medical Records"  : "मेडिकल रिकॉर्ड",  icon: ClipboardList,  page: "admin-records",       color: "hover:border-teal-300 hover:bg-teal-50" },
+                { label: en ? "User Management"  : "उपयोगकर्ता",       icon: Database,       page: "admin-users",         color: "hover:border-purple-300 hover:bg-purple-50" },
+                { label: en ? "Campaigns"         : "अभियान",           icon: TrendingUp,     page: "admin-campaigns",     color: "hover:border-green-300 hover:bg-green-50" },
+                { label: en ? "Notifications"     : "सूचनाएं",          icon: CheckCircle,    page: "admin-notifications", color: "hover:border-yellow-300 hover:bg-yellow-50" },
+                { label: en ? "Health Facilities" : "स्वास्थ्य केंद्र",  icon: TrendingUp,     page: "locations",           color: "hover:border-indigo-300 hover:bg-indigo-50" },
+                { label: en ? "Emergency"         : "आपातकाल",          icon: AlertTriangle,  page: "emergency",           color: "hover:border-red-300 hover:bg-red-50" },
               ].map((action, i) => {
                 const Icon = action.icon
                 return (

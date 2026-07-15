@@ -23,11 +23,13 @@ export async function GET(req: NextRequest) {
 
   let query = supabase
     .from("appointments")
-    .select("*")
+    .select("*, patients(first_name, last_name, email)")
     .order("appointment_date", { ascending: true })
 
-  // All users see their own appointments by patient_id
-  query = query.eq("patient_id", patient.id)
+  // Patients see only their own; doctors & admins see everything
+  if (patient.role === "patient") {
+    query = query.eq("patient_id", patient.id)
+  }
 
   const { data, error } = await query
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })

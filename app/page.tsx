@@ -12,6 +12,8 @@ import { DoctorAppointmentRequests } from "@/components/DoctorAppointmentRequest
 import { AdminUserManagement } from "@/components/AdminUserManagement"
 import { AdminCampaignManager } from "@/components/AdminCampaignManager"
 import { AdminNotifications } from "@/components/AdminNotifications"
+import { AdminAppointments } from "@/components/AdminAppointments"
+import { AdminRecords } from "@/components/AdminRecords"
 import { Header } from "@/components/Header"
 import { Footer } from "@/components/Footer"
 import { SymptomChecker } from "@/components/SymptomChecker"
@@ -190,6 +192,10 @@ supabase.auth.getSession()
         return <AdminCampaignManager language={language} />
       case "admin-notifications":
         return <AdminNotifications language={language} />
+      case "admin-appointments":
+        return <AdminAppointments language={language} />
+      case "admin-records":
+        return <AdminRecords language={language} />
       // ── Shared pages ─────────────────────────────
       case "records":
         return <PatientRecords language={language} />
