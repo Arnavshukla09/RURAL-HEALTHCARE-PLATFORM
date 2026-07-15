@@ -277,7 +277,6 @@ erDiagram
     medical_records {
         uuid id PK
         uuid patient_id FK
-        uuid user_id FK
         text record_type "prescription | lab_result | diagnosis | vaccination | other"
         text content
         text file_url

@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { type NextRequest, NextResponse } from "next/server"
 import { rateLimit } from "@/lib/rate-limit"
 
@@ -25,7 +26,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if patient row already exists
-    const { data: existing } = await supabase
+    const adminSupabase = createAdminClient()
+    const { data: existing } = await adminSupabase
       .from("patients")
       .select("id, first_name, last_name, phone, role")
       .eq("user_id", user.id)
@@ -51,7 +53,7 @@ export async function POST(request: NextRequest) {
     const firstName = fullName.split(" ")[0]
     const lastName = fullName.split(" ").slice(1).join(" ") || ""
 
-    const { data: newPatient, error } = await supabase
+    const { data: newPatient, error } = await adminSupabase
       .from("patients")
       .insert({
         user_id: user.id,
@@ -66,7 +68,7 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       // Might be a unique constraint race condition — try select again
-      const { data: raceCheck } = await supabase
+      const { data: raceCheck } = await adminSupabase
         .from("patients")
         .select("id, first_name, last_name, phone, role")
         .eq("user_id", user.id)

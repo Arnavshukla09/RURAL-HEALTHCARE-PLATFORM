@@ -8,8 +8,8 @@ const ProfileSchema = z.object({
   profileType: z.enum(["patient", "provider"]),
 
   // optional fields (adjust based on your DB)
-  name: z.string().min(1).optional(),
-  age: z.number().int().min(0).optional(),
+  first_name: z.string().min(1).optional(),
+  last_name: z.string().optional(),
   phone: z.string().min(10).optional(),
   specialization: z.string().optional(), // for provider
 })

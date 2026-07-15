@@ -48,17 +48,7 @@ export function DoctorPatients({ language, setCurrentPage }: DoctorPatientsProps
       .order("created_at", { ascending: false })
       .limit(20)
 
-    // Also try user_id if patient has it
     let combined = byPatientId ?? []
-    if (userId && combined.length === 0) {
-      const { data: byUserId } = await supabase
-        .from("medical_records")
-        .select("*")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false })
-        .limit(20)
-      combined = byUserId ?? []
-    }
 
     setRecords(prev => ({ ...prev, [patientId]: combined }))
     setExpanded(patientId)

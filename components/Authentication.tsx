@@ -75,19 +75,17 @@ export function Authentication({ setUser, setCurrentPage, language }: Authentica
 
       if (error) { setErrors([error.message]); setIsLoading(false); return }
 
-      // Fetch role + phone from patients table
-      const { data: patient } = await supabase
-        .from("patients")
-        .select("role, first_name, last_name, phone")
-        .eq("user_id", data.user.id)
-        .single()
+      // Fetch role + phone from ensure-patient API to bypass RLS issues
+      const res = await fetch("/api/auth/ensure-patient", { method: "POST" })
+      if (!res.ok) throw new Error("Failed to load user profile")
+      const patient = await res.json()
 
       setUser({
         id: data.user.id,
-        name: patient?.first_name || data.user.user_metadata?.full_name || data.user.email?.split("@")[0] || "User",
+        name: patient.name || data.user.user_metadata?.full_name || data.user.email?.split("@")[0] || "User",
         email: data.user.email,
-        role: patient?.role || "patient",
-        phone: patient?.phone || "",
+        role: patient.role || "patient",
+        phone: patient.phone || "",
       })
       setCurrentPage("dashboard")
     } catch {

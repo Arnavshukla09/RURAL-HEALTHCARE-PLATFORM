@@ -50,15 +50,7 @@ export function AdminRecords({ language }: AdminRecordsProps) {
       .eq("patient_id", patientId)
       .order("created_at", { ascending: false })
       .limit(20)
-    if (!data || data.length === 0) {
-      const { data: d2 } = await supabase
-        .from("medical_records")
-        .select("*")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false })
-        .limit(20)
-      data = d2
-    }
+    if (!data) data = []
     setRecords(prev => ({ ...prev, [patientId]: data ?? [] }))
     setExpanded(patientId)
     setLoadingRecords(null)
