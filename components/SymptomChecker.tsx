@@ -1,8 +1,10 @@
 "use client"
+import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
 import { Button } from "./ui/button"
 import { Badge } from "./ui/badge"
+import { useToast } from "@/components/ui/use-toast"
 import {
   Activity, AlertTriangle, ArrowLeft, ArrowRight, CheckCircle,
   Brain, Eye, Ear, Heart, Wind, Droplet, Thermometer, User,
@@ -10,7 +12,6 @@ import {
 } from "lucide-react"
 
 interface SymptomCheckerProps {
-  setCurrentPage: (page: string) => void
   language: string
 }
 
@@ -65,7 +66,8 @@ const URGENCY_STYLES: Record<string, { bg: string; border: string; icon: string;
   low:       { bg: "bg-green-50", border: "border-green-400", icon: "✅", iconClass: "text-green-600" },
 }
 
-export function SymptomChecker({ setCurrentPage, language }: SymptomCheckerProps) {
+export function SymptomChecker({ language }: SymptomCheckerProps) {
+  const router = useRouter();
   const en = language === "en"
 
   // Step state
@@ -84,6 +86,7 @@ export function SymptomChecker({ setCurrentPage, language }: SymptomCheckerProps
 
   // Speech Recognition state
   const [isListening, setIsListening] = useState(false)
+  const { toast } = useToast()
   const [recognition, setRecognition] = useState<any>(null)
 
   useEffect(() => {
@@ -124,7 +127,7 @@ export function SymptomChecker({ setCurrentPage, language }: SymptomCheckerProps
         recognition.start()
         setIsListening(true)
       } else {
-        alert(en ? "Speech recognition is not supported in this browser." : "इस ब्राउज़र में स्पीच रिकग्निशन समर्थित नहीं है।")
+        toast({ title: en ? "Speech recognition is not supported in this browser." : "इस ब्राउज़र में स्पीच रिकग्निशन समर्थित नहीं है।", variant: "destructive" })
       }
     }
   }
@@ -486,10 +489,10 @@ export function SymptomChecker({ setCurrentPage, language }: SymptomCheckerProps
                   <AlertTriangle className="mr-2 h-4 w-4" />{en ? "Call Emergency 108" : "आपातकाल 108 पर कॉल करें"}
                 </Button>
               )}
-              <Button size="lg" className="w-full gradient-primary text-white" onClick={() => setCurrentPage("consultation")}>
+              <Button size="lg" className="w-full gradient-primary text-white" onClick={() => router.push("/consultation")}>
                 <Stethoscope className="mr-2 h-4 w-4" />{en ? "Book Consultation" : "परामर्श बुक करें"}
               </Button>
-              <Button variant="outline" size="lg" onClick={() => setCurrentPage("locations")}>
+              <Button variant="outline" size="lg" onClick={() => router.push("/locations")}>
                 <MapPin className="mr-2 h-4 w-4" />{en ? "Find Nearest Hospital" : "निकटतम अस्पताल खोजें"}
               </Button>
               <Button variant="ghost" size="sm" onClick={reset} className="col-span-full">

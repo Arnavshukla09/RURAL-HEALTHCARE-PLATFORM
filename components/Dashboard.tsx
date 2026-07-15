@@ -1,5 +1,6 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
@@ -25,11 +26,11 @@ import { createClient } from "@/lib/supabase/client";
 
 interface DashboardProps {
   user: any;
-  setCurrentPage: (page: string) => void;
   language: string;
 }
 
-export function Dashboard({ user, setCurrentPage, language }: DashboardProps) {
+export function Dashboard({ user, language }: DashboardProps) {
+  const router = useRouter();
   const content = {
     en: {
       welcome: `Welcome back, ${user.name}!`,
@@ -268,7 +269,7 @@ export function Dashboard({ user, setCurrentPage, language }: DashboardProps) {
               <CardContent>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Button 
-                    onClick={() => setCurrentPage('consultation')}
+                    onClick={() => router.push("/consultation")}
                     className="h-16 flex items-center justify-center space-x-2"
                   >
                     <Phone className="h-5 w-5" />
@@ -277,7 +278,7 @@ export function Dashboard({ user, setCurrentPage, language }: DashboardProps) {
                   
                   <Button 
                     variant="outline"
-                    onClick={() => setCurrentPage('directory')}
+                    onClick={() => router.push("/directory")}
                     className="h-16 flex items-center justify-center space-x-2"
                   >
                     <Users className="h-5 w-5" />
@@ -286,7 +287,7 @@ export function Dashboard({ user, setCurrentPage, language }: DashboardProps) {
                   
                   <Button 
                     variant="outline"
-                    onClick={() => setCurrentPage('camps')}
+                    onClick={() => router.push("/camps")}
                     className="h-16 flex items-center justify-center space-x-2"
                   >
                     <Calendar className="h-5 w-5" />
@@ -295,7 +296,7 @@ export function Dashboard({ user, setCurrentPage, language }: DashboardProps) {
                   
                   <Button 
                     variant="outline"
-                    onClick={() => setCurrentPage('records')}
+                    onClick={() => router.push("/records")}
                     className="h-16 flex items-center justify-center space-x-2"
                   >
                     <Heart className="h-5 w-5" />
@@ -308,7 +309,7 @@ export function Dashboard({ user, setCurrentPage, language }: DashboardProps) {
                     variant="destructive" 
                     size="lg"
                     className="w-full"
-                    onClick={() => setCurrentPage('emergency')}
+                    onClick={() => router.push("/emergency")}
                   >
                     <AlertCircle className="h-5 w-5 mr-2" />
                     {t.emergencyContact}
@@ -349,7 +350,7 @@ export function Dashboard({ user, setCurrentPage, language }: DashboardProps) {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>{t.upcomingCampaigns}</CardTitle>
-                <Button variant="outline" size="sm" onClick={() => setCurrentPage('camps')}>
+                <Button variant="outline" size="sm" onClick={() => router.push("/camps")}>
                   {t.viewAll}
                 </Button>
               </CardHeader>
@@ -444,7 +445,7 @@ export function Dashboard({ user, setCurrentPage, language }: DashboardProps) {
                     ? 'Join our comprehensive health screening program' 
                     : 'हमारे व्यापक स्वास्थ्य जांच कार्यक्रम में शामिल हों'}
                 </p>
-                <Button size="sm" onClick={() => setCurrentPage('camps')}>
+                <Button size="sm" onClick={() => router.push("/camps")}>
                   {language === 'en' ? 'Learn More' : 'और जानें'}
                 </Button>
               </CardContent>

@@ -1,16 +1,18 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
 import { Button } from "./ui/button"
 import { Phone, MapPin, Share2, AlertTriangle, Truck, MessageSquare, MessageCircle } from "lucide-react"
+import { useToast } from "@/components/ui/use-toast"
 
 interface EmergencyModuleProps {
-  setCurrentPage: (page: string) => void
   language: string
 }
 
 
-export function EmergencyModule({ setCurrentPage, language }: EmergencyModuleProps) {
+export function EmergencyModule({ language }: EmergencyModuleProps) {
+  const router = useRouter();
   const content = {
     en: {
       title: "Emergency Services",
@@ -61,6 +63,7 @@ export function EmergencyModule({ setCurrentPage, language }: EmergencyModulePro
   }
 
   const t = content[language as keyof typeof content] || content.en
+  const { toast } = useToast()
 
   const emergencyNumbers = [
     { service: t.ambulance, number: "108", icon: Truck, color: "red" },
@@ -111,27 +114,27 @@ export function EmergencyModule({ setCurrentPage, language }: EmergencyModulePro
                 size="lg"
                 variant="outline"
                 className="h-20 bg-transparent"
-                onClick={() => setCurrentPage("locations")}
+                onClick={() => router.push("/locations")}
               >
                 <MapPin className="mr-2 h-5 w-5" />
                 {t.findHospital}
               </Button>
               <Button size="lg" variant="outline" className="h-20 bg-transparent"
                 onClick={() => {
-                  if (!navigator.geolocation) {
-                    alert(language === 'en' ? 'Geolocation not supported by your browser' : 'आपका ब्राउज़र लोकेशन सपोर्ट नहीं करता')
+                      if (!navigator.geolocation) {
+                    toast({ title: language === 'en' ? 'Geolocation not supported by your browser' : 'आपका ब्राउज़र लोकेशन सपोर्ट नहीं करता', variant: "destructive" })
                     return
                   }
                   navigator.geolocation.getCurrentPosition(
                     (pos) => {
                       const url = `https://maps.google.com/?q=${pos.coords.latitude},${pos.coords.longitude}`
                       navigator.clipboard.writeText(url).then(() => {
-                        alert(language === 'en' ? 'Location link copied to clipboard! Share it with emergency contacts.' : 'लोकेशन लिंक कॉपी हो गया! आपातकालीन संपर्कों के साथ साझा करें।')
+                        toast({ title: language === 'en' ? 'Location link copied to clipboard! Share it with emergency contacts.' : 'लोकेशन लिंक कॉपी हो गया! आपातकालीन संपर्कों के साथ साझा करें।' })
                       }).catch(() => {
                         prompt(language === 'en' ? 'Copy this location link:' : 'यह लिंक कॉपी करें:', url)
                       })
                     },
-                    () => alert(language === 'en' ? 'Location access denied' : 'लोकेशन अनुमति अस्वीकृत')
+                    () => toast({ title: language === 'en' ? 'Location access denied' : 'लोकेशन अनुमति अस्वीकृत', variant: "destructive" })
                   )
                 }}
               >

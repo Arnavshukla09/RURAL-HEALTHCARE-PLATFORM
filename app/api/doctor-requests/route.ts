@@ -6,7 +6,7 @@ import { z } from "zod"
 // GET — admin fetches all pending requests
 export async function GET(req: NextRequest) {
   const ip = req.headers.get("x-forwarded-for") ?? "127.0.0.1"
-  if (!rateLimit(ip, 20, 60000)) {
+  if (!(await rateLimit(ip, 20, 60000))) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 })
   }
 
@@ -48,7 +48,7 @@ export async function GET(req: NextRequest) {
 // POST — doctor submits registration request
 export async function POST(req: NextRequest) {
   const ip = req.headers.get("x-forwarded-for") ?? "127.0.0.1"
-  if (!rateLimit(ip, 5, 60000)) {
+  if (!(await rateLimit(ip, 5, 60000))) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 })
   }
 

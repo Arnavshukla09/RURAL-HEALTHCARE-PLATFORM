@@ -48,20 +48,11 @@ The application follows a "Fat Component" design within a Single Page Applicatio
 - Components (e.g., `Dashboard.tsx`, `SymptomChecker.tsx`) handle both their own UI presentation and their own data-fetching logic (`useEffect`).
 - Styling is completely utility-first using **Tailwind CSS**, supplemented by **shadcn/ui** for complex accessible primitives (dialogs, select menus, avatars).
 
-### Routing (Client-Side SPA routing)
-**Critically important for new developers:** The application does *not* currently utilize Next.js native file-based routing (e.g., `/dashboard`, `/directory`). 
+### Routing (Native App Router)
+**Critically important for new developers:** The application was recently migrated to utilize native Next.js file-based routing (`app/(dashboard)/...`, `app/directory/page.tsx`, etc.). 
 
-Instead, the entire application is mounted on `/app/page.tsx` and utilizes a state-based router.
-
-```tsx
-// Example from app/page.tsx
-const [currentPage, setCurrentPage] = useState('landing')
-
-// Render function switches based on state
-{currentPage === 'landing' && <LandingPage setCurrentPage={setCurrentPage} />}
-{currentPage === 'dashboard' && <Dashboard setCurrentPage={setCurrentPage} />}
-```
-**Status:** Implemented. (Marked as technical debt in `PROJECT_CONTEXT.md` for future migration to native Next.js routing).
+- Navigation is handled client-side using `useRouter().push('/path')` from `next/navigation`.
+- Global UI elements (Header, Footer) and state (`AppProvider`) persist across navigations because they are wrapped in the root `app/layout.tsx`.
 
 ### State Management
 - **Global State:** Passed down via Prop Drilling from `app/page.tsx` to child components. The primary global states are:
@@ -129,6 +120,9 @@ sequenceDiagram
 
 ### Map & Spatial (Leaflet + PostGIS)
 - **Implementation:** The client uses `react-leaflet` to render OpenStreetMap tiles. It requests `/api/facilities/nearby?lat=X&lng=Y`, which executes a highly optimized PostGIS RPC function `nearby_facilities()` on Supabase.
+
+### 5.4 Rate Limiting
+To prevent abuse, all Next.js API routes implement rate limiting via `@upstash/ratelimit`. This leverages an Upstash Redis database (`UPSTASH_REDIS_REST_URL`) to globally synchronize token-bucket counts across distributed serverless functions. If the Redis keys are missing locally, it safely falls back to a Node.js `Map`-based memory cache.
 
 ---
 

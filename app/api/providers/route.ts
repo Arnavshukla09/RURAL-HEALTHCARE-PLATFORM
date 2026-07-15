@@ -6,7 +6,7 @@ import { z } from "zod"   // ✅ ADD (for query validation)
 export async function GET(request: NextRequest) {
   try {
     const ip = request.headers.get('x-forwarded-for') ?? '127.0.0.1'
-    if (!rateLimit(ip)) {
+    if (!(await rateLimit(ip))) {
       return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
     }
 
@@ -40,13 +40,37 @@ export async function GET(request: NextRequest) {
       query = query.eq("specialization", specialization)
     }
 
-    const { data, error } = await query
+    const { data: providers, error } = await query
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    return NextResponse.json(data)
+    if (!providers || providers.length === 0) {
+      return NextResponse.json([])
+    }
+
+    // Fetch names and phones from patients table
+    const userIds = providers.map((p) => p.user_id)
+    const { data: patients } = await supabase
+      .from("patients")
+      .select("user_id, first_name, last_name, phone")
+      .in("user_id", userIds)
+
+    const patientsMap = new Map(patients?.map((p) => [p.user_id, p]) || [])
+
+    const enrichedProviders = providers.map((provider) => {
+      const patient = patientsMap.get(provider.user_id)
+      return {
+        ...provider,
+        id: provider.id, // we'll use provider.id for bookings
+        name: patient ? `Dr. ${patient.first_name} ${patient.last_name || ""}`.trim() : "Unknown Doctor",
+        phone: patient?.phone || "",
+        location: provider.clinic_address || "Virtual",
+      }
+    })
+
+    return NextResponse.json(enrichedProviders)
   } catch (error) {
     return NextResponse.json(
       { error: "Internal server error" },

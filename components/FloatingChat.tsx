@@ -3,10 +3,8 @@
 import { useState, useRef, useEffect } from "react"
 import { MessageCircle, X, Send, Loader2, Bot, User, Minimize2, Map, Stethoscope, Calendar, FileText, AlertTriangle, Heart, Home, Info } from "lucide-react"
 
-interface FloatingChatProps {
-  language: string
-  setCurrentPage?: (page: string) => void
-}
+import { useApp } from "@/components/providers/AppProvider"
+import { useRouter } from "next/navigation"
 
 interface ChatMessage {
   role: "user" | "assistant"
@@ -73,7 +71,9 @@ function detectNavIntent(text: string): { page: string; label: string } | null {
   return null
 }
 
-export function FloatingChat({ language, setCurrentPage }: FloatingChatProps) {
+export function FloatingChat() {
+  const { language } = useApp()
+  const router = useRouter()
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState("")
@@ -116,7 +116,9 @@ export function FloatingChat({ language, setCurrentPage }: FloatingChatProps) {
   }, [open])
 
   const navigateTo = (page: string, label: string) => {
-    setCurrentPage?.(page)
+    if (page) {
+      router.push(page === "home" ? "/" : `/${page}`)
+    }
     setMessages(prev => [
       ...prev,
       { role: "user", content: en ? `Take me to ${label}` : `मुझे ${label} पर ले जाएं` },
@@ -188,7 +190,7 @@ export function FloatingChat({ language, setCurrentPage }: FloatingChatProps) {
           { label: en ? "🗺️ More Options" : "🗺️ और विकल्प", action: "show_guide" },
         ]
       }])
-      setTimeout(() => setCurrentPage?.(navIntent.page), 600)
+      setTimeout(() => navigateTo(navIntent.page || "", navIntent.label), 600)
       return
     }
 

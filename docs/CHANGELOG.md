@@ -8,7 +8,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased] - Current Sprint
 
-### Added
+- **Next.js App Router Migration:** Fully transitioned from a React Single Page Application (SPA) state-based router to Next.js native `app/` directory routing, creating individual page files for 39 static routes.
+- **Global Application Context:** Extracted user auth and UI state out of monolithic wrappers into a `components/providers/AppProvider.tsx` context wrapper.
+- **Production Rate Limiting:** Installed `@upstash/ratelimit` and `@upstash/redis` to upgrade API rate-limiting across 13 routes from a localized memory-cache to a globally distributed Vercel-compatible Redis cache (with a graceful local-memory fallback).
+- **Playwright E2E Testing:** Initialized an end-to-end testing suite with `@playwright/test` mapping critical flows (landing, login, symptom-checker).
+- **GitHub Actions CI/CD:** Added a `.github/workflows/playwright.yml` automated pipeline to enforce testing on PRs and pushes to `main`.
+- **Next-PWA Offline Support:** Validated the `@ducanh2912/next-pwa` integration to correctly cache React Server Components and App Router navigation fetches.
 - **Dynamic Registered Camps:** Dashboard now actively fetches and displays the actual health camps the user has registered for, directly from the `medical_records` table.
 - **Inline Symptom Chat:** Replaced the static symptom checker end screen with an interactive embedded AI chat for contextual follow-up questions.
 - **Top-Level Health Hub:** Moved the Health Information Hub to the main Navbar and removed the symptom-check prerequisite gate, allowing free exploration of static medical data.

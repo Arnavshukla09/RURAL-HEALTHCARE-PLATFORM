@@ -2,6 +2,14 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 import "leaflet/dist/leaflet.css"
+import { AppProvider } from "@/components/providers/AppProvider"
+import { Header } from "@/components/Header"
+import { Footer } from "@/components/Footer"
+import { AccessibilityBar } from "@/components/AccessibilityBar"
+import { BottomTabBar } from "@/components/BottomTabBar"
+import { FloatingChat } from "@/components/FloatingChat"
+import { Toaster } from "@/components/ui/toaster"
+
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
 
 export const metadata: Metadata = {
@@ -21,7 +29,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossOrigin="" />
       </head>
-      <body className={`${inter.className} min-h-screen`}>{children}</body>
+      <body className={`${inter.className} min-h-screen bg-gray-50 flex flex-col`}>
+        <AppProvider>
+          <AccessibilityBar />
+          <Header />
+          <main className="flex-1 pb-16 md:pb-0">
+            {children}
+          </main>
+          <Footer />
+          <BottomTabBar />
+          <FloatingChat />
+          <Toaster />
+        </AppProvider>
+      </body>
     </html>
   )
 }

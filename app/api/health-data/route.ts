@@ -14,7 +14,7 @@ const HealthDataSchema = z.object({
 export async function GET(request: NextRequest) {
   try {
     const ip = request.headers.get('x-forwarded-for') ?? '127.0.0.1'
-    if (!rateLimit(ip)) {
+    if (!(await rateLimit(ip))) {
       return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
     }
 
@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const ip = request.headers.get('x-forwarded-for') ?? '127.0.0.1'
-    if (!rateLimit(ip)) {
+    if (!(await rateLimit(ip))) {
       return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
     }
 

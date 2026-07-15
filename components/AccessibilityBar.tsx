@@ -3,17 +3,17 @@ import { useState, useEffect, useRef } from "react"
 import { Button } from "./ui/button"
 import { Card, CardContent } from "./ui/card"
 import { Accessibility, Type, Volume2, Contrast, VolumeX, ChevronUp } from "lucide-react"
+import { useToast } from "@/components/ui/use-toast"
 
-interface AccessibilityBarProps {
-  language: string
-  setLanguage: (lang: string) => void
-}
+import { useApp } from "@/components/providers/AppProvider"
 
-export function AccessibilityBar({ language, setLanguage }: AccessibilityBarProps) {
+export function AccessibilityBar() {
+  const { language, setLanguage } = useApp()
   const [isOpen, setIsOpen] = useState(false)
   const [fontSize, setFontSize] = useState(16)
   const [highContrast, setHighContrast] = useState(false)
   const [isSpeaking, setIsSpeaking] = useState(false)
+  const { toast } = useToast()
 
   const t = {
     en: { title: "Accessibility Options", fontSize: "Font Size", decrease: "Decrease", increase: "Increase", contrast: "High Contrast", language: "Language", readAloud: "Read Aloud", stopReading: "Stop Reading", reset: "Reset Settings", on: "On", off: "Off" },
@@ -38,7 +38,7 @@ export function AccessibilityBar({ language, setLanguage }: AccessibilityBarProp
 
   const handleReadAloud = () => {
     if (!("speechSynthesis" in window)) {
-      alert("Speech not supported in this browser")
+      toast({ title: "Speech not supported in this browser", variant: "destructive" })
       return
     }
     if (isSpeaking) {

@@ -1,5 +1,6 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
 import { Badge } from "./ui/badge"
@@ -8,10 +9,10 @@ import { createClient } from "@/lib/supabase/client"
 
 interface DoctorPatientsProps {
   language: string
-  setCurrentPage: (page: string) => void
 }
 
-export function DoctorPatients({ language, setCurrentPage }: DoctorPatientsProps) {
+export function DoctorPatients({ language }: DoctorPatientsProps) {
+  const router = useRouter();
   const en = language === "en"
   const [patients, setPatients] = useState<any[]>([])
   const [records, setRecords] = useState<Record<string, any[]>>({})

@@ -44,12 +44,14 @@ Rural communities, particularly in regions like Madhya Pradesh, face severe shor
 - **[Jitsi Meet](https://jitsi.org/):** Open-source WebRTC video conferencing for teleconsultations.
 - **[Leaflet / React-Leaflet](https://react-leaflet.js.org/):** Interactive maps via CartoDB Voyager tiles.
 - **[Zod](https://zod.dev/):** Schema validation for all API request bodies.
+- **[Upstash Redis](https://upstash.com/):** Serverless Redis for distributed API rate-limiting via `@upstash/ratelimit`.
+- **[Playwright](https://playwright.dev/):** End-to-end testing automation framework.
 
 ---
 
 ## 3. High-Level Architecture
 
-The platform is a serverless SPA where Next.js is both the BFF and the frontend. Supabase handles persistence, auth, and realtime.
+The platform uses the native Next.js App Router architecture. Supabase handles persistence, auth, and realtime functionality. Upstash handles global rate limiting.
 
 ```mermaid
 architecture-beta

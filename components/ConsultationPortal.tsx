@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useRouter } from "next/navigation"
+import { useState, useMemo, useEffect } from "react"
 import { Button } from "./ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
 import { Label } from "./ui/label"
@@ -10,31 +11,14 @@ import {
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 
+import { UserProfile, SymptomResult, Doctor } from "@/types"
+
 interface ConsultationPortalProps {
   language: string
-  user?: any
-  setCurrentPage?: (page: string) => void
-  symptomResult?: any   // passed from SymptomChecker via page.tsx
+  user?: UserProfile | null
+  symptomResult?: SymptomResult | null
 }
 
-// ── Static MP doctors ────────────────────────────────────────────────────────
-const MP_DOCTORS = [
-  { id: "mp-1",  name: "Dr. Manish Tiwari",   specialty: "General Medicine",        location: "AIIMS Bhopal",                   phone: "+91 755-2672355", rating: 4.9, govt: true  },
-  { id: "mp-2",  name: "Dr. Ajay Goenka",     specialty: "General Medicine",        location: "AIIMS Bhopal",                   phone: "+91 755-2672355", rating: 4.6, govt: true  },
-  { id: "mp-3",  name: "Dr. Asha Bhandari",   specialty: "General Medicine",        location: "District Hospital, Sehore",      phone: "+91 7562-224430", rating: 4.4, govt: true  },
-  { id: "mp-4",  name: "Dr. Kavita Sharma",   specialty: "General Medicine",        location: "CHC Berasia, Bhopal",            phone: "+91 755-2770491", rating: 4.3, govt: true  },
-  { id: "mp-5",  name: "Dr. Sanjeev Sharma",  specialty: "Cardiology",              location: "Hamidia Hospital, Bhopal",       phone: "+91 755-2540222", rating: 4.7, govt: true  },
-  { id: "mp-6",  name: "Dr. Arun Dubey",      specialty: "Cardiology",              location: "Bombay Hospital, Indore",        phone: "+91 731-2558866", rating: 4.6, govt: false },
-  { id: "mp-7",  name: "Dr. Vivek Saraswat",  specialty: "Cardiology",              location: "Bansal Hospital, Bhopal",        phone: "+91 755-4082222", rating: 4.8, govt: false },
-  { id: "mp-8",  name: "Dr. Priya Verma",     specialty: "Pediatrics",              location: "Kamla Nehru Hospital, Bhopal",  phone: "+91 755-2540570", rating: 4.8, govt: true  },
-  { id: "mp-9",  name: "Dr. Rajesh Patel",    specialty: "Pediatrics",              location: "MY Hospital, Indore",            phone: "+91 731-2527383", rating: 4.6, govt: true  },
-  { id: "mp-10", name: "Dr. Sunita Rawat",    specialty: "Pediatrics",              location: "District Hospital, Vidisha",     phone: "+91 7592-234567", rating: 4.5, govt: true  },
-  { id: "mp-11", name: "Dr. Nidhi Gupta",     specialty: "Obstetrics & Gynecology", location: "Sultania Zanana Hospital, Bhopal", phone: "+91 755-2540333", rating: 4.9, govt: true  },
-  { id: "mp-12", name: "Dr. Meena Joshi",     specialty: "Obstetrics & Gynecology", location: "Chirayu Medical College, Bhopal", phone: "+91 755-6679100", rating: 4.7, govt: false },
-  { id: "mp-13", name: "Dr. Pooja Singh",     specialty: "Obstetrics & Gynecology", location: "PHC Obedullaganj, Raisen",      phone: "+91 7480-255444", rating: 4.4, govt: true  },
-  { id: "mp-14", name: "Dr. Rakesh Malviya",  specialty: "Orthopedics",             location: "BMHRC, Bhopal",                  phone: "+91 755-2742612", rating: 4.5, govt: true  },
-  { id: "mp-15", name: "Dr. Sunil Jain",      specialty: "Orthopedics",             location: "CHL Hospital, Indore",           phone: "+91 731-4710000", rating: 4.5, govt: false },
-]
 
 const SPECIALTIES = [
   "All",
@@ -96,7 +80,8 @@ function toISODate(d: Date) {
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
-export function ConsultationPortal({ language, user, setCurrentPage, symptomResult }: ConsultationPortalProps) {
+export function ConsultationPortal({ language, user, symptomResult }: ConsultationPortalProps) {
+  const router = useRouter();
   const en = language === "en"
 
   // Pre-fill notes from symptom checker if available
@@ -116,9 +101,9 @@ export function ConsultationPortal({ language, user, setCurrentPage, symptomResu
 
   const days = useMemo(() => getNext7Days(), [])
 
-  // ── State ──────────────────────────────────────────────────────────────────
+  const [doctors, setDoctors] = useState<Doctor[]>([])
   const [specialtyFilter, setSpecialtyFilter] = useState("All")
-  const [selectedDoctor, setSelectedDoctor]   = useState<typeof MP_DOCTORS[0] | null>(null)
+  const [selectedDoctor, setSelectedDoctor]   = useState<Doctor | null>(null)
   const [consultType,    setConsultType]       = useState("video")
   const [selectedDate,   setSelectedDate]      = useState<string>(toISODate(days[0]))
   const [selectedSlot,   setSelectedSlot]      = useState<string>("")
@@ -127,12 +112,28 @@ export function ConsultationPortal({ language, user, setCurrentPage, symptomResu
   const [success,        setSuccess]           = useState("")
   const [error,          setError]             = useState("")
 
+  // Fetch doctors on mount
+  useEffect(() => {
+    async function loadDoctors() {
+      try {
+        const res = await fetch("/api/providers")
+        if (res.ok) {
+          const data = await res.json()
+          setDoctors(data)
+        }
+      } catch (e) {
+        console.error("Failed to load doctors", e)
+      }
+    }
+    loadDoctors()
+  }, [])
+
   // ── Derived ────────────────────────────────────────────────────────────────
   const filteredDoctors = useMemo(() =>
     specialtyFilter === "All"
-      ? MP_DOCTORS
-      : MP_DOCTORS.filter(d => d.specialty === specialtyFilter),
-    [specialtyFilter]
+      ? doctors
+      : doctors.filter(d => d.specialty === specialtyFilter || d.specialization === specialtyFilter),
+    [specialtyFilter, doctors]
   )
 
   const slots = useMemo(() =>
@@ -196,8 +197,12 @@ export function ConsultationPortal({ language, user, setCurrentPage, symptomResu
           : `अनुरोध सहेजा गया! ${selectedDoctor.name} — ${selectedDate} ${selectedSlot}`
       )
       setSelectedDoctor(null); setSelectedSlot(""); setNotes(symptomPreFill)
-    } catch (e: any) {
-      setError(e?.message || (en ? "Booking failed" : "बुकिंग विफल"))
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        setError(e.message)
+      } else {
+        setError(en ? "Booking failed" : "बुकिंग विफल")
+      }
     } finally {
       setLoading(false)
     }

@@ -1,5 +1,6 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
 import { Button } from "./ui/button"
@@ -12,7 +13,6 @@ import { createClient } from "@/lib/supabase/client"
 
 interface AdminUserManagementProps {
   language: string
-  setCurrentPage: (page: string) => void
 }
 
 const ROLES = ["patient", "doctor", "admin"]
@@ -22,7 +22,8 @@ const roleColors: Record<string, string> = {
   admin: "bg-purple-100 text-purple-700",
 }
 
-export function AdminUserManagement({ language, setCurrentPage }: AdminUserManagementProps) {
+export function AdminUserManagement({ language }: AdminUserManagementProps) {
+  const router = useRouter();
   const en = language === "en"
   const [users, setUsers] = useState<any[]>([])
   const [loading, setLoading] = useState(true)

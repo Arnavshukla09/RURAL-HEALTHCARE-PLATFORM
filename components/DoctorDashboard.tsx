@@ -1,5 +1,6 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
 import { Button } from "./ui/button"
@@ -13,11 +14,11 @@ import { createClient } from "@/lib/supabase/client"
 interface DoctorDashboardProps {
   user: any
   language: string
-  setCurrentPage: (page: string) => void
   setJitsiRoom?: (r: string | null) => void
 }
 
-export function DoctorDashboard({ user, language, setCurrentPage, setJitsiRoom }: DoctorDashboardProps) {
+export function DoctorDashboard({ user, language, setJitsiRoom }: DoctorDashboardProps) {
+  const router = useRouter();
   const en = language === "en"
   const [appointments, setAppointments] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -45,7 +46,7 @@ export function DoctorDashboard({ user, language, setCurrentPage, setJitsiRoom }
   }, [])
 
   const joinCall = (roomId: string) => {
-    if (setJitsiRoom && roomId) { setJitsiRoom(roomId); setCurrentPage("jitsi") }
+    if (setJitsiRoom && roomId) { setJitsiRoom(roomId); router.push("/appointments") }
   }
 
   const markDone = async (id: string) => {
@@ -210,7 +211,7 @@ export function DoctorDashboard({ user, language, setCurrentPage, setJitsiRoom }
               ].map((action, i) => {
                 const Icon = action.icon
                 return (
-                  <button key={i} onClick={() => setCurrentPage(action.page)}
+                  <button key={i} onClick={() => router.push(`/${action.page}`)}
                     className="flex flex-col items-center gap-2 p-3 rounded-xl border border-gray-200 bg-white hover:border-teal-300 hover:bg-teal-50 transition-all text-center">
                     <Icon className="h-5 w-5 text-teal-600" />
                     <span className="text-xs font-medium text-gray-700">{action.label}</span>

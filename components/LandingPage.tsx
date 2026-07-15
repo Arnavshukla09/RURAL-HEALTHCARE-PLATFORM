@@ -1,14 +1,15 @@
+import { useRouter } from "next/navigation"
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Heart, Users, Calendar, Phone, Shield, Globe, Activity, MapPin, AlertTriangle, Stethoscope, Settings } from "lucide-react";
 import { ImageWithFallback } from "./ImageWithFallback";
 
 interface LandingPageProps {
-  setCurrentPage: (page: string) => void;
   language: string;
 }
 
-export function LandingPage({ setCurrentPage, language }: LandingPageProps) {
+export function LandingPage({ language }: LandingPageProps) {
+  const router = useRouter();
   const content = {
     en: {
       hero: {
@@ -115,7 +116,7 @@ export function LandingPage({ setCurrentPage, language }: LandingPageProps) {
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button 
                   size="lg" 
-                  onClick={() => setCurrentPage('auth')}
+                  onClick={() => router.push("/login")}
                   className="text-lg px-8 py-3"
                 >
                   <Heart className="mr-2 h-5 w-5" />
@@ -124,7 +125,7 @@ export function LandingPage({ setCurrentPage, language }: LandingPageProps) {
                 <Button 
                   variant="outline" 
                   size="lg"
-                  onClick={() => setCurrentPage('consultation')}
+                  onClick={() => router.push("/consultation")}
                   className="text-lg px-8 py-3"
                 >
                   <Phone className="mr-2 h-5 w-5" />
@@ -154,7 +155,7 @@ export function LandingPage({ setCurrentPage, language }: LandingPageProps) {
           </div>
           
           <div className="grid md:grid-cols-3 lg:grid-cols-6 gap-4">
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setCurrentPage('symptom-checker')}>
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push("/symptom-checker")}>
               <CardHeader className="text-center pb-4">
                 <Activity className="h-10 w-10 text-primary mx-auto mb-2" />
                 <CardTitle className="text-sm">
@@ -163,7 +164,7 @@ export function LandingPage({ setCurrentPage, language }: LandingPageProps) {
               </CardHeader>
             </Card>
 
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setCurrentPage('consultation')}>
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push("/consultation")}>
               <CardHeader className="text-center pb-4">
                 <Phone className="h-10 w-10 text-primary mx-auto mb-2" />
                 <CardTitle className="text-sm">
@@ -172,7 +173,7 @@ export function LandingPage({ setCurrentPage, language }: LandingPageProps) {
               </CardHeader>
             </Card>
 
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setCurrentPage('locations')}>
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push("/locations")}>
               <CardHeader className="text-center pb-4">
                 <MapPin className="h-10 w-10 text-primary mx-auto mb-2" />
                 <CardTitle className="text-sm">
@@ -181,7 +182,7 @@ export function LandingPage({ setCurrentPage, language }: LandingPageProps) {
               </CardHeader>
             </Card>
 
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setCurrentPage('emergency')}>
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push("/emergency")}>
               <CardHeader className="text-center pb-4">
                 <AlertTriangle className="h-10 w-10 text-red-600 mx-auto mb-2" />
                 <CardTitle className="text-sm">
@@ -190,7 +191,7 @@ export function LandingPage({ setCurrentPage, language }: LandingPageProps) {
               </CardHeader>
             </Card>
 
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setCurrentPage('directory')}>
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push("/directory")}>
               <CardHeader className="text-center pb-4">
                 <Stethoscope className="h-10 w-10 text-primary mx-auto mb-2" />
                 <CardTitle className="text-sm">
@@ -199,7 +200,7 @@ export function LandingPage({ setCurrentPage, language }: LandingPageProps) {
               </CardHeader>
             </Card>
 
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setCurrentPage('records')}>
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push("/records")}>
               <CardHeader className="text-center pb-4">
                 <Settings className="h-10 w-10 text-primary mx-auto mb-2" />
                 <CardTitle className="text-sm">

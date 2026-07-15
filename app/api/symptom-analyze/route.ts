@@ -3,7 +3,7 @@ import { rateLimit } from "@/lib/rate-limit"
 
 export async function POST(request: NextRequest) {
   const ip = request.headers.get("x-forwarded-for") ?? "127.0.0.1"
-  if (!rateLimit(ip)) {
+  if (!(await rateLimit(ip))) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 })
   }
 

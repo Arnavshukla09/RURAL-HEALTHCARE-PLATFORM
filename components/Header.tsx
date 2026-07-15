@@ -5,16 +5,13 @@ import { useState, useRef, useEffect } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { NotificationBell } from "./NotificationBell"
 
-interface HeaderProps {
-  currentPage: string
-  setCurrentPage: (page: string) => void
-  user: any
-  setUser: (user: any) => void
-  language: string
-  setLanguage: (lang: string) => void
-}
+import { usePathname, useRouter } from "next/navigation"
+import { useApp } from "@/components/providers/AppProvider"
 
-export function Header({ currentPage, setCurrentPage, user, setUser, language, setLanguage }: HeaderProps) {
+export function Header() {
+  const { user, setUser, language, setLanguage } = useApp()
+  const router = useRouter()
+  const pathname = usePathname()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [careDropOpen, setCareDropOpen] = useState(false)
   const [userDropOpen, setUserDropOpen] = useState(false)
@@ -35,42 +32,42 @@ export function Header({ currentPage, setCurrentPage, user, setUser, language, s
     const supabase = createClient()
     await supabase.auth.signOut()
     setUser(null)
-    setCurrentPage("home")
+    router.push("/")
     setMobileMenuOpen(false)
     setUserDropOpen(false)
   }
 
   const go = (page: string) => {
-    setCurrentPage(page)
+    router.push(page)
     setMobileMenuOpen(false)
     setCareDropOpen(false)
     setUserDropOpen(false)
   }
 
-  const isActive = (key: string) => currentPage === key
+  const isActive = (key: string) => pathname === key || pathname.startsWith(key + "/")
   const role = user?.role || "patient"
 
   const doctorItems = [
-    { key: "doctor-patients", label: en ? "Patients" : "मरीज़", icon: Users },
-    { key: "doctor-requests", label: en ? "Requests" : "अनुरोध", icon: Calendar },
-    { key: "appointments", label: en ? "Appointments" : "अपॉइंटमेंट", icon: ClipboardList },
-    { key: "locations", label: en ? "Hospitals" : "अस्पताल", icon: MapPin },
+    { key: "/doctor/patients", label: en ? "Patients" : "मरीज़", icon: Users },
+    { key: "/doctor/requests", label: en ? "Requests" : "अनुरोध", icon: Calendar },
+    { key: "/appointments", label: en ? "Appointments" : "अपॉइंटमेंट", icon: ClipboardList },
+    { key: "/locations", label: en ? "Hospitals" : "अस्पताल", icon: MapPin },
   ]
 
   const adminItems = [
-    { key: "admin-users", label: en ? "Users" : "उपयोगकर्ता", icon: Users },
-    { key: "admin-campaigns", label: en ? "Campaigns" : "अभियान", icon: Megaphone },
-    { key: "admin-appointments", label: en ? "Appointments" : "अपॉइंटमेंट", icon: Calendar },
-    { key: "admin-records", label: en ? "Records" : "रिकॉर्ड", icon: ClipboardList },
-    { key: "admin-notifications", label: en ? "Notify" : "सूचनाएं", icon: Bell },
+    { key: "/admin/users", label: en ? "Users" : "उपयोगकर्ता", icon: Users },
+    { key: "/admin/campaigns", label: en ? "Campaigns" : "अभियान", icon: Megaphone },
+    { key: "/admin/appointments", label: en ? "Appointments" : "अपॉइंटमेंट", icon: Calendar },
+    { key: "/admin/records", label: en ? "Records" : "रिकॉर्ड", icon: ClipboardList },
+    { key: "/admin/notifications", label: en ? "Notify" : "सूचनाएं", icon: Bell },
   ]
 
   const careItems = [
-    { key: "consultation", label: en ? "Book Consultation" : "परामर्श बुक करें" },
-    { key: "appointments", label: en ? "My Appointments" : "मेरी अपॉइंटमेंट" },
-    { key: "records", label: en ? "Medical Records" : "चिकित्सा रिकॉर्ड" },
-    { key: "directory", label: en ? "Find Doctors" : "डॉक्टर खोजें" },
-    { key: "locations", label: en ? "Find Hospitals" : "अस्पताल खोजें" },
+    { key: "/consultation", label: en ? "Book Consultation" : "परामर्श बुक करें" },
+    { key: "/appointments", label: en ? "My Appointments" : "मेरी अपॉइंटमेंट" },
+    { key: "/records", label: en ? "Medical Records" : "चिकित्सा रिकॉर्ड" },
+    { key: "/directory", label: en ? "Find Doctors" : "डॉक्टर खोजें" },
+    { key: "/locations", label: en ? "Find Hospitals" : "अस्पताल खोजें" },
   ]
 
   const roleBadge: Record<string, { color: string; label: string }> = {
@@ -91,7 +88,7 @@ export function Header({ currentPage, setCurrentPage, user, setUser, language, s
         <div className="flex justify-between items-center h-16">
 
           {/* Logo */}
-          <div className="flex items-center cursor-pointer gap-2 flex-shrink-0" onClick={() => go(user ? "dashboard" : "home")}>
+          <div className="flex items-center cursor-pointer gap-2 flex-shrink-0" onClick={() => go(user ? (role === "admin" ? "/admin/dashboard" : role === "doctor" ? "/doctor/dashboard" : "/dashboard") : "/")}>
             <Heart className={`h-6 w-6 ${role !== "patient" ? "text-white" : "text-teal-600"}`} />
             <div className="flex items-center gap-1.5">
               <span className={`text-base font-bold hidden sm:block ${role !== "patient" ? "text-white" : "text-teal-700"}`}>
@@ -122,7 +119,7 @@ export function Header({ currentPage, setCurrentPage, user, setUser, language, s
                     </button>
                   )
                 })}
-                <button onClick={() => go("emergency")}
+                <button onClick={() => go("/emergency")}
                   className="flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium text-red-300 hover:bg-red-900/30 hover:text-red-200 transition-colors">
                   <AlertTriangle className="h-4 w-4" />{en ? "Emergency" : "आपातकाल"}
                 </button>
@@ -149,15 +146,15 @@ export function Header({ currentPage, setCurrentPage, user, setUser, language, s
             {/* PATIENT */}
             {role === "patient" && (
               <>
-                <button onClick={() => go("symptom-checker")}
+                <button onClick={() => go("/symptom-checker")}
                   className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActive("symptom-checker") ? "bg-teal-600 text-white" : "text-gray-600 hover:bg-gray-100"
+                    isActive("/symptom-checker") ? "bg-teal-600 text-white" : "text-gray-600 hover:bg-gray-100"
                   }`}>
                   <Activity className="h-4 w-4" />{en ? "Symptoms" : "लक्षण"}
                 </button>
-                <button onClick={() => go("health-info")}
+                <button onClick={() => go("/health-info")}
                   className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActive("health-info") ? "bg-teal-600 text-white" : "text-gray-600 hover:bg-gray-100"
+                    isActive("/health-info") ? "bg-teal-600 text-white" : "text-gray-600 hover:bg-gray-100"
                   }`}>
                   <BookOpen className="h-4 w-4" />{en ? "Health Info" : "स्वास्थ्य जानकारी"}
                 </button>
@@ -182,9 +179,9 @@ export function Header({ currentPage, setCurrentPage, user, setUser, language, s
                     </div>
                   )}
                 </div>
-                <button onClick={() => go("emergency")}
+                <button onClick={() => go("/emergency")}
                   className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActive("emergency") ? "bg-red-600 text-white" : "text-red-600 hover:bg-red-50"
+                    isActive("/emergency") ? "bg-red-600 text-white" : "text-red-600 hover:bg-red-50"
                   }`}>
                   <AlertTriangle className="h-4 w-4" />{en ? "Emergency" : "आपातकाल"}
                 </button>
@@ -222,24 +219,24 @@ export function Header({ currentPage, setCurrentPage, user, setUser, language, s
                       <p className="text-xs text-gray-400 truncate">{user.email}</p>
                       <span className={`mt-1 inline-block text-[10px] px-1.5 py-0.5 rounded-full ${badge.color} text-white font-medium`}>{badge.label}</span>
                     </div>
-                    <button onClick={() => go("dashboard")} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                    <button onClick={() => go("/dashboard")} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
                       {en ? "Dashboard" : "डैशबोर्ड"}
                     </button>
                     {role === "doctor" && (
                       <>
-                        <button onClick={() => go("doctor-patients")} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">{en ? "Patient Records" : "मरीज़ रिकॉर्ड"}</button>
-                        <button onClick={() => go("doctor-requests")} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">{en ? "Appointment Requests" : "नई अनुरोध"}</button>
-                        <button onClick={() => go("appointments")} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">{en ? "Appointments" : "अपॉइंटमेंट"}</button>
-                        <button onClick={() => go("locations")} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">{en ? "Hospitals" : "अस्पताल"}</button>
+                        <button onClick={() => go("/doctor/patients")} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">{en ? "Patient Records" : "मरीज़ रिकॉर्ड"}</button>
+                        <button onClick={() => go("/doctor/requests")} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">{en ? "Appointment Requests" : "नई अनुरोध"}</button>
+                        <button onClick={() => go("/appointments")} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">{en ? "Appointments" : "अपॉइंटमेंट"}</button>
+                        <button onClick={() => go("/locations")} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">{en ? "Hospitals" : "अस्पताल"}</button>
                       </>
                     )}
                     {role === "admin" && (
                       <>
-                        <button onClick={() => go("admin-users")} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">{en ? "Manage Users" : "उपयोगकर्ता प्रबंधन"}</button>
-                        <button onClick={() => go("admin-campaigns")} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">{en ? "Campaigns" : "अभियान"}</button>
-                        <button onClick={() => go("admin-appointments")} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">{en ? "Appointments" : "अपॉइंटमेंट"}</button>
-                        <button onClick={() => go("admin-records")} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">{en ? "Records" : "रिकॉर्ड"}</button>
-                        <button onClick={() => go("admin-notifications")} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">{en ? "Send Notifications" : "सूचनाएं भेजें"}</button>
+                        <button onClick={() => go("/admin/users")} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">{en ? "Manage Users" : "उपयोगकर्ता प्रबंधन"}</button>
+                        <button onClick={() => go("/admin/campaigns")} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">{en ? "Campaigns" : "अभियान"}</button>
+                        <button onClick={() => go("/admin/appointments")} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">{en ? "Appointments" : "अपॉइंटमेंट"}</button>
+                        <button onClick={() => go("/admin/records")} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">{en ? "Records" : "रिकॉर्ड"}</button>
+                        <button onClick={() => go("/admin/notifications")} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">{en ? "Send Notifications" : "सूचनाएं भेजें"}</button>
                       </>
                     )}
                     <div className="border-t border-gray-50 mt-1">
@@ -251,7 +248,7 @@ export function Header({ currentPage, setCurrentPage, user, setUser, language, s
                 )}
               </div>
             ) : (
-              <Button size="sm" onClick={() => go("auth")} className="hidden sm:flex gradient-primary text-white text-xs">
+              <Button size="sm" onClick={() => go("/login")} className="hidden sm:flex gradient-primary text-white text-xs">
                 {en ? "Login" : "लॉगिन"}
               </Button>
             )}
@@ -278,7 +275,7 @@ export function Header({ currentPage, setCurrentPage, user, setUser, language, s
                     </button>
                   )
                 })}
-                <button onClick={() => go("emergency")} className="w-full flex items-center gap-2 px-4 py-3 text-sm text-red-300 hover:bg-red-900/20 rounded-lg">
+                <button onClick={() => go("/emergency")} className="w-full flex items-center gap-2 px-4 py-3 text-sm text-red-300 hover:bg-red-900/20 rounded-lg">
                   <AlertTriangle className="h-4 w-4" />{en ? "Emergency" : "आपातकाल"}
                 </button>
               </>
@@ -294,10 +291,10 @@ export function Header({ currentPage, setCurrentPage, user, setUser, language, s
             })}
             {role === "patient" && (
               <>
-                <button onClick={() => go("symptom-checker")} className={`w-full flex items-center gap-2 px-4 py-3 text-sm rounded-lg ${isActive("symptom-checker") ? "bg-teal-50 text-teal-700" : "text-gray-700 hover:bg-gray-50"}`}>
+                <button onClick={() => go("/symptom-checker")} className={`w-full flex items-center gap-2 px-4 py-3 text-sm rounded-lg ${isActive("/symptom-checker") ? "bg-teal-50 text-teal-700" : "text-gray-700 hover:bg-gray-50"}`}>
                   <Activity className="h-4 w-4" />{en ? "Symptom Checker" : "लक्षण जांचकर्ता"}
                 </button>
-                <button onClick={() => go("health-info")} className={`w-full flex items-center gap-2 px-4 py-3 text-sm rounded-lg ${isActive("health-info") ? "bg-teal-50 text-teal-700" : "text-gray-700 hover:bg-gray-50"}`}>
+                <button onClick={() => go("/health-info")} className={`w-full flex items-center gap-2 px-4 py-3 text-sm rounded-lg ${isActive("/health-info") ? "bg-teal-50 text-teal-700" : "text-gray-700 hover:bg-gray-50"}`}>
                   <BookOpen className="h-4 w-4" />{en ? "Health Info" : "स्वास्थ्य जानकारी"}
                 </button>
                 {careItems.map(item => (
@@ -306,7 +303,7 @@ export function Header({ currentPage, setCurrentPage, user, setUser, language, s
                     {item.label}
                   </button>
                 ))}
-                <button onClick={() => go("emergency")} className="w-full flex items-center gap-2 px-4 py-3 text-sm text-red-600 hover:bg-red-50 rounded-lg">
+                <button onClick={() => go("/emergency")} className="w-full flex items-center gap-2 px-4 py-3 text-sm text-red-600 hover:bg-red-50 rounded-lg">
                   <AlertTriangle className="h-4 w-4" />{en ? "Emergency" : "आपातकाल"}
                 </button>
               </>
@@ -321,7 +318,7 @@ export function Header({ currentPage, setCurrentPage, user, setUser, language, s
                   <LogOut className="h-4 w-4" />{en ? "Logout" : "लॉगआउट"}
                 </button>
               ) : (
-                <Button size="sm" className="w-full gradient-primary text-white" onClick={() => go("auth")}>
+                <Button size="sm" className="w-full gradient-primary text-white" onClick={() => go("/login")}>
                   {en ? "Login / Register" : "लॉगिन / पंजीकरण"}
                 </Button>
               )}
@@ -332,3 +329,4 @@ export function Header({ currentPage, setCurrentPage, user, setUser, language, s
     </header>
   )
 }
+

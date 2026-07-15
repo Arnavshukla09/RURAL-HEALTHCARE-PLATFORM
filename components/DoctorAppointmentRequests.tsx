@@ -1,5 +1,6 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
 import { Button } from "./ui/button"
@@ -9,11 +10,11 @@ import { createClient } from "@/lib/supabase/client"
 
 interface DoctorAppointmentRequestsProps {
   language: string
-  setCurrentPage: (page: string) => void
   setJitsiRoom?: (r: string | null) => void
 }
 
-export function DoctorAppointmentRequests({ language, setCurrentPage, setJitsiRoom }: DoctorAppointmentRequestsProps) {
+export function DoctorAppointmentRequests({ language, setJitsiRoom }: DoctorAppointmentRequestsProps) {
+  const router = useRouter();
   const en = language === "en"
   const [appointments, setAppointments] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -184,7 +185,7 @@ export function DoctorAppointmentRequests({ language, setCurrentPage, setJitsiRo
                             <p className="text-xs text-purple-500 font-mono">{appt.teleconsult_room_id}</p>
                           </div>
                           <Button size="sm" className="bg-purple-600 hover:bg-purple-700 text-white h-8 text-xs"
-                            onClick={() => { setJitsiRoom?.(appt.teleconsult_room_id); setCurrentPage("jitsi") }}>
+                            onClick={() => { setJitsiRoom?.(appt.teleconsult_room_id); router.push("/appointments") }}>
                             <Video className="h-3 w-3 mr-1" />{en ? "Join Call" : "कॉल जॉइन"}
                           </Button>
                         </div>

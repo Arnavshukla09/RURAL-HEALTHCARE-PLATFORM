@@ -12,6 +12,11 @@ This document outlines the current state of the project, technical debt, and a p
 - **Facility Mapping:** PostGIS spatial setup with `react-leaflet` to display nearby OpenStreetMap facilities.
 - **API Layer:** Comprehensive Next.js serverless functions with strict Zod validation.
 - **UI Framework:** Responsive, utility-first design via Tailwind CSS and `shadcn/ui`.
+- **Next.js App Router:** Migrated from a single-page state (`setCurrentPage`) to native Next.js file-based routing (`app/dashboard`, etc.) to enable code splitting and URL linking.
+- **Progressive Web App (PWA):** Configured with `next-pwa`, `manifest.json`, and an App Router compatible Service Worker for Android home screen installation and offline caching.
+- **Global App Context:** Refactored heavily prop-drilled state into React Context API (`AppProvider`).
+- **Distributed Rate Limiting:** Migrated in-memory rate limiting to a Redis store (`@upstash/ratelimit`) suitable for Edge/Serverless environments.
+- **E2E Testing:** Configured Playwright end-to-end tests enforced by GitHub Actions CI/CD pipelines.
 
 ---
 
@@ -22,17 +27,13 @@ This document outlines the current state of the project, technical debt, and a p
 ---
 
 ## 🔴 Pending
-- **Progressive Web App (PWA):** Converting the app to a PWA with a `manifest.json` so it can be installed on Android home screens.
-- **Service Worker:** True offline support for static assets to ensure the app loads instantly without a network connection.
 - **Provider Portal:** A dedicated, robust UI for doctors to manage schedules, view aggregated patient records, and emit digital prescriptions.
 - **SMS/Email Notifications:** Integration with Twilio/Resend to notify users of upcoming appointments.
 
 ---
 
 ## 🛠 Technical Debt
-- **SPA Routing:** The application currently relies on a single-page React state (`currentPage` in `app/page.tsx`). This must be migrated to native Next.js file-based routing (`app/(dashboard)/...`) to enable code splitting and deeper URL linking.
-- **In-Memory Rate Limiting:** API rate limits currently use a Node.js `Map` in `lib/rate-limit.ts`. This fails across distributed edge regions and needs migration to a Redis store (e.g., Upstash).
-- **Prop Drilling:** Global state (`user`, `language`, `setCurrentPage`) is heavily prop-drilled. Transition to React Context API or Zustand is required.
+- **React Query Integration:** Now that App Router is established, move data fetching out of manual `useEffect` into `react-query` or Next.js Server Components where appropriate.
 
 ---
 

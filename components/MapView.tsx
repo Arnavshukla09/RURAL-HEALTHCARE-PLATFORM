@@ -5,6 +5,8 @@ import type { ReactNode } from "react"
 import dynamic from "next/dynamic"
 import { Card, CardContent } from "./ui/card"
 import { Button } from "./ui/button"
+import { Badge } from "./ui/badge"
+import { useToast } from "@/components/ui/use-toast"
 import { Navigation, Phone, Loader2, LocateFixed, Star } from "lucide-react"
 
 // All react-leaflet components loaded client-side only
@@ -140,6 +142,7 @@ export function MapView({ language }: MapViewProps) {
   const [facilities, setFacilities] = useState<Facility[]>([])
   const [loading, setLoading] = useState(false)
   const [locating, setLocating] = useState(false)
+  const { toast } = useToast()
   const [error, setError] = useState<string | null>(null)
   const [filter, setFilter] = useState<Facility["type"] | "all">("all")
   const [radiusKm, setRadiusKm] = useState(25)
@@ -181,7 +184,7 @@ export function MapView({ language }: MapViewProps) {
 
   const useMyLocation = () => {
     if (!navigator.geolocation) {
-      alert(en ? "Geolocation not supported." : "स्थान सेवा समर्थित नहीं है।")
+      toast({ title: en ? "Geolocation not supported." : "स्थान सेवा समर्थित नहीं है।", variant: "destructive" })
       return
     }
     setLocating(true)
@@ -194,7 +197,7 @@ export function MapView({ language }: MapViewProps) {
         setLocating(false)
       },
       () => {
-        alert(en ? "Location access denied." : "स्थान की अनुमति अस्वीकृत।")
+        toast({ title: en ? "Location access denied." : "स्थान की अनुमति अस्वीकृत।", variant: "destructive" })
         setLocating(false)
       },
       { timeout: 10000, maximumAge: 60000 }

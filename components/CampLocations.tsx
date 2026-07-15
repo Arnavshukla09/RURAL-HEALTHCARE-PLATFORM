@@ -1,5 +1,6 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "./ui/button"
@@ -18,11 +19,14 @@ import {
   Stethoscope,
   Activity,
   Map,
+  ArrowRight,
+  Loader2,
+  Info
 } from "lucide-react"
+import { useToast } from "@/components/ui/use-toast"
 import { MapView } from "./MapView"
 
 interface CampLocationsProps {
-  setCurrentPage: (page: string) => void
   language: string
 }
 
@@ -41,7 +45,8 @@ interface CampLocation {
   description: string
 }
 
-export function CampLocations({ setCurrentPage, language }: CampLocationsProps) {
+export function CampLocations({ language }: CampLocationsProps) {
+  const router = useRouter();
   const [userLocation, setUserLocation] = useState<string>("")
   const [userCoordinates, setUserCoordinates] = useState<{ lat: number; lng: number } | null>(null)
   const [selectedType, setSelectedType] = useState<string>("all")
@@ -49,6 +54,7 @@ export function CampLocations({ setCurrentPage, language }: CampLocationsProps) 
   const [showMap, setShowMap] = useState(false)
   const [registering, setRegistering] = useState<number | string | null>(null)
   const [registeredCamps, setRegisteredCamps] = useState<Set<number | string>>(new Set())
+  const { toast } = useToast()
 
   const currentYear = new Date().getFullYear()
 
@@ -313,11 +319,11 @@ export function CampLocations({ setCurrentPage, language }: CampLocationsProps) 
           })
         },
         (error) => {
-          alert(t.locationAccess)
+          toast({ title: t.locationAccess, variant: "destructive" })
         },
       )
     } else {
-      alert(language === "en" ? "Geolocation is not supported by this browser." : "इस ब्राउज़र में भू-स्थान समर्थित नहीं है।")
+      toast({ title: language === "en" ? "Geolocation is not supported by this browser." : "इस ब्राउज़र में भू-स्थान समर्थित नहीं है।", variant: "destructive" })
     }
   }
 
@@ -335,9 +341,9 @@ export function CampLocations({ setCurrentPage, language }: CampLocationsProps) 
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
-        alert(language === "en" 
+        toast({ title: language === "en" 
           ? "Please login first to register for this camp." 
-          : "इस शिविर के लिए पंजीकरण करने हेतु पहले लॉगिन करें।")
+          : "इस शिविर के लिए पंजीकरण करने हेतु पहले लॉगिन करें।", variant: "destructive" })
         setRegistering(null)
         return
       }
@@ -351,15 +357,15 @@ export function CampLocations({ setCurrentPage, language }: CampLocationsProps) 
       })
       if (res.ok) {
         setRegisteredCamps(prev => new Set(prev).add(camp.id))
-        alert(language === "en"
+        toast({ title: language === "en"
           ? "Successfully registered! Check your Medical Records for details."
-          : "सफलतापूर्वक पंजीकृत! विवरण के लिए अपने मेडिकल रिकॉर्ड देखें।")
+          : "सफलतापूर्वक पंजीकृत! विवरण के लिए अपने मेडिकल रिकॉर्ड देखें।" })
       } else {
         const err = await res.json()
-        alert(err.error || (language === "en" ? "Registration failed. Please try again." : "पंजीकरण विफल। कृपया पुनः प्रयास करें।"))
+        toast({ title: err.error || (language === "en" ? "Registration failed. Please try again." : "पंजीकरण विफल। कृपया पुनः प्रयास करें।"), variant: "destructive" })
       }
     } catch {
-      alert(language === "en" ? "Network error. Please try again." : "नेटवर्क त्रुटि। कृपया पुनः प्रयास करें।")
+      toast({ title: language === "en" ? "Network error. Please try again." : "नेटवर्क त्रुटि। कृपया पुनः प्रयास करें।", variant: "destructive" })
     } finally {
       setRegistering(null)
     }
@@ -616,7 +622,7 @@ export function CampLocations({ setCurrentPage, language }: CampLocationsProps) 
             <div className="grid md:grid-cols-3 gap-4">
               <Button
                 variant="outline"
-                onClick={() => setCurrentPage("campaigns")}
+                onClick={() => router.push("/campaigns")}
                 className="h-16 flex flex-col items-center justify-center space-y-2"
               >
                 <Calendar className="h-6 w-6" />
@@ -624,7 +630,7 @@ export function CampLocations({ setCurrentPage, language }: CampLocationsProps) 
               </Button>
               <Button
                 variant="outline"
-                onClick={() => setCurrentPage("directory")}
+                onClick={() => router.push("/directory")}
                 className="h-16 flex flex-col items-center justify-center space-y-2"
               >
                 <MapPin className="h-6 w-6" />

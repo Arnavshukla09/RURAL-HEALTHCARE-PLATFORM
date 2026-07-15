@@ -1,5 +1,6 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import { useState } from "react";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
@@ -24,11 +25,11 @@ import {
 
 
 interface DirectoryProps {
-  setCurrentPage: (page: string) => void;
   language: string;
 }
 
-export function Directory({ setCurrentPage, language }: DirectoryProps) {
+export function Directory({ language }: DirectoryProps) {
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSpecialty, setSelectedSpecialty] = useState('all');
   const [showOnlyFRU, setShowOnlyFRU] = useState(false);
@@ -250,7 +251,7 @@ export function Directory({ setCurrentPage, language }: DirectoryProps) {
   };
 
   const handleConsultation = (doctor: any, type: string) => {
-    setCurrentPage('consultation');
+    router.push("/consultation");
   };
 
   return (
@@ -386,7 +387,7 @@ export function Directory({ setCurrentPage, language }: DirectoryProps) {
                         </div>
                         <Button 
                           variant="secondary"
-                          onClick={() => setCurrentPage('consultation')}
+                          onClick={() => router.push("/consultation")}
                           className="w-full flex items-center"
                         >
                           <Calendar className="h-4 w-4 mr-1" />
@@ -482,7 +483,7 @@ export function Directory({ setCurrentPage, language }: DirectoryProps) {
                         </Button>
                         <Button 
                           variant="outline"
-                          onClick={() => setCurrentPage('consultation')}
+                          onClick={() => router.push("/consultation")}
                           className="w-full flex items-center"
                         >
                           <Calendar className="h-4 w-4 mr-1" />

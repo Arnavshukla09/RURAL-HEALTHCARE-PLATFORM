@@ -1,13 +1,14 @@
+"use client"
 import { useState } from "react";
 import { Button } from "./ui/button";
 import { Heart, Mail, Phone, MapPin, ChevronDown, ChevronUp, ExternalLink, Linkedin } from "lucide-react";
 
-interface FooterProps {
-  setCurrentPage: (page: string) => void;
-  language: string;
-}
+import { useApp } from "@/components/providers/AppProvider";
+import { useRouter } from "next/navigation";
 
-export function Footer({ setCurrentPage, language }: FooterProps) {
+export function Footer() {
+  const { language } = useApp();
+  const router = useRouter();
   const content = {
     en: {
       tagline: "Bridging Healthcare Gaps in Rural Communities",
@@ -122,25 +123,25 @@ export function Footer({ setCurrentPage, language }: FooterProps) {
             <h3 className="text-lg font-semibold">{t.quickLinks}</h3>
             <div className="space-y-2">
               <button 
-                onClick={() => setCurrentPage('home')}
+                onClick={() => router.push('/')}
                 className="block text-gray-300 hover:text-white transition-colors text-sm"
               >
                 {language === 'en' ? 'Home' : 'होम'}
               </button>
               <button 
-                onClick={() => setCurrentPage('directory')}
+                onClick={() => router.push('/directory')}
                 className="block text-gray-300 hover:text-white transition-colors text-sm"
               >
                 {language === 'en' ? 'Directory' : 'निर्देशिका'}
               </button>
               <button 
-                onClick={() => setCurrentPage('camps')}
+                onClick={() => router.push('/camps')}
                 className="block text-gray-300 hover:text-white transition-colors text-sm"
               >
                 {language === 'en' ? 'Campaigns' : 'अभियान'}
               </button>
               <button 
-                onClick={() => setCurrentPage('consultation')}
+                onClick={() => router.push('/consultation')}
                 className="block text-gray-300 hover:text-white transition-colors text-sm"
               >
                 {language === 'en' ? 'Consultation' : 'परामर्श'}
@@ -218,3 +219,5 @@ export function Footer({ setCurrentPage, language }: FooterProps) {
     </footer>
   );
 }
+
+

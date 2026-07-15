@@ -11,8 +11,10 @@ import { Alert, AlertDescription } from "./ui/alert"
 import { Eye, EyeOff, User, Mail, Phone, Loader2, Chrome, Heart } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 
+import { UserProfile } from "@/types"
+
 interface AuthenticationProps {
-  setUser: (user: any) => void
+  setUser: (user: UserProfile) => void
   setCurrentPage: (page: string) => void
   language: string
 }
@@ -83,7 +85,7 @@ export function Authentication({ setUser, setCurrentPage, language }: Authentica
       setUser({
         id: data.user.id,
         name: patient.name || data.user.user_metadata?.full_name || data.user.email?.split("@")[0] || "User",
-        email: data.user.email,
+        email: data.user.email || "",
         role: patient.role || "patient",
         phone: patient.phone || "",
       })

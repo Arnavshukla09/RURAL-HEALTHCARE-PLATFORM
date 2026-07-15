@@ -1,5 +1,6 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
 import { Button } from "./ui/button"
@@ -13,10 +14,10 @@ import { createClient } from "@/lib/supabase/client"
 interface AdminDashboardProps {
   user: any
   language: string
-  setCurrentPage: (page: string) => void
 }
 
-export function AdminDashboard({ user, language, setCurrentPage }: AdminDashboardProps) {
+export function AdminDashboard({ user, language }: AdminDashboardProps) {
+  const router = useRouter();
   const en = language === "en"
   const [stats, setStats] = useState({ users: 0, appointments: 0, records: 0, doctors: 0 })
   const [recentUsers, setRecentUsers] = useState<any[]>([])
@@ -204,7 +205,7 @@ export function AdminDashboard({ user, language, setCurrentPage }: AdminDashboar
               ].map((action, i) => {
                 const Icon = action.icon
                 return (
-                  <button key={i} onClick={() => setCurrentPage(action.page)}
+                  <button key={i} onClick={() => router.push(`/${action.page}`)}
                     className={`flex flex-col items-center gap-2 p-4 rounded-xl border border-gray-200 bg-white transition-all ${action.color}`}>
                     <Icon className="h-5 w-5 text-gray-600" />
                     <span className="text-xs font-medium text-gray-700 text-center">{action.label}</span>

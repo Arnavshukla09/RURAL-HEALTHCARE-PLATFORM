@@ -1,4 +1,5 @@
 "use client"
+import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { Card, CardContent } from "./ui/card"
 import { Button } from "./ui/button"
@@ -8,10 +9,10 @@ import { Search, Syringe, Heart, Shield, BookOpen, AlertTriangle } from "lucide-
 interface HealthInfoHubProps {
   language: string
   symptomResult?: any | null
-  setCurrentPage?: (page: string) => void
 }
 
-export function HealthInfoHub({ language, symptomResult, setCurrentPage }: HealthInfoHubProps) {
+export function HealthInfoHub({ language, symptomResult }: HealthInfoHubProps) {
+  const router = useRouter();
   const en = language === "en"
   const hasRelevantDiseases = (symptomResult?.relevantDiseases?.length ?? 0) > 0
   const [tab, setTab] = useState<"vaccines" | "firstaid" | "diseases" | "awareness">(

@@ -1,4 +1,5 @@
 "use client"
+import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
 import { Button } from "./ui/button"
@@ -8,9 +9,10 @@ import { Label } from "./ui/label"
 import { Calendar, Clock, Video, CheckCircle, XCircle, User, Stethoscope, Plus, Loader2 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 
-interface AppointmentManagerProps { user: any; language: string; setCurrentPage: (page: string) => void; setJitsiRoom?: (r: string | null) => void }
+interface AppointmentManagerProps { user: any; language: string; setJitsiRoom?: (r: string | null) => void }
 
-export function AppointmentManager({ user, language, setCurrentPage, setJitsiRoom }: AppointmentManagerProps) {
+export function AppointmentManager({ user, language, setJitsiRoom }: AppointmentManagerProps) {
+  const router = useRouter();
   const en = language === "en"
   const isDoctor = user?.role === "doctor"
   const [activeTab, setActiveTab] = useState<"upcoming" | "past">("upcoming")
@@ -72,7 +74,7 @@ export function AppointmentManager({ user, language, setCurrentPage, setJitsiRoo
   const joinCall = (roomId: string) => {
     if (setJitsiRoom && roomId) {
       setJitsiRoom(roomId)
-      setCurrentPage("jitsi")
+      router.push("/appointments")
     }
   }
 
@@ -300,7 +302,7 @@ export function AppointmentManager({ user, language, setCurrentPage, setJitsiRoo
         </div>
 
         {!isDoctor && (
-          <Button className="w-full gradient-primary text-white" onClick={() => setCurrentPage("consultation")}>
+          <Button className="w-full gradient-primary text-white" onClick={() => router.push("/consultation")}>
             <Plus className="h-4 w-4 mr-1.5" />
             {en ? "Book New Appointment" : "नया अपॉइंटमेंट बुक करें"}
           </Button>

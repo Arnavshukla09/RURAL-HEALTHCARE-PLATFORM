@@ -12,7 +12,7 @@ const QuerySchema = z.object({
 
 export async function GET(req: NextRequest) {
   const ip = req.headers.get("x-forwarded-for") ?? "127.0.0.1"
-  if (!rateLimit(ip, 30, 60000)) {
+  if (!(await rateLimit(ip, 30, 60000))) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 })
   }
 
