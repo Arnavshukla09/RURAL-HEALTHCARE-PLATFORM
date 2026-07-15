@@ -443,6 +443,9 @@ To reset passwords: Supabase → Authentication → Users → click user → Res
 | Notifications not visible to users | ✅ Fixed | NotificationBell component in Header with Realtime subscription |
 | Book Appointment showed old inline form | ✅ Fixed | Button now navigates to `consultation` page |
 | Map tiles grey/not loading | ✅ Fixed | Switched to CartoDB Voyager tiles |
+| SPA unauthorized page access | ✅ Fixed | Role guards added to `app/page.tsx` for admin and doctor routes |
+| Header dropdown missing links | ✅ Fixed | Added `admin-appointments` and `admin-records` to admin dropdown |
+| Camp Locations hardcoded / Vercel Build | ✅ Fixed | Fetches from `camps` DB table, uses Haversine distance. TS types fixed for Supabase UUIDs. |
 | In-memory rate limiting | ⚠️ Known | Doesn't sync across Vercel edge functions |
 | SPA router scalability | ⚠️ Known | ~20 views now; consider file-based routing if it grows further |
 
@@ -489,7 +492,11 @@ NEXT_PUBLIC_SITE_URL=              # OAuth redirect base URL
 - **Doctor Appointments showing 0** — `/api/appointments` GET always filtered by `patient_id`. Now role-checks: patients get own, doctors/admins get all.
 - **Camps table missing** — `camps` table didn't exist in DB. Created via `scripts/012_camps_extra_columns.sql`.
 - **Campaign TypeScript build error** — `participants` typed as `number | undefined` but DB returns `null`. Fixed to `number | null`.
-- **Doctor patient records empty** — `DoctorPatients.tsx` now queries all patients directly from `patients` table (not via appointments join). Medical records tried with `patient_id` first, then `user_id` fallback.
+- **Doctor patient records empty** — `DoctorPatients.tsx` now queries all patients directly from `patients` table (not via appointments join). Medical records tried with `patient_id` first, then `user_id` fallback. Null roles are properly checked.
+- **Route Guards** — Added role guards in `app/page.tsx` so patients cannot access `admin-*` or `doctor-*` views.
+- **Header Dropdowns** — Admin dropdown now includes Appointments and Records; Doctor dropdown includes Appointments and Hospitals.
+- **Camp Locations Hardcoded** — `CampLocations.tsx` now fetches dynamic DB entries from `camps`, merges them with static fallback, and uses true GPS Haversine distance for sorting instead of alphabetical sorting. Also fixed TypeScript state error for `registering` (UUID strings).
+- **Doctor Appointments Join Array** — Supabase 1:1 joins return arrays. Fixed `.patients?.[0]` unwrap logic in `DoctorAppointmentRequests.tsx`.
 
 #### New Features
 - **NotificationBell** (`components/NotificationBell.tsx`) — Yellow bell in header for all logged-in users. Realtime subscription, unread badge, mark-all-read, dropdown panel.
