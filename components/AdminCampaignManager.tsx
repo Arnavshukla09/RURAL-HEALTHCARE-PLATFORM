@@ -25,7 +25,7 @@ interface Campaign {
   start_time?: string
   status: "active" | "upcoming" | "ended"
   category: string
-  participants?: number
+  participants?: number | null
   phone?: string
   map_url?: string
   is_annual?: boolean
@@ -92,7 +92,7 @@ export function AdminCampaignManager({ language }: AdminCampaignManagerProps) {
       if (editing) {
         const { error } = await supabase.from("camps").update(payload).eq("id", editing)
         if (!error) {
-          setCampaigns(prev => prev.map(c => c.id === editing ? { ...c, ...payload } : c))
+          setCampaigns(prev => prev.map(c => c.id === editing ? ({ ...c, ...payload } as Campaign) : c))
           flash(en ? "Campaign updated!" : "अभियान अपडेट हुआ!")
         } else { flash("Error: " + error.message) }
       } else {
