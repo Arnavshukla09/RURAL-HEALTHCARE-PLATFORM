@@ -91,6 +91,21 @@ export function AppointmentManager({ user, language, setJitsiRoom }: Appointment
     } catch { return "" }
   }
 
+  const handleCancelAppointment = async (id: string) => {
+    try {
+      const res = await fetch("/api/appointments", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status: "cancelled" })
+      })
+      if (res.ok) {
+        setAppointments(appointments.map(a => a.id === id ? { ...a, status: "cancelled" } : a))
+      }
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
   const handleBookAppointment = async () => {
     setBookingError("")
     setBookingSuccess("")
@@ -283,11 +298,18 @@ export function AppointmentManager({ user, language, setJitsiRoom }: Appointment
                   </div>
                   <div className="flex flex-col items-end gap-2">
                     <Badge className={`text-xs ${statusColors[a.status] || 'bg-gray-100'}`}>{a.status}</Badge>
-                    {a.status === "scheduled" && a.teleconsult_room_id && (
-                      <Button size="sm" className="h-7 text-xs gradient-primary text-white" onClick={() => joinCall(a.teleconsult_room_id)}>
-                        <Video className="h-3 w-3 mr-1" />{en ? "Join" : "जुड़ें"}
-                      </Button>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {a.status === "scheduled" && a.teleconsult_room_id && (
+                        <Button size="sm" className="h-7 text-xs gradient-primary text-white" onClick={() => joinCall(a.teleconsult_room_id)}>
+                          <Video className="h-3 w-3 mr-1" />{en ? "Join" : "जुड़ें"}
+                        </Button>
+                      )}
+                      {a.status === "scheduled" && (
+                        <Button size="sm" variant="outline" className="h-7 text-xs text-red-600 border-red-200 hover:bg-red-50" onClick={() => handleCancelAppointment(a.id)}>
+                          <XCircle className="h-3 w-3 mr-1" />{en ? "Cancel" : "रद्द करें"}
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </div>
               </CardContent>

@@ -296,11 +296,11 @@ export function Dashboard({ user, language }: DashboardProps) {
                   
                   <Button 
                     variant="outline"
-                    onClick={() => router.push("/records")}
+                    onClick={() => router.push(user.role === 'doctor' ? "/doctor/patients" : "/records")}
                     className="h-16 flex items-center justify-center space-x-2"
                   >
                     <Heart className="h-5 w-5" />
-                    <span>{language === 'en' ? 'My Records' : 'मेरे रिकॉर्ड'}</span>
+                    <span>{user.role === 'doctor' ? (language === 'en' ? 'Patient Records' : 'मरीज़ रिकॉर्ड') : (language === 'en' ? 'My Records' : 'मेरे रिकॉर्ड')}</span>
                   </Button>
                 </div>
                 
@@ -344,6 +344,11 @@ export function Dashboard({ user, language }: DashboardProps) {
                   </ul>
                 </div>
               </CardContent>
+              <div className="p-4 pt-0">
+                <Button variant="outline" className="w-full text-green-700 border-green-200 hover:bg-green-100" onClick={() => router.push("/health-info/schemes")}>
+                  {language === 'en' ? 'View All Government Schemes' : 'सभी सरकारी योजनाएं देखें'}
+                </Button>
+              </div>
             </Card>
 
             {/* Upcoming Campaigns */}
@@ -392,65 +397,6 @@ export function Dashboard({ user, language }: DashboardProps) {
             </Card>
           </div>
 
-          {/* Notifications */}
-          <div className="space-y-6">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="flex items-center">
-                  <Bell className="h-5 w-5 mr-2" />
-                  {t.notifications}
-                </CardTitle>
-                <Badge variant="secondary">{notifications.length}</Badge>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {notifications.length > 0 ? (
-                    notifications.map((notification) => (
-                      <div key={notification.id} className="flex items-start space-x-3 p-3 border rounded-lg">
-                        <div className={`flex-shrink-0 w-2 h-2 rounded-full mt-2 ${
-                          notification.urgent ? 'bg-red-500' : 'bg-blue-500'
-                        }`} />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm text-gray-900">{notification.message}</p>
-                          <p className="text-xs text-gray-500 mt-1">{notification.time}</p>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-center py-8 text-gray-500">
-                      <Bell className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                      <p>{t.noNotifications}</p>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Featured Campaign Image */}
-            <Card>
-              <CardHeader>
-                <CardTitle>{language === 'en' ? 'Featured Campaign' : 'विशेष अभियान'}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ImageWithFallback
-                  src="https://images.unsplash.com/photo-1608243499710-5ebece89a37d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxoZWFsdGhjYXJlJTIwY2FtcGFpZ24lMjB2YWNjaW5hdGlvbnxlbnwxfHx8fDE3NTc4NTQzNDN8MA&ixlib=rb-4.1.0&q=80&w=1080"
-                  alt="Healthcare campaign"
-                  className="rounded-lg w-full h-32 object-cover mb-4"
-                />
-                <h4 className="font-medium mb-2">
-                  {language === 'en' ? 'Community Health Drive' : 'सामुदायिक स्वास्थ्य अभियान'}
-                </h4>
-                <p className="text-sm text-gray-600 mb-4">
-                  {language === 'en' 
-                    ? 'Join our comprehensive health screening program' 
-                    : 'हमारे व्यापक स्वास्थ्य जांच कार्यक्रम में शामिल हों'}
-                </p>
-                <Button size="sm" onClick={() => router.push("/camps")}>
-                  {language === 'en' ? 'Learn More' : 'और जानें'}
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
         </div>
       </div>
     </div>

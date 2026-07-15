@@ -101,9 +101,26 @@ export function ConsultationPortal({ language, user, symptomResult }: Consultati
 
   const days = useMemo(() => getNext7Days(), [])
 
-  const [doctors, setDoctors] = useState<Doctor[]>([])
+  const [doctors, setDoctors] = useState<any[]>([
+    { id: '1', name: 'Dr. Ajay Goenka', specialty: 'General Medicine', experience: 22, rating: 4.6, location: 'AIIMS Bhopal, Saket Nagar', govt: true },
+    { id: '2', name: 'Dr. Sanjeev Sharma', specialty: 'Cardiology', experience: 18, rating: 4.7, location: 'Hamidia Hospital, Bhopal', govt: true },
+    { id: '3', name: 'Dr. Priya Verma', specialty: 'Pediatrics', experience: 15, rating: 4.8, location: 'Kamla Nehru Hospital, Bhopal', govt: true },
+    { id: '4', name: 'Dr. Rakesh Malviya', specialty: 'Orthopedics', experience: 20, rating: 4.5, location: 'BMHRC, Bhopal', govt: true },
+    { id: '5', name: 'Dr. Nidhi Gupta', specialty: 'Obstetrics & Gynecology', experience: 16, rating: 4.9, location: 'Sultania Zanana Hospital, Bhopal', govt: true },
+    { id: '6', name: 'Dr. Vivek Saraswat', specialty: 'Cardiology', experience: 25, rating: 4.8, location: 'Bansal Hospital, Bhopal', govt: false },
+    { id: '7', name: 'Dr. Asha Bhandari', specialty: 'General Medicine', experience: 12, rating: 4.4, location: 'District Hospital, Sehore', govt: true },
+    { id: '8', name: 'Dr. Rajesh Patel', specialty: 'Pediatrics', experience: 14, rating: 4.6, location: 'MY Hospital, Indore', govt: true },
+    { id: '9', name: 'Dr. Meena Joshi', specialty: 'Obstetrics & Gynecology', experience: 19, rating: 4.7, location: 'Chirayu Medical College, Bhopal', govt: false },
+    { id: '10', name: 'Dr. Sunil Jain', specialty: 'Orthopedics', experience: 23, rating: 4.5, location: 'CHL Hospital, Indore', govt: false },
+    { id: '11', name: 'Dr. Kavita Sharma', specialty: 'General Medicine', experience: 10, rating: 4.3, location: 'CHC Berasia, Bhopal', govt: true },
+    { id: '12', name: 'Dr. Arun Dubey', specialty: 'Cardiology', experience: 17, rating: 4.6, location: 'Bombay Hospital, Indore', govt: false },
+    { id: '13', name: 'Dr. Sunita Rawat', specialty: 'Pediatrics', experience: 11, rating: 4.5, location: 'District Hospital, Vidisha', govt: true },
+    { id: '14', name: 'Dr. Manish Tiwari', specialty: 'General Medicine', experience: 28, rating: 4.9, location: 'AIIMS Bhopal, Saket Nagar', govt: true },
+    { id: '15', name: 'Dr. Pooja Singh', specialty: 'Obstetrics & Gynecology', experience: 9, rating: 4.4, location: 'PHC Obedullaganj, Raisen', govt: true },
+  ])
+
   const [specialtyFilter, setSpecialtyFilter] = useState("All")
-  const [selectedDoctor, setSelectedDoctor]   = useState<Doctor | null>(null)
+  const [selectedDoctor, setSelectedDoctor]   = useState<any | null>(null)
   const [consultType,    setConsultType]       = useState("video")
   const [selectedDate,   setSelectedDate]      = useState<string>(toISODate(days[0]))
   const [selectedSlot,   setSelectedSlot]      = useState<string>("")
@@ -111,22 +128,6 @@ export function ConsultationPortal({ language, user, symptomResult }: Consultati
   const [loading,        setLoading]           = useState(false)
   const [success,        setSuccess]           = useState("")
   const [error,          setError]             = useState("")
-
-  // Fetch doctors on mount
-  useEffect(() => {
-    async function loadDoctors() {
-      try {
-        const res = await fetch("/api/providers")
-        if (res.ok) {
-          const data = await res.json()
-          setDoctors(data)
-        }
-      } catch (e) {
-        console.error("Failed to load doctors", e)
-      }
-    }
-    loadDoctors()
-  }, [])
 
   // ── Derived ────────────────────────────────────────────────────────────────
   const filteredDoctors = useMemo(() =>
@@ -166,6 +167,7 @@ export function ConsultationPortal({ language, user, symptomResult }: Consultati
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          provider_id: null,
           appointment_date: appointmentDate,
           consultation_type: consultType,
           notes: fullNotes,

@@ -50,7 +50,6 @@ export function HealthInfoHub({ language, symptomResult }: HealthInfoHubProps) {
     { icon: "💧", name: "Typhoid", hi: "टाइफाइड", symptoms: "Sustained fever, weakness, stomach pain, headache", prevention: "Clean water, hygienic food, handwashing", severity: "moderate" },
     { icon: "🫁", name: "Pneumonia", hi: "निमोनिया", symptoms: "Cough, fever, difficulty breathing, chest pain", prevention: "Vaccination, nutrition, avoid smoking", severity: "severe" },
     { icon: "🩸", name: "Anemia", hi: "एनीमिया", symptoms: "Fatigue, weakness, pale skin, breathlessness", prevention: "Iron-rich foods, supplements, treat infections", severity: "moderate" },
-
     { icon: "🫀", name: "Hypertension", hi: "उच्च रक्तचाप", symptoms: "Headache, dizziness, blurred vision, often no symptoms", prevention: "Reduce salt, exercise, maintain healthy weight", severity: "moderate" },
     { icon: "🍬", name: "Diabetes", hi: "मधुमेह", symptoms: "Frequent urination, excessive thirst, fatigue, weight loss", prevention: "Healthy diet, exercise, regular checkups", severity: "severe" },
     { icon: "❤️", name: "Heart Disease", hi: "हृदय रोग", symptoms: "Chest pain, shortness of breath, fatigue", prevention: "Healthy lifestyle, avoid smoking, regular exercise", severity: "severe" },
@@ -114,6 +113,17 @@ export function HealthInfoHub({ language, symptomResult }: HealthInfoHubProps) {
               <I className="h-4 w-4 mr-1.5" />{t.label}
             </Button>
           )})}
+        </div>
+
+        {/* Government Schemes Link */}
+        <div className="max-w-md mx-auto">
+          <Button 
+            onClick={() => router.push("/health-info/schemes")}
+            className="w-full bg-green-600 hover:bg-green-700 text-white shadow-md border border-green-500"
+          >
+            <Shield className="h-4 w-4 mr-2" />
+            {en ? "View Government Health Schemes" : "सरकारी स्वास्थ्य योजनाएं देखें"}
+          </Button>
         </div>
 
         {/* Search */}
