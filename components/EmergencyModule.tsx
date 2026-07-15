@@ -86,6 +86,25 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
     { service: t.nationalHealth, number: "18001801104", icon: Phone, color: "gray" },
   ]
 
+  const shareLocationViaWhatsApp = () => {
+    if (!navigator.geolocation) {
+      window.open("https://wa.me/?text=EMERGENCY!%20I%20need%20immediate%20medical%20assistance.");
+      return;
+    }
+    toast({ title: language === 'en' ? 'Fetching location...' : 'लोकेशन प्राप्त कर रहा है...' });
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const url = `https://maps.google.com/?q=${pos.coords.latitude},${pos.coords.longitude}`;
+        const message = `EMERGENCY! I need immediate medical assistance. My location: ${url}`;
+        window.open(`https://wa.me/?text=${encodeURIComponent(message)}`);
+      },
+      () => {
+        window.open("https://wa.me/?text=EMERGENCY!%20I%20need%20immediate%20medical%20assistance.");
+        toast({ title: language === 'en' ? 'Could not fetch location' : 'लोकेशन प्राप्त नहीं किया जा सका', variant: "destructive" });
+      }
+    );
+  };
+
   return (
     <div className="min-h-screen bg-red-50 p-4">
       <div className="max-w-4xl mx-auto space-y-8">
@@ -117,7 +136,7 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
               <Button
                 variant="outline"
                 className="w-full border-green-200 text-green-600 hover:bg-green-50"
-                onClick={() => window.open("https://wa.me/91112?text=EMERGENCY!%20I%20need%20immediate%20medical%20assistance.")}
+                onClick={shareLocationViaWhatsApp}
               >
                 <MessageCircle className="mr-2 h-5 w-5" />
                 {t.waFallback}
@@ -174,16 +193,17 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
                 {emergencyNumbers.map((contact, idx) => {
                   const Icon = contact.icon
                   return (
-                    <div
+                    <button
                       key={idx}
-                      className="flex flex-col p-4 border bg-white hover:bg-gray-50 transition-colors"
+                      onClick={() => window.open(`tel:${contact.number}`)}
+                      className="flex flex-col p-4 border bg-white hover:bg-gray-50 transition-colors text-left w-full focus:outline-none"
                     >
                       <span className="font-semibold text-gray-800 text-sm mb-2">{contact.service}</span>
                       <div className="flex items-center text-gray-600">
                         <Icon className="h-4 w-4 mr-2" />
-                        <span className="text-sm cursor-pointer hover:text-blue-600" onClick={() => window.open(`tel:${contact.number}`)}>{contact.number}</span>
+                        <span className="text-sm">{contact.number}</span>
                       </div>
-                    </div>
+                    </button>
                   )
                 })}
               </div>
