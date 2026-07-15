@@ -7,6 +7,11 @@ import { Authentication } from "@/components/Authentication"
 import { Dashboard } from "@/components/Dashboard"
 import { DoctorDashboard } from "@/components/DoctorDashboard"
 import { AdminDashboard } from "@/components/AdminDashboard"
+import { DoctorPatients } from "@/components/DoctorPatients"
+import { DoctorAppointmentRequests } from "@/components/DoctorAppointmentRequests"
+import { AdminUserManagement } from "@/components/AdminUserManagement"
+import { AdminCampaignManager } from "@/components/AdminCampaignManager"
+import { AdminNotifications } from "@/components/AdminNotifications"
 import { Header } from "@/components/Header"
 import { Footer } from "@/components/Footer"
 import { SymptomChecker } from "@/components/SymptomChecker"
@@ -173,6 +178,19 @@ supabase.auth.getSession()
         return <ConsultationPortal user={user} language={language} setCurrentPage={setCurrentPage} symptomResult={symptomCheckResult} />
       case "appointments":
         return <AppointmentManager user={user} language={language} setCurrentPage={setCurrentPage} setJitsiRoom={setJitsiRoom} />
+      // ── Doctor pages ──────────────────────────────
+      case "doctor-patients":
+        return <DoctorPatients language={language} setCurrentPage={setCurrentPage} />
+      case "doctor-requests":
+        return <DoctorAppointmentRequests language={language} setCurrentPage={setCurrentPage} setJitsiRoom={setJitsiRoom} />
+      // ── Admin pages ──────────────────────────────
+      case "admin-users":
+        return <AdminUserManagement language={language} setCurrentPage={setCurrentPage} />
+      case "admin-campaigns":
+        return <AdminCampaignManager language={language} />
+      case "admin-notifications":
+        return <AdminNotifications language={language} />
+      // ── Shared pages ─────────────────────────────
       case "records":
         return <PatientRecords language={language} />
       case "emergency":
