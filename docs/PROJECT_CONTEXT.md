@@ -1,6 +1,6 @@
 # Project Context: Rural Healthcare Platform
 
-This document is the **master source of truth** for the Rural Healthcare Platform repository. It is maintained as a living document and updated after every major sprint. Last updated: **July 15, 2026**.
+This document is the **master source of truth** for the Rural Healthcare Platform repository. It is maintained as a living document and updated after every major sprint. Last updated: **July 17, 2026**.
 
 ---
 
@@ -214,10 +214,11 @@ Role is determined after login by querying `patients.role` using `auth.uid()`. T
 
 ### 6.8 Medical Records — ✅ Implemented
 - Patient's own records via `PatientRecords.tsx`
+- First-time patients get a "Complete Your Medical Profile" one-time form to set base health metrics (height, weight, blood type, chronic conditions), which saves as a `[Medical Profile]` record.
 - Doctor sees patient records via `DoctorPatients.tsx`
-- Admin sees all records via `AdminRecords.tsx`
+- Admin sees all records via `AdminRecords.tsx`, complete with inline **Edit** and **Delete** actions for management.
 - Consultation bookings saved as `medical_records` entries (type `other`) as fallback
-- **Files:** `components/PatientRecords.tsx`, `app/api/medical-records/route.ts`
+- **Files:** `components/PatientRecords.tsx`, `components/AdminRecords.tsx`, `app/api/medical-records/route.ts`
 
 ### 6.9 Health Camps — ✅ Implemented (DB-connected)
 - `camps` table created via `scripts/012_camps_extra_columns.sql`
@@ -410,11 +411,12 @@ Run these scripts **in order** in Supabase SQL Editor for a fresh setup:
 | 7 | `013_fix_rls_doctor_admin.sql` | Doctor/Admin read-all RLS |
 | 8 | `014_fix_patient_self_read.sql` | **CRITICAL**: patient self-read policy |
 
-Plus these one-off commands:
+Plus these one-off commands and security fixes:
 ```sql
 ALTER TABLE medical_records ALTER COLUMN provider_id DROP NOT NULL;
 UPDATE storage.buckets SET public = TRUE WHERE id = 'medical-records';
 ```
+*(See `supabase/fix_security_warnings.sql` for post-deployment security hardening, such as search paths and revoking public permissions)*
 
 ---
 

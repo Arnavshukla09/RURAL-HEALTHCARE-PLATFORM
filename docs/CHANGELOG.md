@@ -20,6 +20,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **Draggable Map Pointer:** Made the user's location marker draggable in the Leaflet map, automatically refetching and re-centering nearby facilities upon dropping the pin.
 - **Master Documentation Suite:** Generated production-grade documentation across `docs/` (`PROJECT_CONTEXT.md`, `ARCHITECTURE.md`, `API_REFERENCE.md`, `DATABASE.md`, `COMPONENTS.md`, `ROADMAP.md`).
 - **Agent Rules:** Created `.agents/AGENTS.md` to strictly govern AI coding assistant behavior regarding project documentation integrity.
+- **Admin Record Management:** Empowered Admins with inline Edit and Delete capabilities for all patient medical records, secured by role-checked REST API endpoints.
+- **Patient Medical Profile:** Introduced a one-time onboarding form for new patients to establish foundational health metrics (Height, Weight, Blood Group, Chronic Conditions).
+- **Database Security Hardening:** Executed a comprehensive database security review, revoking public execution rights for `SECURITY DEFINER` functions, neutralizing mutable search paths, and dropping excessively permissive RLS policies.
 
 ### Changed
 - **Real MP Healthcare Data:** Stripped out generic mock data in the Directory and Hospitals tabs, replacing it with hardcoded real-world doctors and facilities from Madhya Pradesh (e.g., AIIMS Bhopal, MY Hospital Indore).
