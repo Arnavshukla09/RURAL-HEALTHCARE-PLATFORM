@@ -99,11 +99,21 @@ export async function POST(req: NextRequest) {
 
   const roomId = `ruralhealth-consult-${Date.now().toString(16)}`
 
+  let finalProviderId = parsed.data.provider_id || null;
+  if (!finalProviderId) {
+    const { data: defaultProvider } = await adminSupabase.from("providers").select("id").limit(1).single()
+    if (defaultProvider) {
+      finalProviderId = defaultProvider.id
+    } else {
+      return NextResponse.json({ error: "No doctors available in the system." }, { status: 400 })
+    }
+  }
+
   const { data, error } = await adminSupabase
     .from("appointments")
     .insert({
       patient_id: patient.id,
-      provider_id: parsed.data.provider_id || null,
+      provider_id: finalProviderId,
       appointment_date: parsed.data.appointment_date,
       notes: parsed.data.notes || null,
       status: "scheduled",
