@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
 import { Button } from "./ui/button"
-import { Phone, MapPin, Share2, AlertTriangle, Truck, MessageSquare, MessageCircle } from "lucide-react"
+import { Phone, MapPin, Share2, AlertTriangle, Truck, MessageSquare, MessageCircle, BookOpen } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 
 interface EmergencyModuleProps {
@@ -176,6 +176,18 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
                 {t.shareLocation}
               </Button>
             </div>
+
+            <Button
+              size="lg"
+              variant="outline"
+              className="w-full h-20 bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 mt-4"
+              onClick={() => router.push("/health-info")}
+            >
+              <div className="flex flex-col items-center">
+                <span className="flex items-center text-lg font-semibold"><BookOpen className="mr-2 h-5 w-5" /> {t.firstAid}</span>
+                <span className="text-xs text-blue-500 font-normal mt-1">{t.firstAidSub}</span>
+              </div>
+            </Button>
           </CardContent>
         </Card>
 
