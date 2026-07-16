@@ -404,9 +404,6 @@ export function MapView({ language }: MapViewProps) {
                       )}
                       {f.address && <p className="text-xs text-gray-500">{f.address}</p>}
                       {f.district && <p className="text-xs text-gray-400">{f.district}</p>}
-                      <p className="text-blue-700 font-medium text-xs">
-                        {f.distance_km} km {en ? "away" : "दूर"}
-                      </p>
                       {f.phone && (
                         <a href={`tel:${f.phone}`}
                           className="text-blue-600 underline text-xs flex items-center gap-1">
@@ -465,9 +462,6 @@ export function MapView({ language }: MapViewProps) {
                           {cfg.icon} {en ? cfg.en : cfg.hi}
                         </p>
                         <div className="flex items-center gap-3 mt-0.5 text-xs text-gray-500">
-                          <span className="flex items-center gap-0.5">
-                            <Navigation className="h-3 w-3" />{f.distance_km} km
-                          </span>
                           {f.phone && (
                             <a href={`tel:${f.phone}`} className="flex items-center gap-0.5 text-blue-600">
                               <Phone className="h-3 w-3" />{f.phone}
@@ -504,8 +498,6 @@ export function MapView({ language }: MapViewProps) {
                           <p className="font-medium text-sm truncate">{f.name}</p>
                           <div className="flex items-center gap-2 text-xs text-gray-500">
                             <span style={{ color: cfg.color }}>{en ? cfg.en : cfg.hi}</span>
-                            <span>·</span>
-                            <span>{f.distance_km} km</span>
                             {f.phone && <><span>·</span><a href={`tel:${f.phone}`} className="text-blue-600">{f.phone}</a></>}
                           </div>
                           <Button size="sm" variant="ghost" className="h-6 text-xs mt-1 -ml-2 text-blue-600" onClick={() => showRoute(f.lat, f.lon)} disabled={routingLoading}>
