@@ -26,6 +26,8 @@ export function AdminRecords({ language }: AdminRecordsProps) {
   const [editType, setEditType] = useState<string>("")
   const [editContent, setEditContent] = useState<string>("")
   const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const [expanded, setExpanded] = useState<string | null>(null)
+  const [loadingRecords, setLoadingRecords] = useState<string | null>(null)
 
   useEffect(() => {
     const load = async () => {
