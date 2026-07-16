@@ -97,6 +97,8 @@ export async function POST(req: NextRequest) {
   const { createAdminClient } = await import("@/lib/supabase/admin")
   const adminSupabase = createAdminClient()
 
+  const roomId = `ruralhealth-consult-${Date.now().toString(16)}`
+
   const { data, error } = await adminSupabase
     .from("appointments")
     .insert({
@@ -105,11 +107,18 @@ export async function POST(req: NextRequest) {
       appointment_date: parsed.data.appointment_date,
       notes: parsed.data.notes || null,
       status: "scheduled",
+      teleconsult_room_id: roomId,
     })
     .select()
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  
+  // Insert notification for patient
+  await adminSupabase.from("notifications").insert([
+    { user_id: user.id, title: "Appointment Requested", message: `You requested a ${parsed.data.consultation_type} consultation.`, type: "info" }
+  ])
+
   return NextResponse.json({ appointment: data }, { status: 201 })
 }
 
@@ -136,5 +145,15 @@ export async function PATCH(req: NextRequest) {
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  if (data?.patient_id) {
+    const { data: pt } = await adminSupabase.from("patients").select("user_id").eq("id", data.patient_id).single()
+    if (pt?.user_id && pt.user_id !== user.id) {
+      await adminSupabase.from("notifications").insert([
+        { user_id: pt.user_id, title: `Appointment ${status}`, message: `Your appointment status is now ${status}.`, type: status === 'cancelled' ? 'alert' : 'info' }
+      ])
+    }
+  }
+
   return NextResponse.json({ appointment: data })
 }

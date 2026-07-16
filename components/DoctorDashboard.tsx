@@ -7,7 +7,7 @@ import { Button } from "./ui/button"
 import { Badge } from "./ui/badge"
 import {
   Stethoscope, Calendar, Clock, Video, User, CheckCircle,
-  XCircle, Loader2, Phone, ClipboardList, Activity
+  XCircle, Loader2, Phone, ClipboardList, Activity, MessageSquare
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 
@@ -85,7 +85,7 @@ export function DoctorDashboard({ user, language, setJitsiRoom }: DoctorDashboar
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[
             { label: en ? "Total Appointments" : "कुल अपॉइंटमेंट", value: stats.total, icon: Calendar, color: "text-blue-600 bg-blue-50" },
             { label: en ? "Today" : "आज", value: stats.today, icon: Clock, color: "text-orange-600 bg-orange-50" },
@@ -144,11 +144,17 @@ export function DoctorDashboard({ user, language, setJitsiRoom }: DoctorDashboar
                       </div>
                       {appt.notes && <p className="text-xs text-gray-500 bg-gray-50 rounded p-2 line-clamp-2">{appt.notes}</p>}
                       <div className="flex gap-2">
-                        {appt.teleconsult_room_id && (
-                          <Button size="sm" className="flex-1 gradient-primary text-white h-7 text-xs" onClick={() => joinCall(appt.teleconsult_room_id)}>
-                            <Video className="h-3 w-3 mr-1" />{en ? "Join Video" : "वीडियो जॉइन"}
-                          </Button>
-                        )}
+                        {appt.teleconsult_room_id && (() => {
+                          const isAudio = appt.notes?.includes("AUDIO") || appt.notes?.includes("CALL")
+                          const isChat = !appt.notes?.includes("VIDEO") && !isAudio
+                          const btnLabel = isChat ? (en ? "Chat" : "चैट") : isAudio ? (en ? "Join Call" : "कॉल जॉइन") : (en ? "Join Video" : "वीडियो जॉइन")
+                          const BtnIcon = isChat ? MessageSquare : isAudio ? Phone : Video
+                          return (
+                            <Button size="sm" className="flex-1 gradient-primary text-white h-7 text-xs" onClick={() => joinCall(appt.teleconsult_room_id)}>
+                              <BtnIcon className="h-3 w-3 mr-1" />{btnLabel}
+                            </Button>
+                          )
+                        })()}
                         <Button size="sm" variant="outline" className="flex-1 h-7 text-xs text-green-600 border-green-200" onClick={() => markDone(appt.id)}>
                           <CheckCircle className="h-3 w-3 mr-1" />{en ? "Done" : "पूर्ण"}
                         </Button>

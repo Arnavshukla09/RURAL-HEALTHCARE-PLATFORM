@@ -181,12 +181,13 @@ export function DoctorAppointmentRequests({ language, setJitsiRoom }: DoctorAppo
                       {appt.teleconsult_room_id && (
                         <div className="bg-purple-50 rounded-xl p-3 flex items-center justify-between">
                           <div>
-                            <p className="text-xs font-semibold text-purple-700">{en ? "Video Room" : "वीडियो रूम"}</p>
+                            <p className="text-xs font-semibold text-purple-700">{en ? "Consultation Room" : "परामर्श रूम"}</p>
                             <p className="text-xs text-purple-500 font-mono">{appt.teleconsult_room_id}</p>
                           </div>
                           <Button size="sm" className="bg-purple-600 hover:bg-purple-700 text-white h-8 text-xs"
                             onClick={() => { setJitsiRoom?.(appt.teleconsult_room_id); router.push("/appointments") }}>
-                            <Video className="h-3 w-3 mr-1" />{en ? "Join Call" : "कॉल जॉइन"}
+                            <Icon className="h-3 w-3 mr-1" />
+                            {ct.type === "Video" ? (en ? "Join Video" : "वीडियो जॉइन") : ct.type === "Audio" ? (en ? "Join Call" : "कॉल जॉइन") : (en ? "Chat" : "चैट")}
                           </Button>
                         </div>
                       )}
