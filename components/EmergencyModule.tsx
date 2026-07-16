@@ -78,12 +78,12 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
   const emergencyNumbers = [
     { service: t.cmHelpline, number: "181", icon: Phone, color: "gray" },
     { service: t.childHelpline, number: "1098", icon: Phone, color: "gray" },
-    { service: t.police, number: "100", icon: Phone, color: "gray" },
-    { service: t.fire, number: "101", icon: Phone, color: "gray" },
-    { service: t.ambulance, number: "108", icon: Phone, color: "gray" },
+    { service: t.police, number: "100", icon: AlertTriangle, color: "blue" },
+    { service: t.fire, number: "101", icon: AlertTriangle, color: "orange" },
+    { service: t.ambulance, number: "108", icon: Truck, color: "red" },
     { service: t.womenHelpline, number: "1090", icon: Phone, color: "gray" },
-    { service: t.ayushman, number: "18002332085", icon: Phone, color: "gray" },
-    { service: t.nationalHealth, number: "18001801104", icon: Phone, color: "gray" },
+    { service: t.ayushman, number: "18002332085", icon: Phone, color: "teal" },
+    { service: t.nationalHealth, number: "18001801104", icon: Phone, color: "teal" },
   ]
 
   const shareLocationViaWhatsApp = () => {
@@ -179,37 +179,58 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
           </CardContent>
         </Card>
 
-        <div>
+        <div className="grid md:grid-cols-2 gap-6">
           {/* Emergency Contacts */}
-          <Card className="bg-white overflow-hidden shadow-sm">
+          <Card className="bg-white">
             <CardHeader>
               <CardTitle className="flex items-center">
                 <Phone className="h-5 w-5 mr-2 text-primary" />
                 {t.emergencyContacts}
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-0">
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-0">
-                {emergencyNumbers.map((contact, idx) => {
-                  const Icon = contact.icon
-                  return (
-                    <button
-                      key={idx}
-                      onClick={() => window.open(`tel:${contact.number}`)}
-                      className="flex flex-col p-4 border bg-white hover:bg-gray-50 transition-colors text-left w-full focus:outline-none"
-                    >
-                      <span className="font-semibold text-gray-800 text-sm mb-2">{contact.service}</span>
-                      <div className="flex items-center text-gray-600">
-                        <Icon className="h-4 w-4 mr-2" />
-                        <span className="text-sm">{contact.number}</span>
-                      </div>
-                    </button>
-                  )
-                })}
-              </div>
+            <CardContent className="space-y-3">
+              {emergencyNumbers.map((contact, idx) => {
+                const Icon = contact.icon
+                return (
+                  <div
+                    key={idx}
+                    onClick={() => window.open(`tel:${contact.number}`)}
+                    className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Icon className={`h-6 w-6 text-${contact.color}-600`} />
+                      <span className="font-medium">{contact.service}</span>
+                    </div>
+                    <Button size="sm" onClick={(e) => { e.stopPropagation(); window.open(`tel:${contact.number}`); }} className="font-bold">
+                      {contact.number}
+                    </Button>
+                  </div>
+                )
+              })}
             </CardContent>
           </Card>
 
+          {/* Emergency Instructions */}
+          <Card className="bg-white">
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <AlertTriangle className="h-5 w-5 mr-2 text-primary" />
+                {t.instructions}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ol className="space-y-3">
+                {t.steps.map((step, idx) => (
+                  <li key={idx} className="flex items-start gap-3">
+                    <span className="flex-shrink-0 w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-bold">
+                      {idx + 1}
+                    </span>
+                    <span className="text-gray-700">{step}</span>
+                  </li>
+                ))}
+              </ol>
+            </CardContent>
+          </Card>
         </div>
 
       </div>
