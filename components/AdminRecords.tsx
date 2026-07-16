@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { Card, CardContent } from "./ui/card"
 import { Badge } from "./ui/badge"
-import { FileText, Search, ChevronDown, ChevronUp, Loader2, User, Mail, Phone, Calendar } from "lucide-react"
+import { FileText, Search, ChevronDown, ChevronUp, Loader2, User, Mail, Phone, Calendar, Trash2, Edit2, Check, X } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 
 interface AdminRecordsProps { language: string }
@@ -22,8 +22,10 @@ export function AdminRecords({ language }: AdminRecordsProps) {
   const [records, setRecords] = useState<Record<string, any[]>>({})
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState("")
-  const [expanded, setExpanded] = useState<string | null>(null)
-  const [loadingRecords, setLoadingRecords] = useState<string | null>(null)
+  const [editingRecord, setEditingRecord] = useState<string | null>(null)
+  const [editType, setEditType] = useState<string>("")
+  const [editContent, setEditContent] = useState<string>("")
+  const [actionLoading, setActionLoading] = useState<string | null>(null)
 
   useEffect(() => {
     const load = async () => {
@@ -43,7 +45,6 @@ export function AdminRecords({ language }: AdminRecordsProps) {
     if (records[patientId]) { setExpanded(patientId); return }
     setLoadingRecords(patientId)
     const supabase = createClient()
-    // Try patient_id first, then user_id as fallback
     let { data } = await supabase
       .from("medical_records")
       .select("*")
@@ -54,6 +55,47 @@ export function AdminRecords({ language }: AdminRecordsProps) {
     setRecords(prev => ({ ...prev, [patientId]: data ?? [] }))
     setExpanded(patientId)
     setLoadingRecords(null)
+  }
+
+  const handleDelete = async (patientId: string, recordId: string) => {
+    if (!confirm(en ? "Delete this medical record?" : "क्या आप इस रिकॉर्ड को हटाना चाहते हैं?")) return
+    setActionLoading(recordId)
+    try {
+      const res = await fetch(`/api/medical-records?id=${recordId}`, { method: "DELETE" })
+      if (res.ok) {
+        setRecords(prev => ({
+          ...prev,
+          [patientId]: prev[patientId].filter(r => r.id !== recordId)
+        }))
+      }
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  const handleSaveEdit = async (patientId: string, recordId: string) => {
+    setActionLoading(recordId)
+    try {
+      const res = await fetch(`/api/medical-records`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: recordId, record_type: editType, content: editContent })
+      })
+      if (res.ok) {
+        const [updated] = await res.json()
+        setRecords(prev => ({
+          ...prev,
+          [patientId]: prev[patientId].map(r => r.id === recordId ? { ...r, record_type: editType, content: editContent } : r)
+        }))
+        setEditingRecord(null)
+      }
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setActionLoading(null)
+    }
   }
 
   const filtered = patients.filter(p => {
@@ -133,26 +175,72 @@ export function AdminRecords({ language }: AdminRecordsProps) {
                         <p className="text-sm text-gray-400 py-4 text-center">
                           {en ? "No medical records for this user" : "इस उपयोगकर्ता का कोई रिकॉर्ड नहीं"}
                         </p>
-                      ) : patientRecords.map(rec => (
-                        <div key={rec.id} className="bg-gray-50 rounded-xl p-3 space-y-1">
+                      ) : patientRecords.map(rec => {
+                        const isEditing = editingRecord === rec.id
+                        return (
+                        <div key={rec.id} className="bg-gray-50 rounded-xl p-3 space-y-1 relative group">
                           <div className="flex items-center justify-between">
-                            <Badge className={`text-xs border-0 ${TYPE_COLORS[rec.record_type] || TYPE_COLORS.other}`}>
-                              {rec.record_type?.replace("_", " ") || "other"}
-                            </Badge>
-                            <span className="text-xs text-gray-400 flex items-center gap-1">
-                              <Calendar className="h-3 w-3" />
-                              {new Date(rec.created_at).toLocaleDateString("en-IN", { day:"numeric", month:"short", year:"numeric" })}
-                            </span>
+                            {isEditing ? (
+                              <select 
+                                value={editType} 
+                                onChange={e => setEditType(e.target.value)}
+                                className="text-xs border-gray-300 rounded focus:ring-purple-500 focus:border-purple-500"
+                              >
+                                {["diagnosis", "prescription", "lab_result", "vaccination", "other"].map(t => (
+                                  <option key={t} value={t}>{t}</option>
+                                ))}
+                              </select>
+                            ) : (
+                              <Badge className={`text-xs border-0 ${TYPE_COLORS[rec.record_type] || TYPE_COLORS.other}`}>
+                                {rec.record_type?.replace("_", " ") || "other"}
+                              </Badge>
+                            )}
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-gray-400 flex items-center gap-1">
+                                <Calendar className="h-3 w-3" />
+                                {new Date(rec.created_at).toLocaleDateString("en-IN", { day:"numeric", month:"short", year:"numeric" })}
+                              </span>
+                              {/* Action buttons (Edit/Delete) */}
+                              {!isEditing ? (
+                                <div className="hidden group-hover:flex items-center gap-1 ml-2">
+                                  <button onClick={() => { setEditingRecord(rec.id); setEditType(rec.record_type); setEditContent(rec.content || rec.notes || ""); }} className="p-1 hover:bg-gray-200 rounded text-gray-500 hover:text-purple-600 transition-colors">
+                                    <Edit2 className="h-3.5 w-3.5" />
+                                  </button>
+                                  <button onClick={() => handleDelete(patient.id, rec.id)} disabled={actionLoading === rec.id} className="p-1 hover:bg-gray-200 rounded text-gray-500 hover:text-red-600 transition-colors">
+                                    {actionLoading === rec.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                                  </button>
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-1 ml-2">
+                                  <button onClick={() => handleSaveEdit(patient.id, rec.id)} disabled={actionLoading === rec.id} className="p-1 hover:bg-purple-100 rounded text-purple-600 transition-colors">
+                                    {actionLoading === rec.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+                                  </button>
+                                  <button onClick={() => setEditingRecord(null)} className="p-1 hover:bg-gray-200 rounded text-gray-500 transition-colors">
+                                    <X className="h-3.5 w-3.5" />
+                                  </button>
+                                </div>
+                              )}
+                            </div>
                           </div>
-                          <p className="text-sm text-gray-700 leading-relaxed">{rec.content || rec.notes || "—"}</p>
-                          {rec.file_url && (
+                          
+                          {isEditing ? (
+                            <textarea
+                              value={editContent}
+                              onChange={e => setEditContent(e.target.value)}
+                              className="w-full text-sm border-gray-300 rounded p-2 focus:ring-purple-500 focus:border-purple-500 min-h-[80px]"
+                            />
+                          ) : (
+                            <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{rec.content || rec.notes || "—"}</p>
+                          )}
+
+                          {rec.file_url && !isEditing && (
                             <a href={rec.file_url} target="_blank" rel="noopener noreferrer"
                               className="text-xs text-purple-600 hover:underline flex items-center gap-1">
                               <FileText className="h-3 w-3" />{en ? "View file" : "फ़ाइल देखें"}
                             </a>
                           )}
                         </div>
-                      ))}
+                      )})}
                     </div>
                   )}
                 </CardContent>
