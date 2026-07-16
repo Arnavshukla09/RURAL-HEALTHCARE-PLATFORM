@@ -537,3 +537,20 @@ UNION ALL
 SELECT 'health_data', COUNT(*) FROM health_data
 UNION ALL
 SELECT 'notifications', COUNT(*) FROM notifications;
+-- Seed one demo camp entry so the list isn't empty
+INSERT INTO camps (title, description, location, address, start_date, end_date, start_time, status, category, participants, phone, map_url, is_annual)
+VALUES (
+  'RNTCP TB Screening Camp',
+  'Free sputum test, chest X-ray, CBNAAT testing under Nikshay Poshan Yojana',
+  'District TB Centre, Hamidia Hospital, Bhopal',
+  'Inside Hamidia Hospital Campus',
+  '2026-08-12',
+  '2026-08-12',
+  '10:00',
+  'upcoming',
+  'tb_screening',
+  90,
+  '+91 75524 00100',
+  'https://maps.google.com/?q=Hamidia+Hospital+Bhopal',
+  TRUE
+);
