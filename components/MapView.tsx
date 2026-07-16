@@ -7,7 +7,8 @@ import { Card, CardContent } from "./ui/card"
 import { Button } from "./ui/button"
 import { Badge } from "./ui/badge"
 import { useToast } from "@/components/ui/use-toast"
-import { Navigation, Phone, Loader2, LocateFixed, Star } from "lucide-react"
+import { Navigation, Phone, Loader2, LocateFixed, Star, Search } from "lucide-react"
+import { Input } from "./ui/input"
 
 // All react-leaflet components loaded client-side only
 const MapContainer = dynamic(() => import("react-leaflet").then(m => m.MapContainer), { ssr: false })
@@ -15,6 +16,7 @@ const TileLayer    = dynamic(() => import("react-leaflet").then(m => m.TileLayer
 const Marker       = dynamic(() => import("react-leaflet").then(m => m.Marker), { ssr: false })
 const Popup        = dynamic(() => import("react-leaflet").then(m => m.Popup), { ssr: false })
 const Circle       = dynamic(() => import("react-leaflet").then(m => m.Circle), { ssr: false })
+const Polyline     = dynamic(() => import("react-leaflet").then(m => m.Polyline), { ssr: false })
 
 interface Facility {
   id: string
@@ -147,6 +149,9 @@ export function MapView({ language }: MapViewProps) {
   const [filter, setFilter] = useState<Facility["type"] | "all">("all")
   const [radiusKm, setRadiusKm] = useState(25)
   const [leafletReady, setLeafletReady] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [routeData, setRouteData] = useState<{ coords: [number, number][], distance: number, duration: number } | null>(null)
+  const [routingLoading, setRoutingLoading] = useState(false)
 
   // Leaflet CSS is now imported globally in layout.tsx
   useEffect(() => {
@@ -215,8 +220,36 @@ export function MapView({ language }: MapViewProps) {
   }
 
   // Sort by distance, top 10 are "nearest"
-  const sorted = useMemo(() => [...facilities].sort((a, b) => a.distance_km - b.distance_km), [facilities])
+  const sorted = useMemo(() => {
+    let filtered = [...facilities]
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase()
+      filtered = filtered.filter(f => f.name.toLowerCase().includes(q))
+    }
+    return filtered.sort((a, b) => a.distance_km - b.distance_km)
+  }, [facilities, searchQuery])
   const top10Ids = useMemo(() => new Set(sorted.slice(0, 10).map(f => f.id)), [sorted])
+
+  const showRoute = async (destLat: number, destLon: number) => {
+    const start = userCoords || center
+    if (!start) return
+    setRoutingLoading(true)
+    try {
+      const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${start.lng},${start.lat};${destLon},${destLat}?overview=full&geometries=geojson`)
+      const data = await res.json()
+      if (data.code === "Ok" && data.routes.length > 0) {
+        const route = data.routes[0]
+        const coords = route.geometry.coordinates.map((c: [number, number]) => [c[1], c[0]] as [number, number])
+        setRouteData({ coords, distance: route.distance, duration: route.duration })
+      } else {
+        toast({ title: en ? "Could not find route" : "मार्ग नहीं मिला", variant: "destructive" })
+      }
+    } catch (e) {
+      toast({ title: en ? "Error fetching route" : "मार्ग प्राप्त करने में त्रुटि", variant: "destructive" })
+    } finally {
+      setRoutingLoading(false)
+    }
+  }
 
   const counts = useMemo(() => {
     const c: Record<string, number> = { all: facilities.length }
@@ -238,8 +271,18 @@ export function MapView({ language }: MapViewProps) {
       </div>
 
       {/* Controls row */}
-      <div className="flex flex-wrap gap-2 items-center">
-        <Button size="sm" variant="outline" onClick={useMyLocation}
+      <div className="flex flex-col gap-3">
+        <div className="relative w-full md:w-96">
+          <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+          <Input 
+            placeholder={en ? "Search hospital/clinic name..." : "अस्पताल/क्लिनिक का नाम खोजें..."}
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <div className="flex flex-wrap gap-2 items-center">
+          <Button size="sm" variant="outline" onClick={useMyLocation}
           disabled={locating}
           className="gap-1.5 shrink-0">
           {locating
@@ -268,10 +311,21 @@ export function MapView({ language }: MapViewProps) {
             <option key={km} value={km}>{km} km</option>
           ))}
         </select>
+        </div>
       </div>
 
       {/* Map */}
-      <div className="rounded-xl overflow-hidden border shadow-sm" style={{ height: 440 }}>
+      <div className="rounded-xl overflow-hidden border shadow-sm relative" style={{ height: 440 }}>
+        {routeData && (
+          <div className="absolute top-4 right-4 bg-white p-3 rounded-lg shadow-lg z-[1000] border text-sm">
+            <p className="font-bold text-blue-700">{en ? "Route Info" : "मार्ग की जानकारी"}</p>
+            <p className="mt-1"><strong>{en ? "Distance:" : "दूरी:"}</strong> {(routeData.distance / 1000).toFixed(1)} km</p>
+            <p><strong>{en ? "ETA:" : "अनुमानित समय:"}</strong> {Math.ceil(routeData.duration / 60)} {en ? "mins" : "मिनट"}</p>
+            <Button size="sm" variant="outline" className="mt-2 h-7 text-xs w-full" onClick={() => setRouteData(null)}>
+              {en ? "Clear Route" : "मार्ग हटाएं"}
+            </Button>
+          </div>
+        )}
         {leafletReady && (
           <LeafletMap center={[center.lat, center.lng]} zoom={userCoords ? 13 : 11}>
             <TileLayer
@@ -316,6 +370,10 @@ export function MapView({ language }: MapViewProps) {
               </>
             )}
 
+            {routeData && (
+              <Polyline positions={routeData.coords} color="#3b82f6" weight={5} opacity={0.7} />
+            )}
+
             {/* All facility markers — top 10 are larger and outlined */}
             {sorted.map(f => {
               const cfg = TYPE_CONFIG[f.type] ?? TYPE_CONFIG.clinic
@@ -355,10 +413,14 @@ export function MapView({ language }: MapViewProps) {
                           <Phone className="h-3 w-3" />{f.phone}
                         </a>
                       )}
+                      <Button size="sm" variant="outline" className="w-full mt-2 h-7 text-xs" onClick={() => showRoute(f.lat, f.lon)} disabled={routingLoading}>
+                        {routingLoading ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Navigation className="h-3 w-3 mr-1" />}
+                        {en ? "Show Route" : "मार्ग दिखाएं"}
+                      </Button>
                       <a href={`https://www.openstreetmap.org/?mlat=${f.lat}&mlon=${f.lon}&zoom=17`}
                         target="_blank" rel="noreferrer"
-                        className="text-gray-500 underline text-xs block">
-                        {en ? "Open in OpenStreetMap ↗" : "OpenStreetMap में देखें ↗"}
+                        className="text-gray-500 underline text-xs block mt-1 text-center">
+                        {en ? "Open in OSM ↗" : "OSM में देखें ↗"}
                       </a>
                     </div>
                   </Popup>
@@ -412,7 +474,11 @@ export function MapView({ language }: MapViewProps) {
                             </a>
                           )}
                         </div>
-                        {f.address && <p className="text-xs text-gray-400 truncate mt-0.5">{f.address}</p>}
+                        {f.address && <p className="text-xs text-gray-400 truncate mt-0.5 mb-2">{f.address}</p>}
+                        <Button size="sm" variant="outline" className="w-full h-7 text-xs mt-1" onClick={() => showRoute(f.lat, f.lon)} disabled={routingLoading}>
+                          {routingLoading ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Navigation className="h-3 w-3 mr-1" />}
+                          {en ? "Show Route" : "मार्ग दिखाएं"}
+                        </Button>
                       </div>
                     </CardContent>
                   </Card>
@@ -442,6 +508,9 @@ export function MapView({ language }: MapViewProps) {
                             <span>{f.distance_km} km</span>
                             {f.phone && <><span>·</span><a href={`tel:${f.phone}`} className="text-blue-600">{f.phone}</a></>}
                           </div>
+                          <Button size="sm" variant="ghost" className="h-6 text-xs mt-1 -ml-2 text-blue-600" onClick={() => showRoute(f.lat, f.lon)} disabled={routingLoading}>
+                            {en ? "Show Route" : "मार्ग दिखाएं"}
+                          </Button>
                         </div>
                       </CardContent>
                     </Card>

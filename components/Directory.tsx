@@ -319,7 +319,7 @@ export function Directory({ language }: DirectoryProps) {
                           </AvatarFallback>
                         </Avatar>
                         <div className="space-y-2">
-                          <div className="flex items-center space-x-2">
+                          <div className="flex flex-wrap items-center gap-2">
                             <h3 className="text-xl font-semibold">{doctor.name}</h3>
                             {doctor.verified && (
                               <Badge variant="secondary" className="text-green-600 bg-green-50">
@@ -480,14 +480,6 @@ export function Directory({ language }: DirectoryProps) {
                         >
                           <Phone className="h-4 w-4 mr-1" />
                           {t.contact}
-                        </Button>
-                        <Button 
-                          variant="outline"
-                          onClick={() => router.push("/consultation")}
-                          className="w-full flex items-center"
-                        >
-                          <Calendar className="h-4 w-4 mr-1" />
-                          {t.bookAppointment}
                         </Button>
                         {hospital.emergency && (
                           <Button 

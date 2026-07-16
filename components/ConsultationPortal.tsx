@@ -127,15 +127,17 @@ export function ConsultationPortal({ language, user, symptomResult }: Consultati
         if (res.ok) {
           const dbDocs = await res.json();
           if (Array.isArray(dbDocs) && dbDocs.length > 0) {
-            const formattedDbDocs = dbDocs.map((doc: any) => ({
-              id: doc.id,
-              name: doc.name,
-              specialty: doc.specialization || 'General Medicine',
-              experience: doc.experience_years || 5,
-              rating: doc.rating || 4.5,
-              location: doc.location || 'Virtual',
-              govt: false, // Defaulting to false for dynamic unless specified
-            }));
+            const formattedDbDocs = dbDocs
+              .filter((doc: any) => doc.name && !doc.name.toLowerCase().includes('unknown'))
+              .map((doc: any) => ({
+                id: doc.id,
+                name: doc.name,
+                specialty: doc.specialization || 'General Medicine',
+                experience: doc.experience_years || 5,
+                rating: doc.rating || 4.5,
+                location: doc.location || 'Virtual',
+                govt: false, // Defaulting to false for dynamic unless specified
+              }));
             
             // Filter out any duplicates by name just in case, prioritizing the DB ones
             const existingNames = new Set(formattedDbDocs.map(d => d.name));

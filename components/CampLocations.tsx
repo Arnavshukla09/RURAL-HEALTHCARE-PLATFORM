@@ -311,8 +311,15 @@ export function CampLocations({ language }: CampLocationsProps) {
   const getCurrentLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setUserLocation(language === "en" ? "Current Location" : "वर्तमान स्थान")
+        async (position) => {
+          try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}`);
+            const data = await res.json();
+            const city = data.address?.city || data.address?.town || data.address?.village || data.address?.county || (language === "en" ? "Current Location" : "वर्तमान स्थान");
+            setUserLocation(city);
+          } catch (e) {
+            setUserLocation(language === "en" ? "Current Location" : "वर्तमान स्थान");
+          }
           setUserCoordinates({
             lat: position.coords.latitude,
             lng: position.coords.longitude,
