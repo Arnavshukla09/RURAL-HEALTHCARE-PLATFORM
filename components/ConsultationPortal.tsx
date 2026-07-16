@@ -101,7 +101,7 @@ export function ConsultationPortal({ language, user, symptomResult }: Consultati
 
   const days = useMemo(() => getNext7Days(), [])
 
-  const [doctors, setDoctors] = useState<any[]>([
+  const defaultDoctors = [
     { id: '1', name: 'Dr. Ajay Goenka', specialty: 'General Medicine', experience: 22, rating: 4.6, location: 'AIIMS Bhopal, Saket Nagar', govt: true },
     { id: '2', name: 'Dr. Sanjeev Sharma', specialty: 'Cardiology', experience: 18, rating: 4.7, location: 'Hamidia Hospital, Bhopal', govt: true },
     { id: '3', name: 'Dr. Priya Verma', specialty: 'Pediatrics', experience: 15, rating: 4.8, location: 'Kamla Nehru Hospital, Bhopal', govt: true },
@@ -117,7 +117,39 @@ export function ConsultationPortal({ language, user, symptomResult }: Consultati
     { id: '13', name: 'Dr. Sunita Rawat', specialty: 'Pediatrics', experience: 11, rating: 4.5, location: 'District Hospital, Vidisha', govt: true },
     { id: '14', name: 'Dr. Manish Tiwari', specialty: 'General Medicine', experience: 28, rating: 4.9, location: 'AIIMS Bhopal, Saket Nagar', govt: true },
     { id: '15', name: 'Dr. Pooja Singh', specialty: 'Obstetrics & Gynecology', experience: 9, rating: 4.4, location: 'PHC Obedullaganj, Raisen', govt: true },
-  ])
+  ]
+  const [doctors, setDoctors] = useState<any[]>(defaultDoctors)
+
+  useEffect(() => {
+    async function loadDbDoctors() {
+      try {
+        const res = await fetch('/api/providers');
+        if (res.ok) {
+          const dbDocs = await res.json();
+          if (Array.isArray(dbDocs) && dbDocs.length > 0) {
+            const formattedDbDocs = dbDocs.map((doc: any) => ({
+              id: doc.id,
+              name: doc.name,
+              specialty: doc.specialization || 'General Medicine',
+              experience: doc.experience_years || 5,
+              rating: doc.rating || 4.5,
+              location: doc.location || 'Virtual',
+              govt: false, // Defaulting to false for dynamic unless specified
+            }));
+            
+            // Filter out any duplicates by name just in case, prioritizing the DB ones
+            const existingNames = new Set(formattedDbDocs.map(d => d.name));
+            const filteredDefaults = defaultDoctors.filter(d => !existingNames.has(d.name));
+            
+            setDoctors([...formattedDbDocs, ...filteredDefaults]);
+          }
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    loadDbDoctors();
+  }, []);
 
   const [specialtyFilter, setSpecialtyFilter] = useState("All")
   const [selectedDoctor, setSelectedDoctor]   = useState<any | null>(null)
@@ -163,11 +195,13 @@ export function ConsultationPortal({ language, user, symptomResult }: Consultati
       ].filter(Boolean).join(" | ")
 
       // Insert via API route (handles patient lookup & null provider gracefully)
+      const isDbDoctor = selectedDoctor.id.length > 10; // DB UUIDs are long, hardcoded are "1", "2"
+      
       const res = await fetch("/api/appointments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          provider_id: null,
+          provider_id: isDbDoctor ? selectedDoctor.id : null,
           appointment_date: appointmentDate,
           consultation_type: consultType,
           notes: fullNotes,
