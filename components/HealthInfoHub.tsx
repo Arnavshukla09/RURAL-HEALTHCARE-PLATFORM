@@ -164,7 +164,7 @@ export function HealthInfoHub({ language, symptomResult }: HealthInfoHubProps) {
                 <CardContent className="p-4">
                   <div className="flex items-center gap-2 mb-3"><span className="text-2xl">{f.icon}</span><h3 className="font-semibold">{en ? f.title : f.hi}</h3></div>
                   <ol className="list-decimal list-inside space-y-1.5">
-                    {f.steps.map((s, i) => <li key={i} className="text-sm text-muted-foreground">{s}</li>)}
+                    {(en ? f.steps : (f.hiSteps || f.steps)).map((s, i) => <li key={i} className="text-sm text-muted-foreground">{s}</li>)}
                   </ol>
                 </CardContent>
               </Card>

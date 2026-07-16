@@ -94,7 +94,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
   }
 
-  const { data, error } = await supabase
+  const { createAdminClient } = await import("@/lib/supabase/admin")
+  const adminSupabase = createAdminClient()
+
+  const { data, error } = await adminSupabase
     .from("appointments")
     .insert({
       patient_id: patient.id,
@@ -122,7 +125,10 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "id and status required" }, { status: 400 })
   }
 
-  const { data, error } = await supabase
+  const { createAdminClient } = await import("@/lib/supabase/admin")
+  const adminSupabase = createAdminClient()
+
+  const { data, error } = await adminSupabase
     .from("appointments")
     .update({ status })
     .eq("id", id)

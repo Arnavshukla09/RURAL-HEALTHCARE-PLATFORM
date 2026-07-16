@@ -218,23 +218,10 @@ export function ConsultationPortal({ language, user, symptomResult }: Consultati
         )
         setSelectedDoctor(null); setSelectedSlot(""); setNotes(symptomPreFill)
         return
+      } else {
+        const errorData = await res.json()
+        throw new Error(errorData.error || (en ? "Failed to book appointment" : "अपॉइंटमेंट बुक करने में विफल"))
       }
-
-      // API failed — fallback to medical record so user doesn't lose their request
-      await fetch("/api/medical-records", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          record_type: "other",
-          content: `[Consultation Request] [${consultType.toUpperCase()} — ${selectedDoctor.name}, ${selectedDoctor.location}] ${notes.trim()} | Slot: ${selectedDate} ${selectedSlot}`,
-        }),
-      })
-      setSuccess(
-        en
-          ? `Request saved! ${selectedDoctor.name} at ${selectedSlot} on ${selectedDate}. (Appointment system updating — check back soon)`
-          : `अनुरोध सहेजा गया! ${selectedDoctor.name} — ${selectedDate} ${selectedSlot}`
-      )
-      setSelectedDoctor(null); setSelectedSlot(""); setNotes(symptomPreFill)
     } catch (e: unknown) {
       if (e instanceof Error) {
         setError(e.message)
