@@ -102,6 +102,14 @@ The application will be available at `http://localhost:3000`.
 
 ---
 
+## 🧪 Quality Assurance & Testing
+
+This project maintains a high standard of reliability through automated Playwright End-to-End (E2E) testing. The testing suite verifies role-based access control, correct dashboard routing for Doctors, Patients, and Admins, and strict middleware security that prevents unauthenticated access to protected routes.
+
+📄 **[View the detailed QA Test Report here](docs/QA_REPORT.md)**
+
+---
+
 ## 📄 License
 This project is licensed under the MIT License - see the LICENSE file for details.
 
