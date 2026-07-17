@@ -8,12 +8,18 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: 'list',
   use: {
-    baseURL: 'https://rural-healthcare-platform.vercel.app',
+    baseURL: 'http://localhost:3000',
     trace: 'on-first-retry',
     video: 'retain-on-failure',
     screenshot: 'only-on-failure',
     actionTimeout: 15000,
     navigationTimeout: 15000
+  },
+  webServer: {
+    command: 'npm run dev',
+    url: 'http://localhost:3000',
+    reuseExistingServer: !process.env.CI,
+    timeout: 120 * 1000,
   },
   projects: [
     {
