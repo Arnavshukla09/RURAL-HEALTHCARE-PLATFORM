@@ -34,7 +34,6 @@ In rural India, access to quality healthcare is limited by geography, lack of sp
 
 ### 📹 Teleconsultation
 - **Jitsi Integration:** Secure, embedded video conferencing for remote doctor-patient visits.
-- **Smart Booking:** "Occupation-based" smart pre-fill allows farmers, construction workers, etc., to quickly describe occupational health issues.
 
 ### 🛡️ Medical Records & Security
 - **Role-Based Access Control (RBAC):** Powered by strict PostgreSQL Row-Level Security (RLS). Patients only see their data; doctors see their patients; admins see the aggregate.
@@ -111,8 +110,8 @@ This project maintains a high standard of reliability through automated Playwrig
 ---
 
 ## 📄 License
-This project is licensed under the MIT License - see the LICENSE file for details.
+Copyright (c) 2025. This project is licensed under the MIT License - see the LICENSE file for details.
 
 ---
 
-*Built with passion to bring quality healthcare to every corner of India. 🇮🇳*
+*Built with passion to bring quality healthcare to rural communities globally. 🌍*
