@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs"
 import { Alert, AlertDescription } from "./ui/alert"
 import { Eye, EyeOff, User, Mail, Phone, Loader2, Chrome, Heart } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
+import { useToast } from "@/components/ui/use-toast"
 
 import { UserProfile } from "@/types"
 
@@ -32,6 +33,7 @@ export function Authentication({ setUser, setCurrentPage, language }: Authentica
   })
   const [errors, setErrors] = useState<string[]>([])
   const [successMsg, setSuccessMsg] = useState("")
+  const { toast } = useToast()
 
   const en = language === "en"
 
@@ -63,7 +65,9 @@ export function Authentication({ setUser, setCurrentPage, language }: Authentica
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!formData.email.trim() || !formData.password.trim()) {
-      setErrors([en ? "Email and password are required" : "ईमेल और पासवर्ड आवश्यक है"])
+      const msg = en ? "Email and password are required" : "ईमेल और पासवर्ड आवश्यक है"
+      setErrors([msg])
+      toast({ title: "Validation Error", description: msg, variant: "destructive" })
       return
     }
 
@@ -75,7 +79,12 @@ export function Authentication({ setUser, setCurrentPage, language }: Authentica
         password: formData.password,
       })
 
-      if (error) { setErrors([error.message]); setIsLoading(false); return }
+      if (error) { 
+        setErrors([error.message]); 
+        toast({ title: "Authentication Failed", description: error.message, variant: "destructive" })
+        setIsLoading(false); 
+        return 
+      }
 
       // Fetch role + phone from ensure-patient API to bypass RLS issues
       const res = await fetch("/api/auth/ensure-patient", { method: "POST" })
@@ -91,7 +100,9 @@ export function Authentication({ setUser, setCurrentPage, language }: Authentica
       })
       setCurrentPage("dashboard")
     } catch {
-      setErrors([en ? "Login failed. Try again." : "लॉगिन विफल। पुनः प्रयास करें।"])
+      const msg = en ? "Login failed. Try again." : "लॉगिन विफल। पुनः प्रयास करें।"
+      setErrors([msg])
+      toast({ title: "Error", description: msg, variant: "destructive" })
     } finally {
       setIsLoading(false)
     }
@@ -105,7 +116,11 @@ export function Authentication({ setUser, setCurrentPage, language }: Authentica
     if (!formData.phone.trim()) errs.push(en ? "Phone is required" : "फोन आवश्यक है")
     if (!formData.password.trim()) errs.push(en ? "Password is required" : "पासवर्ड आवश्यक है")
     if (formData.password !== formData.confirmPassword) errs.push(en ? "Passwords do not match" : "पासवर्ड मेल नहीं खाते")
-    if (errs.length > 0) { setErrors(errs); return }
+    if (errs.length > 0) { 
+      setErrors(errs); 
+      toast({ title: "Validation Error", description: errs[0], variant: "destructive" })
+      return 
+    }
 
     setIsLoading(true)
     try {
@@ -119,7 +134,12 @@ export function Authentication({ setUser, setCurrentPage, language }: Authentica
         },
       })
 
-      if (error) { setErrors([error.message]); setIsLoading(false); return }
+      if (error) { 
+        setErrors([error.message]); 
+        toast({ title: "Sign up Failed", description: error.message, variant: "destructive" })
+        setIsLoading(false); 
+        return 
+      }
 
       // Create patient profile
       if (data.user) {
@@ -137,7 +157,9 @@ export function Authentication({ setUser, setCurrentPage, language }: Authentica
       setSuccessMsg(t.emailConfirm)
       setErrors([])
     } catch {
-      setErrors([en ? "Sign up failed. Try again." : "साइन अप विफल।"])
+      const msg = en ? "Sign up failed. Try again." : "साइन अप विफल।"
+      setErrors([msg])
+      toast({ title: "Error", description: msg, variant: "destructive" })
     } finally {
       setIsLoading(false)
     }
@@ -162,8 +184,15 @@ export function Authentication({ setUser, setCurrentPage, language }: Authentica
       redirectTo: `${window.location.origin}/auth/callback`,
     })
     setIsLoading(false)
-    if (!error) { setForgotSent(true); setErrors([]) }
-    else setErrors([error.message])
+    if (!error) { 
+      setForgotSent(true); 
+      setErrors([]) 
+      toast({ title: "Success", description: t.forgotSent })
+    }
+    else {
+      setErrors([error.message])
+      toast({ title: "Error", description: error.message, variant: "destructive" })
+    }
   }
 
   const handleGuestAccess = () => {
