@@ -233,21 +233,22 @@ CREATE POLICY "offline_sync_delete_own" ON public.offline_sync_log
 
 -- ==========================================
 -- TABLE: doctor_requests
+-- Note: uses user_id directly (not patient_id)
 -- ==========================================
 DROP POLICY IF EXISTS "doctor_requests_select_own"  ON public.doctor_requests;
 DROP POLICY IF EXISTS "doctor_requests_insert_own"  ON public.doctor_requests;
 DROP POLICY IF EXISTS "doctor_requests_doctor_view" ON public.doctor_requests;
 DROP POLICY IF EXISTS "doctor_requests_admin_all"   ON public.doctor_requests;
 
-CREATE POLICY "doctor_requests_insert_own" ON public.doctor_requests
-  FOR INSERT WITH CHECK (patient_id IN (SELECT id FROM public.patients WHERE user_id = auth.uid()));
-
+-- Users can read their own request
 CREATE POLICY "doctor_requests_select_own" ON public.doctor_requests
-  FOR SELECT USING (patient_id IN (SELECT id FROM public.patients WHERE user_id = auth.uid()));
+  FOR SELECT USING (user_id = auth.uid());
 
-CREATE POLICY "doctor_requests_doctor_view" ON public.doctor_requests
-  FOR SELECT USING (public.get_user_role() = 'doctor');
+-- Users can submit a request only for themselves
+CREATE POLICY "doctor_requests_insert_own" ON public.doctor_requests
+  FOR INSERT WITH CHECK (user_id = auth.uid());
 
+-- Admins can view all and approve/reject
 CREATE POLICY "doctor_requests_admin_all" ON public.doctor_requests
   FOR ALL TO authenticated
   USING (public.get_user_role() = 'admin')
