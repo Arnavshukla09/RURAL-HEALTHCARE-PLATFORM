@@ -18,6 +18,9 @@ ALTER TABLE IF EXISTS public.patients              ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS public.providers             ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS public.healthcare_providers  ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS public.appointments          ENABLE ROW LEVEL SECURITY;
+-- PostGIS system table: lock from external PostgREST access entirely.
+-- No policies needed — internal DB functions (triggers, SECURITY DEFINER) bypass RLS automatically.
+ALTER TABLE IF EXISTS public.spatial_ref_sys       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS public.medical_records       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS public.notifications         ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS public.camps                 ENABLE ROW LEVEL SECURITY;
