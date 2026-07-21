@@ -6,36 +6,38 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-## [Unreleased] - Current Sprint
+## [v1.1.0] - 2026-07-21 — Security Hardening & Final Release
 
-- **Next.js App Router Migration:** Fully transitioned from a React Single Page Application (SPA) state-based router to Next.js native `app/` directory routing, creating individual page files for 39 static routes.
-- **Global Application Context:** Extracted user auth and UI state out of monolithic wrappers into a `components/providers/AppProvider.tsx` context wrapper.
-- **Production Rate Limiting:** Installed `@upstash/ratelimit` and `@upstash/redis` to upgrade API rate-limiting across 13 routes from a localized memory-cache to a globally distributed Vercel-compatible Redis cache (with a graceful local-memory fallback).
-- **Playwright E2E Testing:** Initialized an end-to-end testing suite with `@playwright/test` mapping critical flows (landing, login, symptom-checker).
-- **GitHub Actions CI/CD:** Added a `.github/workflows/playwright.yml` automated pipeline to enforce testing on PRs and pushes to `main`.
-- **Next-PWA Offline Support:** Validated the `@ducanh2912/next-pwa` integration to correctly cache React Server Components and App Router navigation fetches.
-- **Dynamic Registered Camps:** Dashboard now actively fetches and displays the actual health camps the user has registered for, directly from the `medical_records` table.
-- **Inline Symptom Chat:** Replaced the static symptom checker end screen with an interactive embedded AI chat for contextual follow-up questions.
-- **Top-Level Health Hub:** Moved the Health Information Hub to the main Navbar and removed the symptom-check prerequisite gate, allowing free exploration of static medical data.
-- **Draggable Map Pointer:** Made the user's location marker draggable in the Leaflet map, automatically refetching and re-centering nearby facilities upon dropping the pin.
-- **Master Documentation Suite:** Generated production-grade documentation across `docs/` (`PROJECT_CONTEXT.md`, `ARCHITECTURE.md`, `API_REFERENCE.md`, `DATABASE.md`, `COMPONENTS.md`, `ROADMAP.md`).
-- **Agent Rules:** Created `.agents/AGENTS.md` to strictly govern AI coding assistant behavior regarding project documentation integrity.
-- **Admin Record Management:** Empowered Admins with inline Edit and Delete capabilities for all patient medical records, secured by role-checked REST API endpoints.
-- **Patient Medical Profile:** Introduced a one-time onboarding form for new patients to establish foundational health metrics (Height, Weight, Blood Group, Chronic Conditions).
-- **Database Security Hardening:** Executed a comprehensive database security review, revoking public execution rights for `SECURITY DEFINER` functions, neutralizing mutable search paths, and dropping excessively permissive RLS policies.
+### Added
+- **Playwright E2E Test Suite:** Implemented `tests/e2e.spec.ts` with 5 automated test scenarios covering all three user roles (Patient, Doctor, Admin), public page rendering, and unauthorized route blocking. All 5 tests pass at 100%.
+- **QA Test Report:** Created `docs/QA_REPORT.md` documenting the test environment, scenarios, pass rates, and security testing methodology.
+- **Next.js Edge Middleware:** Added `middleware.ts` to intercept and redirect unauthenticated requests to protected routes at the Edge before any React component renders.
+- **shadcn/ui Toast Notifications:** Integrated toast feedback on all authentication events (login success/failure, registration, OAuth errors).
+- **Database Seeding Scripts:** Added `scripts/seed_e2e_users.js` and `scripts/fix_roles.js` to enable reproducible E2E test environments.
+- **Modular Supabase SQL:** Restructured all database SQL into a sequential, numbered file set (`01_schema.sql` → `06_security_warnings_final.sql`) for clean, repeatable deployments.
 
-### Changed
-- **Real MP Healthcare Data:** Stripped out generic mock data in the Directory and Hospitals tabs, replacing it with hardcoded real-world doctors and facilities from Madhya Pradesh (e.g., AIIMS Bhopal, MY Hospital Indore).
-- **Camp Campaigns Overhaul:** Reworked the CampLocations component to use dynamic current-year dates with tentative labels, removed arbitrary distance/travel-time estimates, and fixed the text-based location search filter.
+### Security
+- **RLS Enabled on All Tables:** Enabled Row Level Security on `providers`, `healthcare_providers`, `health_data`, `offline_sync_log`, `doctor_requests`, `notifications` — all previously missing policies.
+- **Full CRUD Policies:** Wrote complete INSERT, UPDATE, DELETE, and SELECT RLS policies for every table, scoped by role (patient/doctor/admin).
+- **Dropped Over-Permissive Policy:** Removed `patients_service_insert` policy which had `USING(true) WITH CHECK(true)` — effectively bypassing RLS entirely.
+- **Function `search_path` Locked:** Applied `SET search_path = public` to all custom `SECURITY DEFINER` functions to prevent search path injection attacks.
+- **SECURITY DEFINER REVOKE:** Revoked `EXECUTE` from `anon` and `authenticated` roles on `audit_medical_records`, `get_current_user_role`, `get_tables`, and all 3 overloads of `st_estimatedextent`.
+- **Storage Bucket Locked:** Changed `medical-records` Supabase Storage bucket from `public: true` to `public: false` and added scoped RLS policies so users can only access files in their own `user_id/` folder.
+- **PostGIS Public Exposure Mitigated:** Revoked `ALL` privileges from `anon` and `authenticated` on `spatial_ref_sys`, `geometry_columns`, and `geography_columns`.
+- **TypeScript Build Fix:** Fixed a type error in `middleware.ts` where `request.cookies.delete()` was called with an incompatible object type — corrected to use `cookies.set({ name, value: '' })`.
+
+### Documentation
+- **README Rewritten:** Fully rewrote `README.md` to professional standard — covering architecture, security model, file structure, DB setup, testing, and license with copyright year 2025.
+- **Removed Inaccurate Claims:** Deleted the "occupation-based smart pre-fill" feature claim that was not implemented.
+- **Updated Copyright:** Added `Copyright (c) 2025` to the MIT License section.
+- **Updated Tagline:** Changed "every corner of India" to "rural communities globally" for broader, accurate scope.
+- **`PROJECT_CONTEXT.md` Sync:** Updated folder structure, last-updated date, and all documentation file references.
 
 ### Fixed
-- **Patient Profile Creation RLS:** Fixed a Row-Level Security bug preventing manual records from saving by utilizing `createAdminClient()` (Service Role) to bypass RLS during patient auto-creation.
-- **Medical Records API Insert RLS:** Bypassed RLS on the `/api/medical-records` POST route via service role to allow patients to successfully insert their own camp registrations without violating provider-only insert policies.
-- **Infinite Recursion DB Error:** Fixed the recursive loop in `admin_read_all_patients` and related policies by introducing a `SECURITY DEFINER` function `public.get_user_role()` in a new SQL migration script.
-- **Provider Optionality:** Dropped the `NOT NULL` constraint on `provider_id` in the `medical_records` table (via migration script) to support patient-uploaded records and camp registrations.
-- **Gemini Context Sequence Bug:** Fixed a `400 Bad Request` API connection error by preventing sequential `user` messages in the Gemini chat history.
-- **PostGIS Seeding Script:** Fixed `scripts/seed_mp_facilities.js` to correctly pass `lat`/`lon` to the database instead of manually passing `geom` and non-existent `source` columns.
-- **SQL Migration Conflicts:** Updated `006_facilities_postgis.sql` to explicitly `DROP TABLE IF EXISTS` and `DROP FUNCTION IF EXISTS` to prevent schema mismatch errors during deployment on existing Supabase instances.
+- **`doctor_requests` RLS Column:** Fixed RLS policies to use `user_id` instead of `patient_id` (table does not have a `patient_id` column).
+- **`spatial_ref_sys` Permission Error:** Replaced `ALTER TABLE` (requires ownership) with `REVOKE ALL` on the PostGIS system table.
+- **Playwright Config:** Fixed `playwright.config.ts` to target `localhost:3000` and manage the local dev server lifecycle.
+- **`.gitignore`:** Added Playwright output folders (`test-results/`, `playwright-report/`, `blob-report/`) to prevent test artifacts from being committed.
 
 ---
 

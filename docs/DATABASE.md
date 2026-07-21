@@ -165,37 +165,41 @@ To maintain performance on read-heavy or spatial queries, the following indexes 
 
 ## 4. Migrations & Seed Scripts
 
-Database schema changes are tracked in `scripts/` and must be executed in the Supabase SQL Editor.
+Database schema changes are tracked in the `supabase/` directory and must be executed in the Supabase SQL Editor in sequential order.
 
-| Script | Purpose |
+| File | Purpose |
 |--------|---------|
-| `001_create_tables.sql` | Base schema, tables, and foreign keys. |
-| `002_rls_policies.sql` | Row-Level Security defining who can read/write what. |
-| `003_functions.sql` | Utility functions. |
-| `004_triggers.sql` | Auto-updating timestamps and room generation. |
-| `005_indexes.sql` | Performance indexing. |
-| `006_facilities_postgis.sql` | PostGIS setup, spatial RPC function `nearby_facilities`. |
-| `007_security_hardening.sql` | Patches for auth checking in offline tables. |
-| `008_oauth_patient_rls.sql` | Allow OAuth users to insert their patient record. |
-| `009_fix_rls_recursion.sql` | Fixes infinite recursion in admin/doctor RLS policies via SECURITY DEFINER function. |
-| `010_make_provider_optional.sql` | Drops NOT NULL constraint on `medical_records.provider_id` for patient uploads. |
-| `seed_mp_facilities.js` | Node.js script to hydrate `healthcare_facilities` with raw GeoJSON. |
+| `01_schema.sql` | Core table definitions, foreign keys, and PostGIS extension setup. |
+| `02_functions_triggers.sql` | DB helper functions (`get_user_role`, `handle_new_user`, `nearby_facilities`), auth trigger, and PostGIS geom auto-population trigger. |
+| `03_rls.sql` | **Complete** Row-Level Security policies for every table (all roles, all operations). |
+| `04_seed_data.sql` | Real-world Madhya Pradesh health facilities, demo providers, and sample medical records. |
+| `05_security_patch.sql` | Enables RLS on tables that were missing it (`doctor_requests`, `offline_sync_log`, etc.) and locks the `medical-records` storage bucket. |
+| `06_security_warnings_final.sql` | Resolves all Supabase Security Advisor warnings: locks `search_path` on all functions, revokes `EXECUTE` from `anon`/`authenticated` on `SECURITY DEFINER` functions, drops over-permissive policy. |
 
 ---
 
 ## 5. Row Level Security (RLS) & Data Flow
 
-**Security Rule:** NO direct database queries bypass RLS on the client. 
+**Security Rule:** NO direct database queries bypass RLS on the client side. All client Supabase calls use the user's session cookie and are subject to RLS. Only the `lib/supabase/admin.ts` service-role client (used exclusively in trusted API routes) bypasses RLS.
 
-1. **Patients:** Can strictly `SELECT`, `INSERT`, `UPDATE` rows where `user_id = auth.uid()` or `patient_id = <their_patient_uuid>`.
-2. **Providers:** Can view appointments where `provider_id = <their_provider_uuid>`.
-3. **Public Data:** `healthcare_facilities` and verified `healthcare_providers` are readable by the public (Guest mode allowed).
+| Table | Patient Access | Doctor Access | Admin Access |
+|---|---|---|---|
+| `patients` | Own row (SELECT, UPDATE) | All rows (SELECT) | All rows (SELECT) |
+| `medical_records` | Own records (SELECT, INSERT) | All records (SELECT, INSERT, UPDATE) | All records (all ops) |
+| `appointments` | Own (SELECT, INSERT, UPDATE) | All (SELECT) | All (SELECT) |
+| `health_data` | Own (all ops) | All (SELECT) | All (SELECT) |
+| `notifications` | Own + broadcast (SELECT, UPDATE read) | — | All (all ops) |
+| `camps` | Public (SELECT) | Public (SELECT) | All (all ops) |
+| `healthcare_facilities` | Public (SELECT) | Public (SELECT) | All (all ops) |
+| `doctor_requests` | Own request (SELECT, INSERT) | — | All (all ops) |
+| `providers` | Own profile (SELECT, UPDATE, INSERT) | — | All (SELECT) |
+| `offline_sync_log` | Own logs (SELECT, INSERT, DELETE) | — | — |
 
 **Data Flow Example (Health Vitals):**
-1. Next.js API `/api/health-data` validates the POST request.
-2. The Server uses `createClient()` utilizing the user's secure Cookie.
-3. The SQL `INSERT` is executed.
-4. RLS intercepts at the database level ensuring `patient_id` matches the token context.
+1. Next.js API `/api/health-data` validates the POST body with a **Zod schema** and runs rate limiting.
+2. The route calls `createClient()` using the user's secure session cookie.
+3. The SQL `INSERT` is executed against Supabase.
+4. PostgreSQL RLS intercepts at the DB level, verifying `patient_id` matches the authenticated user's token context before committing.
 
 ---
 

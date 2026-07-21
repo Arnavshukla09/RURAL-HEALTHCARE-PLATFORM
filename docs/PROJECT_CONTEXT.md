@@ -1,6 +1,6 @@
 # Project Context: Rural Healthcare Platform
 
-This document is the **master source of truth** for the Rural Healthcare Platform repository. It is maintained as a living document and updated after every major sprint. Last updated: **July 17, 2026**.
+This document is the **master source of truth** for the Rural Healthcare Platform repository. It is maintained as a living document and updated after every major sprint. Last updated: **July 21, 2026**.
 
 ---
 
@@ -93,55 +93,81 @@ architecture-beta
 RURAL-HEALTHCARE-PLATFORM/
 ├── app/
 │   ├── api/
-│   │   ├── admin/seed-demo/   # Creates demo accounts (doctor/admin/patient)
-│   │   ├── ai-chat/           # Gemini AI streaming chat
-│   │   ├── appointments/      # GET/POST/PATCH appointments (role-aware)
-│   │   ├── auth/profile/      # Fetch/update patient/provider profile
-│   │   ├── facilities/nearby/ # PostGIS spatial facility search
-│   │   ├── health-data/       # Vitals tracking
-│   │   ├── medical-records/   # Records CRUD
-│   │   ├── symptom-analyze/   # Gemini symptom triage
-│   │   └── teleconsult/room/  # Jitsi room generation
-│   ├── page.tsx               # SPA router (currentPage state)
+│   │   ├── admin/seed-demo/      # Creates demo accounts (doctor/admin/patient)
+│   │   ├── ai-chat/              # Gemini AI streaming chat
+│   │   ├── appointments/         # GET/POST/PATCH appointments (role-aware)
+│   │   ├── auth/
+│   │   │   ├── callback/         # Supabase OAuth redirect handler
+│   │   │   ├── ensure-patient/   # Auto-creates patient row on OAuth login
+│   │   │   └── profile/          # Fetch/update patient/provider profile
+│   │   ├── doctor-requests/      # Doctor registration approval workflow
+│   │   ├── facilities/nearby/    # PostGIS spatial proximity search
+│   │   ├── health-data/          # Vitals tracking CRUD
+│   │   ├── medical-records/      # Records CRUD (role-aware)
+│   │   ├── notifications/        # Notification read/create API
+│   │   ├── offline-sync/         # PWA offline action queue
+│   │   ├── providers/            # Healthcare provider directory
+│   │   ├── symptom-analyze/      # Gemini symptom triage endpoint
+│   │   └── teleconsult/room/     # Jitsi room ID generation
+│   ├── (role-pages)/             # Next.js App Router pages for all 39 routes
 │   └── globals.css
 ├── components/
-│   ├── ui/                    # shadcn/ui primitives
-│   ├── Authentication.tsx     # Login / Register / Google OAuth
-│   ├── Header.tsx             # Role-aware top nav + NotificationBell
-│   ├── Dashboard.tsx          # Patient dashboard
-│   ├── AdminDashboard.tsx     # Admin overview
-│   ├── AdminUserManagement.tsx
-│   ├── AdminCampaignManager.tsx  # Rich campaign CRUD with map/phone/time
-│   ├── AdminNotifications.tsx    # Send notifications to users
+│   ├── ui/                       # shadcn/ui primitives (Button, Card, Dialog…)
+│   ├── providers/AppProvider.tsx  # Global auth + UI state context
+│   ├── Authentication.tsx        # Login / Register / Google OAuth + toast feedback
+│   ├── Header.tsx                # Role-aware top nav + NotificationBell
+│   ├── Dashboard.tsx             # Patient dashboard
+│   ├── AdminDashboard.tsx        # Admin overview
+│   ├── AdminUserManagement.tsx   # Manage all users
+│   ├── AdminCampaignManager.tsx  # Camp CRUD with location/time details
+│   ├── AdminNotifications.tsx    # Broadcast notifications
 │   ├── AdminAppointments.tsx     # All appointments (admin view)
-│   ├── AdminRecords.tsx          # All medical records (admin view)
+│   ├── AdminRecords.tsx          # All medical records (admin edit/delete)
 │   ├── DoctorAppointmentRequests.tsx
-│   ├── DoctorPatients.tsx        # All patients + medical records
-│   ├── NotificationBell.tsx      # Yellow bell with unread badge + realtime
-│   ├── AppointmentManager.tsx    # Patient appointments (redirects to consultation)
+│   ├── DoctorPatients.tsx        # Patient list + record access
+│   ├── NotificationBell.tsx      # Bell icon with realtime unread badge
 │   ├── ConsultationPortal.tsx    # Book teleconsultation
 │   ├── PatientRecords.tsx        # Patient's own medical records
-│   ├── CampLocations.tsx         # Health camps (map + list)
-│   ├── MapView.tsx               # Leaflet facility map
-│   ├── SymptomChecker.tsx        # AI symptom analysis
-│   ├── EmergencyModule.tsx       # First-aid cards
-│   └── ...
-├── scripts/                   # DB migration SQL files (run in order)
-│   ├── 001_create_tables.sql
-│   ├── 006_seed_real_data.sql
-│   ├── 007_security_hardening.sql
-│   ├── 009_fix_audit_trigger.sql
-│   ├── 011_notifications_table.sql
-│   ├── 012_camps_extra_columns.sql   # Creates camps table from scratch
-│   ├── 013_fix_rls_doctor_admin.sql  # Doctor/admin read-all RLS
-│   └── 014_fix_patient_self_read.sql # CRITICAL: patient self-read RLS
+│   ├── CampLocations.tsx         # Health camps (map + list view)
+│   ├── MapView.tsx               # Leaflet facility proximity map
+│   ├── SymptomChecker.tsx        # 4-step AI-powered symptom analysis
+│   ├── EmergencyModule.tsx       # First-aid cards + emergency contacts
+│   └── FloatingChat.tsx          # Persistent AI health assistant chatbot
 ├── docs/
-│   ├── PROJECT_CONTEXT.md     # This file
-│   └── ARCHITECTURE.md
-└── lib/
-    ├── supabase/              # client.ts, server.ts, middleware.ts
-    ├── offline/               # IndexedDB sync
-    └── rate-limit.ts
+│   ├── PROJECT_CONTEXT.md        # This file — master source of truth
+│   ├── ARCHITECTURE.md           # System architecture deep-dive
+│   ├── API_REFERENCE.md          # All REST API endpoints documented
+│   ├── DATABASE.md               # Schema, RLS policies, ER diagram
+│   ├── COMPONENTS.md             # Component reference guide
+│   ├── DEVELOPER_GUIDE.md        # Local setup and contribution guide
+│   ├── CHANGELOG.md              # Full version history
+│   ├── ROADMAP.md                # Planned features
+│   ├── WALKTHROUGH.md            # End-user feature walkthrough
+│   └── QA_REPORT.md              # Playwright E2E automated test results
+├── hooks/                        # Custom React hooks (useAuth, useToast…)
+├── lib/
+│   ├── supabase/
+│   │   ├── client.ts             # Browser-side Supabase client
+│   │   ├── server.ts             # Server-side cookie-based client
+│   │   └── admin.ts              # Service-role admin client (bypasses RLS)
+│   ├── rate-limit.ts             # Upstash Redis + local memory rate limiter
+│   └── utils.ts                  # Shared utility functions
+├── middleware.ts                  # Next.js Edge auth guard for all protected routes
+├── playwright.config.ts          # Playwright E2E test configuration
+├── public/                       # Static assets + PWA service worker
+├── scripts/
+│   ├── seed_e2e_users.js         # Seeds demo accounts for E2E testing
+│   └── fix_roles.js              # Patches user roles in DB for testing
+├── supabase/
+│   ├── 01_schema.sql             # Core table definitions + PostGIS setup
+│   ├── 02_functions_triggers.sql # DB functions, auth trigger, geom trigger
+│   ├── 03_rls.sql                # Complete Row Level Security policies
+│   ├── 04_seed_data.sql          # Real-world MP health facilities + demo data
+│   ├── 05_security_patch.sql     # RLS patch for missing tables
+│   └── 06_security_warnings_final.sql  # Fixes all Supabase Advisor warnings
+├── tests/
+│   └── e2e.spec.ts               # Playwright E2E test suite (5 tests, 100% pass)
+└── types/                        # Shared TypeScript type definitions
 ```
 
 ---
