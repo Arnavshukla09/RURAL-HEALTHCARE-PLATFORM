@@ -205,19 +205,19 @@ export function AdminRecords({ language }: AdminRecordsProps) {
                               {/* Action buttons (Edit/Delete) */}
                               {!isEditing ? (
                                 <div className="hidden group-hover:flex items-center gap-1 ml-2">
-                                  <button onClick={() => { setEditingRecord(rec.id); setEditType(rec.record_type); setEditContent(rec.content || rec.notes || ""); }} className="p-1 hover:bg-gray-200 rounded text-gray-500 hover:text-purple-600 transition-colors">
+                                  <button aria-label="Edit record" onClick={() => { setEditingRecord(rec.id); setEditType(rec.record_type); setEditContent(rec.content || rec.notes || ""); }} className="p-1 hover:bg-gray-200 rounded text-gray-500 hover:text-purple-600 transition-colors">
                                     <Edit2 className="h-3.5 w-3.5" />
                                   </button>
-                                  <button onClick={() => handleDelete(patient.id, rec.id)} disabled={actionLoading === rec.id} className="p-1 hover:bg-gray-200 rounded text-gray-500 hover:text-red-600 transition-colors">
+                                  <button aria-label="Delete record" onClick={() => handleDelete(patient.id, rec.id)} disabled={actionLoading === rec.id} className="p-1 hover:bg-gray-200 rounded text-gray-500 hover:text-red-600 transition-colors">
                                     {actionLoading === rec.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
                                   </button>
                                 </div>
                               ) : (
                                 <div className="flex items-center gap-1 ml-2">
-                                  <button onClick={() => handleSaveEdit(patient.id, rec.id)} disabled={actionLoading === rec.id} className="p-1 hover:bg-purple-100 rounded text-purple-600 transition-colors">
+                                  <button aria-label="Save edit" onClick={() => handleSaveEdit(patient.id, rec.id)} disabled={actionLoading === rec.id} className="p-1 hover:bg-purple-100 rounded text-purple-600 transition-colors">
                                     {actionLoading === rec.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
                                   </button>
-                                  <button onClick={() => setEditingRecord(null)} className="p-1 hover:bg-gray-200 rounded text-gray-500 transition-colors">
+                                  <button aria-label="Cancel edit" onClick={() => setEditingRecord(null)} className="p-1 hover:bg-gray-200 rounded text-gray-500 transition-colors">
                                     <X className="h-3.5 w-3.5" />
                                   </button>
                                 </div>

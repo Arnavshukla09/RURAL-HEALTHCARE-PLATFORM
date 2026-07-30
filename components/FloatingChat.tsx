@@ -285,11 +285,12 @@ export function FloatingChat() {
               <button
                 onClick={() => { setShowGuide(s => !s) }}
                 className="p-1.5 hover:bg-white/20 rounded-lg transition-colors text-[10px] font-medium"
+                aria-label={en ? "Toggle site map" : "साइट मैप टॉगल करें"}
                 title={en ? "Site map" : "साइट मैप"}
               >
                 <Map className="h-4 w-4" />
               </button>
-              <button onClick={() => setOpen(false)} className="p-1.5 hover:bg-white/20 rounded-lg transition-colors">
+              <button onClick={() => setOpen(false)} className="p-1.5 hover:bg-white/20 rounded-lg transition-colors" aria-label={en ? "Minimize chat" : "चैट बंद करें"}>
                 <Minimize2 className="h-4 w-4" />
               </button>
             </div>
@@ -400,6 +401,7 @@ export function FloatingChat() {
                 type="submit"
                 disabled={!input.trim() || loading}
                 className="h-10 w-10 rounded-xl bg-teal-600 text-white flex items-center justify-center hover:bg-teal-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex-shrink-0"
+                aria-label={en ? "Send message" : "संदेश भेजें"}
               >
                 {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
               </button>

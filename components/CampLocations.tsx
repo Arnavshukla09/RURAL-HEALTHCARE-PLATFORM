@@ -24,7 +24,17 @@ import {
   Info
 } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
-import { MapView } from "./MapView"
+import dynamic from "next/dynamic"
+
+// Lazy-load the map — Leaflet is heavy (~150 KB) and only needed when user opens the map view
+const MapView = dynamic(() => import("./MapView").then(m => ({ default: m.MapView })), {
+  ssr: false,
+  loading: () => (
+    <div className="h-64 w-full rounded-xl bg-gray-100 flex items-center justify-center text-gray-400 text-sm">
+      <span>Loading map...</span>
+    </div>
+  )
+})
 
 interface CampLocationsProps {
   language: string
@@ -662,7 +672,7 @@ export function CampLocations({ language }: CampLocationsProps) {
     <div className="bg-white rounded-xl w-full max-w-4xl max-h-[90vh] overflow-auto">
       <div className="flex justify-between items-center p-4 border-b">
         <h3 className="font-semibold">{language === "en" ? "Nearby Facilities" : "निकटतम सुविधाएं"}</h3>
-        <button onClick={() => setShowMap(false)} className="text-gray-500 hover:text-gray-800 text-xl font-bold">✕</button>
+        <button onClick={() => setShowMap(false)} aria-label={language === "en" ? "Close map" : "मानचित्र बंद करें"} className="text-gray-500 hover:text-gray-800 text-xl font-bold">✕</button>
       </div>
       <MapView language={language} />
     </div>
