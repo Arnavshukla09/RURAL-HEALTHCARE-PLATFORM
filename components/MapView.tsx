@@ -100,17 +100,19 @@ function makeIcon(color: string, isTop10: boolean, isUser = false) {
     if (isUser) {
       return L.divIcon({
         className: "",
-        html: `<div style="
-          width:20px;height:20px;
-          background:#1d4ed8;
-          border:3px solid white;
-          border-radius:50%;
-          box-shadow:0 0 0 3px #1d4ed8,0 2px 8px rgba(0,0,0,0.4);
-          animation:pulse 1.5s infinite;
-        "></div>
-        <style>@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}</style>`,
-        iconSize: [20, 20],
-        iconAnchor: [10, 10],
+        html: `
+          <div style="position:relative; width:36px; height:36px; display:flex; justify-content:center; align-items:flex-end; cursor: grab;">
+            <div style="position:absolute; top:-22px; background:#1d4ed8; color:white; padding:2px 8px; border-radius:12px; font-size:10px; font-weight:bold; white-space:nowrap; pointer-events:none; box-shadow:0 2px 4px rgba(0,0,0,0.3); border: 1.5px solid white; z-index:50;">
+              ✋ Drag to Move
+            </div>
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="#3b82f6" stroke="white" stroke-width="2" style="filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.4));">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+              <circle cx="12" cy="10" r="4" fill="white"></circle>
+            </svg>
+          </div>
+        `,
+        iconSize: [36, 36],
+        iconAnchor: [18, 36],
       })
     }
     const size = isTop10 ? 14 : 10
