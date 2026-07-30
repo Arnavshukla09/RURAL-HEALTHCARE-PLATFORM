@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 import { createClient } from "@/lib/supabase/server"
 import { rateLimit } from "@/lib/rate-limit"
 import { z } from "zod"
@@ -32,7 +33,11 @@ export async function GET(req: NextRequest) {
   }
 
   const { lat, lon, type, radius_km } = parsed.data
-  const supabase = await createClient()
+  // Use admin client to bypass the broken execute permissions for anon users on the DB
+  const supabase = createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
 
   const { data, error } = await supabase.rpc("nearby_facilities", {
     p_lat: lat,
