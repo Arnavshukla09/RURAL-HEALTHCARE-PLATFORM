@@ -11,14 +11,25 @@ const path = require('path');
 
 // Load env from .env.local (never hardcode secrets)
 function loadEnv() {
-  try {
-    const envPath = path.join(__dirname, '..', '.env.local');
-    const lines = fs.readFileSync(envPath, 'utf8').split('\n');
-    for (const line of lines) {
-      const match = line.match(/^([^#=]+)=(.*)$/);
-      if (match) process.env[match[1].trim()] = match[2].trim().replace(/\r$/, '');
-    }
-  } catch (_) {
+  // benchmark.js lives in scripts/ — go up one level to find .env.local in project root
+  const roots = [
+    path.join(__dirname, '..', '.env.local'),
+    path.join(process.cwd(), '.env.local'),
+    path.join(__dirname, '.env.local'),
+  ];
+  let loaded = false;
+  for (const envPath of roots) {
+    try {
+      const lines = fs.readFileSync(envPath, 'utf8').split(/\r?\n/);
+      for (const line of lines) {
+        const match = line.match(/^([A-Z0-9_]+)=(.+)$/);
+        if (match) process.env[match[1]] = match[2].trim();
+      }
+      loaded = true;
+      break;
+    } catch (_) {}
+  }
+  if (!loaded) {
     console.error('Could not load .env.local — ensure it exists with NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY');
     process.exit(1);
   }
