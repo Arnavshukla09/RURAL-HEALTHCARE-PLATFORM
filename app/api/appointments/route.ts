@@ -21,7 +21,9 @@ export async function GET(req: NextRequest) {
 
   if (!patient) return NextResponse.json({ error: "Patient profile not found" }, { status: 404 })
 
-  let query = supabase
+  const { createAdminClient } = await import("@/lib/supabase/admin")
+  const adminSupabase = createAdminClient()
+  let query = adminSupabase
     .from("appointments")
     .select("*, patients(first_name, last_name, email)")
     .order("appointment_date", { ascending: true })

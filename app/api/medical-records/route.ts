@@ -59,7 +59,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json([])
     }
 
-    const { data, error } = await supabase
+    const adminSupabase = createAdminClient()
+    const { data, error } = await adminSupabase
       .from("medical_records")
       .select("*")
       .eq("patient_id", patient.id)

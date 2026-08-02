@@ -119,21 +119,20 @@ export function Dashboard({ user, language }: DashboardProps) {
           .single();
 
         if (patient?.id) {
-          const { count } = await supabase
-            .from('appointments')
-            .select('*', { count: 'exact', head: true })
-            .eq('patient_id', patient.id);
-          
-          setUserStats(prev => ({ ...prev, consultations: count || 0 }));
+          // Fetch appointments count
+          const apptRes = await fetch('/api/appointments');
+          if (apptRes.ok) {
+            const apptData = await apptRes.json();
+            setUserStats(prev => ({ ...prev, consultations: apptData.appointments?.length || 0 }));
+          }
 
           // Fetch registered camps from medical records
-          const { data: records } = await supabase
-            .from('medical_records')
-            .select('*')
-            .eq('patient_id', patient.id)
-            .eq('record_type', 'other')
-            .like('content', '[Camp Registration]%')
-            .order('created_at', { ascending: false });
+          const recRes = await fetch('/api/medical-records');
+          if (recRes.ok) {
+            const allRecords = await recRes.json();
+            const records = (allRecords || []).filter((r: any) => 
+              r.record_type === 'other' && r.content.startsWith('[Camp Registration]')
+            );
 
           if (records) {
             setUserStats(prev => ({ ...prev, campaigns: records.length }));
