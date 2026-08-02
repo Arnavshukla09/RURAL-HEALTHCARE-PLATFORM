@@ -39,7 +39,7 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
       ],
       smsFallback: "SMS Emergency SOS",
       waFallback: "WhatsApp SOS",
-      firstAid: "Visual First-Aid Guide",
+      firstAid: "First-Aid Guide",
       firstAidSub: "Tap any card for full step-by-step instructions →",
     },
     hi: {
