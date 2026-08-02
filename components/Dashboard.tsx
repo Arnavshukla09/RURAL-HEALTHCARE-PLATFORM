@@ -136,7 +136,7 @@ export function Dashboard({ user, language }: DashboardProps) {
 
           if (records) {
             setUserStats(prev => ({ ...prev, campaigns: records.length }));
-            setRegisteredCamps(records.map(r => {
+            setRegisteredCamps(records.map((r: any) => {
               // Parse the string: "[Camp Registration] Name — Address on Date at Time. Contact: X"
               const content = r.content;
               const titleMatch = content.match(/\[Camp Registration\] (.*?) —/);
@@ -154,6 +154,7 @@ export function Dashboard({ user, language }: DashboardProps) {
                 participants: 1 // just themselves
               };
             }));
+          }
           }
         }
       } catch (err) {
