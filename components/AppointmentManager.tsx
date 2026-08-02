@@ -161,18 +161,23 @@ export function AppointmentManager({ user, language, setJitsiRoom }: Appointment
       const appointmentDate = new Date(`${bookingForm.date}T${bookingForm.time}:00`).toISOString()
       const roomId = `ruralhealth-${authUser.id.slice(0, 8)}-${Date.now()}`
 
-      const { error } = await supabase.from('appointments').insert({
-        patient_id: patientId,
-        provider_id: provId,
-        appointment_date: appointmentDate,
-        duration_minutes: 30,
-        status: 'scheduled',
-        notes: bookingForm.notes || null,
-        teleconsult_room_id: roomId,
-      })
-
-      if (error) {
-        setBookingError(error.message)
+      const res = await fetch('/api/appointments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          appointment_date: appointmentDate,
+          provider_id: provId,
+          notes: bookingForm.notes || null,
+          consultation_type: 'General',
+          teleconsult_room_id: roomId
+        })
+      });
+      
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        throw new Error(data.error || 'Failed to book appointment');
       } else {
         setBookingSuccess(en ? "Appointment booked successfully!" : "अपॉइंटमेंट सफलतापूर्वक बुक हुई!")
         setBookingForm({ provider_id: "", date: "", time: "", notes: "" })
