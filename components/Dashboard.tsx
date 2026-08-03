@@ -212,7 +212,7 @@ export function Dashboard({ user, language }: DashboardProps) {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className={`grid grid-cols-1 gap-6 ${user.role === 'patient' ? 'md:grid-cols-2 max-w-3xl mx-auto w-full' : 'md:grid-cols-3'}`}>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{t.stats.consultations}</CardTitle>
@@ -259,9 +259,9 @@ export function Dashboard({ user, language }: DashboardProps) {
           )}
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="max-w-5xl mx-auto w-full">
           {/* Quick Actions */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle>{t.quickActions}</CardTitle>
