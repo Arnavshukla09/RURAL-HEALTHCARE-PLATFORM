@@ -92,6 +92,8 @@ GRANT EXECUTE ON FUNCTION public.nearby_facilities(double precision, double prec
 
 -- Revoke access to the PostGIS spatial reference system table
 REVOKE ALL ON public.spatial_ref_sys FROM anon, authenticated;
+ALTER TABLE public.spatial_ref_sys ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow public read access to spatial_ref_sys" ON public.spatial_ref_sys FOR SELECT TO PUBLIC USING (true);
 
 -- Revoke access to PostGIS geometry_columns and geography_columns views
 REVOKE ALL ON public.geometry_columns     FROM anon, authenticated;
