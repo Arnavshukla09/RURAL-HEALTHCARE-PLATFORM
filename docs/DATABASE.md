@@ -185,8 +185,8 @@ Database schema changes are tracked in the `supabase/` directory and must be exe
 | Table | Patient Access | Doctor Access | Admin Access |
 |---|---|---|---|
 | `patients` | Own row (SELECT, UPDATE) | All rows (SELECT) | All rows (SELECT) |
-| `medical_records` | Own records (SELECT, INSERT) | All records (SELECT, INSERT, UPDATE) | All records (all ops) |
-| `appointments` | Own (SELECT, INSERT, UPDATE) | All (SELECT) | All (SELECT) |
+| `medical_records` | Own records (all ops) | All records (SELECT, INSERT, UPDATE) | All records (all ops) |
+| `appointments` | Own (all ops) | All (SELECT) | All (SELECT) |
 | `health_data` | Own (all ops) | All (SELECT) | All (SELECT) |
 | `notifications` | Own + broadcast (SELECT, UPDATE read) | — | All (all ops) |
 | `camps` | Public (SELECT) | Public (SELECT) | All (all ops) |

@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
+## [v1.1.1] - 2026-08-11 — Security & RLS Hotfixes
+
+### Security
+- **PostGIS Security Lints:** Addressed Supabase Linter warnings regarding `spatial_ref_sys` by enabling Row Level Security (RLS) on it and applying a public `SELECT` policy, ensuring map features continue to work without exposing the table to malicious updates.
+- **Patient RLS Expansion:** Added missing `UPDATE` and `DELETE` policies to `medical_records` and `appointments` for patients. This completely unlocks patient functionality (like cancelling appointments or updating self-submitted health records) that was previously restricted by strict DB-level security policies.
+
+---
+
 ## [v1.1.0] - 2026-07-21 — Security Hardening & Final Release
 
 ### Added
