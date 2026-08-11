@@ -67,16 +67,30 @@ Security is deeply integrated at both the network and database layers to ensure 
 
 ---
 
-## 🗄️ Database Architecture
+## 🗄️ Database Architecture & Request Routing
 
-The backend relies on a normalized **PostgreSQL** database managed through Supabase.
+The platform employs a hybrid request routing model, strictly separating public client-side interactions from secure server-side operations against our normalized **PostgreSQL (Supabase)** database.
 
-- **`patients`**: Stores core user profiles linked 1-to-1 with Supabase Auth users.
-- **`medical_records`**: Secure ledger of diagnoses, prescriptions, and historical data.
-- **`appointments`**: Tracks consultation scheduling, statuses, and Jitsi room allocations.
-- **`facilities` & `health_camps`**: Spatially indexed tables leveraging the PostGIS `geography` type for fast radius queries (`ST_DWithin`).
+### 1. Data Models
+- **`patients` & `healthcare_providers`**: Core profiles linked 1-to-1 with Supabase Auth identities.
+- **`medical_records`**: A secure ledger for diagnoses and prescriptions, heavily restricted by RLS.
+- **`appointments`**: Tracks scheduling and automatically allocates Jitsi teleconsultation rooms.
+- **`healthcare_facilities` & `camps`**: Spatially indexed tables using **PostGIS `geography`** to enable lightning-fast `< 50km` radius searches.
 
-*Initialization scripts are available in the `supabase/` directory, broken down by schema definition, functions, RLS policies, and seed data.*
+### 2. Request Routing & Security Boundary
+The application utilizes Next.js Server Components and API Routes to maintain a strict security perimeter:
+
+- **Client-Side Requests (Direct DB Access):**
+  - Frontend components query the database using the public `anon` key.
+  - **Security:** Every request is strictly evaluated against PostgreSQL **Row Level Security (RLS)** policies. Users can only fetch and update their own assigned rows (`user_id = auth.uid()`).
+  - *Example:* A patient reading their own appointments on the Dashboard.
+
+- **Server-Side API Routes (Elevated Access):**
+  - Next.js API Routes (e.g., `/api/medical-records`) execute securely on the backend using the `SUPABASE_SERVICE_ROLE_KEY`.
+  - **Security:** These routes bypass RLS but enforce **custom server-side validation** (rate limiting, Zod schema validation, and role checking) before performing sensitive insertions or deletions.
+  - *Example:* Uploading a new medical record document or fetching administrative reports.
+
+*All initialization scripts, including schemas, RLS policies, and PostGIS triggers, are located in the `supabase/` directory and must be executed sequentially.*
 
 ---
 
