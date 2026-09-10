@@ -173,4 +173,3 @@ Copyright (c) 2025. This project is licensed under the MIT License - see the LIC
 
 ---
 
-*Built with passion to bring quality healthcare to rural communities globally. 🌍*
