@@ -90,7 +90,7 @@ Guidelines for your medical advice:
     if (!response.ok) {
       const errBody = await response.text()
       console.error("Gemini API error:", response.status, errBody)
-      return NextResponse.json({ error: "AI service error" }, { status: 502 })
+      return NextResponse.json({ error: "AI service error", details: errBody }, { status: 502 })
     }
 
     const data = await response.json()
