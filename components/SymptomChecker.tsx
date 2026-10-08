@@ -153,7 +153,8 @@ export function SymptomChecker({ language }: SymptomCheckerProps) {
         ? `My symptoms are: ${selectedSymptoms.join(", ")}. Temperature: ${patientInfo.temperature ? patientInfo.temperature + "°" + patientInfo.tempUnit : 'normal'}. Duration: ${patientInfo.daysSick} days. The analysis urgency is '${data.urgency}'. What are the best home remedies, and what exact steps should I take based on this severity?`
         : `मेरे लक्षण हैं: ${selectedSymptoms.map(s => SYMPTOM_HI[s] || s).join(", ")}। तापमान: ${patientInfo.temperature ? patientInfo.temperature + "°" + patientInfo.tempUnit : 'सामान्य'}। अवधि: ${patientInfo.daysSick} दिन। विश्लेषण की गंभीरता '${data.urgency === 'emergency' ? 'आपातकालीन' : data.urgency === 'high' ? 'उच्च' : data.urgency === 'medium' ? 'मध्यम' : 'कम'}' है। सबसे अच्छे घरेलू उपचार क्या हैं, और मुझे क्या कदम उठाने चाहिए?`
       
-      setChatInput(promptText)
+      // Auto-submit the initial prompt immediately to the chat
+      handleChat(promptText, data)
     } catch (e: any) {
       setError(e.message || "Analysis failed. Please try again.")
     } finally {
@@ -167,7 +168,7 @@ export function SymptomChecker({ language }: SymptomCheckerProps) {
     setChatMessages([]); setChatInput("")
   }
 
-  const handleChat = async (overrideText?: string) => {
+  const handleChat = async (overrideText?: string, specificAiResult?: any) => {
     const text = overrideText || chatInput.trim()
     if (!text || chatLoading) return
 
@@ -177,12 +178,13 @@ export function SymptomChecker({ language }: SymptomCheckerProps) {
     if (!overrideText) setChatInput("")
     setChatLoading(true)
 
+    const currentAiResult = specificAiResult || aiResult;
     const apiMessage = chatMessages.length === 0
-      ? `Context: My symptom analysis result was: ${JSON.stringify({ urgency: aiResult?.urgency, conditions: aiResult?.possibleConditions })}. Please answer my follow up question: ${text}`
+      ? `Context: My symptom analysis result was: ${JSON.stringify({ urgency: currentAiResult?.urgency, conditions: currentAiResult?.possibleConditions })}. Please answer my follow up question: ${text}`
       : text
 
     const apiHistory = chatMessages.map((msg, i) => 
-      i === 0 ? { ...msg, content: `Context: My symptom analysis result was: ${JSON.stringify({ urgency: aiResult?.urgency, conditions: aiResult?.possibleConditions })}. Please answer my follow up question: ${msg.content}` } : msg
+      i === 0 ? { ...msg, content: `Context: My symptom analysis result was: ${JSON.stringify({ urgency: currentAiResult?.urgency, conditions: currentAiResult?.possibleConditions })}. Please answer my follow up question: ${msg.content}` } : msg
     )
 
     try {
