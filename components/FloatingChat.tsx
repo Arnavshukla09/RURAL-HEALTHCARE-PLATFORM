@@ -1,15 +1,20 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { MessageCircle, X, Send, Loader2, Bot, User, Minimize2, Map, Stethoscope, Calendar, FileText, AlertTriangle, Heart, Home, Info } from "lucide-react"
+import { MessageCircle, X, Send, Loader2, Bot, User, Minimize2, Map, Stethoscope, Calendar, FileText, AlertTriangle, Heart, Home, Info, Mic, MicOff, Volume2, ThumbsUp, ThumbsDown } from "lucide-react"
 
 import { useApp } from "@/components/providers/AppProvider"
 import { useRouter } from "next/navigation"
+import { lookupOffline } from "@/lib/offline/offline-ai"
+import { findCachedAnswer, learnFromAnswer, applyFeedback } from "@/lib/ai/query-learner"
+import { startSpeechRecognition, stopSpeechRecognition, speak, stopSpeaking } from "@/lib/ai/speech"
 
 interface ChatMessage {
   role: "user" | "assistant"
   content: string
   navButtons?: NavButton[]
+  queryId?: string
+  feedback?: 1 | -1
 }
 
 interface NavButton {
@@ -79,9 +84,52 @@ export function FloatingChat() {
   const [input, setInput] = useState("")
   const [loading, setLoading] = useState(false)
   const [showGuide, setShowGuide] = useState(false)
+  const [isListening, setIsListening] = useState(false)
+  const [speakingMsgIdx, setSpeakingMsgIdx] = useState<number | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const en = language === "en"
+
+  const toggleListen = () => {
+    if (isListening) {
+      stopSpeechRecognition()
+      setIsListening(false)
+    } else {
+      startSpeechRecognition({
+        lang: language === 'en' ? 'en-IN' : 'hi-IN',
+        onResult: (res) => {
+          setInput((prev) => prev ? prev + ' ' + res.transcript : res.transcript)
+          setIsListening(false)
+        },
+        onError: (err) => {
+          console.error('Speech error:', err)
+          setIsListening(false)
+        },
+        onEnd: () => setIsListening(false)
+      })
+      setIsListening(true)
+    }
+  }
+
+  const toggleSpeak = (idx: number, text: string) => {
+    if (speakingMsgIdx === idx) {
+      stopSpeaking()
+      setSpeakingMsgIdx(null)
+    } else {
+      setSpeakingMsgIdx(idx)
+      speak(text, {
+        lang: language === 'en' ? 'en-IN' : 'hi-IN',
+        onEnd: () => setSpeakingMsgIdx(null),
+        onError: () => setSpeakingMsgIdx(null)
+      })
+    }
+  }
+
+  const handleFeedback = async (msgIdx: number, queryId: string, isUp: boolean) => {
+    if (!queryId) return
+    await applyFeedback(queryId, isUp)
+    setMessages(prev => prev.map((m, i) => i === msgIdx ? { ...m, feedback: isUp ? 1 : -1 } : m))
+  }
 
   // Welcome message on first open
   useEffect(() => {
@@ -197,6 +245,30 @@ export function FloatingChat() {
     setLoading(true)
 
     try {
+      // 1. Check Offline Static FAQ
+      const staticHit = lookupOffline(text)
+      if (staticHit) {
+        setMessages(prev => [...prev, {
+          role: "assistant",
+          content: en ? staticHit.answer : staticHit.answerHi,
+        }])
+        setLoading(false)
+        return
+      }
+
+      // 2. Check Learned Queries Cache (TF-IDF)
+      const cachedHit = await findCachedAnswer(text)
+      if (cachedHit.found && cachedHit.response) {
+        setMessages(prev => [...prev, {
+          role: "assistant",
+          content: cachedHit.response,
+          queryId: cachedHit.queryId
+        }])
+        setLoading(false)
+        return
+      }
+
+      // 3. Fallback to Gemini API
       const response = await fetch("/api/ai-chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -223,16 +295,23 @@ export function FloatingChat() {
 
       const data = await response.json()
 
+      // Learn this answer so we don't need the API next time someone asks this
+      await learnFromAnswer(text, data.reply)
+
       // Check if AI response mentions navigating somewhere
       const aiNavIntent = detectNavIntent(data.reply)
       const navBtns: NavButton[] = aiNavIntent
         ? [{ label: `→ ${aiNavIntent.label}`, page: aiNavIntent.page }]
         : []
 
+      // Retrieve the newly learned queryId so user can leave feedback
+      const recentCache = await findCachedAnswer(text)
+      
       setMessages(prev => [...prev, {
         role: "assistant",
         content: data.reply,
-        navButtons: navBtns.length > 0 ? navBtns : undefined
+        navButtons: navBtns.length > 0 ? navBtns : undefined,
+        queryId: recentCache.queryId
       }])
     } catch {
       setMessages(prev => [...prev, {
@@ -337,6 +416,36 @@ export function FloatingChat() {
                         : "bg-gray-100 text-gray-800 rounded-tl-sm"
                     }`}>
                       <div className="whitespace-pre-wrap">{msg.content}</div>
+                      {msg.role === "assistant" && (
+                        <div className="flex items-center gap-1 mt-2 pt-2 border-t border-gray-200/50 justify-between">
+                          <button 
+                            onClick={() => toggleSpeak(i, msg.content)}
+                            className={`p-1.5 rounded hover:bg-gray-200 transition-colors ${speakingMsgIdx === i ? "text-teal-600 bg-teal-50" : "text-gray-500"}`}
+                            title={speakingMsgIdx === i ? (en ? "Stop speaking" : "बोलना बंद करें") : (en ? "Read aloud" : "जोर से पढ़ें")}
+                          >
+                            <Volume2 className={`h-3.5 w-3.5 ${speakingMsgIdx === i ? "animate-pulse" : ""}`} />
+                          </button>
+                          
+                          {msg.queryId && (
+                            <div className="flex items-center gap-1">
+                              <button 
+                                onClick={() => handleFeedback(i, msg.queryId!, true)}
+                                disabled={msg.feedback !== undefined}
+                                className={`p-1.5 rounded transition-colors ${msg.feedback === 1 ? 'text-teal-600 bg-teal-50' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-200'}`}
+                              >
+                                <ThumbsUp className="h-3.5 w-3.5" />
+                              </button>
+                              <button 
+                                onClick={() => handleFeedback(i, msg.queryId!, false)}
+                                disabled={msg.feedback !== undefined}
+                                className={`p-1.5 rounded transition-colors ${msg.feedback === -1 ? 'text-red-500 bg-red-50' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-200'}`}
+                              >
+                                <ThumbsDown className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -388,15 +497,24 @@ export function FloatingChat() {
           {/* Input */}
           <div className="border-t border-gray-100 p-3 flex-shrink-0">
             <form onSubmit={e => { e.preventDefault(); handleSend() }} className="flex items-center gap-2">
-              <input
-                ref={inputRef}
-                type="text"
-                value={input}
-                onChange={e => setInput(e.target.value)}
-                placeholder={en ? "Ask or say 'go to appointments'..." : "पूछें या 'अपॉइंटमेंट पर जाएं'..."}
-                className="flex-1 text-sm border border-gray-200 rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-teal-400 focus:ring-1 focus:ring-teal-100"
-                disabled={loading}
-              />
+              <div className="flex-1 relative">
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={input}
+                  onChange={e => setInput(e.target.value)}
+                  placeholder={isListening ? (en ? "Listening..." : "सुन रहा हूँ...") : (en ? "Ask or say 'go to appointments'..." : "पूछें या 'अपॉइंटमेंट पर जाएं'...")}
+                  className="w-full text-sm border border-gray-200 rounded-xl px-3.5 py-2.5 pr-10 focus:outline-none focus:border-teal-400 focus:ring-1 focus:ring-teal-100"
+                  disabled={loading}
+                />
+                <button
+                  type="button"
+                  onClick={toggleListen}
+                  className={`absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg transition-colors ${isListening ? 'text-red-500 bg-red-50 animate-pulse' : 'text-gray-400 hover:text-teal-600 hover:bg-teal-50'}`}
+                >
+                  {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                </button>
+              </div>
               <button
                 type="submit"
                 disabled={!input.trim() || loading}

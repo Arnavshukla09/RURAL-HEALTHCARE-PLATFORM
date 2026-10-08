@@ -58,6 +58,9 @@ const SYMPTOM_HI: Record<string, string> = {
   "Unexplained weight loss": "अकारण वजन घटना", "Night sweats": "रात में पसीना",
 }
 
+import { triageOffline } from "@/lib/offline/offline-ai"
+import { startSpeechRecognition, stopSpeechRecognition } from "@/lib/ai/speech"
+
 // Urgency colour mapping
 const URGENCY_STYLES: Record<string, { bg: string; border: string; icon: string; iconClass: string }> = {
   emergency: { bg: "bg-red-50", border: "border-red-400", icon: "🚨", iconClass: "text-red-600" },
@@ -87,48 +90,27 @@ export function SymptomChecker({ language }: SymptomCheckerProps) {
   // Speech Recognition state
   const [isListening, setIsListening] = useState(false)
   const { toast } = useToast()
-  const [recognition, setRecognition] = useState<any>(null)
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
-      if (SpeechRecognition) {
-        const rec = new SpeechRecognition()
-        rec.continuous = false
-        rec.interimResults = false
-        rec.lang = language === 'en' ? 'en-US' : 'hi-IN'
-        
-        rec.onresult = (event: any) => {
-          const transcript = event.results[0][0].transcript
-          setChatInput((prev) => prev ? prev + ' ' + transcript : transcript)
-          setIsListening(false)
-        }
-        
-        rec.onerror = (event: any) => {
-          console.error('Speech recognition error', event.error)
-          setIsListening(false)
-        }
-        
-        rec.onend = () => {
-          setIsListening(false)
-        }
-        
-        setRecognition(rec)
-      }
-    }
-  }, [language])
 
   const toggleListen = () => {
     if (isListening) {
-      recognition?.stop()
+      stopSpeechRecognition()
       setIsListening(false)
     } else {
-      if (recognition) {
-        recognition.start()
-        setIsListening(true)
-      } else {
-        toast({ title: en ? "Speech recognition is not supported in this browser." : "इस ब्राउज़र में स्पीच रिकग्निशन समर्थित नहीं है।", variant: "destructive" })
-      }
+      const supported = startSpeechRecognition({
+        lang: language === 'en' ? 'en-IN' : 'hi-IN',
+        onResult: (res) => {
+          setChatInput((prev) => prev ? prev + ' ' + res.transcript : res.transcript)
+          setIsListening(false)
+        },
+        onError: (err) => {
+          console.error('Speech error:', err)
+          setIsListening(false)
+          toast({ title: err, variant: "destructive" })
+        },
+        onEnd: () => setIsListening(false)
+      })
+      if (supported) setIsListening(true)
+      else toast({ title: en ? "Speech recognition not supported." : "स्पीच रिकग्निशन समर्थित नहीं है।", variant: "destructive" })
     }
   }
 
@@ -141,22 +123,29 @@ export function SymptomChecker({ language }: SymptomCheckerProps) {
     setLoading(true)
     setError("")
     try {
-      const res = await fetch("/api/symptom-analyze", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          age: patientInfo.age || "unknown",
-          gender: patientInfo.gender,
-          temperature: patientInfo.temperature,
-          tempUnit: patientInfo.tempUnit,
-          daysSick: patientInfo.daysSick,
-          bodyPart: selectedBodyPart,
-          symptoms: selectedSymptoms,
-          language,
-        }),
-      })
-      const data = await res.json()
-      if (data.error) throw new Error(data.error)
+      let data;
+      if (!navigator.onLine) {
+        // Use offline triage
+        const res = triageOffline(selectedSymptoms, language)
+        data = { ...res, possibleConditions: [] }
+      } else {
+        const res = await fetch("/api/symptom-analyze", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            age: patientInfo.age || "unknown",
+            gender: patientInfo.gender,
+            temperature: patientInfo.temperature,
+            tempUnit: patientInfo.tempUnit,
+            daysSick: patientInfo.daysSick,
+            bodyPart: selectedBodyPart,
+            symptoms: selectedSymptoms,
+            language,
+          }),
+        })
+        data = await res.json()
+        if (data.error) throw new Error(data.error)
+      }
       setAiResult(data)
       setStep(4)
       
