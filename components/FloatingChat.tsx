@@ -261,7 +261,7 @@ export function FloatingChat() {
       if (cachedHit.found && cachedHit.response) {
         setMessages(prev => [...prev, {
           role: "assistant",
-          content: cachedHit.response,
+          content: cachedHit.response || "",
           queryId: cachedHit.queryId
         }])
         setLoading(false)
