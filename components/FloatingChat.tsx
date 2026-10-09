@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation"
 import { lookupOffline } from "@/lib/offline/offline-ai"
 import { findCachedAnswer, learnFromAnswer, applyFeedback } from "@/lib/ai/query-learner"
 import { startSpeechRecognition, stopSpeechRecognition, speak, stopSpeaking } from "@/lib/ai/speech"
+import { answerMedicalQuery } from "@/lib/ai/medical-brain"
 
 interface ChatMessage {
   role: "user" | "assistant"
@@ -245,6 +246,18 @@ export function FloatingChat() {
     setLoading(true)
 
     try {
+      // 0. High-accuracy Clinical Knowledge Engine (Medical Brain)
+      const clinicalBrainAnswer = answerMedicalQuery(text, language)
+      if (clinicalBrainAnswer) {
+        setMessages(prev => [...prev, {
+          role: "assistant",
+          content: clinicalBrainAnswer,
+        }])
+        learnFromAnswer(text, clinicalBrainAnswer).catch(() => {})
+        setLoading(false)
+        return
+      }
+
       // 1. Check Offline Static FAQ
       const staticHit = lookupOffline(text)
       if (staticHit) {

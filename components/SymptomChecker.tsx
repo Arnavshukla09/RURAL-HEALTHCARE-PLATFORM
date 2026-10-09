@@ -61,6 +61,7 @@ const SYMPTOM_HI: Record<string, string> = {
 import { triageOffline, lookupOffline } from "@/lib/offline/offline-ai"
 import { findCachedAnswer, learnFromAnswer } from "@/lib/ai/query-learner"
 import { startSpeechRecognition, stopSpeechRecognition } from "@/lib/ai/speech"
+import { answerMedicalQuery } from "@/lib/ai/medical-brain"
 
 // Urgency colour mapping
 const URGENCY_STYLES: Record<string, { bg: string; border: string; icon: string; iconClass: string }> = {
@@ -189,7 +190,20 @@ export function SymptomChecker({ language }: SymptomCheckerProps) {
     )
 
     try {
-      // 1. Static and offline check first
+      // 0. High-accuracy Clinical Knowledge Engine (Medical Brain)
+      // Directly handles diet questions (spicy, fiber, dairy), medications, rest, and specific follow-ups
+      const clinicalBrainAnswer = answerMedicalQuery(text, language, selectedSymptoms)
+      if (clinicalBrainAnswer) {
+        setChatMessages(prev => [...prev, {
+          role: "assistant",
+          content: clinicalBrainAnswer,
+        }])
+        learnFromAnswer(text, clinicalBrainAnswer).catch(() => {})
+        setChatLoading(false)
+        return
+      }
+
+      // 1. Static and offline check
       const staticHit = lookupOffline(text)
       if (staticHit) {
         setChatMessages(prev => [...prev, {

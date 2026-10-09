@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { rateLimit } from "@/lib/rate-limit"
+import { answerMedicalQuery } from "@/lib/ai/medical-brain"
 
 /**
  * POST /api/ai-chat
@@ -116,11 +117,14 @@ Guidelines for your medical advice:
     }
 
     if (!reply) {
-      // Local graceful fallback if all remote models fail or quota/key is invalid
+      // 1. Try Clinical Medical Brain first for domain-specific medical answering
+      const clinicalReply = answerMedicalQuery(message, language)
+
       const fallbackReply =
-        language === "hi"
-          ? "नमस्ते! आपकी सुरक्षा के लिए: यदि आपको तेज बुखार, सांस लेने में तकलीफ या गंभीर लक्षण हैं, तो तुरंत नजदीकी स्वास्थ्य केंद्र (PHC) या 108 पर संपर्क करें। हम आपके प्रश्न का जल्द समाधान करेंगे।"
-          : "Hello! For your health and safety: If you are experiencing high fever, chest pain, or severe difficulty breathing, please consult your nearest Primary Health Centre (PHC) or call 108 immediately. We are processing your request."
+        clinicalReply ||
+        (language === "hi"
+          ? "नमस्ते! यदि आपको तेज बुखार, सांस लेने में तकलीफ या गंभीर लक्षण हैं, तो तुरंत नजदीकी स्वास्थ्य केंद्र (PHC) या 108 पर संपर्क करें। सामान्य लक्षणों के लिए पर्याप्त आराम करें, ओआरएस या हल्का भोजन लें।"
+          : "Hello! For your health and safety: If you are experiencing high fever, chest pain, or severe difficulty breathing, please consult your nearest Primary Health Centre (PHC) or call 108 immediately. For mild symptoms, rest adequately, hydrate with ORS, and take light bland meals.")
 
       return NextResponse.json({
         reply: fallbackReply,
