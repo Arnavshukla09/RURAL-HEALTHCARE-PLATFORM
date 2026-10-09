@@ -58,7 +58,8 @@ const SYMPTOM_HI: Record<string, string> = {
   "Unexplained weight loss": "अकारण वजन घटना", "Night sweats": "रात में पसीना",
 }
 
-import { triageOffline } from "@/lib/offline/offline-ai"
+import { triageOffline, lookupOffline } from "@/lib/offline/offline-ai"
+import { findCachedAnswer, learnFromAnswer } from "@/lib/ai/query-learner"
 import { startSpeechRecognition, stopSpeechRecognition } from "@/lib/ai/speech"
 
 // Urgency colour mapping
@@ -188,6 +189,29 @@ export function SymptomChecker({ language }: SymptomCheckerProps) {
     )
 
     try {
+      // 1. Static and offline check first
+      const staticHit = lookupOffline(text)
+      if (staticHit) {
+        setChatMessages(prev => [...prev, {
+          role: "assistant",
+          content: en ? staticHit.answer : staticHit.answerHi,
+        }])
+        setChatLoading(false)
+        return
+      }
+
+      // 2. Local TF-IDF query learner cache check
+      const cachedHit = await findCachedAnswer(text)
+      if (cachedHit.found && cachedHit.response) {
+        setChatMessages(prev => [...prev, {
+          role: "assistant",
+          content: cachedHit.response,
+        }])
+        setChatLoading(false)
+        return
+      }
+
+      // 3. Fallback to server endpoint
       const response = await fetch("/api/ai-chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -198,13 +222,23 @@ export function SymptomChecker({ language }: SymptomCheckerProps) {
         }),
       })
 
-      if (!response.ok) throw new Error("API error")
       const data = await response.json()
-      setChatMessages(prev => [...prev, { role: "assistant", content: data.reply }])
+      if (data.reply) {
+        // Learn from the response locally in IndexedDB
+        learnFromAnswer(text, data.reply).catch(() => {})
+        setChatMessages(prev => [...prev, { role: "assistant", content: data.reply }])
+      } else {
+        throw new Error(data.error || "No reply")
+      }
     } catch {
+      // Graceful offline triage advice
+      const emergencyAdvice = en
+        ? "• Rest adequately and keep yourself well hydrated with boiled water or ORS.\n• Monitor your temperature and symptoms closely.\n• If symptoms worsen or you feel severe discomfort, please consult your nearest Community Health Centre (CHC) or call 108 immediately."
+        : "• पर्याप्त आराम करें और ओआरएस या उबले हुए पानी से हाइड्रेटेड रहें।\n• अपने तापमान और लक्षणों पर नज़र रखें।\n• यदि लक्षण बढ़ें या सांस लेने में तकलीफ हो, तो तुरंत नजदीकी स्वास्थ्य केंद्र (CHC) जाएँ या 108 पर कॉल करें।"
+
       setChatMessages(prev => [...prev, {
         role: "assistant",
-        content: en ? "Connection error. Please try again." : "कनेक्शन त्रुटि। कृपया पुनः प्रयास करें।"
+        content: emergencyAdvice
       }])
     } finally {
       setChatLoading(false)

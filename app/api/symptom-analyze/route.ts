@@ -57,24 +57,43 @@ Rules:
 - CRITICAL: DO NOT output any internal thought process or reasoning steps. Output strictly the JSON object and absolutely nothing else.
 - ${language === "hi" ? "Provide immediateActions and homeCare in Hindi" : "Provide responses in English"}`
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0.3,
-            maxOutputTokens: 2500,
-          },
-        }),
-      }
-    )
+    const candidateModels = [
+      "gemini-1.5-flash",
+      "gemini-2.0-flash",
+      "gemini-1.5-flash-8b",
+      "gemini-2.0-flash-lite",
+      "gemini-1.5-pro",
+    ]
 
-    if (!response.ok) {
-      const errText = await response.text()
-      console.error("Gemini API error:", errText)
+    let geminiData: any = null
+
+    for (const model of candidateModels) {
+      try {
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: {
+                temperature: 0.3,
+                maxOutputTokens: 2500,
+              },
+            }),
+          }
+        )
+
+        if (response.ok) {
+          geminiData = await response.json()
+          if (geminiData?.candidates?.[0]?.content?.parts?.[0]?.text) break
+        }
+      } catch (e) {
+        console.warn(`Model ${model} failed in symptom-analyze:`, e)
+      }
+    }
+
+    if (!geminiData) {
       return NextResponse.json(buildFallback(symptoms, language))
     }
 

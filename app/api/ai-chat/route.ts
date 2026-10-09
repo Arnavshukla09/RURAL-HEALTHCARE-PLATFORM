@@ -69,36 +69,65 @@ Guidelines for your medical advice:
     // Add current message
     contents.push({ role: "user", parts: [{ text: message }] })
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents,
-          generationConfig: { temperature: 0.4, maxOutputTokens: 2000 },
-          safetySettings: [
-            { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_ONLY_HIGH" },
-            { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_ONLY_HIGH" },
-            { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_ONLY_HIGH" },
-            { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_ONLY_HIGH" },
-          ],
-        }),
-      }
-    )
+    // Try models in order of speed and availability
+    const candidateModels = [
+      "gemini-1.5-flash",
+      "gemini-2.0-flash",
+      "gemini-1.5-flash-8b",
+      "gemini-2.0-flash-lite",
+      "gemini-1.5-pro",
+    ]
 
-    if (!response.ok) {
-      const errBody = await response.text()
-      console.error("Gemini API error:", response.status, errBody)
-      return NextResponse.json({ error: "AI service error", details: errBody }, { status: 502 })
+    let reply: string | null = null
+    let lastErrorDetails = ""
+
+    for (const model of candidateModels) {
+      try {
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents,
+              generationConfig: { temperature: 0.4, maxOutputTokens: 2000 },
+              safetySettings: [
+                { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_ONLY_HIGH" },
+                { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_ONLY_HIGH" },
+                { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_ONLY_HIGH" },
+                { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_ONLY_HIGH" },
+              ],
+            }),
+          }
+        )
+
+        if (response.ok) {
+          const data = await response.json()
+          reply = data.candidates?.[0]?.content?.parts?.[0]?.text || null
+          if (reply) break
+        } else {
+          lastErrorDetails = await response.text()
+          console.warn(`Model ${model} failed (${response.status}):`, lastErrorDetails)
+        }
+      } catch (err: any) {
+        lastErrorDetails = err.message || String(err)
+        console.warn(`Model ${model} fetch exception:`, lastErrorDetails)
+      }
     }
 
-    const data = await response.json()
-    const reply =
-      data.candidates?.[0]?.content?.parts?.[0]?.text ||
-      (language === "hi"
-        ? "क्षमा करें, मैं अभी जवाब नहीं दे पा रहा। कृपया पुनः प्रयास करें।"
-        : "Sorry, I couldn't process that. Please try again.")
+    if (!reply) {
+      // Local graceful fallback if all remote models fail or quota/key is invalid
+      const fallbackReply =
+        language === "hi"
+          ? "नमस्ते! आपकी सुरक्षा के लिए: यदि आपको तेज बुखार, सांस लेने में तकलीफ या गंभीर लक्षण हैं, तो तुरंत नजदीकी स्वास्थ्य केंद्र (PHC) या 108 पर संपर्क करें। हम आपके प्रश्न का जल्द समाधान करेंगे।"
+          : "Hello! For your health and safety: If you are experiencing high fever, chest pain, or severe difficulty breathing, please consult your nearest Primary Health Centre (PHC) or call 108 immediately. We are processing your request."
+
+      return NextResponse.json({
+        reply: fallbackReply,
+        fallback: true,
+        details: lastErrorDetails,
+      })
+    }
 
     return NextResponse.json({ reply })
   } catch (error: any) {
