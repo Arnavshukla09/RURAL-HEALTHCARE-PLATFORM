@@ -97,7 +97,6 @@ Rules:
       return NextResponse.json(buildFallback(symptoms, language))
     }
 
-    const geminiData = await response.json()
     const rawText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || ""
 
     // Strip markdown code fences if present
