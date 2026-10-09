@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
+## [v1.2.0] - 2026-10-10 — Clinical Medical Brain, Multi-Model Resilient AI & Offline PWA
+ 
+### Added
+- **Clinical Decision Knowledge Engine (`lib/ai/medical-brain.ts`):** High-precision clinical decision engine designed for rural medical triage. Resolves nuanced follow-up questions regarding diet (capsaicin/spicy food restriction, soluble vs. insoluble fiber, temporary lactose intolerance during gastroenteritis), hydration (ORS, coconut water, rice starch), and emergency red flags.
+- **Multi-Model LLM Resilience (`app/api/ai-chat/route.ts` & `app/api/symptom-analyze/route.ts`):** Cascading candidate fallback loop through `gemini-1.5-flash`, `gemini-2.0-flash`, `gemini-1.5-flash-8b`, `gemini-2.0-flash-lite`, and `gemini-1.5-pro` to prevent 404/502 errors if any single Google API endpoint is deprecated or rate-limited.
+- **Self-Improving Query Learning Engine (`lib/ai/query-learner.ts`):** Client-side TF-IDF similarity cache backed by browser IndexedDB (`ruralhealth_ai`). Repeated queries load with 0ms server latency, reducing API consumption. Features user feedback weighting (Thumbs Up / Down).
+- **Offline Medical FAQ & Triage Engine (`lib/offline/offline-ai.ts`):** Curated static medical triage rules based on NHP/WHO India guidelines. Runs 100% offline in Airplane Mode.
+- **Multilingual Speech System (`lib/ai/speech.ts`):** Voice recognition and text-to-speech audio with Hinglish transliteration for Indian English and Hindi speakers.
+- **Auto-Submission Symptom Triage Flow:** Step 4 of `SymptomChecker.tsx` now automatically submits the clinical summary to the assistant, removing the need for a manual click on the send button.
+
+### Fixed
+- **Vercel Build Compilation Errors:** Fixed duplicate identifier in `symptom-analyze/route.ts` and resolved TypeScript typing on `cachedHit.response` in `SymptomChecker.tsx`.
+- **Eliminated Generic Chat Disconnects:** Replaced generic emergency warning loops with context-aware clinical diet and triage answering.
+
+---
+
 ## [v1.1.1] - 2026-08-11 — Security & RLS Hotfixes
 
 ### Security

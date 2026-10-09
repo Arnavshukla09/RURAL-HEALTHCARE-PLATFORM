@@ -24,9 +24,16 @@ Access to quality healthcare in rural regions is heavily limited by geography, a
 - **Doctors:** Access a dedicated dashboard to review patient histories, approve consultation requests, and conduct video calls.
 - **Admins:** Oversee the entire ecosystem, manage medical records, verify doctors, and organize regional health camps.
 
-### 🤖 AI-Powered Health Triage
-- **Symptom Checker:** A guided triage flow leveraging **Google Gemini Flash Lite** to analyze symptoms, categorize urgency, and suggest immediate next steps before a human doctor is available.
-- **Persistent Health Assistant:** A context-aware chatbot available globally across the application for immediate Q&A and guidance.
+### 🤖 Resilient Offline-First AI & Medical Brain
+- **Tiered Multi-Model LLM Cascade:** Routes queries through an automatic fallback chain (`gemini-1.5-flash` → `gemini-2.0-flash` → `gemini-1.5-flash-8b` → `gemini-2.0-flash-lite` → `gemini-1.5-pro`) ensuring queries never return unhandled `502` or `500` errors.
+- **Clinical Decision Knowledge Engine (`medical-brain.ts`):** Context-aware clinical decision engine resolving follow-ups on diet (spicy foods, soluble vs. insoluble fiber, milk/dairy), hydration formulas (ORS, coconut water), and warning signs before making remote calls.
+- **Self-Improving Query Learning Engine (`query-learner.ts`):** Uses client-side **TF-IDF similarity** stored in IndexedDB (`ruralhealth_ai`). Repeated queries load with 0ms server latency and zero API consumption. Includes user feedback weighting (Thumbs Up / Down).
+- **Zero-Failure Offline Symptom Triage (`offline-ai.ts`):** Evaluates selected symptom combinations, categorizes clinical urgency (Emergency, High, Medium, Low), and delivers rural-appropriate home care and PHC/CHC guidance without internet connectivity.
+- **Multilingual Voice Recognition & Synthesis (`speech.ts`):** Voice input and text-to-speech audio with Hinglish transliteration for Indian English and Hindi speakers.
+
+### 📱 Progressive Web Application (PWA) & Mobile Installation
+- **Offline Mode:** Full service worker caching and local storage persistence allow key triage flows to run in Airplane Mode.
+- **Mobile Installation:** Native install prompts for Android (Chrome) and iOS (Safari) with standalone display, home screen icon, and splash screen.
 
 ### 🗺️ Geographical Mapping (PostGIS)
 - **Interactive Map:** Built with React-Leaflet and OpenStreetMap.
