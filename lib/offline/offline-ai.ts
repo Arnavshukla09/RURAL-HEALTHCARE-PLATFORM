@@ -53,7 +53,22 @@ export const MEDICAL_FAQ: Record<string, OfflineAnswer> = {
     category: 'urgent', confidence: 'high', referTo: 'PHC'
   },
 
-  // Malaria
+  // Headache
+  'headache': {
+    answer: 'For a mild to moderate headache: Rest in a quiet, dark room, stay well hydrated with water, and gently massage your temples or neck. Over-the-counter paracetamol (500mg) can help. If headache is sudden and unusually severe ("thunderclap"), accompanied by neck stiffness, vision loss, vomiting, or weakness on one side, visit an emergency clinic or call 108 immediately.',
+    answerHi: 'हल्के से मध्यम सिरदर्द के लिए: शांत और अंधेरे कमरे में आराम करें, पर्याप्त पानी पिएं। पैरासिटामोल (500mg) ले सकते हैं। यदि सिरदर्द अचानक और बहुत तीव्र हो, गर्दन में अकड़न हो या उल्टी आए, तो तुरंत अस्पताल जाएं या 108 पर कॉल करें।',
+    category: 'common', confidence: 'high', referTo: 'PHC'
+  },
+  'cough': {
+    answer: 'For common cough and throat irritation: Drink warm water, herbal tea (tulsi/ginger), or honey with warm water. Steam inhalation helps loosen congestion. If cough lasts more than 2 weeks, has blood, or comes with night sweats and weight loss, visit a PHC for a free Sputum Test to screen for TB.',
+    answerHi: 'सामान्य खांसी और गले में खराश के लिए: गुनगुना पानी, तुलसी/अदरक की चाय या शहद का सेवन करें। भाप लें। यदि खांसी 2 सप्ताह से अधिक रहे या खून आए, तो टीबी की मुफ्त जांच के लिए तुरंत PHC जाएं।',
+    category: 'common', confidence: 'high', referTo: 'PHC'
+  },
+  'cold': {
+    answer: 'For a common cold: Rest, drink warm fluids, and take steam inhalation 2-3 times daily. Paracetamol helps relieve body aches and mild fever. Most viral colds improve within 5-7 days. Consult a PHC if breathing becomes difficult or fever exceeds 102°F.',
+    answerHi: 'सर्दी-जुकाम के लिए: आराम करें, गर्म तरल पदार्थ पिएं और दिन में 2-3 बार भाप लें। बदन दर्द के लिए पैरासिटामोल ले सकते हैं। 5-7 दिनों में यह ठीक हो जाता है। यदि सांस लेने में कठिनाई हो तो PHC जाएं।',
+    category: 'common', confidence: 'high', referTo: 'PHC'
+  },
   'malaria': {
     answer: 'Malaria symptoms: Fever with chills and sweating, headache, body ache, coming in cycles every 1-3 days. Go to PHC for a free Rapid Diagnostic Test (RDT). Treatment (ACT medicine) is free at all government facilities. Spray your home and sleep under a mosquito net.',
     answerHi: 'मलेरिया के लक्षण: ठंड और पसीने के साथ बुखार, सिरदर्द, हर 1-3 दिन में आना। PHC में मुफ्त RDT जांच कराएं। सरकारी अस्पताल में दवाई मुफ्त मिलती है।',
@@ -180,7 +195,8 @@ export function lookupOffline(query: string): OfflineAnswer | null {
 
   // Partial Hindi keyword scan
   const HINDI_KEYWORDS: Record<string, string> = {
-    'बुखार': 'fever', 'खांसी': 'tuberculosis', 'पेट दर्द': 'diarrhea',
+    'बुखार': 'fever', 'खांसी': 'cough', 'जुकाम': 'cold', 'सर्दी': 'cold', 'सिरदर्द': 'headache',
+    'सिर दर्द': 'headache', 'पेट दर्द': 'diarrhea',
     'उल्टी': 'diarrhea', 'दस्त': 'diarrhea', 'मलेरिया': 'malaria',
     'डेंगू': 'dengue', 'TB': 'tuberculosis', 'गर्भ': 'pregnancy',
     'प्रसव': 'delivery', 'बच्चा': 'child vaccination', 'टीका': 'child vaccination',
