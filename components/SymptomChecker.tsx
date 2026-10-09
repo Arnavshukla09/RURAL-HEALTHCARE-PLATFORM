@@ -205,7 +205,7 @@ export function SymptomChecker({ language }: SymptomCheckerProps) {
       if (cachedHit.found && cachedHit.response) {
         setChatMessages(prev => [...prev, {
           role: "assistant",
-          content: cachedHit.response,
+          content: cachedHit.response || "",
         }])
         setChatLoading(false)
         return
