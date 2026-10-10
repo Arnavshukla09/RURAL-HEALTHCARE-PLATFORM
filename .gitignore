@@ -24,3 +24,11 @@ playwright/.cache/
 scripts/lighthouse_report.json
 scripts/benchmark_results.json
 benchmark_results.json
+scripts/*_report.json
+
+# security & temporary scratch files
+scripts/replacements.txt
+scripts/scrub_keys.ps1
+env_search.txt
+supabase/.temp/
+*.tsbuildinfo

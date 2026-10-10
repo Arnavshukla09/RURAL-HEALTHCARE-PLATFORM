@@ -1,10 +1,19 @@
 import { test, expect } from '@playwright/test';
 
-// Roles and their test credentials
+// Roles and their test credentials (read from env vars)
 const ROLES = {
-  admin: { email: 'admin@ruralhealth.com', password: 'Admin@123' },
-  doctor: { email: 'doctor@ruralhealth.com', password: 'Doctor@123' },
-  patient: { email: 'patient@ruralhealth.com', password: 'Patient@123' }
+  admin: {
+    email: process.env.E2E_ADMIN_EMAIL || 'admin@ruralhealth.com',
+    password: process.env.E2E_ADMIN_PASSWORD || 'Admin@123'
+  },
+  doctor: {
+    email: process.env.E2E_DOCTOR_EMAIL || 'doctor@ruralhealth.com',
+    password: process.env.E2E_DOCTOR_PASSWORD || 'Doctor@123'
+  },
+  patient: {
+    email: process.env.E2E_PATIENT_EMAIL || 'patient@ruralhealth.com',
+    password: process.env.E2E_PATIENT_PASSWORD || 'Patient@123'
+  }
 };
 
 // Helper function to log in
