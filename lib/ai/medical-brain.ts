@@ -1,177 +1,211 @@
 /**
  * lib/ai/medical-brain.ts
  *
- * Comprehensive Clinical Decision & Question-Answering Knowledge Engine
- * Curated from WHO India, AIIMS Triage Protocols, and ICMR Rural Health Guidelines.
- *
- * Covers:
- * 1. Deep Clinical Follow-ups: Diet (spicy, fiber, dairy, hydration), Medication, Activities, Rest, Red flags.
- * 2. 70+ Combinations across all body parts and symptoms from SymptomChecker.
- * 3. Multi-turn conversational understanding (e.g. "can I eat spicy food", "translate to Hindi", "what about fiber").
+ * Scored, context-gated clinical knowledge engine for rural healthcare.
+ * - Strict word-boundary matching (no loose substring collisions).
+ * - Priority-weighted multi-factor scoring (emergency > red-flag > symptom > diet).
+ * - Context-gated diet guidance (spicy, fiber, dairy only trigger when diarrhea/GI context is active).
+ * - Age/weight relative fever and medication wording (no rigid adult dosages).
  */
 
-export interface MedicalKnowledgeEntry {
+export interface MedicalBrainEntry {
+  id: string
+  priority: number // 100 = emergency, 80 = red flag, 60 = acute symptom, 40 = diet/home care
+  requiresGIContext?: boolean
   patterns: RegExp[]
   keywords: string[]
   en: string
   hi: string
-  urgency?: 'low' | 'medium' | 'high' | 'emergency'
 }
 
-export const CLINICAL_KNOWLEDGE_BASE: MedicalKnowledgeEntry[] = [
-  // ── 1. DIET: SPICY & OILY FOOD ──
+export const CLINICAL_KNOWLEDGE_BASE: MedicalBrainEntry[] = [
+  // ── PRIORITY 100: EMERGENCY & RED FLAGS ──
   {
+    id: "emergency-chest-pain",
+    priority: 100,
     patterns: [
-      /spicy/i, /oily/i, /mirch/i, /masala/i, /fried/i, /junk food/i,
-      /तीखा/i, /मसालेदार/i, /तला/i, /मिर्च/i
+      /\b(chest pain|heart attack|angina)\b/i,
+      /\b(seene mein dard|chhati me dard)\b/i,
+      /\b(सीने में दर्द|दिल का दौरा)\b/i,
     ],
-    keywords: ['spicy', 'oily', 'mirch', 'masala', 'fried', 'spices'],
-    en: "No, you should strictly avoid spicy, oily, and fried foods right now.\n\n• Why: Spicy foods (chillies, heavy masalas) irritate the inflamed stomach and intestinal lining, worsening diarrhea, nausea, stomach cramps, and acidity.\n• What to eat instead: Bland, easily digestible foods like plain moong dal khichdi, boiled potatoes, plain white rice, curd/buttermilk, or toasted bread.",
-    hi: "नहीं, आपको इस समय तीखा, तला हुआ और मसालेदार खाना बिल्कुल नहीं खाना चाहिए।\n\n• कारण: मिर्च और भारी मसाले पेट और आंतों की परत में जलन पैदा करते हैं, जिससे दस्त, उल्टी, पेट दर्द और गैस की समस्या और बढ़ जाती है।\n• इसकी जगह क्या खाएं: हल्का और सुपाच्य भोजन जैसे मूंग दाल की पतली खिचड़ी, सादे उबले चावल, दही/छाछ, उबला आलू या दलिया खाएं।"
+    keywords: ["chest pain", "heart", "cardiac", "seene mein dard"],
+    en: "🚨 CHEST PAIN IS A MEDICAL EMERGENCY:\n\n• Stop all physical activity immediately and sit upright.\n• If pain radiates to the left arm, jaw, neck, or is accompanied by breathlessness or cold sweating, CALL 108 AMBULANCE IMMEDIATELY.\n• Do not drive yourself. Stay calm while emergency responders arrive.",
+    hi: "🚨 सीने का दर्द एक आपातकालीन स्थिति (Emergency) है:\n\n• तुरंत सारा काम बंद करके सीधे बैठ जाएं।\n• यदि दर्द बाएं हाथ, जबड़े या गर्दन में फैल रहा हो या पसीना व सांस फूल रही हो, तो तुरंत 108 पर कॉल करें।\n• खुद गाड़ी न चलाएं। आपातकालीन सहायता आने तक शांत रहें।",
+  },
+  {
+    id: "emergency-respiratory",
+    priority: 100,
+    patterns: [
+      /\b(shortness of breath|cannot breathe|gasping for air|suffocating)\b/i,
+      /\b(saans lene me takleef|saans phoolna)\b/i,
+      /\b(सांस लेने में तकलीफ|सांस फूलना)\b/i,
+    ],
+    keywords: ["shortness of breath", "breathing", "suffocating", "saans"],
+    en: "🚨 SEVERE BREATHING DIFFICULTY IS AN EMERGENCY:\n\n• Sit upright; do not lie flat.\n• Loosen tight clothing around the neck and chest.\n• Call 108 Ambulance immediately or go to the nearest hospital casualty.",
+    hi: "🚨 सांस लेने में अत्यधिक कठिनाई आपातकालीन स्थिति है:\n\n• सीधे बैठें, सीधे न लेटें।\n• कपड़े ढीले करें।\n• तुरंत 108 एम्बुलेंस पर कॉल करें या नजदीकी अस्पताल जाएं।",
+  },
+  {
+    id: "emergency-hospital-red-flags",
+    priority: 85,
+    patterns: [
+      /\b(danger signs|red flag|when to go to hospital|serious signs)\b/i,
+      /\b(khatra|kab hospital jaye)\b/i,
+      /\b(अस्पताल कब जाएं|खतरे के लक्षण)\b/i,
+    ],
+    keywords: ["hospital", "emergency", "danger", "serious", "khatra"],
+    en: "Go to the nearest Hospital or Community Health Centre (CHC) immediately if you experience:\n\n1. Blood in vomit, cough, or stool\n2. Inability to keep any liquids down for 12+ hours\n3. Fever above 103°F not responding to medicine\n4. Drowsiness, confusion, or fainting\n5. Reduced urination for 8+ hours (severe dehydration)",
+    hi: "तुरंत अस्पताल या सामुदायिक स्वास्थ्य केंद्र (CHC) जाएं यदि:\n\n1. उल्टी, खांसी या मल में खून आए\n2. 12 घंटे से पानी भी पेट में न रुक रहा हो\n3. 103°F से अधिक तेज बुखार जो दवा से न उतरे\n4. बेहोशी, भ्रम या अत्यधिक कमजोरी हो\n5. 8 घंटे से पेशाब न आया हो (गंभीर निर्जलीकरण)",
   },
 
-  // ── 2. DIET: FIBER RICH FOOD ──
+  // ── PRIORITY 60: ACUTE SYMPTOM GUIDELINES ──
   {
+    id: "symptom-fever",
+    priority: 60,
     patterns: [
-      /fiber/i, /fibre/i, /raw salad/i, /raw vegetable/i, /bran/i,
-      /फाइबर/i, /रेशा/i, /सलाद/i
+      /\b(fever|high temperature|pyrexia)\b/i,
+      /\b(bukhar|tez bukhar)\b/i,
+      /\b(बुखार|तेज बुखार|तापमान)\b/i,
     ],
-    keywords: ['fiber', 'fibre', 'salad', 'raw', 'vegetables'],
-    en: "During active diarrhea, nausea, or stomach upset, avoid high-insoluble fiber foods (raw salads, raw green leaves, whole grains, nuts, and fibrous skins).\n\n• Why: Insoluble fiber speeds up intestinal movement and can worsen loose motions and cramping.\n• Soluble fiber is okay: Bananas, boiled apples, and oats (soluble fiber) help absorb water and firm up the stool. Re-introduce normal fiber only 2–3 days after your bowel movements return to normal.",
-    hi: "दस्त, उल्टी या पेट खराब होने के दौरान कच्चे सलाद, ज्यादा रेशेदार सब्जियां और साबुत अनाज (Insoluble Fiber) न खाएं।\n\n• कारण: यह आंतों की गति को तेज कर देता है, जिससे दस्त और मरोड़ बढ़ सकती है।\n• क्या खा सकते हैं: केला और सेब (Soluble Fiber) खा सकते हैं क्योंकि यह मल को बांधने में मदद करते हैं। सामान्य फाइबर युक्त खाना पेट पूरी तरह ठीक होने के 2-3 दिन बाद ही शुरू करें।"
+    keywords: ["fever", "temperature", "bukhar", "chills"],
+    en: "For fever (99°F–102°F):\n\n• Rest, stay well-hydrated, and apply room-temperature damp cloth sponging to the forehead.\n• Paracetamol may be used to lower fever — always follow the age/weight dosage instructions on the package or consult an ASHA worker/pharmacist.\n• If fever exceeds 103°F or lasts more than 3 days, get tested for Malaria/Dengue/Typhoid at your nearest PHC.",
+    hi: "बुखार (99°F–102°F) के लिए:\n\n• आराम करें, पर्याप्त पानी पिएं और माथे पर सामान्य पानी की ठंडी पट्टी रखें।\n• बुखार कम करने के लिए पैरासिटामोल का उपयोग कर सकते हैं — हमेशा दवा के पैकेट पर दी गई उम्र और वजन के अनुसार खुराक लें या ASHA कार्यकर्ता/फार्मासिस्ट से पूछें।\n• बुखार 103°F से अधिक हो या 3 दिन से अधिक रहे तो PHC में मलेरिया/डेंगू की जांच कराएं।",
+  },
+  {
+    id: "symptom-headache",
+    priority: 60,
+    patterns: [
+      /\b(headache|migraine|head pain|throbbing head)\b/i,
+      /\b(sir dard|sar dard|sirdard|sardard)\b/i,
+      /\b(सिरदर्द|सिर दर्द|माइग्रेन)\b/i,
+    ],
+    keywords: ["headache", "migraine", "head", "sir dard"],
+    en: "For headaches:\n\n• Rest in a quiet, dark room and drink plenty of water (dehydration is a frequent cause).\n• Gently massage the neck and temples.\n• Warning: A sudden, explosive 'thunderclap' headache, or headache with neck stiffness, vision change, or weakness requires immediate hospital emergency evaluation.",
+    hi: "सिरदर्द के लिए:\n\n• शांत, अंधेरे कमरे में आराम करें और भरपूर पानी पिएं।\n• माथे और गर्दन की हल्की मालिश करें।\n• चेतावनी: यदि अचानक असहनीय तीव्र सिरदर्द हो, गर्दन में अकड़न हो या उल्टी व चक्कर आएं, तो तुरंत अस्पताल जाएं।",
+  },
+  {
+    id: "symptom-vomiting-nausea",
+    priority: 60,
+    patterns: [
+      /\b(vomiting|nausea|throwing up|vomit)\b/i,
+      /\b(ulti|matli)\b/i,
+      /\b(उल्टी|मतली|जी मिचलाना)\b/i,
+    ],
+    keywords: ["vomit", "vomiting", "nausea", "ulti", "matli"],
+    en: "For vomiting and nausea:\n\n• Do not gulp large amounts of water at once; take 1–2 small sips every 5–10 minutes.\n• Sip warm water with ginger or fennel seeds (saunf).\n• Avoid lying flat right after drinking; keep the head elevated.\n• Consult a doctor if vomiting persists for more than 12 hours without retaining liquids.",
+    hi: "उल्टी और मतली के लिए:\n\n• एक साथ ज्यादा पानी न पिएं; हर 5-10 मिनट में 1-2 घूंट करके पिएं।\n• अदरक की चाय या सौंफ का उबला पानी पिएं।\n• कुछ भी पीने के तुरंत बाद सीधे न लेटें।\n• यदि उल्टी 12 घंटे से अधिक समय तक लगातार हो, तो तुरंत डॉक्टर से मिलें।",
   },
 
-  // ── 3. DIET: MILK & DAIRY ──
+  // ── PRIORITY 40: CONTEXT-GATED DIETARY & RECOVERY RULES ──
   {
+    id: "diet-spicy-food",
+    priority: 40,
+    requiresGIContext: true,
     patterns: [
-      /milk/i, /dairy/i, /cheese/i, /paneer/i, /curd/i, /buttermilk/i, /chaas/i, /dahi/i,
-      /दूध/i, /दही/i, /छाछ/i, /पनीर/i
+      /\b(spicy food|spicy|chillies|chili|oily food|fried food|masala)\b/i,
+      /\b(tikha|teekha|masaledar|tala hua)\b/i,
+      /\b(तीखा|मसालेदार|तला हुआ|मिर्च)\b/i,
     ],
-    keywords: ['milk', 'dairy', 'curd', 'dahi', 'chaas', 'paneer'],
-    en: "Avoid regular whole milk, cheese, and heavy cream during stomach infection, as temporary lactose intolerance is common during diarrhea.\n\n• Fresh Curd (Dahi) and Buttermilk (Chaas) are strongly recommended: They contain natural probiotics (Lactobacillus) which soothe the gut and restore healthy digestive bacteria.",
-    hi: "पेट खराब या दस्त के दौरान सादा दूध और पनीर से बचें, क्योंकि इस समय पेट लैक्टोज पचा नहीं पाता।\n\n• ताजा दही और छाछ (मट्ठा) बहुत फायदेमंद हैं: इनमें प्रोबायोटिक्स (अच्छे बैक्टीरिया) होते हैं जो आंतों को ठंडा करते हैं और पाचन को जल्दी ठीक करते हैं।"
+    keywords: ["spicy", "oily", "chili", "masala", "tikha", "teekha"],
+    en: "No, you should strictly avoid spicy, oily, and fried foods right now.\n\n• Why: Chillies and heavy masalas irritate the inflamed stomach and intestinal lining, worsening loose motions, cramping, and acidity.\n• What to eat instead: Bland, soothing meals such as plain moong dal khichdi, boiled potatoes, boiled white rice, and fresh curd.",
+    hi: "नहीं, आपको इस समय तीखा, तला हुआ और मसालेदार खाना बिल्कुल नहीं खाना चाहिए।\n\n• कारण: मिर्च और मसाले आंतों में जलन पैदा करते हैं, जिससे दस्त, पेट दर्द और मरोड़ बढ़ जाती है।\n• क्या खाएं: हल्का सुपाच्य भोजन जैसे मूंग दाल की खिचड़ी, सादे उबले चावल, उबला आलू और ताजा दही लें।",
   },
-
-  // ── 4. HYDRATION & ORS ──
   {
+    id: "diet-fiber-food",
+    priority: 40,
+    requiresGIContext: true,
     patterns: [
-      /ors/i, /hydration/i, /water/i, /fluid/i, /dehydration/i, /coconut water/i, /nimbu pani/i,
-      /ओआरएस/i, /पानी/i, /तरल/i, /नारियल पानी/i, /नींबू पानी/i
+      /\b(fiber rich|fiber|fibre|raw salad|raw vegetables|bran)\b/i,
+      /\b(resha|salad)\b/i,
+      /\b(फाइबर|रेशा|कच्चा सलाद)\b/i,
     ],
-    keywords: ['ors', 'water', 'dehydration', 'coconut', 'hydration', 'fluids'],
-    en: "Proper hydration is the single most critical treatment for diarrhea, vomiting, or fever.\n\n• ORS (Oral Rehydration Solution): Drink 1 glass of ORS after every loose motion or vomit. Available free at any PHC/Anganwadi.\n• Home Recipe: Mix 6 level teaspoons of sugar + 1/2 teaspoon of salt in 1 litre of clean boiled water.\n• Also recommended: Coconut water, light rice starch (maal/kanji), and dal water.",
-    hi: "दस्त, उल्टी या बुखार में डिहाइड्रेशन (पानी की कमी) से बचना सबसे महत्वपूर्ण है।\n\n• ORS (जीवन रक्षक घोल): हर बार दस्त या उल्टी के बाद 1 गिलास ORS पिएं। यह सरकारी स्वास्थ्य केंद्र या आंगनवाड़ी में मुफ्त मिलता है।\n• घर पर बनाने का तरीका: 1 लीटर उबले और ठंडे पानी में 6 चम्मच चीनी और आधा चम्मच नमक घोलें।\n• अन्य विकल्प: नारियल पानी, चावल का मांड और पतली दाल का पानी पिएं।"
+    keywords: ["fiber", "fibre", "salad", "raw vegetables"],
+    en: "During active stomach upset or diarrhea, avoid high-insoluble fiber (raw salads, raw leafy greens, whole nuts, and bran).\n\n• Insoluble fiber speeds intestinal transit and can aggravate cramping.\n• Soluble fiber is beneficial: Ripe bananas, boiled apples, and oats help absorb excess fluid and firm up the stool. Resume normal high-fiber foods only 2–3 days after recovery.",
+    hi: "दस्त या पेट खराब के दौरान कच्चे सलाद और साबुत अनाज (Insoluble Fiber) से बचें।\n\n• यह आंतों की गति तेज करता है जिससे दस्त बढ़ सकते हैं।\n• क्या ले सकते हैं: केला और सेब (Soluble Fiber) फायदेमंद हैं क्योंकि ये मल को बांधते हैं। सामान्य सब्जियां और सलाद पेट पूरी तरह ठीक होने के 2-3 दिन बाद ही लें।",
   },
-
-  // ── 5. FEVER & TEMPERATURE MANAGEMENT ──
   {
+    id: "diet-dairy-milk",
+    priority: 40,
+    requiresGIContext: true,
     patterns: [
-      /fever/i, /temperature/i, /paracetamol/i, /dolo/i, /bukhar/i, /chills/i,
-      /बुखार/i, /तापमान/i, /पैरासिटामोल/i, /ठंड/i
+      /\b(milk|dairy|cheese|paneer|curd|buttermilk|chaas|dahi)\b/i,
+      /\b(doodh|paneer|dahi|chaach)\b/i,
+      /\b(दूध|पनीर|दही|छाछ|मट्ठा)\b/i,
     ],
-    keywords: ['fever', 'temperature', 'paracetamol', 'bukhar', 'chills'],
-    en: "For fever (99°F–102°F):\n\n• Take Paracetamol (500mg or 650mg for adults) every 6–8 hours after food if needed (maximum 3g/day).\n• Use a room-temperature damp cloth sponge on the forehead, neck, and armpits. Never use ice or very cold water.\n• Wear light cotton clothing and drink plenty of fluids.\n• Red Flag: If fever crosses 103°F or lasts beyond 3 days with shivering, test for Malaria/Dengue/Typhoid at the nearest PHC.",
-    hi: "बुखार (99°F–102°F) के लिए:\n\n• वयस्क जरूरत पड़ने पर भोजन के बाद पैरासिटामोल (500mg या 650mg) हर 6-8 घंटे में ले सकते हैं।\n• माथे, गर्दन और बगल पर सामान्य पानी की ठंडी पट्टियां रखें। बर्फ का पानी न इस्तेमाल करें।\n• हल्के सूती कपड़े पहनें और खूब पानी पिएं।\n• खतरे का संकेत: यदि बुखार 103°F से अधिक हो या 3 दिन से ज्यादा रहे, तो तुरंत PHC जाकर मलेरिया, डेंगू या टाइफाइड की जांच कराएं।"
+    keywords: ["milk", "dairy", "cheese", "curd", "dahi", "chaas"],
+    en: "Avoid whole milk and heavy paneer during stomach infection, as temporary lactose intolerance commonly occurs during diarrhea.\n\n• Fresh Curd (Dahi) and Buttermilk (Chaas) are strongly recommended: They contain natural gut probiotics (Lactobacillus) which soothe the digestive tract and help restore normal flora.",
+    hi: "दस्त के दौरान सादा दूध और पनीर न लें, क्योंकि इस समय पेट दूध पचा नहीं पाता।\n\n• ताजा दही और छाछ (मट्ठा) बहुत लाभदायक हैं: इनमें प्राकृतिक प्रोबायोटिक्स होते हैं जो पेट को ठंडा करते हैं और पाचन को सुधारते हैं।",
   },
-
-  // ── 6. VOMITING & NAUSEA REMEDIES ──
   {
+    id: "diet-ors-hydration",
+    priority: 45,
     patterns: [
-      /vomit/i, /nausea/i, /ulti/i, /matli/i,
-      /उल्टी/i, /मतली/i
+      /\b(ors|oral rehydration|hydration|coconut water|dehydration)\b/i,
+      /\b(nimbu pani|paani)\b/i,
+      /\b(ओआरएस|जीवन रक्षक घोल|नारियल पानी|निर्जलीकरण)\b/i,
     ],
-    keywords: ['vomit', 'vomiting', 'nausea', 'ulti', 'matli'],
-    en: "For nausea and vomiting:\n\n• Do not gulp large glasses of water at once; take tiny sips (1–2 spoonfuls) every 5–10 minutes.\n• Sip ginger tea or water boiled with fennel seeds (saunf) and mint (pudina).\n• Avoid lying down flat immediately after drinking or eating; keep your head elevated.\n• Consult a doctor for anti-emetic medication (such as Ondansetron) if vomiting continues for more than 12 hours.",
-    hi: "उल्टी और मतली (जी मिचलाना) के लिए:\n\n• एक बार में ज्यादा पानी न पिएं; हर 5-10 मिनट में 1-2 चम्मच करके घूंट-घूंट पिएं।\n• अदरक की चाय, सौंफ का उबला पानी या पुदीने का रस पिएं।\n• कुछ भी खाने या पीने के तुरंत बाद सीधे न लेटें; सिर थोड़ा ऊंचा रखें।\n• यदि उल्टी 12 घंटे से लगातार हो रही हो और पानी भी न रुक रहा हो, तो तुरंत डॉक्टर से संपर्क करें।"
+    keywords: ["ors", "hydration", "dehydration", "coconut water"],
+    en: "Adequate hydration is the most crucial treatment for fever, diarrhea, and vomiting:\n\n• ORS (Oral Rehydration Solution): Drink 1 cup after every loose motion or vomit. Available free at any government health center.\n• Home ORS Recipe: Mix 6 level teaspoons of sugar and 1/2 teaspoon of salt in 1 litre of clean boiled water.\n• Also beneficial: Fresh coconut water, thin dal water, and rice starch (kanji).",
+    hi: "बुखार, दस्त और उल्टी में पानी की कमी (डिहाइड्रेशन) से बचना सबसे महत्वपूर्ण है:\n\n• ORS घोल: हर दस्त या उल्टी के बाद 1 कप पिएं। यह सरकारी स्वास्थ्य केंद्र पर मुफ्त मिलता है।\n• घर पर बनाने की विधि: 1 लीटर उबले पानी में 6 चम्मच चीनी और आधा चम्मच नमक घोलें।\n• अन्य तरल: नारियल पानी, पतली दाल का पानी और चावल का मांड पिएं।",
   },
-
-  // ── 7. ABDOMINAL PAIN & BLOATING ──
-  {
-    patterns: [
-      /bloat/i, /stomach ache/i, /abdominal pain/i, /cramp/i, /gas/i, /pet dard/i,
-      /पेट दर्द/i, /मरोड़/i, /गैस/i, /अफारा/i
-    ],
-    keywords: ['bloating', 'pain', 'cramps', 'gas', 'stomach', 'bloat'],
-    en: "For stomach cramps and bloating:\n\n• Drink warm water with a pinch of roasted cumin (jeera) and asafoetida (hing).\n• Apply a warm compress or warm water bottle to your lower abdomen.\n• Avoid carbonated drinks, chewing gum, cabbage, and beans while bloated.\n• Warning: If the stomach pain is sudden, extremely severe, localized to the lower right side (possible appendicitis), or accompanied by a rigid belly, go to a hospital immediately.",
-    hi: "पेट दर्द, मरोड़ और गैस (Bloating) के लिए:\n\n• गुनगुने पानी में भुना जीरा और एक चुटकी हींग मिलाकर पिएं।\n• पेट पर गर्म पानी की सिकाई करें।\n• जब तक पेट में भारीपन हो, तब तक गोभी, राजमा, छोले और कोल्ड ड्रिंक्स बिल्कुल न लें।\n• चेतावनी: यदि पेट में असहनीय तेज दर्द हो, विशेषकर दाईं तरफ (अपेंडिक्स का खतरा), तो बिना देर किए अस्पताल जाएं।"
-  },
-
-  // ── 8. HEADACHE MANAGEMENT ──
-  {
-    patterns: [
-      /headache/i, /migraine/i, /sir dard/i, /sar dard/i,
-      /सिरदर्द/i, /सिर दर्द/i, /माइग्रेन/i
-    ],
-    keywords: ['headache', 'migraine', 'head', 'head pain'],
-    en: "For headaches:\n\n• Rest in a quiet, darkened room away from phone screens and loud noises.\n• Drink 2 large glasses of water — dehydration is one of the most common causes of headaches.\n• Gently massage temples and neck with warm mustard or eucalyptus oil.\n• Danger signs: Sudden explosive pain ('thunderclap'), stiffness in the neck, numbness, or fainting require urgent hospital emergency care.",
-    hi: "सिरदर्द के लिए:\n\n• फोन की स्क्रीन और तेज आवाज से दूर शांत, अंधेरे कमरे में आराम करें।\n• 2 गिलास पानी पिएं — पानी की कमी सिरदर्द का बहुत बड़ा कारण होती है।\n• माथे और गर्दन की हल्की मालिश करें।\n• खतरे के संकेत: अचानक बहुत तीव्र दर्द, गर्दन में अकड़न या चक्कर आकर गिरना गंभीर हो सकता है; तुरंत अस्पताल जाएं।"
-  },
-
-  // ── 9. CHEST PAIN & HEART WARNINGS ──
-  {
-    patterns: [
-      /chest pain/i, /heart/i, /seene mein dard/i, /cardiac/i,
-      /सीने में दर्द/i, /दिल/i, /हार्ट/i
-    ],
-    keywords: ['chest pain', 'heart', 'cardiac'],
-    en: "🚨 CHEST PAIN IS A MEDICAL EMERGENCY:\n\n• Stop all physical activity and sit down immediately in a comfortable upright position.\n• If the pain radiates to the left arm, jaw, shoulder, or is accompanied by cold sweating and breathlessness, CALL 108 AMBULANCE IMMEDIATELY.\n• Do not attempt to drive yourself. If prescribed sorbitrate or aspirin, take as instructed by your doctor.",
-    hi: "🚨 सीने का दर्द एक गंभीर आपातकालीन स्थिति (Emergency) है:\n\n• तुरंत बैठ जाएं और कोई भी काम बंद कर दें।\n• यदि दर्द बाएं हाथ, जबड़े, कंधे में फैल रहा हो या पसीना और सांस फूल रही हो, तो तुरंत 108 एम्बुलेंस पर कॉल करें।\n• खुद गाड़ी चलाकर न जाएं। नजदीकी अस्पताल के इमरजेंसी वार्ड में जाएं।"
-  },
-
-  // ── 10. RED FLAGS: WHEN TO GO TO HOSPITAL ──
-  {
-    patterns: [
-      /hospital/i, /doctor/i, /danger/i, /red flag/i, /emergency/i, /serious/i, /when to go/i,
-      /अस्पताल/i, /डॉक्टर/i, /खतरा/i, /गंभीर/i
-    ],
-    keywords: ['hospital', 'doctor', 'emergency', 'danger', 'when'],
-    en: "You must visit the Community Health Centre (CHC) or District Hospital immediately if you notice any of these danger signs:\n\n1. Blood in stool or vomit\n2. Inability to keep any liquid down for more than 12 hours\n3. High fever (>103°F) that does not reduce with medication\n4. Confusion, extreme drowsiness, or fainting\n5. Little or no urination for more than 8 hours (severe dehydration)\n6. Severe, unbearable abdominal pain",
-    hi: "यदि आपको इनमें से कोई भी लक्षण दिखे, तो बिना देर किए सामुदायिक स्वास्थ्य केंद्र (CHC) या जिला अस्पताल जाएं:\n\n1. मल या उल्टी में खून आना\n2. 12 घंटे से ज्यादा समय तक पानी भी पेट में न रुकना\n3. तेज बुखार (103°F से अधिक) जो दवा से भी न उतरे\n4. अत्यधिक कमजोरी, बेहोशी या भ्रम की स्थिति\n5. 8 घंटे से अधिक समय तक पेशाब न आना (गंभीर निर्जलीकरण)\n6. पेट में असहनीय तेज मरोड़ या दर्द"
-  }
 ]
 
-/**
- * Intelligent matcher that inspects context, query intent, and past history.
- */
-export function answerMedicalQuery(query: string, language: string = 'en', contextSymptoms: string[] = []): string | null {
+export interface ScoredMatchResult {
+  entry: MedicalBrainEntry
+  score: number
+}
+
+export function answerMedicalQuery(
+  query: string,
+  language: string = "en",
+  contextSymptoms: string[] = []
+): string | null {
   const q = query.trim().toLowerCase()
+  const lang = language === "hi" ? "hi" : "en"
 
-  // 1. Direct regex/pattern match from our clinical knowledge base
-  for (const entry of CLINICAL_KNOWLEDGE_BASE) {
-    if (entry.patterns.some(rx => rx.test(q))) {
-      return language === 'hi' ? entry.hi : entry.en
-    }
-  }
+  // Check if GI / diarrhea context is present in recent symptoms or query
+  const combinedContext = (contextSymptoms.join(" ") + " " + q).toLowerCase()
+  const hasGIContext = /\b(diarrhea|diarrhoea|vomit|vomiting|nausea|stomach|loose motion|loosemotion|bloat|cramp|dast|ulti|pet dard)\b/i.test(
+    combinedContext
+  )
 
-  // 2. Keyword score matching
-  let bestEntry: MedicalKnowledgeEntry | null = null
-  let maxScore = 0
+  let bestMatch: ScoredMatchResult | null = null
 
   for (const entry of CLINICAL_KNOWLEDGE_BASE) {
-    let score = 0
-    for (const kw of entry.keywords) {
-      if (q.includes(kw.toLowerCase())) score += 2
+    // If entry requires GI context (diet entries) and no GI context exists, skip
+    if (entry.requiresGIContext && !hasGIContext) {
+      continue
     }
-    if (score > maxScore && score >= 2) {
-      maxScore = score
-      bestEntry = entry
-    }
-  }
 
-  if (bestEntry) {
-    return language === 'hi' ? bestEntry.hi : bestEntry.en
-  }
-
-  // 3. Fallback based on known symptoms from the current triage context
-  if (contextSymptoms.length > 0) {
-    const sStr = contextSymptoms.join(' ').toLowerCase()
-    if (sStr.includes('diarrhea') || sStr.includes('vomit') || sStr.includes('stomach')) {
-      if (q.includes('eat') || q.includes('food') || q.includes('diet') || q.includes('खाना') || q.includes('भोजन')) {
-        return language === 'hi'
-          ? "पेट की समस्या और दस्त के दौरान: सादी मूंग दाल की खिचड़ी, उबले चावल, केला, ताजा दही/छाछ और ORS लें। तेल, मिर्च-मसाले, दूध और कच्चे सलाद से बचें।"
-          : "For stomach upset and diarrhea: Stick to the BRAT/bland diet — banana, white rice, applesauce, thin moong dal khichdi, and fresh curd. Avoid spicy foods, oily items, milk, and raw vegetables until you recover."
+    let patternScore = 0
+    for (const rx of entry.patterns) {
+      if (rx.test(q)) {
+        patternScore += 3
       }
     }
+
+    let keywordScore = 0
+    for (const kw of entry.keywords) {
+      const kwRegex = new RegExp(`\\b${kw}\\b`, "i")
+      if (kwRegex.test(q)) {
+        keywordScore += 1
+      }
+    }
+
+    const totalScore = patternScore + keywordScore
+    if (totalScore >= 3) {
+      // Prioritize higher total score, break ties by entry priority
+      if (
+        !bestMatch ||
+        totalScore > bestMatch.score ||
+        (totalScore === bestMatch.score && entry.priority > bestMatch.entry.priority)
+      ) {
+        bestMatch = { entry, score: totalScore }
+      }
+    }
+  }
+
+  if (bestMatch) {
+    return lang === "hi" ? bestMatch.entry.hi : bestMatch.entry.en
   }
 
   return null

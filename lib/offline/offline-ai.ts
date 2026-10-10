@@ -26,8 +26,8 @@ export const MEDICAL_FAQ: Record<string, OfflineAnswer> = {
 
   // Emergency triggers
   'chest pain': {
-    answer: 'Chest pain can be serious. Stop all activity and sit down immediately. If pain radiates to left arm or jaw, call 108 now. Do not eat or drink. Chew an aspirin (300mg) if available. This may be a heart attack.',
-    answerHi: 'सीने का दर्द गंभीर हो सकता है। तुरंत बैठ जाएं और 108 पर कॉल करें। दर्द बाएं हाथ या जबड़े तक जाए तो यह हार्ट अटैक हो सकता है।',
+    answer: 'Chest pain can be serious. Stop all activity and sit down immediately. If pain radiates to left arm or jaw, call 108 now. Do not eat or drink. If previously prescribed by a doctor, chew an aspirin. Otherwise do not self-medicate.',
+    answerHi: 'सीने का दर्द गंभीर हो सकता है। तुरंत बैठ जाएं और 108 पर कॉल करें। यदि डॉक्टर ने पहले एस्पिरिन बताई हो तो ही लें, खुद से दवा न लें।',
     category: 'emergency', confidence: 'high', emergency: true, referTo: '108'
   },
   'shortness of breath': {
@@ -200,7 +200,7 @@ export function lookupOffline(query: string): OfflineAnswer | null {
     'उल्टी': 'diarrhea', 'दस्त': 'diarrhea', 'मलेरिया': 'malaria',
     'डेंगू': 'dengue', 'TB': 'tuberculosis', 'गर्भ': 'pregnancy',
     'प्रसव': 'delivery', 'बच्चा': 'child vaccination', 'टीका': 'child vaccination',
-    'सांप': 'snake bite', 'जल': 'burn', 'सीने': 'chest pain',
+    'सांप': 'snake bite', 'जल गया': 'burn', 'जलना': 'burn', 'सीने': 'chest pain',
     'बेहोश': 'unconscious', 'सांस': 'shortness of breath', '108': '108',
     'आयुष्मान': 'ayushman bharat', 'JSSK': 'jssk', 'जन औषधि': 'jan aushadhi',
   }
