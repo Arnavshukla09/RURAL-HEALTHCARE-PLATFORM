@@ -17,8 +17,8 @@ const ROLES = {
 };
 
 // Helper function to log in
-async function login(page, email, password) {
-  page.on('console', msg => console.log('PAGE LOG:', msg.text()));
+async function login(page: any, email: string, password: string) {
+  page.on('console', (msg: any) => console.log('PAGE LOG:', msg.text()));
   await page.goto('/login');
   // Usually, unauthenticated users are shown the login page directly or via a login button.
   await page.goto('/login');

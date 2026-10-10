@@ -204,7 +204,7 @@ export function SymptomChecker({ language }: SymptomCheckerProps) {
 
   const reset = () => {
     setStep(1); setSelectedBodyPart(null); setSelectedSymptoms([])
-    setAiResult(null); setError(""); setPatientInfo({ age: "", gender: "male", temperature: "", tempUnit: "F", daysSick: "1" })
+    setAiResult(null); setError(""); setPatientInfo({ age: "", gender: "male", temperature: "", tempUnit: "F", daysSick: "1", intensity: "moderate" })
     setChatMessages([]); setChatInput("")
   }
 

@@ -6,6 +6,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
+## [v1.3.0] - 2026-10-10 — Master Chatbot Architecture Overhaul (Tiers 0–3)
+
+### Security
+- **Eliminated Exposed Endpoints**: Deleted `app/api/fix-db/route.ts` and `app/api/admin/seed-demo/route.ts`. Removed direct `pg` TCP dependency.
+- **Scrubbed Sensitive Files**: Cleaned uncommitted scratch credential artifacts and fortified `.gitignore` against tracking secrets.
+- **Server-Only Gemini Key**: Completely removed all references to `NEXT_PUBLIC_GEMINI_API_KEY`. API keys are passed strictly through the `x-goog-api-key` header on the server.
+
+### Architecture & Features
+- **Tier 0 Red-Flag Emergency Gate (`lib/chat/emergency.ts`)**: Instant rule-based detection for cardiac, stroke, poison, snakebite, and mental health crises. Delivers **108 Ambulance** or **Tele-MANAS 14416** with zero LLM calls.
+- **Tier 1 Structured Symptom Composition (`lib/symptoms/`)**: Deterministic composition of clinical advice based on anatomical systems, intensity, duration, and age group (with automatic escalation for infants and elders).
+- **Tier 2 Live Suggestions (`lib/chat/suggestions.ts`)**: Debounced prefix suggestions powered by `fuse.js` over 31 rural diseases, catalog symptoms, and common clinical FAQs.
+- **Tier 2 Curated Knowledge Engine (`lib/ai/medical-brain.ts`)**: Priority-scored matching with word boundary regexes and GI context gating.
+- **Tier 2b IndexedDB Cache (`lib/ai/query-learner.ts`)**: Language-isolated token matching with threshold gates (`>=0.75` direct, `0.50–0.75` suggestions, `<0.50` Tier 3 fallback).
+- **Tier 3 Resilient Gemini Layer (`lib/ai/gemini.ts`)**: Server-side fallback cascade (`gemini-3.5-flash`, `gemini-3.1-flash-lite`, `gemini-2.5-flash`) with 12s timeout and zero-500 fallback.
+- **Tier 3 Governance & Human Review (`supabase/05_chat_cache.sql` & `app/admin/chat-review/`)**: PII-filtered review queue allowing doctors and admins to promote approved responses to Tier 2.
+
+### Testing & Reliability
+- **Automated Vitest Test Suite**: Added 15 unit tests across emergency gates, medical brain regressions, symptom composition rules, and a 40-case golden routing suite (`tests/chat-routing.cases.json`). 100% pass rate.
+
+---
+
 ## [v1.2.0] - 2026-10-10 — Clinical Medical Brain, Multi-Model Resilient AI & Offline PWA
  
 ### Added
