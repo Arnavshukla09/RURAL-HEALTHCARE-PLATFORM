@@ -1,146 +1,101 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { rateLimit } from "@/lib/rate-limit"
+import { triageOffline } from "@/lib/offline/offline-ai"
+import { generateGeminiContent } from "@/lib/ai/gemini"
 
 export async function POST(request: NextRequest) {
-  const ip = request.headers.get("x-forwarded-for") ?? "127.0.0.1"
-  if (!(await rateLimit(ip))) {
-    return NextResponse.json({ error: "Too many requests" }, { status: 429 })
-  }
-
   try {
+    const forwardedHeader = request.headers.get("x-forwarded-for")
+    const clientIp = forwardedHeader ? forwardedHeader.split(",")[0].trim() : "127.0.0.1"
+
+    if (!(await rateLimit(clientIp))) {
+      return NextResponse.json({ error: "Too many requests. Please try again shortly." }, { status: 429 })
+    }
+
     const body = await request.json()
-    const { age, gender, temperature, tempUnit, daysSick, bodyPart, symptoms, language } = body
+    const {
+      age = "unknown",
+      gender = "unknown",
+      temperature = "",
+      tempUnit = "F",
+      daysSick = "1",
+      bodyPart = "general",
+      symptoms = [],
+      language = "en",
+    } = body
 
-    if (!symptoms || symptoms.length === 0) {
-      return NextResponse.json({ error: "No symptoms provided" }, { status: 400 })
-    }
+    const sanitizedSymptoms = Array.isArray(symptoms)
+      ? symptoms.map((s) => String(s).trim().slice(0, 100)).filter(Boolean)
+      : []
 
-    const apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY
-    if (!apiKey) {
-      // Fallback: rule-based triage when no key configured
-      return NextResponse.json(buildFallback(symptoms, language))
-    }
+    const lang = language === "hi" ? "hi" : "en"
 
-    const lang = language === "hi" ? "Hindi and English" : "English"
-    const prompt = `You are a medical assistant for rural India. A patient needs health guidance.
-
-Patient Details:
-- Age: ${age || "unknown"}
-- Gender: ${gender || "unknown"}
-- Temperature: ${temperature ? temperature + "°" + (tempUnit || "F") : "not measured"}
-- Duration of symptoms: ${daysSick} day(s)
-- Body part affected: ${bodyPart || "general"}
-- Reported symptoms: ${symptoms.join(", ")}
-
-Analyze these symptoms and respond ONLY with valid JSON (no markdown, no code blocks) in this exact format:
+    const prompt = `You are an expert clinical triage assistant for rural Indian primary healthcare.
+Analyze the following patient report and return STRICTLY a JSON object with this exact schema:
 {
-  "urgency": "low|medium|high|emergency",
-  "possibleConditions": [
-    {"name": "Condition Name", "probability": "60%", "description": "brief description"}
-  ],
-  "immediateActions": ["action 1", "action 2", "action 3"],
-  "homeCare": ["tip 1", "tip 2", "tip 3"],
-  "whenToGoToHospital": "describe when to seek emergency care",
-  "specialistNeeded": "General Physician|Cardiologist|Pediatrician|etc",
-  "relevantDiseases": ["disease_key_1", "disease_key_2"],
-  "language": "${lang}"
+  "urgency": "low" | "medium" | "high" | "emergency",
+  "specialistNeeded": "string",
+  "immediateActions": ["string", "string"],
+  "homeCare": ["string", "string"],
+  "whenToGoToHospital": "string"
 }
 
+Patient Information:
+- Age: ${String(age).slice(0, 10)}
+- Gender: ${String(gender).slice(0, 10)}
+- Temperature: ${String(temperature).slice(0, 10)}°${String(tempUnit).slice(0, 2)}
+- Duration: ${String(daysSick).slice(0, 10)} days
+- Body Part: ${String(bodyPart).slice(0, 30)}
+- Reported Symptoms: ${sanitizedSymptoms.join(", ")}
+- Language: ${lang}
+
 Rules:
-- urgency=emergency: chest pain + breathing, unconsciousness, severe bleeding, stroke symptoms
-- urgency=high: high fever + 3+ symptoms, severe pain, rapid deterioration
-- urgency=medium: moderate symptoms persisting 2+ days, requires doctor visit
-- urgency=low: mild symptoms, manageable at home
-- possibleConditions: For mild symptoms, DO NOT list severe diseases (fake reports). List simple conditions like 'Common Cold', 'Mild Dehydration', or leave empty. Only list 2-4 actual diseases if symptoms strongly match.
-- relevantDiseases: list 1-3 disease keys ONLY from this exact list: [malaria, dengue, tuberculosis, typhoid, pneumonia, anemia, hypertension, diabetes, heart disease, stroke, covid-19, influenza, cholera, hepatitis b, asthma, copd, cataract, osteoporosis, arthritis, leprosy, chikungunya, diarrheal disease, measles, ear infection, skin infection, hiv/aids, polio, kidney disease, liver disease, epilepsy, dental caries]. If none apply, return an empty array [].
-- Keep responses culturally appropriate for rural India
-- CRITICAL: DO NOT output any internal thought process or reasoning steps. Output strictly the JSON object and absolutely nothing else.
-- ${language === "hi" ? "Provide immediateActions and homeCare in Hindi" : "Provide responses in English"}`
+1. Do not invent diagnoses or percentages.
+2. If severe emergency red flags exist, urgency must be "emergency" or "high".
+3. Provide practical rural home care (ORS, hydration, light khichdi).
+4. Output strictly the JSON object and no surrounding text or markdown.`
 
-    const candidateModels = [
-      "gemini-1.5-flash",
-      "gemini-2.0-flash",
-      "gemini-1.5-flash-8b",
-      "gemini-2.0-flash-lite",
-      "gemini-1.5-pro",
-    ]
+    const geminiResult = await generateGeminiContent([{ role: "user", parts: [{ text: prompt }] }])
 
-    let geminiData: any = null
+    if (geminiResult.reply && !geminiResult.fallback) {
+      const cleaned = geminiResult.reply
+        .replace(/```json\n?/gi, "")
+        .replace(/```\n?/g, "")
+        .trim()
 
-    for (const model of candidateModels) {
-      try {
-        const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: prompt }] }],
-              generationConfig: {
-                temperature: 0.3,
-                maxOutputTokens: 2500,
-              },
-            }),
-          }
-        )
+      const firstBrace = cleaned.indexOf("{")
+      const lastBrace = cleaned.lastIndexOf("}")
 
-        if (response.ok) {
-          geminiData = await response.json()
-          if (geminiData?.candidates?.[0]?.content?.parts?.[0]?.text) break
+      if (firstBrace !== -1 && lastBrace !== -1) {
+        try {
+          const parsed = JSON.parse(cleaned.slice(firstBrace, lastBrace + 1))
+          return NextResponse.json(parsed)
+        } catch {
+          // Fall through to deterministic triage on JSON parse failure
         }
-      } catch (e) {
-        console.warn(`Model ${model} failed in symptom-analyze:`, e)
       }
     }
 
-    if (!geminiData) {
-      return NextResponse.json(buildFallback(symptoms, language))
-    }
-
-    const rawText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || ""
-
-    // Strip markdown code fences if present
-    const cleaned = rawText.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim()
-
-    try {
-      const parsed = JSON.parse(cleaned)
-      return NextResponse.json(parsed)
-    } catch {
-      // JSON parse failed — return fallback
-      return NextResponse.json(buildFallback(symptoms, language))
-    }
+    // Deterministic safe fallback using offline triage
+    const offlineTriage = triageOffline(sanitizedSymptoms, lang)
+    return NextResponse.json({
+      urgency: offlineTriage.urgency,
+      specialistNeeded: offlineTriage.referTo === "108" ? "Emergency / Ambulance" : "General Physician / Medical Officer",
+      immediateActions: offlineTriage.immediateActions,
+      homeCare: offlineTriage.homeCare,
+      whenToGoToHospital: offlineTriage.whenToGoToHospital,
+      fallback: true
+    })
   } catch (error: any) {
-    console.error("Symptom analyze error:", error)
-    return NextResponse.json({ error: error.message || "Analysis failed" }, { status: 500 })
-  }
-}
-
-// Rule-based fallback when Gemini API key is not set or fails
-function buildFallback(symptoms: string[], language: string) {
-  const en = language !== "hi"
-  const highRisk = symptoms.some(s =>
-    ["Chest pain", "Shortness of breath", "Cough with blood", "Fainting", "Severe headache"].includes(s)
-  )
-  const medRisk = symptoms.length >= 3
-
-  const urgency = highRisk ? "high" : medRisk ? "medium" : "low"
-
-  return {
-    urgency,
-    possibleConditions: [
-      { name: en ? "Viral Infection" : "वायरल संक्रमण", probability: "50%", description: en ? "Common viral illness" : "सामान्य वायरल बीमारी" },
-      { name: en ? "Bacterial Infection" : "बैक्टीरियल संक्रमण", probability: "30%", description: en ? "May require antibiotics" : "एंटीबायोटिक की आवश्यकता हो सकती है" },
-    ],
-    immediateActions: en
-      ? ["Rest and stay hydrated", "Monitor temperature every 4 hours", "Avoid self-medication without guidance"]
-      : ["आराम करें और पानी पिएं", "हर 4 घंटे में बुखार मापें", "बिना सलाह के दवा न लें"],
-    homeCare: en
-      ? ["Drink ORS if experiencing diarrhea", "Use wet cloth for high fever", "Eat light, easily digestible food"]
-      : ["दस्त होने पर ORS पिएं", "तेज बुखार के लिए गीला कपड़ा लगाएं", "हल्का भोजन करें"],
-    whenToGoToHospital: en
-      ? "Go to hospital if fever exceeds 103°F, difficulty breathing, or symptoms worsen after 2 days."
-      : "अगर बुखार 103°F से ज्यादा हो, सांस लेने में तकलीफ हो, या 2 दिन बाद भी लक्षण बिगड़ें तो अस्पताल जाएं।",
-    specialistNeeded: "General Physician",
-    relevantDiseases: ["malaria", "dengue", "typhoid"],
+    console.error("Symptom analyze server error:", error)
+    const offlineTriage = triageOffline([], "en")
+    return NextResponse.json({
+      urgency: offlineTriage.urgency,
+      specialistNeeded: "Medical Officer",
+      immediateActions: offlineTriage.immediateActions,
+      homeCare: offlineTriage.homeCare,
+      whenToGoToHospital: offlineTriage.whenToGoToHospital,
+      fallback: true
+    })
   }
 }
