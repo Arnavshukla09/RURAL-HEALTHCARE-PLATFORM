@@ -65,7 +65,7 @@ export async function routeChatMessage(input: RouteChatInput): Promise<ChatResul
   }
 
   // ── 3. Tier 2: Static Medical FAQ ──────────────────────────────────────
-  const faqHit = lookupOffline(text)
+  const faqHit = lookupOffline(text) || lookupOffline(normalized)
   if (faqHit) {
     if (process.env.NODE_ENV === "development") {
       console.log("[ChatRouter] Responded via Tier 2 (Static FAQ)")
@@ -99,7 +99,7 @@ export async function routeChatMessage(input: RouteChatInput): Promise<ChatResul
   }
 
   // ── 5. Tier 3: Server Gemini API ───────────────────────────────────────
-  if (typeof navigator !== "undefined" && !navigator.onLine) {
+  if (typeof navigator !== "undefined" && navigator.onLine === false) {
     // Device is offline — deliver graceful offline clinical triage response
     return {
       reply:

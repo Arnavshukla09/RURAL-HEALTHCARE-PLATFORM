@@ -36,7 +36,7 @@ export function buildSymptomKey(input: TriageInput): string {
 
 export function composeResponse(input: TriageInput, language: string = "en"): ComposedTriageResult {
   const lang = language === "hi" ? "hi" : "en"
-  const urgency = computeSeverity(input)
+  let urgency = computeSeverity(input)
   const cacheKey = buildSymptomKey(input)
 
   const immediateActions: string[] = []
@@ -51,6 +51,8 @@ export function composeResponse(input: TriageInput, language: string = "en"): Co
     )
 
     if (hasAll) {
+      if (override.urgency === "emergency") urgency = "emergency"
+      else if (override.urgency === "high" && urgency !== "emergency") urgency = "high"
       immediateActions.push(lang === "hi" ? override.actionHi : override.actionEn)
       homeCare.push(lang === "hi" ? override.warningHi : override.warningEn)
     }

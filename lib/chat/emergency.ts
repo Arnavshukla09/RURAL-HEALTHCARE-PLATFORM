@@ -16,10 +16,10 @@ const EMERGENCY_PATTERNS = [
   // Cardiac / Severe respiratory
   /\b(chest pain|heart attack|heart failure)\b/i,
   /\b(shortness of breath|cannot breathe|suffocating|choking)\b/i,
-  /\b(seene mein dard|chhati me dard|saans lene me dikkat)\b/i,
+  /\b(seene mein dard|chhati me dard|saans lene me (dikkat|takleef))\b/i,
 
   // Neurological / Stroke
-  /\b(stroke|paralysis|unconscious|fainted|loss of consciousness)\b/i,
+  /\b(stroke(?! of luck)|paralysis(?! tick)|unconscious|fainted|loss of consciousness)\b/i,
   /\b(behhosh|behoshi|lakwa)\b/i,
 
   // Trauma / Poison / Environmental

@@ -188,9 +188,10 @@ function normalizeQuery(q: string): string {
 export function lookupOffline(query: string): OfflineAnswer | null {
   const normalized = normalizeQuery(query)
 
-  // Direct key match
+  // Word-boundary key match
   for (const [key, answer] of Object.entries(MEDICAL_FAQ)) {
-    if (normalized.includes(key)) return answer
+    const keyRegex = new RegExp(`\\b${key}\\b`, "i")
+    if (keyRegex.test(normalized)) return answer
   }
 
   // Partial Hindi keyword scan
