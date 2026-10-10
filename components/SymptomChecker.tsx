@@ -93,8 +93,15 @@ export function SymptomChecker({ language }: SymptomCheckerProps) {
 
   // Inline chat state
   const [chatInput, setChatInput] = useState("")
-  const [chatMessages, setChatMessages] = useState<{role: "user" | "assistant", content: string}[]>([])
+  const [chatMessages, setChatMessages] = useState<{
+    role: "user" | "assistant"
+    content: string
+    contentHi?: string
+    contentEn?: string
+    displayLang?: "en" | "hi"
+  }[]>([])
   const [chatLoading, setChatLoading] = useState(false)
+  const [translatingIdx, setTranslatingIdx] = useState<number | null>(null)
 
   // Speech Recognition state
   const [isListening, setIsListening] = useState(false)
@@ -176,7 +183,6 @@ export function SymptomChecker({ language }: SymptomCheckerProps) {
               data = {
                 ...data,
                 ...apiData,
-                // Keep composed emergency severity if rules detected emergency
                 urgency: composed.urgency === "emergency" ? "emergency" : apiData.urgency || composed.urgency,
               }
             }
@@ -190,10 +196,9 @@ export function SymptomChecker({ language }: SymptomCheckerProps) {
       setStep(4)
       
       const promptText = en 
-        ? `My symptoms are: ${selectedSymptoms.join(", ")}. Temperature: ${patientInfo.temperature ? patientInfo.temperature + "°" + patientInfo.tempUnit : 'normal'}. Duration: ${patientInfo.daysSick} days. Intensity: ${patientInfo.intensity}. The analysis urgency is '${data.urgency}'. What are the best home remedies, and what exact steps should I take based on this severity?`
-        : `मेरे लक्षण हैं: ${selectedSymptoms.map(s => SYMPTOM_HI[s] || s).join(", ")}। तापमान: ${patientInfo.temperature ? patientInfo.temperature + "°" + patientInfo.tempUnit : 'सामान्य'}। अवधि: ${patientInfo.daysSick} दिन। तीव्रता: ${patientInfo.intensity}। विश्लेषण की गंभीरता '${data.urgency === 'emergency' ? 'आपातकालीन' : data.urgency === 'high' ? 'उच्च' : data.urgency === 'medium' ? 'मध्यम' : 'कम'}' है। सबसे अच्छे घरेलू उपचार क्या हैं, और मुझे क्या कदम उठाने चाहिए?`
+        ? `What home care and remedies should I follow for: ${selectedSymptoms.join(", ")} (Fever: ${patientInfo.temperature ? patientInfo.temperature + "°" + patientInfo.tempUnit : 'Normal'}, ${patientInfo.daysSick} days, ${patientInfo.intensity} intensity)?`
+        : `${selectedSymptoms.map(s => SYMPTOM_HI[s] || s).join(", ")} (बुखार: ${patientInfo.temperature ? patientInfo.temperature + "°" + patientInfo.tempUnit : 'सामान्य'}, ${patientInfo.daysSick} दिन, ${patientInfo.intensity} तीव्रता) के लिए क्या घरेलू उपचार और देखभाल करनी चाहिए?`
       
-      // Auto-submit the initial prompt immediately to the chat
       handleChat(promptText, data)
     } catch (e: any) {
       setError(e.message || "Analysis failed. Please try again.")
@@ -208,27 +213,82 @@ export function SymptomChecker({ language }: SymptomCheckerProps) {
     setChatMessages([]); setChatInput("")
   }
 
+  const handleToggleMessageLanguage = async (idx: number) => {
+    const msg = chatMessages[idx]
+    if (!msg || msg.role !== "assistant" || translatingIdx !== null) return
+
+    const currentLang = msg.displayLang || (language === "hi" ? "hi" : "en")
+    const targetLang = currentLang === "en" ? "hi" : "en"
+
+    // If translation already pre-cached on message object, flip instantly!
+    if (targetLang === "hi" && msg.contentHi) {
+      setChatMessages(prev => prev.map((m, i) => i === idx ? { ...m, displayLang: "hi" } : m))
+      return
+    }
+    if (targetLang === "en" && msg.contentEn) {
+      setChatMessages(prev => prev.map((m, i) => i === idx ? { ...m, displayLang: "en" } : m))
+      return
+    }
+
+    setTranslatingIdx(idx)
+    try {
+      const prompt = targetLang === "hi"
+        ? `कृपया इस संदेश का स्पष्ट और सरल हिंदी में अनुवाद करें:\n\n${msg.content}`
+        : `Please translate this medical advice into clear, accurate English:\n\n${msg.content}`
+
+      const result = await routeChatMessage({
+        message: prompt,
+        language: targetLang,
+        history: [],
+      })
+
+      setChatMessages(prev => prev.map((m, i) => {
+        if (i !== idx) return m
+        return {
+          ...m,
+          displayLang: targetLang,
+          contentHi: targetLang === "hi" ? result.reply : m.contentHi,
+          contentEn: targetLang === "en" ? result.reply : m.contentEn,
+        }
+      }))
+    } catch (err) {
+      console.warn("Translation failed:", err)
+    } finally {
+      setTranslatingIdx(null)
+    }
+  }
+
   const handleChat = async (overrideText?: string, specificAiResult?: any, targetLang?: "en" | "hi") => {
     const text = overrideText || chatInput.trim()
     if (!text || chatLoading) return
 
+    const activeLanguage = targetLang || (language === "hi" ? "hi" : "en")
     const userMsg = { role: "user" as const, content: text }
     const newHistory = [...chatMessages, userMsg]
     setChatMessages(newHistory)
     if (!overrideText) setChatInput("")
     setChatLoading(true)
 
-    const activeLanguage = targetLang || (language === "hi" ? "hi" : "en")
-
     try {
       const result = await routeChatMessage({
         message: text,
         language: activeLanguage,
-        history: chatMessages.slice(-6),
+        history: chatMessages.slice(-6).map(m => ({
+          role: m.role,
+          content: m.displayLang === "hi" && m.contentHi ? m.contentHi : m.content
+        })),
         symptomContext: selectedSymptoms,
       })
 
-      setChatMessages(prev => [...prev, { role: "assistant", content: result.reply }])
+      const assistantMsg = {
+        role: "assistant" as const,
+        content: result.reply,
+        displayLang: activeLanguage,
+        contentEn: activeLanguage === "en" ? result.reply : undefined,
+        contentHi: activeLanguage === "hi" ? result.reply : undefined,
+      }
+
+      setChatMessages(prev => [...prev, assistantMsg])
     } catch {
       const emergencyAdvice = activeLanguage === "en"
         ? "• Rest adequately and keep yourself well hydrated with boiled water or ORS.\n• Monitor your temperature and symptoms closely.\n• If symptoms worsen or you feel severe discomfort, please consult your nearest Community Health Centre (CHC) or call 108 immediately."
@@ -236,7 +296,8 @@ export function SymptomChecker({ language }: SymptomCheckerProps) {
 
       setChatMessages(prev => [...prev, {
         role: "assistant",
-        content: emergencyAdvice
+        content: emergencyAdvice,
+        displayLang: activeLanguage,
       }])
     } finally {
       setChatLoading(false)
@@ -441,40 +502,41 @@ export function SymptomChecker({ language }: SymptomCheckerProps) {
                       <Bot className="h-5 w-5 text-teal-600" />
                       {en ? "Discuss your symptoms with AI" : "AI के साथ अपने लक्षणों पर चर्चा करें"}
                     </h3>
-                    {chatMessages.length > 0 && (
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => {
-                          const lastAssistantMsg = [...chatMessages].reverse().find(m => m.role === "assistant")?.content || ""
-                          if (en) {
-                            handleChat(`कृपया इस जानकारी का हिंदी में अनुवाद करें:\n"${lastAssistantMsg}"`, undefined, "hi")
-                          } else {
-                            handleChat(`Please translate this response to English:\n"${lastAssistantMsg}"`, undefined, "en")
-                          }
-                        }}
-                        disabled={chatLoading}
-                        className="text-xs h-7 text-teal-700 hover:text-teal-800 hover:bg-teal-50"
-                      >
-                        <Languages className="h-3 w-3 mr-1" />
-                        {en ? "Translate to Hindi" : "Translate to English"}
-                      </Button>
-                    )}
                   </div>
-                  
+
                   <div className="bg-gray-50 rounded-xl p-3 h-64 overflow-y-auto mb-3 flex flex-col gap-3">
                     {chatMessages.length === 0 ? (
                       <p className="text-sm text-gray-500 text-center mt-auto mb-auto">
                         {en ? "Ask any questions about your condition, home remedies, or next steps." : "अपनी स्थिति, घरेलू उपचार, या अगले कदमों के बारे में कोई भी प्रश्न पूछें।"}
                       </p>
                     ) : (
-                      chatMessages.map((msg, i) => (
-                        <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-                          <div className={`whitespace-pre-wrap max-w-[85%] rounded-xl px-3 py-2 text-sm ${msg.role === "user" ? "bg-teal-600 text-white rounded-tr-none" : "bg-white border rounded-tl-none text-gray-800 shadow-sm"}`}>
-                            {msg.content}
+                      chatMessages.map((msg, i) => {
+                        const isAssistant = msg.role === "assistant"
+                        const activeMsgLang = msg.displayLang || (language === "hi" ? "hi" : "en")
+                        const displayedContent = activeMsgLang === "hi" && msg.contentHi ? msg.contentHi : msg.content
+
+                        return (
+                          <div key={i} className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}>
+                            <div className={`whitespace-pre-wrap max-w-[88%] rounded-xl px-3.5 py-2.5 text-sm ${msg.role === "user" ? "bg-teal-600 text-white rounded-tr-none" : "bg-white border rounded-tl-none text-gray-800 shadow-sm"}`}>
+                              {displayedContent}
+                              {isAssistant && (
+                                <div className="mt-2.5 pt-1.5 border-t border-gray-100 flex items-center justify-between">
+                                  <button
+                                    onClick={() => handleToggleMessageLanguage(i)}
+                                    disabled={translatingIdx === i}
+                                    className="inline-flex items-center gap-1.5 text-xs text-teal-700 hover:text-teal-900 bg-teal-50 hover:bg-teal-100 px-2.5 py-1 rounded-full transition-all font-medium border border-teal-200"
+                                  >
+                                    <Languages className="h-3 w-3" />
+                                    {translatingIdx === i
+                                      ? (activeMsgLang === "en" ? "हिंदी में अनुवाद हो रहा है..." : "Translating to English...")
+                                      : (activeMsgLang === "en" ? "हिन्दी में देखें (Switch to Hindi)" : "View in English")}
+                                  </button>
+                                </div>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      ))
+                        )
+                      })
                     )}
                     {chatLoading && (
                       <div className="flex justify-start">

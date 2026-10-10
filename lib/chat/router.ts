@@ -33,8 +33,14 @@ export async function routeChatMessage(input: RouteChatInput): Promise<ChatResul
     }
   }
 
+  // ── 0. Translation Request Gate ──────────────────────────────────────
+  // If user requests a translation, bypass medical QA pattern matching and delegate to Gemini Tier 3
+  const isTranslationRequest =
+    /\b(translate|अनुवाद|hindi mein|english mein|translate to|translation)\b/i.test(text) ||
+    /^(hindi|हिन्दी|english|अंग्रेजी)$/i.test(text)
+
   // ── 1. Tier 0: Emergency Gate ──────────────────────────────────────────
-  const emergencyMatch = detectTier0Emergency(text, lang)
+  const emergencyMatch = !isTranslationRequest ? detectTier0Emergency(text, lang) : null
   if (emergencyMatch) {
     if (process.env.NODE_ENV === "development") {
       console.log("[ChatRouter] Responded via Tier 0 (Emergency Gate)")
@@ -49,53 +55,59 @@ export async function routeChatMessage(input: RouteChatInput): Promise<ChatResul
 
   // ── 2. Tier 2: Curated Clinical Knowledge (Medical Brain) ──────────────
   const normalized = normalizeQuery(text)
-  const brainAnswer = answerMedicalQuery(normalized, lang, symptomContext)
-  if (brainAnswer) {
-    if (process.env.NODE_ENV === "development") {
-      console.log("[ChatRouter] Responded via Tier 2 (Clinical Knowledge Engine)")
-    }
-    // Asynchronously record into learned cache with explicit language
-    learnFromAnswer(text, brainAnswer, lang).catch(() => {})
-    return {
-      reply: cleanMarkdown(brainAnswer),
-      tier: 2,
-      confidence: 0.95,
-      source: "medical-brain",
+  if (!isTranslationRequest) {
+    const brainAnswer = answerMedicalQuery(normalized, lang, symptomContext)
+    if (brainAnswer) {
+      if (process.env.NODE_ENV === "development") {
+        console.log("[ChatRouter] Responded via Tier 2 (Clinical Knowledge Engine)")
+      }
+      // Asynchronously record into learned cache with explicit language
+      learnFromAnswer(text, brainAnswer, lang).catch(() => {})
+      return {
+        reply: cleanMarkdown(brainAnswer),
+        tier: 2,
+        confidence: 0.95,
+        source: "medical-brain",
+      }
     }
   }
 
   // ── 3. Tier 2: Static Medical FAQ ──────────────────────────────────────
-  const faqHit = lookupOffline(text) || lookupOffline(normalized)
-  if (faqHit) {
-    if (process.env.NODE_ENV === "development") {
-      console.log("[ChatRouter] Responded via Tier 2 (Static FAQ)")
-    }
-    const replyText = lang === "hi" ? faqHit.answerHi : faqHit.answer
-    return {
-      reply: cleanMarkdown(replyText),
-      tier: 2,
-      confidence: 0.9,
-      source: "offline-faq",
+  if (!isTranslationRequest) {
+    const faqHit = lookupOffline(text) || lookupOffline(normalized)
+    if (faqHit) {
+      if (process.env.NODE_ENV === "development") {
+        console.log("[ChatRouter] Responded via Tier 2 (Static FAQ)")
+      }
+      const replyText = lang === "hi" ? faqHit.answerHi : faqHit.answer
+      return {
+        reply: cleanMarkdown(replyText),
+        tier: 2,
+        confidence: 0.9,
+        source: "offline-faq",
+      }
     }
   }
 
   // ── 4. Tier 2b: Local IndexedDB Learned Cache (language-isolated) ──────
-  try {
-    const cachedHit = await findCachedAnswer(text, lang)
-    if (cachedHit.found && cachedHit.response) {
-      if (process.env.NODE_ENV === "development") {
-        console.log("[ChatRouter] Responded via Tier 2b (IndexedDB Cache)")
+  if (!isTranslationRequest) {
+    try {
+      const cachedHit = await findCachedAnswer(text, lang)
+      if (cachedHit.found && cachedHit.response) {
+        if (process.env.NODE_ENV === "development") {
+          console.log("[ChatRouter] Responded via Tier 2b (IndexedDB Cache)")
+        }
+        return {
+          reply: cleanMarkdown(cachedHit.response),
+          tier: "2b",
+          confidence: cachedHit.similarity || 0.8,
+          queryId: cachedHit.queryId,
+          source: "indexeddb-cache",
+        }
       }
-      return {
-        reply: cleanMarkdown(cachedHit.response),
-        tier: "2b",
-        confidence: cachedHit.similarity || 0.8,
-        queryId: cachedHit.queryId,
-        source: "indexeddb-cache",
-      }
+    } catch (err) {
+      console.warn("[ChatRouter] Cache lookup skipped:", err)
     }
-  } catch (err) {
-    console.warn("[ChatRouter] Cache lookup skipped:", err)
   }
 
   // ── 5. Tier 3: Server Gemini API ───────────────────────────────────────

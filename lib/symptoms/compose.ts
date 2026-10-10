@@ -64,7 +64,10 @@ export function composeResponse(input: TriageInput, language: string = "en"): Co
     let partKey = "general"
 
     if (l.includes("fever")) partKey = "fever"
-    else if (l.includes("diarrhea") || l.includes("stool") || l.includes("stomach")) partKey = "diarrhea"
+    else if (l.includes("constipation") || l.includes("kabj")) partKey = "constipation"
+    else if (l.includes("vomit") || l.includes("nausea") || l.includes("ulti") || l.includes("matli")) partKey = "vomiting"
+    else if (l.includes("diarrhea") || l.includes("loose motion") || l.includes("dast")) partKey = "diarrhea"
+    else if (l.includes("stomach") || l.includes("abdominal") || l.includes("bloat") || l.includes("heartburn")) partKey = "stomachAche"
     else if (l.includes("headache")) partKey = "headache"
     else if (l.includes("cough")) partKey = "cough"
 

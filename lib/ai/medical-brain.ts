@@ -94,6 +94,18 @@ export const CLINICAL_KNOWLEDGE_BASE: MedicalBrainEntry[] = [
     en: "For vomiting and nausea:\n\n• Do not gulp large amounts of water at once; take 1–2 small sips every 5–10 minutes.\n• Sip warm water with ginger or fennel seeds (saunf).\n• Avoid lying flat right after drinking; keep the head elevated.\n• Consult a doctor if vomiting persists for more than 12 hours without retaining liquids.",
     hi: "उल्टी और मतली के लिए:\n\n• एक साथ ज्यादा पानी न पिएं; हर 5-10 मिनट में 1-2 घूंट करके पिएं।\n• अदरक की चाय या सौंफ का उबला पानी पिएं।\n• कुछ भी पीने के तुरंत बाद सीधे न लेटें।\n• यदि उल्टी 12 घंटे से अधिक समय तक लगातार हो, तो तुरंत डॉक्टर से मिलें।",
   },
+  {
+    id: "symptom-constipation",
+    priority: 60,
+    patterns: [
+      /\b(constipation|constipated|hard stool|difficulty passing stool)\b/i,
+      /\b(kabj|kabzi|pet saaf na hona)\b/i,
+      /\b(कब्ज|कब्जियत|पेट साफ न होना)\b/i,
+    ],
+    keywords: ["constipation", "kabj", "hard stool", "constipated"],
+    en: "For constipation and stomach heaviness:\n\n• Drink 8–10 glasses of warm water throughout the day, especially 1 glass of warm water early in the morning.\n• Eat high-fiber foods: ripe papaya, guava, green leafy vegetables, and whole grains (daliya, oats).\n• Avoid refined flour (maida), junk food, and excess tea/coffee which dehydrate the bowel.\n• Physical movement: 20–30 minutes of brisk walking helps stimulate intestinal movement.",
+    hi: "कब्ज और पेट भारी होने के लिए:\n\n• दिन भर में 8-10 गिलास गुनगुना पानी पिएं, विशेष रूप से सुबह उठकर 1 गिलास गुनगुना पानी लें।\n• फाइबर युक्त भोजन करें: पका पपीता, अमरूद, हरी सब्जियां और दलिया खाएं।\n• मैदा, बाहर का तला-भुना खाना और ज्यादा चाय/कॉफी से बचें।\n• रोजाना 20-30 मिनट टहलें, इससे पाचन और आंतों की क्रिया सुधरती है।",
+  },
 
   // ── PRIORITY 40: CONTEXT-GATED DIETARY & RECOVERY RULES ──
   {
