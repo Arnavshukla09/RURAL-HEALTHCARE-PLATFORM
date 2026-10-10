@@ -9,6 +9,7 @@ import { lookupOffline } from "@/lib/offline/offline-ai"
 import { startSpeechRecognition, stopSpeechRecognition, speak, stopSpeaking } from "@/lib/ai/speech"
 import { applyFeedback } from "@/lib/ai/query-learner"
 import { routeChatMessage } from "@/lib/chat/router"
+import { getLiveSuggestions, SuggestionItem } from "@/lib/chat/suggestions"
 
 interface ChatMessage {
   role: "user" | "assistant"
@@ -87,9 +88,25 @@ export function FloatingChat() {
   const [showGuide, setShowGuide] = useState(false)
   const [isListening, setIsListening] = useState(false)
   const [speakingMsgIdx, setSpeakingMsgIdx] = useState<number | null>(null)
+  const [suggestions, setSuggestions] = useState<SuggestionItem[]>([])
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const en = language === "en"
+
+  // Live suggestions debounce (150ms)
+  useEffect(() => {
+    if (!input || input.trim().length < 2) {
+      setSuggestions([])
+      return
+    }
+
+    const timer = setTimeout(() => {
+      const items = getLiveSuggestions(input, language, 4)
+      setSuggestions(items)
+    }, 150)
+
+    return () => clearTimeout(timer)
+  }, [input, language])
 
   const toggleListen = () => {
     if (isListening) {
@@ -449,7 +466,29 @@ export function FloatingChat() {
 
           {/* Input */}
           <div className="border-t border-gray-100 p-3 flex-shrink-0">
-            <form onSubmit={e => { e.preventDefault(); handleSend() }} className="flex items-center gap-2">
+            {/* Live Suggestions Chips */}
+            {suggestions.length > 0 && !loading && (
+              <div className="flex flex-wrap gap-1.5 mb-2 max-h-20 overflow-y-auto" role="listbox" aria-label="Suggestions">
+                {suggestions.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => {
+                      const textToSend = en ? item.queryEn : item.queryHi
+                      setInput(textToSend)
+                      setSuggestions([])
+                      setTimeout(() => handleSend(), 50)
+                    }}
+                    className="text-xs bg-emerald-50 text-emerald-800 border border-emerald-200 px-2.5 py-1 rounded-full hover:bg-emerald-100 transition-all text-left flex items-center gap-1 shadow-xs"
+                  >
+                    <span>💡</span>
+                    <span>{en ? item.textEn : item.textHi}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <form onSubmit={e => { e.preventDefault(); setSuggestions([]); handleSend() }} className="flex items-center gap-2">
               <div className="flex-1 relative">
                 <input
                   ref={inputRef}
