@@ -15,6 +15,8 @@ export interface NavButton {
 
 export interface ChatResult {
   reply: string
+  replyHi?: string
+  replyEn?: string
   tier: ChatTier
   confidence: number
   suggestions?: string[]

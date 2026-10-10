@@ -284,19 +284,20 @@ export function SymptomChecker({ language }: SymptomCheckerProps) {
         role: "assistant" as const,
         content: result.reply,
         displayLang: activeLanguage,
-        contentEn: activeLanguage === "en" ? result.reply : undefined,
-        contentHi: activeLanguage === "hi" ? result.reply : undefined,
+        contentEn: result.replyEn || (activeLanguage === "en" ? result.reply : undefined),
+        contentHi: result.replyHi || (activeLanguage === "hi" ? result.reply : undefined),
       }
 
       setChatMessages(prev => [...prev, assistantMsg])
     } catch {
-      const emergencyAdvice = activeLanguage === "en"
-        ? "• Rest adequately and keep yourself well hydrated with boiled water or ORS.\n• Monitor your temperature and symptoms closely.\n• If symptoms worsen or you feel severe discomfort, please consult your nearest Community Health Centre (CHC) or call 108 immediately."
-        : "• पर्याप्त आराम करें और ओआरएस या उबले हुए पानी से हाइड्रेटेड रहें।\n• अपने तापमान और लक्षणों पर नज़र रखें।\n• यदि लक्षण बढ़ें या सांस लेने में तकलीफ हो, तो तुरंत नजदीकी स्वास्थ्य केंद्र (CHC) जाएँ या 108 पर कॉल करें।"
+      const emergencyEn = "• Rest adequately and keep yourself well hydrated with boiled water or ORS.\n• Monitor your temperature and symptoms closely.\n• If symptoms worsen or you feel severe discomfort, please consult your nearest Community Health Centre (CHC) or call 108 immediately."
+      const emergencyHi = "• पर्याप्त आराम करें और ओआरएस या उबले हुए पानी से हाइड्रेटेड रहें।\n• अपने तापमान और लक्षणों पर नज़र रखें।\n• यदि लक्षण बढ़ें या सांस लेने में तकलीफ हो, तो तुरंत नजदीकी स्वास्थ्य केंद्र (CHC) जाएँ या 108 पर कॉल करें।"
 
       setChatMessages(prev => [...prev, {
         role: "assistant",
-        content: emergencyAdvice,
+        content: activeLanguage === "hi" ? emergencyHi : emergencyEn,
+        contentEn: emergencyEn,
+        contentHi: emergencyHi,
         displayLang: activeLanguage,
       }])
     } finally {
@@ -513,7 +514,9 @@ export function SymptomChecker({ language }: SymptomCheckerProps) {
                       chatMessages.map((msg, i) => {
                         const isAssistant = msg.role === "assistant"
                         const activeMsgLang = msg.displayLang || (language === "hi" ? "hi" : "en")
-                        const displayedContent = activeMsgLang === "hi" && msg.contentHi ? msg.contentHi : msg.content
+                        const displayedContent = activeMsgLang === "hi"
+                          ? (msg.contentHi || msg.content)
+                          : (msg.contentEn || msg.content)
 
                         return (
                           <div key={i} className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}>

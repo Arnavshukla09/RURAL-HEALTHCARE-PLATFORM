@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { rateLimit } from "@/lib/rate-limit"
-import { answerMedicalQuery } from "@/lib/ai/medical-brain"
+import { answerMedicalQuery, getMedicalBrainEntry } from "@/lib/ai/medical-brain"
 import { generateGeminiContent, GeminiContent } from "@/lib/ai/gemini"
 
 const SYSTEM_PROMPT = `You are a helpful, culturally sensitive AI health assistant for rural communities in India.
@@ -33,10 +33,12 @@ export async function POST(request: NextRequest) {
     const lang = language === "hi" ? "hi" : "en"
 
     // 2. Immediate Clinical Knowledge Engine Match (Tier 0 & Tier 2)
-    const clinicalHit = answerMedicalQuery(sanitizedMessage, lang)
-    if (clinicalHit) {
+    const brainEntry = getMedicalBrainEntry(sanitizedMessage)
+    if (brainEntry) {
       return NextResponse.json({
-        reply: clinicalHit,
+        reply: lang === "hi" ? brainEntry.hi : brainEntry.en,
+        replyHi: brainEntry.hi,
+        replyEn: brainEntry.en,
         fallback: false,
         source: "clinical-knowledge-engine"
       })
@@ -72,6 +74,17 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // System instruction requesting bilingual JSON
+    const BILINGUAL_SYSTEM_PROMPT = `${SYSTEM_PROMPT}
+7. CRITICAL FORMAT REQUIREMENT:
+You must provide your response in BOTH English and Hindi.
+Return STRICTLY a JSON object with this exact structure:
+{
+  "en": "Your complete helpful response in English (no markdown asterisks like **)",
+  "hi": "Your exact corresponding complete response in clear, simple Hindi (no markdown asterisks like **)"
+}
+Do NOT wrap in any extra markdown or conversational commentary outside the JSON.`
+
     // Add current user prompt
     contents.push({
       role: "user",
@@ -79,30 +92,60 @@ export async function POST(request: NextRequest) {
     })
 
     // 4. Request Gemini with graceful fallback
-    const geminiResult = await generateGeminiContent(contents, SYSTEM_PROMPT)
+    const geminiResult = await generateGeminiContent(contents, BILINGUAL_SYSTEM_PROMPT)
 
     if (geminiResult.reply && !geminiResult.fallback) {
+      let replyEn = ""
+      let replyHi = ""
+
+      // Attempt parsing bilingual JSON
+      try {
+        const cleanedRaw = geminiResult.reply
+          .replace(/^```json\s*/i, "")
+          .replace(/^```\s*/i, "")
+          .replace(/\s*```$/i, "")
+          .trim()
+        const parsed = JSON.parse(cleanedRaw)
+        if (parsed.en && parsed.hi) {
+          replyEn = String(parsed.en).trim()
+          replyHi = String(parsed.hi).trim()
+        }
+      } catch {
+        // Fallback: raw text in whatever language Gemini produced
+        if (lang === "hi") replyHi = geminiResult.reply
+        else replyEn = geminiResult.reply
+      }
+
+      const selectedReply = lang === "hi" ? (replyHi || replyEn) : (replyEn || replyHi)
+
       return NextResponse.json({
-        reply: geminiResult.reply,
+        reply: selectedReply,
+        replyEn: replyEn || undefined,
+        replyHi: replyHi || undefined,
         model: geminiResult.modelUsed,
         fallback: false
       })
     }
 
     // 5. Zero-500 Graceful Clinical Fallback
-    const safeFallbackReply = lang === "hi"
-      ? "नमस्ते! आपकी सुरक्षा के लिए: यदि आपको तेज बुखार, सीने में दर्द या सांस लेने में तकलीफ जैसे गंभीर लक्षण हैं, तो तुरंत नजदीकी स्वास्थ्य केंद्र (PHC) या 108 पर संपर्क करें। सामान्य लक्षणों के लिए पर्याप्त आराम करें, ओआरएस या हल्का भोजन लें।"
-      : "Hello! For your health and safety: If you are experiencing high fever, chest pain, or severe difficulty breathing, please consult your nearest Primary Health Centre (PHC) or call 108 immediately. For mild symptoms, rest adequately, hydrate with ORS, and take light bland meals."
+    const fallbackHi = "नमस्ते! आपकी सुरक्षा के लिए: यदि आपको तेज बुखार, सीने में दर्द या सांस लेने में तकलीफ जैसे गंभीर लक्षण हैं, तो तुरंत नजदीकी स्वास्थ्य केंद्र (PHC) या 108 पर संपर्क करें। सामान्य लक्षणों के लिए पर्याप्त आराम करें, ओआरएस या हल्का भोजन लें।"
+    const fallbackEn = "Hello! For your health and safety: If you are experiencing high fever, chest pain, or severe difficulty breathing, please consult your nearest Primary Health Centre (PHC) or call 108 immediately. For mild symptoms, rest adequately, hydrate with ORS, and take light bland meals."
 
     return NextResponse.json({
-      reply: safeFallbackReply,
+      reply: lang === "hi" ? fallbackHi : fallbackEn,
+      replyHi: fallbackHi,
+      replyEn: fallbackEn,
       fallback: true,
       reason: geminiResult.reason || "upstream-exhausted"
     })
   } catch (error: any) {
     console.error("AI chat server error:", error)
+    const errEn = "We are currently experiencing connectivity difficulties. If your symptoms are severe, please call 108 or visit your nearest Primary Health Centre."
+    const errHi = "तकनीकी समस्या के कारण सेवा में बाधा है। यदि लक्षण गंभीर हैं, तो कृपया तुरंत 108 पर कॉल करें या नजदीकी स्वास्थ्य केंद्र जाएँ।"
     return NextResponse.json({
       reply: "We are currently experiencing connectivity difficulties. If your symptoms are severe, please call 108 or visit your nearest Primary Health Centre.",
+      replyEn: errEn,
+      replyHi: errHi,
       fallback: true,
       reason: "internal-exception"
     })

@@ -8,6 +8,8 @@
 export interface EmergencyMatch {
   isEmergency: boolean
   reply: string
+  replyHi?: string
+  replyEn?: string
   hotline: "108" | "14416"
 }
 
@@ -35,26 +37,28 @@ export function detectTier0Emergency(text: string, language: string): EmergencyM
 
   // 1. Check for self-harm / mental health emergency first (Tele-MANAS)
   if (/\b(suicide|kill myself|end my life|want to die|atmahathya|khudkushi)\b/i.test(query)) {
-    const isHi = language === "hi"
+    const replyHi = "🚨 आपातकालीन सहायता: यदि आप या आपका कोई प्रिय व्यक्ति मानसिक तनाव या संकट में है, तो कृपया तुरंत Tele-MANAS राष्ट्रीय हेल्पलाइन 14416 पर कॉल करें (24/7 मुफ्त एवं गोपनीय)। आप अकेले नहीं हैं, मदद उपलब्ध है।"
+    const replyEn = "🚨 Mental Health Emergency: If you or someone you know is in distress, please call the national Tele-MANAS helpline at 14416 immediately (toll-free, 24/7, confidential support). You are not alone and help is available."
     return {
       isEmergency: true,
       hotline: "14416",
-      reply: isHi
-        ? "🚨 आपातकालीन सहायता: यदि आप या आपका कोई प्रिय व्यक्ति मानसिक तनाव या संकट में है, तो कृपया तुरंत Tele-MANAS राष्ट्रीय हेल्पलाइन 14416 पर कॉल करें (24/7 मुफ्त एवं गोपनीय)। आप अकेले नहीं हैं, मदद उपलब्ध है।"
-        : "🚨 Mental Health Emergency: If you or someone you know is in distress, please call the national Tele-MANAS helpline at 14416 immediately (toll-free, 24/7, confidential support). You are not alone and help is available.",
+      reply: language === "hi" ? replyHi : replyEn,
+      replyHi,
+      replyEn,
     }
   }
 
   // 2. Check for physical medical emergencies (108 Ambulance)
   for (const rx of EMERGENCY_PATTERNS) {
     if (rx.test(query)) {
-      const isHi = language === "hi"
+      const replyHi = "🚨 मेडिकल इमरजेंसी चेतावनी: यह एक गंभीर स्थिति हो सकती है। कृपया तुरंत 108 एम्बुलेंस पर कॉल करें या नजदीकी अस्पताल के इमरजेंसी वार्ड में जाएं। मरीज को शांत रखें और डॉक्टर की सलाह के बिना कोई दवा न दें।"
+      const replyEn = "🚨 MEDICAL EMERGENCY DETECTED: This requires immediate clinical attention. Please call 108 Ambulance right now or go directly to the nearest hospital emergency department. Keep the patient calm and comfortable."
       return {
         isEmergency: true,
         hotline: "108",
-        reply: isHi
-          ? "🚨 मेडिकल इमरजेंसी चेतावनी: यह एक गंभीर स्थिति हो सकती है। कृपया तुरंत 108 एम्बुलेंस पर कॉल करें या नजदीकी अस्पताल के इमरजेंसी वार्ड में जाएं। मरीज को शांत रखें और डॉक्टर की सलाह के बिना कोई दवा न दें।"
-          : "🚨 MEDICAL EMERGENCY DETECTED: This requires immediate clinical attention. Please call 108 Ambulance right now or go directly to the nearest hospital emergency department. Keep the patient calm and comfortable.",
+        reply: language === "hi" ? replyHi : replyEn,
+        replyHi,
+        replyEn,
       }
     }
   }

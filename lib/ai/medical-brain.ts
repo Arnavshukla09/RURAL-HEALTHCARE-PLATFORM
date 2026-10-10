@@ -166,13 +166,11 @@ export interface ScoredMatchResult {
   score: number
 }
 
-export function answerMedicalQuery(
+export function getMedicalBrainEntry(
   query: string,
-  language: string = "en",
   contextSymptoms: string[] = []
-): string | null {
+): MedicalBrainEntry | null {
   const q = query.trim().toLowerCase()
-  const lang = language === "hi" ? "hi" : "en"
 
   // Check if GI / diarrhea context is present in recent symptoms or query
   const combinedContext = (contextSymptoms.join(" ") + " " + q).toLowerCase()
@@ -216,9 +214,18 @@ export function answerMedicalQuery(
     }
   }
 
-  if (bestMatch) {
-    return lang === "hi" ? bestMatch.entry.hi : bestMatch.entry.en
-  }
+  return bestMatch ? bestMatch.entry : null
+}
 
+export function answerMedicalQuery(
+  query: string,
+  language: string = "en",
+  contextSymptoms: string[] = []
+): string | null {
+  const lang = language === "hi" ? "hi" : "en"
+  const entry = getMedicalBrainEntry(query, contextSymptoms)
+  if (entry) {
+    return lang === "hi" ? entry.hi : entry.en
+  }
   return null
 }
