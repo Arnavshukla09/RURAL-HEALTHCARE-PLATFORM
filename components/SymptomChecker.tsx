@@ -58,10 +58,9 @@ const SYMPTOM_HI: Record<string, string> = {
   "Unexplained weight loss": "अकारण वजन घटना", "Night sweats": "रात में पसीना",
 }
 
-import { triageOffline, lookupOffline } from "@/lib/offline/offline-ai"
-import { findCachedAnswer, learnFromAnswer } from "@/lib/ai/query-learner"
+import { triageOffline } from "@/lib/offline/offline-ai"
 import { startSpeechRecognition, stopSpeechRecognition } from "@/lib/ai/speech"
-import { answerMedicalQuery } from "@/lib/ai/medical-brain"
+import { routeChatMessage } from "@/lib/chat/router"
 
 // Urgency colour mapping
 const URGENCY_STYLES: Record<string, { bg: string; border: string; icon: string; iconClass: string }> = {
@@ -190,62 +189,15 @@ export function SymptomChecker({ language }: SymptomCheckerProps) {
     )
 
     try {
-      // 0. High-accuracy Clinical Knowledge Engine (Medical Brain)
-      // Directly handles diet questions (spicy, fiber, dairy), medications, rest, and specific follow-ups
-      const clinicalBrainAnswer = answerMedicalQuery(text, language, selectedSymptoms)
-      if (clinicalBrainAnswer) {
-        setChatMessages(prev => [...prev, {
-          role: "assistant",
-          content: clinicalBrainAnswer,
-        }])
-        learnFromAnswer(text, clinicalBrainAnswer).catch(() => {})
-        setChatLoading(false)
-        return
-      }
-
-      // 1. Static and offline check
-      const staticHit = lookupOffline(text)
-      if (staticHit) {
-        setChatMessages(prev => [...prev, {
-          role: "assistant",
-          content: en ? staticHit.answer : staticHit.answerHi,
-        }])
-        setChatLoading(false)
-        return
-      }
-
-      // 2. Local TF-IDF query learner cache check
-      const cachedHit = await findCachedAnswer(text)
-      if (cachedHit.found && cachedHit.response) {
-        setChatMessages(prev => [...prev, {
-          role: "assistant",
-          content: cachedHit.response || "",
-        }])
-        setChatLoading(false)
-        return
-      }
-
-      // 3. Fallback to server endpoint
-      const response = await fetch("/api/ai-chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: apiMessage,
-          history: apiHistory,
-          language,
-        }),
+      const result = await routeChatMessage({
+        message: text,
+        language,
+        history: chatMessages.slice(-6),
+        symptomContext: selectedSymptoms,
       })
 
-      const data = await response.json()
-      if (data.reply) {
-        // Learn from the response locally in IndexedDB
-        learnFromAnswer(text, data.reply).catch(() => {})
-        setChatMessages(prev => [...prev, { role: "assistant", content: data.reply }])
-      } else {
-        throw new Error(data.error || "No reply")
-      }
+      setChatMessages(prev => [...prev, { role: "assistant", content: result.reply }])
     } catch {
-      // Graceful offline triage advice
       const emergencyAdvice = en
         ? "• Rest adequately and keep yourself well hydrated with boiled water or ORS.\n• Monitor your temperature and symptoms closely.\n• If symptoms worsen or you feel severe discomfort, please consult your nearest Community Health Centre (CHC) or call 108 immediately."
         : "• पर्याप्त आराम करें और ओआरएस या उबले हुए पानी से हाइड्रेटेड रहें।\n• अपने तापमान और लक्षणों पर नज़र रखें।\n• यदि लक्षण बढ़ें या सांस लेने में तकलीफ हो, तो तुरंत नजदीकी स्वास्थ्य केंद्र (CHC) जाएँ या 108 पर कॉल करें।"

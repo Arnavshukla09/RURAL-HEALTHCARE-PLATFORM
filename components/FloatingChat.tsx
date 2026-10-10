@@ -6,9 +6,9 @@ import { MessageCircle, X, Send, Loader2, Bot, User, Minimize2, Map, Stethoscope
 import { useApp } from "@/components/providers/AppProvider"
 import { useRouter } from "next/navigation"
 import { lookupOffline } from "@/lib/offline/offline-ai"
-import { findCachedAnswer, learnFromAnswer, applyFeedback } from "@/lib/ai/query-learner"
 import { startSpeechRecognition, stopSpeechRecognition, speak, stopSpeaking } from "@/lib/ai/speech"
-import { answerMedicalQuery } from "@/lib/ai/medical-brain"
+import { applyFeedback } from "@/lib/ai/query-learner"
+import { routeChatMessage } from "@/lib/chat/router"
 
 interface ChatMessage {
   role: "user" | "assistant"
@@ -246,90 +246,30 @@ export function FloatingChat() {
     setLoading(true)
 
     try {
-      // 0. High-accuracy Clinical Knowledge Engine (Medical Brain)
-      const clinicalBrainAnswer = answerMedicalQuery(text, language)
-      if (clinicalBrainAnswer) {
-        setMessages(prev => [...prev, {
-          role: "assistant",
-          content: clinicalBrainAnswer,
-        }])
-        learnFromAnswer(text, clinicalBrainAnswer).catch(() => {})
-        setLoading(false)
-        return
-      }
-
-      // 1. Check Offline Static FAQ
-      const staticHit = lookupOffline(text)
-      if (staticHit) {
-        setMessages(prev => [...prev, {
-          role: "assistant",
-          content: en ? staticHit.answer : staticHit.answerHi,
-        }])
-        setLoading(false)
-        return
-      }
-
-      // 2. Check Learned Queries Cache (TF-IDF)
-      const cachedHit = await findCachedAnswer(text)
-      if (cachedHit.found && cachedHit.response) {
-        setMessages(prev => [...prev, {
-          role: "assistant",
-          content: cachedHit.response || "",
-          queryId: cachedHit.queryId
-        }])
-        setLoading(false)
-        return
-      }
-
-      // 3. Fallback to Gemini API
-      const response = await fetch("/api/ai-chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: text,
-          history: messages.slice(-8),
-          language,
-        }),
+      const result = await routeChatMessage({
+        message: text,
+        language,
+        history: messages.slice(-6),
       })
 
-      if (!response.ok) {
-        const errData = await response.json().catch(() => ({}))
-        if (response.status === 429) {
-          setMessages(prev => [...prev, {
-            role: "assistant",
-            content: en ? "Too many requests. Please wait a moment and try again." : "बहुत सारे अनुरोध। कृपया कुछ समय प्रतीक्षा करें।"
-          }])
-        } else {
-          throw new Error(errData.error || "API error")
-        }
-        setLoading(false)
-        return
-      }
-
-      const data = await response.json()
-
-      // Learn this answer so we don't need the API next time someone asks this
-      await learnFromAnswer(text, data.reply)
-
       // Check if AI response mentions navigating somewhere
-      const aiNavIntent = detectNavIntent(data.reply)
+      const aiNavIntent = detectNavIntent(result.reply)
       const navBtns: NavButton[] = aiNavIntent
         ? [{ label: `→ ${aiNavIntent.label}`, page: aiNavIntent.page }]
         : []
 
-      // Retrieve the newly learned queryId so user can leave feedback
-      const recentCache = await findCachedAnswer(text)
-      
       setMessages(prev => [...prev, {
         role: "assistant",
-        content: data.reply,
+        content: result.reply,
         navButtons: navBtns.length > 0 ? navBtns : undefined,
-        queryId: recentCache.queryId
+        queryId: result.queryId
       }])
     } catch {
       setMessages(prev => [...prev, {
         role: "assistant",
-        content: en ? "Connection error. Please check your internet and try again." : "कनेक्शन त्रुटि। कृपया इंटरनेट जांचें।"
+        content: en
+          ? "For your safety: If symptoms are serious, please call 108 or visit your nearest PHC immediately."
+          : "आपकी सुरक्षा के लिए: यदि लक्षण गंभीर हैं, तो तुरंत 108 पर कॉल करें या नजदीकी प्राथमिक स्वास्थ्य केंद्र जाएं।"
       }])
     } finally {
       setLoading(false)
