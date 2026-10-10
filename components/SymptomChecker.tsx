@@ -61,6 +61,7 @@ const SYMPTOM_HI: Record<string, string> = {
 import { triageOffline } from "@/lib/offline/offline-ai"
 import { startSpeechRecognition, stopSpeechRecognition } from "@/lib/ai/speech"
 import { routeChatMessage } from "@/lib/chat/router"
+import { composeResponse } from "@/lib/symptoms/compose"
 
 // Urgency colour mapping
 const URGENCY_STYLES: Record<string, { bg: string; border: string; icon: string; iconClass: string }> = {
@@ -76,7 +77,14 @@ export function SymptomChecker({ language }: SymptomCheckerProps) {
 
   // Step state
   const [step, setStep] = useState(1)
-  const [patientInfo, setPatientInfo] = useState({ age: "", gender: "male", temperature: "", tempUnit: "F", daysSick: "1" })
+  const [patientInfo, setPatientInfo] = useState({
+    age: "",
+    gender: "male",
+    temperature: "",
+    tempUnit: "F",
+    daysSick: "1",
+    intensity: "moderate" as "mild" | "moderate" | "severe",
+  })
   const [selectedBodyPart, setSelectedBodyPart] = useState<string | null>(null)
   const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([])
   const [aiResult, setAiResult] = useState<any>(null)
@@ -124,35 +132,66 @@ export function SymptomChecker({ language }: SymptomCheckerProps) {
     setLoading(true)
     setError("")
     try {
-      let data;
-      if (!navigator.onLine) {
-        // Use offline triage
-        const res = triageOffline(selectedSymptoms, language)
-        data = { ...res, possibleConditions: [] }
-      } else {
-        const res = await fetch("/api/symptom-analyze", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            age: patientInfo.age || "unknown",
-            gender: patientInfo.gender,
-            temperature: patientInfo.temperature,
-            tempUnit: patientInfo.tempUnit,
-            daysSick: patientInfo.daysSick,
-            bodyPart: selectedBodyPart,
-            symptoms: selectedSymptoms,
-            language,
-          }),
-        })
-        data = await res.json()
-        if (data.error) throw new Error(data.error)
+      // 1. Immediately compose offline clinical response (Tier 1)
+      const composed = composeResponse({
+        symptoms: selectedSymptoms,
+        intensity: patientInfo.intensity,
+        temperature: patientInfo.temperature,
+        tempUnit: patientInfo.tempUnit,
+        daysSick: patientInfo.daysSick,
+        age: patientInfo.age,
+        gender: patientInfo.gender,
+      }, language)
+
+      let data: any = {
+        urgency: composed.urgency,
+        specialistNeeded: composed.specialistNeeded,
+        immediateActions: composed.immediateActions,
+        homeCare: composed.homeCare,
+        whenToGoToHospital: composed.whenToGoToHospital,
+        possibleConditions: [],
       }
+
+      // 2. If online, attempt to fetch supplementary AI analysis
+      if (navigator.onLine) {
+        try {
+          const res = await fetch("/api/symptom-analyze", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              age: patientInfo.age || "unknown",
+              gender: patientInfo.gender,
+              temperature: patientInfo.temperature,
+              tempUnit: patientInfo.tempUnit,
+              daysSick: patientInfo.daysSick,
+              intensity: patientInfo.intensity,
+              bodyPart: selectedBodyPart,
+              symptoms: selectedSymptoms,
+              language,
+            }),
+          })
+          if (res.ok) {
+            const apiData = await res.json()
+            if (!apiData.error) {
+              data = {
+                ...data,
+                ...apiData,
+                // Keep composed emergency severity if rules detected emergency
+                urgency: composed.urgency === "emergency" ? "emergency" : apiData.urgency || composed.urgency,
+              }
+            }
+          }
+        } catch (fetchErr) {
+          console.warn("[SymptomChecker] Supplementary API call skipped, using composed result:", fetchErr)
+        }
+      }
+
       setAiResult(data)
       setStep(4)
       
       const promptText = en 
-        ? `My symptoms are: ${selectedSymptoms.join(", ")}. Temperature: ${patientInfo.temperature ? patientInfo.temperature + "°" + patientInfo.tempUnit : 'normal'}. Duration: ${patientInfo.daysSick} days. The analysis urgency is '${data.urgency}'. What are the best home remedies, and what exact steps should I take based on this severity?`
-        : `मेरे लक्षण हैं: ${selectedSymptoms.map(s => SYMPTOM_HI[s] || s).join(", ")}। तापमान: ${patientInfo.temperature ? patientInfo.temperature + "°" + patientInfo.tempUnit : 'सामान्य'}। अवधि: ${patientInfo.daysSick} दिन। विश्लेषण की गंभीरता '${data.urgency === 'emergency' ? 'आपातकालीन' : data.urgency === 'high' ? 'उच्च' : data.urgency === 'medium' ? 'मध्यम' : 'कम'}' है। सबसे अच्छे घरेलू उपचार क्या हैं, और मुझे क्या कदम उठाने चाहिए?`
+        ? `My symptoms are: ${selectedSymptoms.join(", ")}. Temperature: ${patientInfo.temperature ? patientInfo.temperature + "°" + patientInfo.tempUnit : 'normal'}. Duration: ${patientInfo.daysSick} days. Intensity: ${patientInfo.intensity}. The analysis urgency is '${data.urgency}'. What are the best home remedies, and what exact steps should I take based on this severity?`
+        : `मेरे लक्षण हैं: ${selectedSymptoms.map(s => SYMPTOM_HI[s] || s).join(", ")}। तापमान: ${patientInfo.temperature ? patientInfo.temperature + "°" + patientInfo.tempUnit : 'सामान्य'}। अवधि: ${patientInfo.daysSick} दिन। तीव्रता: ${patientInfo.intensity}। विश्लेषण की गंभीरता '${data.urgency === 'emergency' ? 'आपातकालीन' : data.urgency === 'high' ? 'उच्च' : data.urgency === 'medium' ? 'मध्यम' : 'कम'}' है। सबसे अच्छे घरेलू उपचार क्या हैं, और मुझे क्या कदम उठाने चाहिए?`
       
       // Auto-submit the initial prompt immediately to the chat
       handleChat(promptText, data)
