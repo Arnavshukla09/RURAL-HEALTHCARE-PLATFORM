@@ -208,7 +208,7 @@ export function SymptomChecker({ language }: SymptomCheckerProps) {
     setChatMessages([]); setChatInput("")
   }
 
-  const handleChat = async (overrideText?: string, specificAiResult?: any) => {
+  const handleChat = async (overrideText?: string, specificAiResult?: any, targetLang?: "en" | "hi") => {
     const text = overrideText || chatInput.trim()
     if (!text || chatLoading) return
 
@@ -218,26 +218,19 @@ export function SymptomChecker({ language }: SymptomCheckerProps) {
     if (!overrideText) setChatInput("")
     setChatLoading(true)
 
-    const currentAiResult = specificAiResult || aiResult;
-    const apiMessage = chatMessages.length === 0
-      ? `Context: My symptom analysis result was: ${JSON.stringify({ urgency: currentAiResult?.urgency, conditions: currentAiResult?.possibleConditions })}. Please answer my follow up question: ${text}`
-      : text
-
-    const apiHistory = chatMessages.map((msg, i) => 
-      i === 0 ? { ...msg, content: `Context: My symptom analysis result was: ${JSON.stringify({ urgency: currentAiResult?.urgency, conditions: currentAiResult?.possibleConditions })}. Please answer my follow up question: ${msg.content}` } : msg
-    )
+    const activeLanguage = targetLang || (language === "hi" ? "hi" : "en")
 
     try {
       const result = await routeChatMessage({
         message: text,
-        language,
+        language: activeLanguage,
         history: chatMessages.slice(-6),
         symptomContext: selectedSymptoms,
       })
 
       setChatMessages(prev => [...prev, { role: "assistant", content: result.reply }])
     } catch {
-      const emergencyAdvice = en
+      const emergencyAdvice = activeLanguage === "en"
         ? "• Rest adequately and keep yourself well hydrated with boiled water or ORS.\n• Monitor your temperature and symptoms closely.\n• If symptoms worsen or you feel severe discomfort, please consult your nearest Community Health Centre (CHC) or call 108 immediately."
         : "• पर्याप्त आराम करें और ओआरएस या उबले हुए पानी से हाइड्रेटेड रहें।\n• अपने तापमान और लक्षणों पर नज़र रखें।\n• यदि लक्षण बढ़ें या सांस लेने में तकलीफ हो, तो तुरंत नजदीकी स्वास्थ्य केंद्र (CHC) जाएँ या 108 पर कॉल करें।"
 
@@ -452,7 +445,14 @@ export function SymptomChecker({ language }: SymptomCheckerProps) {
                       <Button 
                         variant="ghost" 
                         size="sm" 
-                        onClick={() => handleChat(en ? "Please translate your previous response to Hindi." : "कृपया अपने पिछले उत्तर का अंग्रेजी में अनुवाद करें।")}
+                        onClick={() => {
+                          const lastAssistantMsg = [...chatMessages].reverse().find(m => m.role === "assistant")?.content || ""
+                          if (en) {
+                            handleChat(`कृपया इस जानकारी का हिंदी में अनुवाद करें:\n"${lastAssistantMsg}"`, undefined, "hi")
+                          } else {
+                            handleChat(`Please translate this response to English:\n"${lastAssistantMsg}"`, undefined, "en")
+                          }
+                        }}
                         disabled={chatLoading}
                         className="text-xs h-7 text-teal-700 hover:text-teal-800 hover:bg-teal-50"
                       >

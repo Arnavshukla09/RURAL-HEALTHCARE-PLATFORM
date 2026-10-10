@@ -81,3 +81,20 @@ export function normalizeQuery(raw: string): string {
 
   return tokens.join(" ")
 }
+
+/**
+ * Strips raw markdown bold asterisks (**) from text responses to keep
+ * chat messages clean and readable without exposing raw markdown syntax.
+ */
+export function cleanMarkdown(text: string): string {
+  if (!text) return ""
+  return text
+    // Replace **bold** with plain bold text (strip **)
+    .replace(/\*\*(.*?)\*\*/g, "$1")
+    // Replace stray double asterisks
+    .replace(/\*\*/g, "")
+    // Normalize any triple asterisks
+    .replace(/\*\*\*/g, "")
+    .trim()
+}
+

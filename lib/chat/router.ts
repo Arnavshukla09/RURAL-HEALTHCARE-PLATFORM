@@ -18,7 +18,7 @@ import { detectTier0Emergency } from "./emergency"
 import { answerMedicalQuery } from "@/lib/ai/medical-brain"
 import { lookupOffline } from "@/lib/offline/offline-ai"
 import { findCachedAnswer, learnFromAnswer } from "@/lib/ai/query-learner"
-import { normalizeQuery } from "./normalize"
+import { normalizeQuery, cleanMarkdown } from "./normalize"
 
 export async function routeChatMessage(input: RouteChatInput): Promise<ChatResult> {
   const { message, language, history = [], symptomContext = [] } = input
@@ -40,7 +40,7 @@ export async function routeChatMessage(input: RouteChatInput): Promise<ChatResul
       console.log("[ChatRouter] Responded via Tier 0 (Emergency Gate)")
     }
     return {
-      reply: emergencyMatch.reply,
+      reply: cleanMarkdown(emergencyMatch.reply),
       tier: 0,
       confidence: 1.0,
       emergency: true,
@@ -54,10 +54,10 @@ export async function routeChatMessage(input: RouteChatInput): Promise<ChatResul
     if (process.env.NODE_ENV === "development") {
       console.log("[ChatRouter] Responded via Tier 2 (Clinical Knowledge Engine)")
     }
-    // Asynchronously record into learned cache
-    learnFromAnswer(text, brainAnswer).catch(() => {})
+    // Asynchronously record into learned cache with explicit language
+    learnFromAnswer(text, brainAnswer, lang).catch(() => {})
     return {
-      reply: brainAnswer,
+      reply: cleanMarkdown(brainAnswer),
       tier: 2,
       confidence: 0.95,
       source: "medical-brain",
@@ -72,22 +72,22 @@ export async function routeChatMessage(input: RouteChatInput): Promise<ChatResul
     }
     const replyText = lang === "hi" ? faqHit.answerHi : faqHit.answer
     return {
-      reply: replyText,
+      reply: cleanMarkdown(replyText),
       tier: 2,
       confidence: 0.9,
       source: "offline-faq",
     }
   }
 
-  // ── 4. Tier 2b: Local IndexedDB Learned Cache ──────────────────────────
+  // ── 4. Tier 2b: Local IndexedDB Learned Cache (language-isolated) ──────
   try {
-    const cachedHit = await findCachedAnswer(text)
+    const cachedHit = await findCachedAnswer(text, lang)
     if (cachedHit.found && cachedHit.response) {
       if (process.env.NODE_ENV === "development") {
         console.log("[ChatRouter] Responded via Tier 2b (IndexedDB Cache)")
       }
       return {
-        reply: cachedHit.response,
+        reply: cleanMarkdown(cachedHit.response),
         tier: "2b",
         confidence: cachedHit.similarity || 0.8,
         queryId: cachedHit.queryId,
@@ -126,9 +126,10 @@ export async function routeChatMessage(input: RouteChatInput): Promise<ChatResul
     if (response.ok) {
       const data = await response.json()
       if (data.reply) {
+        const cleanedReply = cleanMarkdown(data.reply)
         // Only cache if not an upstream emergency or generic fallback
         if (!data.fallback && !data.emergency) {
-          learnFromAnswer(text, data.reply).catch(() => {})
+          learnFromAnswer(text, cleanedReply, lang).catch(() => {})
         }
 
         if (process.env.NODE_ENV === "development") {
@@ -136,7 +137,7 @@ export async function routeChatMessage(input: RouteChatInput): Promise<ChatResul
         }
 
         return {
-          reply: data.reply,
+          reply: cleanedReply,
           tier: 3,
           confidence: data.fallback ? 0.6 : 0.9,
           fallback: data.fallback,
