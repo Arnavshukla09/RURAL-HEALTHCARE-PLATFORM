@@ -45,28 +45,32 @@ ON public.chat_cache
 FOR UPDATE
 USING (
     EXISTS (
-        SELECT 1 FROM public.healthcare_providers
+        SELECT 1 FROM public.providers
         WHERE user_id = auth.uid()
     )
     OR
     EXISTS (
-        SELECT 1 FROM auth.users
-        WHERE id = auth.uid() AND raw_user_meta_data->>'role' = 'admin'
+        SELECT 1 FROM public.patients
+        WHERE user_id = auth.uid() AND role IN ('admin', 'doctor')
     )
+    OR
+    (auth.jwt() -> 'user_metadata' ->> 'role') IN ('admin', 'doctor')
 );
 
--- 4. Admins can view all pending entries for review
+-- 4. Admins and doctors can view all pending entries for review
 CREATE POLICY "Admins and doctors can view pending entries for review"
 ON public.chat_cache
 FOR SELECT
 USING (
     EXISTS (
-        SELECT 1 FROM public.healthcare_providers
+        SELECT 1 FROM public.providers
         WHERE user_id = auth.uid()
     )
     OR
     EXISTS (
-        SELECT 1 FROM auth.users
-        WHERE id = auth.uid() AND raw_user_meta_data->>'role' = 'admin'
+        SELECT 1 FROM public.patients
+        WHERE user_id = auth.uid() AND role IN ('admin', 'doctor')
     )
+    OR
+    (auth.jwt() -> 'user_metadata' ->> 'role') IN ('admin', 'doctor')
 );
