@@ -1,8 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { Bell, X, Info, AlertTriangle, CheckCircle, Megaphone, Loader2 } from "lucide-react"
-import { createClient } from "@/lib/supabase/client"
+import { Bell, X, Info, AlertTriangle, CheckCircle, Loader2 } from "lucide-react"
 
 interface NotificationBellProps {
   user: any
@@ -26,27 +25,107 @@ export function NotificationBell({ user, language }: NotificationBellProps) {
   const [unread, setUnread] = useState(0)
   const panelRef = useRef<HTMLDivElement>(null)
 
+  const latestCreatedAtRef = useRef<string | null>(null)
+  const pollTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const backoffDelayRef = useRef<number>(60000)
+
+  const fetchNotifications = async (isInitial = false) => {
+    if (!user) return
+    if (isInitial) setLoading(true)
+    try {
+      const res = await fetch("/api/notifications?limit=20")
+      if (res.ok) {
+        const json = await res.json()
+        const notifs = Array.isArray(json) ? json : (json.data ?? [])
+        setNotifications(notifs)
+        setNextCursor(json.nextCursor || null)
+        setUnread(notifs.filter((n: any) => !n.is_read).length)
+        if (notifs.length > 0 && notifs[0].created_at) {
+          latestCreatedAtRef.current = notifs[0].created_at
+        } else {
+          latestCreatedAtRef.current = new Date().toISOString()
+        }
+        backoffDelayRef.current = 60000
+      } else {
+        backoffDelayRef.current = Math.min(backoffDelayRef.current * 2, 300000)
+      }
+    } catch (e) {
+      console.error("Notifications fetch error:", e)
+      backoffDelayRef.current = Math.min(backoffDelayRef.current * 2, 300000)
+    } finally {
+      if (isInitial) setLoading(false)
+    }
+  }
+
+  const pollNewNotifications = async () => {
+    if (!user || typeof document === "undefined" || document.visibilityState !== "visible") {
+      return
+    }
+    const sinceParam = latestCreatedAtRef.current
+    if (!sinceParam) {
+      await fetchNotifications(false)
+      return
+    }
+    try {
+      const res = await fetch(`/api/notifications?since=${encodeURIComponent(sinceParam)}&limit=20`)
+      if (res.ok) {
+        const json = await res.json()
+        const newNotifs = Array.isArray(json) ? json : (json.data ?? [])
+        if (newNotifs.length > 0) {
+          setNotifications(prev => {
+            const existingIds = new Set(prev.map((n: any) => n.id))
+            const fresh = newNotifs.filter((n: any) => !existingIds.has(n.id))
+            return [...fresh, ...prev]
+          })
+          const freshUnread = newNotifs.filter((n: any) => !n.is_read).length
+          if (freshUnread > 0) {
+            setUnread(prev => prev + freshUnread)
+          }
+          if (newNotifs[0].created_at) {
+            latestCreatedAtRef.current = newNotifs[0].created_at
+          }
+        }
+        backoffDelayRef.current = 60000
+      } else {
+        backoffDelayRef.current = Math.min(backoffDelayRef.current * 2, 300000)
+      }
+    } catch (e) {
+      console.error("Notifications poll error:", e)
+      backoffDelayRef.current = Math.min(backoffDelayRef.current * 2, 300000)
+    }
+  }
+
   useEffect(() => {
     if (!user) return
-    fetchNotifications()
-    // Real-time: subscribe to new notifications
-    const supabase = createClient()
-    const channel = supabase
-      .channel("notifications-live")
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "notifications" }, payload => {
-        const n = payload.new as any
-        const myId = user.patientId
-        const myRole = user.role
-        // Show if broadcast, role-match, or individual match
-        if (n.recipient_type === "all"
-          || (n.recipient_type === "role" && n.recipient_role === myRole)
-          || (n.recipient_type === "individual" && n.recipient_id === myId)) {
-          setNotifications(prev => [n, ...prev])
-          setUnread(prev => prev + 1)
+    fetchNotifications(true)
+
+    const scheduleNextPoll = () => {
+      if (pollTimerRef.current) clearTimeout(pollTimerRef.current)
+      pollTimerRef.current = setTimeout(async () => {
+        if (typeof document !== "undefined" && document.visibilityState === "visible") {
+          await pollNewNotifications()
         }
-      })
-      .subscribe()
-    return () => { supabase.removeChannel(channel) }
+        scheduleNextPoll()
+      }, backoffDelayRef.current)
+    }
+
+    scheduleNextPoll()
+
+    const handleFocusOrVisible = () => {
+      if (typeof document !== "undefined" && document.visibilityState === "visible") {
+        pollNewNotifications()
+        scheduleNextPoll()
+      }
+    }
+
+    window.addEventListener("focus", handleFocusOrVisible)
+    document.addEventListener("visibilitychange", handleFocusOrVisible)
+
+    return () => {
+      if (pollTimerRef.current) clearTimeout(pollTimerRef.current)
+      window.removeEventListener("focus", handleFocusOrVisible)
+      document.removeEventListener("visibilitychange", handleFocusOrVisible)
+    }
   }, [user])
 
   // Close on outside click
@@ -57,22 +136,6 @@ export function NotificationBell({ user, language }: NotificationBellProps) {
     document.addEventListener("mousedown", h)
     return () => document.removeEventListener("mousedown", h)
   }, [])
-
-  const fetchNotifications = async () => {
-    if (!user) return
-    setLoading(true)
-    try {
-      const res = await fetch("/api/notifications?limit=20")
-      if (res.ok) {
-        const json = await res.json()
-        const notifs = Array.isArray(json) ? json : (json.data ?? [])
-        setNotifications(notifs)
-        setNextCursor(json.nextCursor || null)
-        setUnread(notifs.filter((n: any) => !n.is_read).length)
-      }
-    } catch (e) { console.error(e) }
-    finally { setLoading(false) }
-  }
 
   const handleLoadMoreNotifs = async () => {
     if (!nextCursor || loadingMore) return
@@ -90,17 +153,24 @@ export function NotificationBell({ user, language }: NotificationBellProps) {
   }
 
   const markAllRead = async () => {
-    const supabase = createClient()
     const unreadIds = notifications.filter(n => !n.is_read).map(n => n.id)
     if (unreadIds.length === 0) return
-    await supabase.from("notifications").update({ is_read: true }).in("id", unreadIds)
+    try {
+      await fetch("/api/notifications", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ notificationIds: unreadIds, is_read: true }),
+      })
+    } catch (e) {
+      console.error("Failed to mark notifications as read:", e)
+    }
     setNotifications(prev => prev.map(n => ({ ...n, is_read: true })))
     setUnread(0)
   }
 
   const handleOpen = () => {
     setOpen(!open)
-    if (!open) { fetchNotifications(); markAllRead() }
+    if (!open) { fetchNotifications(false); markAllRead() }
   }
 
   if (!user) return null

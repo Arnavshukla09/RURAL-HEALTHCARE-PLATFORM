@@ -4,6 +4,24 @@ All notable changes to the Rural Healthcare Platform will be documented in this 
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres roughly to chronological feature milestones.
 
+## [v1.10.0] - 2026-10-11 — Phase 7: Realtime Elimination & Visibility-Aware Notification Polling (Audit H10)
+
+### Realtime & Notifications (H10)
+- **Supabase Realtime Elimination (`components/NotificationBell.tsx`)**:
+  - Removed the unfiltered `postgres_changes` table subscription that previously exhausted the 200 concurrent connection limit on Supabase Free and triggered per-subscriber row permission checks.
+  - Replaced with visibility-aware polling (`GET /api/notifications?since=<timestamp>`) executing every 60 seconds exclusively when `document.visibilityState === "visible"`.
+  - Added immediate polling trigger on tab focus (`window.addEventListener("focus")`) and document visibility change.
+  - Integrated exponential backoff on fetch failures (60s -> 120s -> 240s -> max 300s).
+- **Notifications Route Enhancements (`app/api/notifications/route.ts`)**:
+  - Supported `since` query parameter filtering `.gt("created_at", since)` to return only newly arrived notifications for polling.
+  - Extended `PATCH /api/notifications` schema to accept either single `notificationId` or batch `notificationIds` (max 100).
+  - Applied user-scoped ownership check `eq("recipient_id", patient.id)` for patient mark-as-read operations.
+  - Set `Cache-Control: private, no-cache, no-store, must-revalidate` response header to prevent private notifications from being cached by intermediate proxies.
+- **Automated Verification (`tests/unit/notifications.test.ts`)**:
+  - Added 5 unit tests verifying authentication requirement, `since` parameter filtering, missing payload validation, single notification update, and batch notification updates.
+
+---
+
 ## [v1.9.0] - 2026-10-11 — Phase 6: ISR Caching, Bundle Optimization & Non-Blocking First Paint (Audit H6, M5)
 
 ### Performance, Rendering & Bundle Optimization (H6, M5)

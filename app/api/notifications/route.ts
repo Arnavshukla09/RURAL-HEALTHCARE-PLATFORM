@@ -15,8 +15,11 @@ const NotificationSchema = z.object({
 })
 
 const UpdateNotificationSchema = z.object({
-  notificationId: z.string().uuid(),
+  notificationId: z.string().uuid().optional(),
+  notificationIds: z.array(z.string().uuid()).max(100).optional(),
   is_read: z.boolean(),
+}).refine(data => !!data.notificationId || (!!data.notificationIds && data.notificationIds.length > 0), {
+  message: "Either notificationId or notificationIds is required",
 })
 
 export async function GET(request: NextRequest) {
@@ -32,6 +35,7 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url)
     const unreadOnly = searchParams.get("unreadOnly") === "true"
+    const since = searchParams.get("since")
     const { limit, cursor } = parsePaginationParams(searchParams, 20, 100)
 
     // Explicit column selection (H8)
@@ -46,6 +50,13 @@ export async function GET(request: NextRequest) {
       query = query.eq("is_read", false)
     }
 
+    if (since) {
+      const d = new Date(since)
+      if (!isNaN(d.getTime())) {
+        query = query.gt("created_at", d.toISOString())
+      }
+    }
+
     if (cursor) {
       query = query.lt("created_at", cursor.createdAt)
     }
@@ -57,7 +68,11 @@ export async function GET(request: NextRequest) {
     }
 
     const paginated = paginateResults((data ?? []) as any, limit)
-    return NextResponse.json(paginated)
+    return NextResponse.json(paginated, {
+      headers: {
+        "Cache-Control": "private, no-cache, no-store, must-revalidate",
+      },
+    })
   } catch (error) {
     return authErrorResponse(error)
   }
@@ -119,13 +134,14 @@ export async function PATCH(request: NextRequest) {
       )
     }
 
-    const { notificationId, is_read } = parsed.data
+    const { notificationId, notificationIds, is_read } = parsed.data
+    const ids = notificationIds ?? (notificationId ? [notificationId] : [])
 
     // H1 FIX: compare recipient_id with patient.id (patients table PK), NOT auth user.id!
     let updateQuery = supabase
       .from("notifications")
       .update({ is_read })
-      .eq("id", notificationId)
+      .in("id", ids)
 
     if (patient.role !== "admin") {
       updateQuery = updateQuery
@@ -135,13 +151,12 @@ export async function PATCH(request: NextRequest) {
 
     const { data, error } = await updateQuery
       .select("id, title, message, type, is_read, created_at")
-      .single()
 
     if (error) {
-      return NextResponse.json({ error: "Notification not found or access denied", code: "NOT_FOUND" }, { status: 404 })
+      return NextResponse.json({ error: "Failed to update notification(s)", code: "DB_ERROR" }, { status: 500 })
     }
 
-    return NextResponse.json({ data })
+    return NextResponse.json({ data: notificationId ? data?.[0] : data, count: data?.length ?? 0 })
   } catch (error) {
     return authErrorResponse(error)
   }
