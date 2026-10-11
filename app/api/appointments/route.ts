@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { rateLimit } from "@/lib/rate-limit"
+import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit"
 import { z } from "zod"
 import { requireUser, getPatientProfile, authErrorResponse, AuthError } from "@/lib/auth/guard"
 import { getAdminClient } from "@/lib/supabase/admin"
@@ -20,10 +20,8 @@ import { parsePaginationParams, paginateResults } from "@/lib/pagination"
 
 export async function GET(req: NextRequest) {
   try {
-    const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "127.0.0.1"
-    if (!(await rateLimit(ip, 30, 60000))) {
-      return NextResponse.json({ error: "Too many requests", code: "RATE_LIMITED" }, { status: 429 })
-    }
+    const rl = await checkRateLimit(req, "read")
+    if (!rl.success) return rateLimitResponse(rl)
 
     const { user, supabase } = await requireUser()
     const patient = await getPatientProfile(user.id)
@@ -69,10 +67,8 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "127.0.0.1"
-    if (!(await rateLimit(ip, 10, 60000))) {
-      return NextResponse.json({ error: "Too many requests", code: "RATE_LIMITED" }, { status: 429 })
-    }
+    const rl = await checkRateLimit(req, "write")
+    if (!rl.success) return rateLimitResponse(rl)
 
     const { user, supabase } = await requireUser()
     let patient = await getPatientProfile(user.id)
@@ -184,10 +180,8 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
-    const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "127.0.0.1"
-    if (!(await rateLimit(ip, 20, 60000))) {
-      return NextResponse.json({ error: "Too many requests", code: "RATE_LIMITED" }, { status: 429 })
-    }
+    const rl = await checkRateLimit(req, "write")
+    if (!rl.success) return rateLimitResponse(rl)
 
     const { user, supabase } = await requireUser()
     const patient = await getPatientProfile(user.id)

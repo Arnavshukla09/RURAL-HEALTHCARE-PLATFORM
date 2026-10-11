@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 import { createClient } from "@/lib/supabase/server"
 import { normalizeQuery } from "@/lib/chat/normalize"
+import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit"
 
 const ChatCacheSchema = z.object({
   question: z.string().min(3).max(500),
@@ -26,6 +27,12 @@ export async function POST(request: NextRequest) {
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    // Rate limiting keyed by session user ID (Audit H4)
+    const rl = await checkRateLimit(request, "write", user.id)
+    if (!rl.success) {
+      return rateLimitResponse(rl)
     }
 
     const body = await request.json()

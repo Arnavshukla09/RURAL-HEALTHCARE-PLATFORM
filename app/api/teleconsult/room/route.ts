@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
-import { rateLimit } from "@/lib/rate-limit"
+import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit"
 import { requireUser, getPatientProfile, authErrorResponse } from "@/lib/auth/guard"
 
 const TeleconsultSchema = z.object({
@@ -9,10 +9,8 @@ const TeleconsultSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    const ip = request.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "127.0.0.1"
-    if (!(await rateLimit(ip, 20, 60000))) {
-      return NextResponse.json({ error: "Too many requests", code: "RATE_LIMITED" }, { status: 429 })
-    }
+    const rl = await checkRateLimit(request, "read")
+    if (!rl.success) return rateLimitResponse(rl)
 
     const { user, supabase } = await requireUser()
     const patient = await getPatientProfile(user.id)

@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server"
 import { getAdminClient } from "@/lib/supabase/admin"
 import { type NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
-import { rateLimit } from "@/lib/rate-limit"
+import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit"
 import { requireUser, getPatientProfile, authErrorResponse } from "@/lib/auth/guard"
 
 const MedicalRecordSchema = z.object({
@@ -47,10 +47,8 @@ import { parsePaginationParams, paginateResults } from "@/lib/pagination"
 
 export async function GET(request: NextRequest) {
   try {
-    const ip = request.headers.get('x-forwarded-for')?.split(",")[0].trim() ?? '127.0.0.1'
-    if (!(await rateLimit(ip, 30, 60000))) {
-      return NextResponse.json({ error: 'Too many requests', code: "RATE_LIMITED" }, { status: 429 })
-    }
+    const rl = await checkRateLimit(request, "read")
+    if (!rl.success) return rateLimitResponse(rl)
 
     const { user, supabase } = await requireUser()
     const patient = await getOrCreatePatient(supabase, user)
@@ -93,10 +91,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const ip = request.headers.get('x-forwarded-for')?.split(",")[0].trim() ?? '127.0.0.1'
-    if (!(await rateLimit(ip, 15, 60000))) {
-      return NextResponse.json({ error: 'Too many requests', code: "RATE_LIMITED" }, { status: 429 })
-    }
+    const rl = await checkRateLimit(request, "write")
+    if (!rl.success) return rateLimitResponse(rl)
 
     const { user, supabase } = await requireUser()
     const body = await request.json()
@@ -134,10 +130,8 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const ip = request.headers.get('x-forwarded-for')?.split(",")[0].trim() ?? '127.0.0.1'
-    if (!(await rateLimit(ip, 10, 60000))) {
-      return NextResponse.json({ error: 'Too many requests', code: "RATE_LIMITED" }, { status: 429 })
-    }
+    const rl = await checkRateLimit(request, "write")
+    if (!rl.success) return rateLimitResponse(rl)
 
     const { user, supabase } = await requireUser()
     const { searchParams } = new URL(request.url)
@@ -172,10 +166,8 @@ export async function DELETE(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
-    const ip = request.headers.get('x-forwarded-for')?.split(",")[0].trim() ?? '127.0.0.1'
-    if (!(await rateLimit(ip, 15, 60000))) {
-      return NextResponse.json({ error: 'Too many requests', code: "RATE_LIMITED" }, { status: 429 })
-    }
+    const rl = await checkRateLimit(request, "write")
+    if (!rl.success) return rateLimitResponse(rl)
 
     const { user, supabase } = await requireUser()
     const body = await request.json()

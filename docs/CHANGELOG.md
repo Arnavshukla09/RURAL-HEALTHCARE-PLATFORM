@@ -4,6 +4,43 @@ All notable changes to the Rural Healthcare Platform will be documented in this 
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres roughly to chronological feature milestones.
 
+## [v1.8.0] - 2026-10-11 — Phase 5: Rate Limiting Factory, AI Gateway & Staging Load-Test Harness (Audit H4, M4)
+
+### Security, Rate Limiting & Abuse Prevention (H4)
+- **Route-Class Rate Limiting Factory (`lib/rate-limit.ts`)**:
+  - Replaced the single global rate limit bucket with a specialized limiter factory supporting 5 distinct route classes:
+    - `auth`: 10 requests / 60s (prevents credential stuffing)
+    - `read`: 60 requests / 60s
+    - `write`: 20 requests / 60s (prevents appointment/record flood)
+    - `ai`: 10 requests / 60s (protects Gemini quota)
+    - `public`: 60 requests / 60s (facilities locator & providers directory)
+  - Fixed the critical bug where `max` and `windowMs` parameters were ignored when Upstash Redis was configured.
+  - Resolved CGNAT IP collisions across rural community hotspots: `clientKey()` keys on `user:<id>` for authenticated requests and strictly extracts the **first** hop of `x-forwarded-for` for unauthenticated requests.
+  - Eliminated serverless memory leaks: bounded in-memory fallback store with active TTL eviction and 5,000-entry FIFO ceiling.
+  - Returns standard HTTP 429 response with `Retry-After`, `X-RateLimit-Limit`, `X-RateLimit-Remaining`, and `X-RateLimit-Reset` headers.
+  - Applied across all application endpoints: `ai-chat`, `appointments` (GET, POST, PATCH), `auth/ensure-patient`, `auth/profile`, `chat-cache`, `doctor-requests`, `facilities/nearby`, `health-data`, `medical-records`, `notifications`, `offline-sync`, `providers`, `symptom-analyze`, and `teleconsult/room`.
+
+### Upstream AI Gateway & Circuit Breaker (M4)
+- **AI Gateway Protection (`lib/ai/gateway.ts`)**:
+  - **Circuit Breaker**: Automatically trips open after 5 consecutive upstream failures for 60 seconds, preventing cascaded failures and latency spikes. Gracefully half-opens after cooldown to probe upstream health.
+  - **Daily Free-Tier Quota Guard**: Enforces a per-user/IP limit of 30 queries/day to guarantee $0 spend across free tier Gemini usage.
+  - **Strict Timeout Guard**: Hard 12-second abort timeout via `Promise.race`, preventing hanging serverless invocations.
+  - Integrated into `app/api/ai-chat/route.ts` and `app/api/symptom-analyze/route.ts`, falling back to instant deterministic offline triage (`triageOffline` & clinical knowledge base).
+
+### Staging Load-Test Mode & Health Probes
+- **Load-Test Bypass & Stub Harness (`lib/loadtest.ts`)**:
+  - Implemented staging-only load testing switch following `scale-kit/loadtest/patches/loadtest-mode.md`.
+  - Constant-time `timingSafeEqual` cryptographic check on `x-loadtest-key` matching `LOADTEST_KEY`.
+  - Strictly inert on production deployments (`LOADTEST_ENABLED !== "1"`).
+  - Stubs Gemini latency with realistic 400-1200ms randomized delay while allowing k6 to load-test system capacity without consuming upstream quotas.
+- **Health & Readiness Endpoints**:
+  - `GET /api/health`: Comprehensive liveness probe checking database connectivity, cache status, and AI circuit breaker state without exposing secrets or connection parameters.
+  - `GET /api/ready`: Deployment readiness probe returning HTTP 200 `{ ready: true, version: "1.7.0" }`.
+- **Automated Verification (`tests/unit/rate-limit-and-gateway.test.ts`)**:
+  - 7 unit tests verifying IP hop extraction, authenticated user keys, sliding window limits, load-test key authorization, circuit breaker transitions, and timeouts.
+
+---
+
 ## [v1.7.0] - 2026-10-11 — Phase 4: Offline Sync Rewrite, IndexedDB Outbox & Idempotency (Audit C4, §2.4)
 
 ### Offline Data & Synchronization

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 import { createClient } from "@/lib/supabase/server"
-import { rateLimit } from "@/lib/rate-limit"
+import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit"
 import { z } from "zod"
 import {
   buildFacilitiesCacheKey,
@@ -17,10 +17,8 @@ const QuerySchema = z.object({
 })
 
 export async function GET(req: NextRequest) {
-  const ip = req.headers.get("x-forwarded-for") ?? "127.0.0.1"
-  if (!(await rateLimit(ip, 30, 60000))) {
-    return NextResponse.json({ error: "Too many requests" }, { status: 429 })
-  }
+  const rl = await checkRateLimit(req, "public")
+  if (!rl.success) return rateLimitResponse(rl)
 
   const { searchParams } = new URL(req.url)
   const parsed = QuerySchema.safeParse({

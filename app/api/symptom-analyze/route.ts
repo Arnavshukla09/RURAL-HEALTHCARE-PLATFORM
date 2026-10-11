@@ -1,15 +1,16 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { rateLimit } from "@/lib/rate-limit"
+import { checkRateLimit, rateLimitResponse, clientKey } from "@/lib/rate-limit"
 import { triageOffline } from "@/lib/offline/offline-ai"
 import { generateGeminiContent } from "@/lib/ai/gemini"
+import { isLoadTest, stubDelay } from "@/lib/loadtest"
+import { executeWithAiGateway } from "@/lib/ai/gateway"
 
 export async function POST(request: NextRequest) {
   try {
-    const forwardedHeader = request.headers.get("x-forwarded-for")
-    const clientIp = forwardedHeader ? forwardedHeader.split(",")[0].trim() : "127.0.0.1"
-
-    if (!(await rateLimit(clientIp))) {
-      return NextResponse.json({ error: "Too many requests. Please try again shortly." }, { status: 429 })
+    // 1. Route-class rate limiting (Audit H4)
+    const rl = await checkRateLimit(request, "ai")
+    if (!rl.success) {
+      return rateLimitResponse(rl)
     }
 
     const body = await request.json()
@@ -55,7 +56,30 @@ Rules:
 3. Provide practical rural home care (ORS, hydration, light khichdi).
 4. Output strictly the JSON object and no surrounding text or markdown.`
 
-    const geminiResult = await generateGeminiContent([{ role: "user", parts: [{ text: prompt }] }])
+    // Staging load-test mode bypass (Audit §4 / scale-kit patch)
+    if (isLoadTest(request)) {
+      await stubDelay()
+      const offlineTriage = triageOffline(sanitizedSymptoms, lang)
+      return NextResponse.json({
+        urgency: offlineTriage.urgency,
+        specialistNeeded: offlineTriage.referTo === "108" ? "Emergency / Ambulance" : "General Physician / Medical Officer",
+        immediateActions: offlineTriage.immediateActions,
+        homeCare: offlineTriage.homeCare,
+        whenToGoToHospital: offlineTriage.whenToGoToHospital,
+        fallback: false,
+      })
+    }
+
+    const userKey = clientKey(request)
+    let geminiResult
+    try {
+      geminiResult = await executeWithAiGateway(userKey, () =>
+        generateGeminiContent([{ role: "user", parts: [{ text: prompt }] }])
+      )
+    } catch (gwErr: any) {
+      console.warn("[symptom-analyze] AI Gateway fallback to offline triage:", gwErr?.message || gwErr)
+      geminiResult = { reply: null, fallback: true }
+    }
 
     if (geminiResult.reply && !geminiResult.fallback) {
       const cleaned = geminiResult.reply

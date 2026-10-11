@@ -1,14 +1,12 @@
 import { createClient } from "@/lib/supabase/server"
 import { type NextRequest, NextResponse } from "next/server"
-import { rateLimit } from "@/lib/rate-limit"
-import { z } from "zod"   // ✅ ADD (for query validation)
+import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit"
+import { z } from "zod"
 
 export async function GET(request: NextRequest) {
   try {
-    const ip = request.headers.get('x-forwarded-for') ?? '127.0.0.1'
-    if (!(await rateLimit(ip))) {
-      return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
-    }
+    const rl = await checkRateLimit(request, "public")
+    if (!rl.success) return rateLimitResponse(rl)
 
     const supabase = await createClient()
 

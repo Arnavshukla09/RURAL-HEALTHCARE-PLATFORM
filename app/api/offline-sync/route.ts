@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
-import { rateLimit } from "@/lib/rate-limit"
+import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit"
 import { requireUser, getPatientProfile, authErrorResponse } from "@/lib/auth/guard"
 
 // ── Strict Column Whitelists Per Table (Audit C4, §2.4) ──────────────────────
@@ -71,10 +71,8 @@ export type SyncResult = {
 
 export async function POST(request: NextRequest) {
   try {
-    const ip = request.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "127.0.0.1"
-    if (!(await rateLimit(ip, 30, 60000))) {
-      return NextResponse.json({ error: "Too many requests", code: "RATE_LIMITED" }, { status: 429 })
-    }
+    const rl = await checkRateLimit(request, "write")
+    if (!rl.success) return rateLimitResponse(rl)
 
     // Auth guard: User-scoped client ensures RLS applies
     const { user, supabase } = await requireUser()

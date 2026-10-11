@@ -19,7 +19,10 @@ vi.mock("@/lib/auth/guard", () => {
 
 // Mock rate limiting
 vi.mock("@/lib/rate-limit", () => ({
+  checkRateLimit: vi.fn().mockResolvedValue({ success: true }),
+  rateLimitResponse: vi.fn(),
   rateLimit: vi.fn().mockResolvedValue(true),
+  clientKey: vi.fn().mockReturnValue("user:test"),
 }))
 
 import { requireUser, getPatientProfile } from "@/lib/auth/guard"

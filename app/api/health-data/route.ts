@@ -1,9 +1,9 @@
 import { createClient } from "@/lib/supabase/server"
 import { type NextRequest, NextResponse } from "next/server"
-import { z } from "zod"   // ✅ ADD
-import { rateLimit } from "@/lib/rate-limit"
+import { z } from "zod"
+import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit"
 
-// ✅ Define schema (adjust fields if your DB differs)
+// Define schema
 const HealthDataSchema = z.object({
   data_type: z.string().min(1),              // e.g. "heart_rate", "steps"
   value: z.number(),                         // numeric reading
@@ -16,10 +16,8 @@ import { parsePaginationParams, paginateResults } from "@/lib/pagination"
 
 export async function GET(request: NextRequest) {
   try {
-    const ip = request.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "127.0.0.1"
-    if (!(await rateLimit(ip, 30, 60000))) {
-      return NextResponse.json({ error: "Too many requests", code: "RATE_LIMITED" }, { status: 429 })
-    }
+    const rl = await checkRateLimit(request, "read")
+    if (!rl.success) return rateLimitResponse(rl)
 
     const { user, supabase } = await requireUser()
     const patient = await getPatientProfile(user.id)
@@ -65,10 +63,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const ip = request.headers.get('x-forwarded-for') ?? '127.0.0.1'
-    if (!(await rateLimit(ip))) {
-      return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
-    }
+    const rl = await checkRateLimit(request, "write")
+    if (!rl.success) return rateLimitResponse(rl)
 
     const supabase = await createClient()
     const {

@@ -1,6 +1,6 @@
 import { getAdminClient } from "@/lib/supabase/admin"
 import { type NextRequest, NextResponse } from "next/server"
-import { rateLimit } from "@/lib/rate-limit"
+import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit"
 import { requireUser, authErrorResponse } from "@/lib/auth/guard"
 
 /**
@@ -14,10 +14,8 @@ import { requireUser, authErrorResponse } from "@/lib/auth/guard"
  */
 export async function POST(request: NextRequest) {
   try {
-    const ip = request.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "127.0.0.1"
-    if (!(await rateLimit(ip, 20, 60000))) {
-      return NextResponse.json({ error: "Too many requests", code: "RATE_LIMITED" }, { status: 429 })
-    }
+    const rl = await checkRateLimit(request, "auth")
+    if (!rl.success) return rateLimitResponse(rl)
 
     const { user, supabase } = await requireUser()
 

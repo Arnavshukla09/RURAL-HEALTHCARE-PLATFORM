@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
-import { rateLimit } from "@/lib/rate-limit"
+import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit"
 import { z } from "zod"
 
 import { requireUser, getPatientProfile, authErrorResponse } from "@/lib/auth/guard"
@@ -9,10 +9,8 @@ import { parsePaginationParams, paginateResults } from "@/lib/pagination"
 // GET — admin fetches all pending requests (with pagination)
 export async function GET(req: NextRequest) {
   try {
-    const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "127.0.0.1"
-    if (!(await rateLimit(ip, 20, 60000))) {
-      return NextResponse.json({ error: "Too many requests", code: "RATE_LIMITED" }, { status: 429 })
-    }
+    const rl = await checkRateLimit(req, "read")
+    if (!rl.success) return rateLimitResponse(rl)
 
     const { user, supabase } = await requireUser()
     const patient = await getPatientProfile(user.id)
@@ -65,10 +63,8 @@ export async function GET(req: NextRequest) {
 
 // POST — doctor submits registration request
 export async function POST(req: NextRequest) {
-  const ip = req.headers.get("x-forwarded-for") ?? "127.0.0.1"
-  if (!(await rateLimit(ip, 5, 60000))) {
-    return NextResponse.json({ error: "Too many requests" }, { status: 429 })
-  }
+  const rl = await checkRateLimit(req, "write")
+  if (!rl.success) return rateLimitResponse(rl)
 
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()

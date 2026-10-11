@@ -1,8 +1,10 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { rateLimit } from "@/lib/rate-limit"
+import { checkRateLimit, rateLimitResponse, clientKey } from "@/lib/rate-limit"
 import { answerMedicalQuery, getMedicalBrainEntry } from "@/lib/ai/medical-brain"
 import { generateGeminiContent, GeminiContent } from "@/lib/ai/gemini"
 import { getCachedResponse, setCachedResponse } from "@/lib/cache/response-cache"
+import { isLoadTest, stubDelay } from "@/lib/loadtest"
+import { executeWithAiGateway } from "@/lib/ai/gateway"
 
 const SYSTEM_PROMPT = `You are a helpful, culturally sensitive AI health assistant for rural communities in India.
 Follow these clinical safety rules strictly:
@@ -15,12 +17,10 @@ Follow these clinical safety rules strictly:
 
 export async function POST(request: NextRequest) {
   try {
-    // 1. Client IP rate limiting using first entry of x-forwarded-for
-    const forwardedHeader = request.headers.get("x-forwarded-for")
-    const clientIp = forwardedHeader ? forwardedHeader.split(",")[0].trim() : "127.0.0.1"
-
-    if (!(await rateLimit(clientIp))) {
-      return NextResponse.json({ error: "Too many requests. Please try again shortly." }, { status: 429 })
+    // 1. Route-class rate limiting (Audit H4)
+    const rl = await checkRateLimit(request, "ai")
+    if (!rl.success) {
+      return rateLimitResponse(rl)
     }
 
     const body = await request.json()
@@ -109,8 +109,23 @@ Do NOT wrap in any extra markdown or conversational commentary outside the JSON.
       parts: [{ text: sanitizedMessage }]
     })
 
-    // 4. Request Gemini with graceful fallback
-    const geminiResult = await generateGeminiContent(contents, BILINGUAL_SYSTEM_PROMPT)
+    // Staging load-test mode bypass (Audit §4 / scale-kit patch)
+    if (isLoadTest(request)) {
+      await stubDelay()
+      return NextResponse.json({ reply: "Load-test stub reply.", fallback: false })
+    }
+
+    // 4. Request Gemini with graceful fallback via AI Gateway (Circuit Breaker & Quota Guard)
+    const userKey = clientKey(request)
+    let geminiResult
+    try {
+      geminiResult = await executeWithAiGateway(userKey, () =>
+        generateGeminiContent(contents, BILINGUAL_SYSTEM_PROMPT)
+      )
+    } catch (gwErr: any) {
+      console.warn("[ai-chat] AI Gateway bypassed to offline triage:", gwErr?.message || gwErr)
+      geminiResult = { reply: null, fallback: true, reason: gwErr?.code || "gateway-circuit" }
+    }
 
     if (geminiResult.reply && !geminiResult.fallback) {
       let replyEn = ""
