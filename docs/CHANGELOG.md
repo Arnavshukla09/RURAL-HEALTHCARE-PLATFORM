@@ -4,6 +4,39 @@ All notable changes to the Rural Healthcare Platform will be documented in this 
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres roughly to chronological feature milestones.
 
+## [v1.7.0] - 2026-10-11 — Phase 4: Offline Sync Rewrite, IndexedDB Outbox & Idempotency (Audit C4, §2.4)
+
+### Offline Data & Synchronization
+- **IndexedDB Outbox Engine (`lib/offline/outbox.ts`)**:
+  - Replaced flaky `localStorage` operation queue with persistent `idb` store `rhcp_offline_db` (`outbox` store).
+  - Strongly typed schema `{ client_op_id (uuid v4), table, type, payload, created_at, attempts, status, last_error }`.
+  - Operations implemented: `enqueue`, `listPending`, `listAll`, `markSent`, `deleteOps`, `markFailed`, `retryOp`, `discardOp`, `purgeSent`.
+  - Hard cap of 500 operations to prevent unbounded storage bloat on low-end devices.
+  - Storage quota monitor (`checkStorageQuota`) surfacing 80% usage alerts.
+  - One-time migration `migrateLegacyLocalStorage()` transferring any legacy `rhcp_offline_operations` entries into IndexedDB before cleanup.
+- **Server-Side Offline Sync Endpoint Rewrite (`POST /api/offline-sync`)**:
+  - Mandatory session authentication via `requireUser()` and patient verification via `getPatientProfile()`.
+  - **Strict Batch Cap**: Accepts at most 50 operations per batch (`SyncBatchSchema`).
+  - **Strict Column Whitelists**: Dedicated non-passthrough Zod schemas for `appointments`, `medical_records`, `health_data`, and `notifications`. Eliminates arbitrary column injection or privilege tampering.
+  - **Enforced Session Scoping**: Automatically binds server-verified `patient_id` or `user_id` from the authenticated session, overriding any client-supplied IDs.
+  - **Idempotency Protection**: Checks incoming `client_op_id`s against `processed_client_ops`. Skips duplicate operations cleanly with `{ status: "duplicate" }` instead of failing or creating duplicates.
+  - **Partial Failure Resilience**: Returns HTTP 200 with per-operation status array (`ok`, `duplicate`, `rejected`) so individual invalid operations never abort valid ones in the batch.
+  - Audit logging recorded best-effort in `offline_sync_log`.
+- **Client Sync Orchestrator & Triggers (`lib/offline/sync.ts`)**:
+  - Triggers on `online`, `visibilitychange` (when document returns to view), and Background Sync (`sync` event in Service Worker `app/sw.ts`).
+  - Implements jittered exponential backoff for network retries.
+  - Deletes only `ok` and `duplicate` items from the IndexedDB outbox; marks rejected operations as `failed` with error details so user data is never silently dropped.
+  - Dispatches `rhcp:outbox-updated` events for real-time UI synchronization.
+- **Bilingual Queue Inspector UI (`components/OfflineSyncBadge.tsx` & `components/Header.tsx`)**:
+  - Header pill showing live count of waiting or failed offline actions ("N waiting" / "N প্রতীक्षारत", "N failed" / "N विफल").
+  - Outbox inspector dialog displaying per-item table, operation type, timestamp, attempts (up to 5), and failure reasons.
+  - Interactive "Retry" and "Discard" actions for failed items, and one-tap "Sync Now".
+  - Storage quota warning banner when device storage exceeds 80%.
+- **Automated Verification (`tests/unit/offline-sync.test.ts`)**:
+  - Added unit test suite covering authentication requirement, batch size capping, idempotent replay, column whitelist enforcement, and partial failure handling.
+
+---
+
 ## [v1.6.0] - 2026-10-11 — Phase 3: PWA Modernization, Serwist Migration, Offline Fallback & Privacy Hardening (Audit §2, C3)
 
 ### PWA & Offline Experience

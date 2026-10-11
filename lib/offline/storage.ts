@@ -1,4 +1,7 @@
-// Local storage utilities for offline functionality
+// Local storage & key-value cache utilities for offline functionality
+// Bridged with IndexedDB outbox (lib/offline/outbox.ts) for persistent guaranteed synchronization
+import { enqueue, type OutboxTable, type OutboxOpType } from "./outbox"
+
 export interface OfflineOperation {
   id: string
   table: string
@@ -11,21 +14,53 @@ export interface OfflineOperation {
 const OPERATIONS_KEY = "rhcp_offline_operations"
 const CACHE_KEY = "rhcp_cache"
 
-export function saveOfflineOperation(operation: Omit<OfflineOperation, "id" | "timestamp" | "synced">) {
-  try {
-    const operations = getOfflineOperations()
-    const newOperation: OfflineOperation = {
-      ...operation,
-      id: `op_${Date.now()}_${Math.random()}`,
-      timestamp: Date.now(),
-      synced: false,
-    }
-    operations.push(newOperation)
-    localStorage.setItem(OPERATIONS_KEY, JSON.stringify(operations))
-    return newOperation
-  } catch (error) {
-    console.error("Failed to save offline operation:", error)
-    return null
+/**
+ * Save an operation to the offline queue.
+ * Bridges seamlessly to IndexedDB outbox.
+ */
+export function saveOfflineOperation(operation: {
+  table: string
+  type: "INSERT" | "UPDATE" | "DELETE"
+  data: any
+}) {
+  const validTable: OutboxTable = [
+    "appointments",
+    "health_data",
+    "medical_records",
+    "notifications",
+  ].includes(operation.table)
+    ? (operation.table as OutboxTable)
+    : "medical_records"
+
+  const validOpType: OutboxOpType = ["INSERT", "UPDATE", "DELETE"].includes(operation.type)
+    ? (operation.type as OutboxOpType)
+    : "INSERT"
+
+  const opId = crypto.randomUUID()
+
+  // Asynchronously enqueue to IndexedDB outbox
+  enqueue({
+    client_op_id: opId,
+    table: validTable,
+    type: validOpType,
+    payload: operation.data || {},
+  })
+    .then(() => {
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("rhcp:outbox-updated"))
+      }
+    })
+    .catch((err) => {
+      console.warn("[storage] Outbox enqueue error:", err)
+    })
+
+  return {
+    id: opId,
+    table: validTable,
+    type: validOpType,
+    data: operation.data,
+    timestamp: Date.now(),
+    synced: false,
   }
 }
 

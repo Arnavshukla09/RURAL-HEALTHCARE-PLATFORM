@@ -8,6 +8,7 @@ import { NotificationBell } from "./NotificationBell"
 import { usePathname, useRouter } from "next/navigation"
 import { useApp } from "@/components/providers/AppProvider"
 import { wipeClientCachesOnSignOut } from "@/lib/offline/cache-cleaner"
+import { OfflineSyncBadge } from "./OfflineSyncBadge"
 
 export function Header() {
   const { user, setUser, language, setLanguage } = useApp()
@@ -193,6 +194,9 @@ export function Header() {
 
           {/* Right */}
           <div className="flex items-center gap-1.5">
+            {/* Offline sync queue badge (Audit C4 / Phase 4) */}
+            <OfflineSyncBadge language={language} role={role} />
+
             {/* Language toggle */}
             <button onClick={() => setLanguage(en ? "hi" : "en")}
               className={`hidden sm:flex items-center px-2.5 py-1.5 text-xs font-medium border rounded-md transition-colors ${

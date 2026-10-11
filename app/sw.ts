@@ -171,4 +171,17 @@ self.addEventListener("message", (event: any) => {
   }
 })
 
+// Background Sync support (Audit C4 / Phase 4)
+self.addEventListener("sync", (event: any) => {
+  if (event.tag === "offline-outbox-sync") {
+    event.waitUntil(
+      self.clients.matchAll({ type: "window" }).then((clients) => {
+        for (const client of clients) {
+          client.postMessage({ type: "SYNC_OUTBOX" })
+        }
+      })
+    )
+  }
+})
+
 serwist.addEventListeners()
