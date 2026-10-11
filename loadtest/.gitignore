@@ -1,0 +1,4 @@
+# loadtest gitignore
+tokens.json
+summary-*.json
+*.log

@@ -4,6 +4,24 @@ All notable changes to the Rural Healthcare Platform will be documented in this 
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres roughly to chronological feature milestones.
 
+## [v1.12.0] - 2026-10-11 — Phase 9: Staging Load-Test Harness & Automated Smoke CI (Audit §4, §5)
+
+### Load Testing & Capacity Engineering
+- **Repository Load-Test Suite (`loadtest/`)**:
+  - Integrated full k6 traffic generator (`loadtest/k6/rural_health_mixed.js` and `lib.js`) supporting smoke, load, stress, spike, soak, and breakpoint scenarios.
+  - Added synthetic seeding suite (`loadtest/seed/seed_staging.sql`) generating up to 10,000 synthetic patients, 50,000 appointments, and 100,000 health records.
+  - Added session minting utility (`loadtest/tools/mint_tokens.mjs`) generating valid `@supabase/ssr` cookies.
+  - Added capacity planning model (`loadtest/tools/capacity_model.mjs`) calculating maximum sustainable MAU and identifying limiting monthly quotas (Vercel invocations vs. Supabase egress).
+  - Fortified `loadtest/.gitignore` against tracking session tokens or execution summaries.
+- **Automated Smoke Test Workflow (`.github/workflows/loadtest-smoke.yml`)**:
+  - Created manual `workflow_dispatch` GitHub Actions workflow executing k6 smoke test via `grafana/k6-action@v0.3.1`.
+  - Configured strict production safeguard: rejects execution immediately if target URL matches production (`rural-healthcare-platform.vercel.app`).
+  - Added scheduled workflow 60-day inactivity documentation note in `.github/workflows/keep-alive.yml`.
+- **Runbook & SLO Guide (`docs/LOAD_TESTING.md`)**:
+  - Comprehensive guide documenting test execution sequence, service-level objectives (<800ms API p95, <2.5s mobile LCP, <1% error rate), and post-test data cleanup.
+
+---
+
 ## [v1.11.0] - 2026-10-11 — Phase 8: Structured Observability, Request Tracing & CSP Report-Only (Audit M1, M6)
 
 ### Observability & Security (M1, M6)

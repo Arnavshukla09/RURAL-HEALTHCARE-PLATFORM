@@ -1,6 +1,9 @@
 name: Keep Supabase Alive
 
 # Ping the Supabase project every 3 days so it never pauses on the free tier.
+# NOTE: GitHub Actions automatically disables scheduled cron workflows if no repository
+# commit activity occurs for 60 consecutive days. If you notice keep-alive stops firing,
+# push a commit or manually trigger this workflow via workflow_dispatch to re-enable it.
 on:
   schedule:
     - cron: '0 8 */3 * *'   # Every 3 days at 8:00 AM UTC
