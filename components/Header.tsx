@@ -7,6 +7,7 @@ import { NotificationBell } from "./NotificationBell"
 
 import { usePathname, useRouter } from "next/navigation"
 import { useApp } from "@/components/providers/AppProvider"
+import { wipeClientCachesOnSignOut } from "@/lib/offline/cache-cleaner"
 
 export function Header() {
   const { user, setUser, language, setLanguage } = useApp()
@@ -29,6 +30,7 @@ export function Header() {
   }, [])
 
   const handleLogout = async () => {
+    await wipeClientCachesOnSignOut()
     const supabase = createClient()
     await supabase.auth.signOut()
     setUser(null)

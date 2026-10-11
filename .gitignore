@@ -32,3 +32,10 @@ scripts/scrub_keys.ps1
 env_search.txt
 supabase/.temp/
 *.tsbuildinfo
+
+# PWA and Serwist generated service worker outputs
+public/sw.js
+public/sw.js.map
+public/swe-worker-*.js
+public/workbox-*.js
+public/serwist-*.js

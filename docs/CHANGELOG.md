@@ -4,6 +4,39 @@ All notable changes to the Rural Healthcare Platform will be documented in this 
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres roughly to chronological feature milestones.
 
+## [v1.6.0] - 2026-10-11 — Phase 3: PWA Modernization, Serwist Migration, Offline Fallback & Privacy Hardening (Audit §2, C3)
+
+### PWA & Offline Experience
+- **Real PNG & Maskable Icons**: Generated standard-compliant PNG icons via `scripts/make_icons.mjs` using `sharp`:
+  - `public/icons/icon-192.png` & `public/icons/icon-512.png`
+  - `public/icons/maskable-192.png` & `public/icons/maskable-512.png` (80% safe zone with padded borders)
+  - `public/apple-touch-icon.png` (180x180)
+  - Resized and converted hero banner to `public/hero.webp` (120 KB vs 898 KB — 86.6% bandwidth saving).
+  - Purged obsolete 1024px JPEG-as-PNG placeholder icons.
+- **Manifest Standardization (`public/manifest.json`)**:
+  - Aligned theme color to `#0ea5e9` matching `<meta theme-color>` and Tailwind UI palette.
+  - Corrected app shortcuts pointing directly to valid client routes (`/emergency` and `/symptom-checker`).
+  - Added `id: "/"`, `start_url: "/?source=pwa"`, and distinct `"any"` vs `"maskable"` icon definitions.
+- **Serwist Service Worker Migration (`app/sw.ts` & `next.config.mjs`)**:
+  - Replaced legacy `@ducanh2912/next-pwa` with `@serwist/next` and hand-written `app/sw.ts`.
+  - **Strict NetworkOnly Isolation (C3)**: Ensured private medical APIs (`/api/appointments`, `/api/medical-records`, `/api/notifications`, `/api/health-data`, `/api/doctor-requests`, `/api/chat-cache`, `/api/offline-sync`, `/api/auth/*`) never enter Cache Storage.
+  - **StaleWhileRevalidate**: Applied to public read-only JSON (`/api/providers`, `/api/facilities/*`, `/api/health`) with 2-hour TTL and 50-entry cap.
+  - **Low-Bandwidth Navigation Optimization**: 3-second network timeout on navigations for rural 2G/3G connections, falling back to cached pages or `/offline`.
+  - **Safe Connectivity Behavior**: Eliminated `reloadOnOnline` to prevent losing in-progress patient symptom descriptions or chats.
+- **Bilingual Offline Fallback Page (`app/offline/page.tsx`)**:
+  - Emergency hotline one-tap dialers (108 Ambulance, 112 Emergency, Tele-MANAS 14416, 104 Health Helpline).
+  - Direct offline links to built-in rule-based symptom checker and visual first-aid triage.
+  - Connection status monitoring and reconnect trigger.
+- **Sign-Out Privacy & Cache Wipe (`lib/offline/cache-cleaner.ts`)**:
+  - On user logout, sends `{ type: "CLEAR_CACHES" }` to Serwist service worker to purge all runtime caches, deletes `window.caches`, and clears IndexedDB and offline queues.
+- **PWA Lifecycle UX (`components/PwaUpdaterAndInstaller.tsx`)**:
+  - Controlled update prompt with Reload button using deferred `SKIP_WAITING` activation.
+  - Dismissible bilingual install banner on 2nd visit, with iOS Safari "Add to Home Screen" instructions.
+- **Testing & Verification (`tests/unit/pwa-strategy.test.ts`)**:
+  - Unit tests verifying manifest properties, physical icon files, and NetworkOnly routing classifications for all sensitive endpoints.
+
+---
+
 ## [v1.5.0] - 2026-10-11 — Phase 2: Data Layer, Cursor Pagination, Schema Alignment & RLS Performance (H1, H8, H9, M2)
 
 ### Data Layer & Scalability

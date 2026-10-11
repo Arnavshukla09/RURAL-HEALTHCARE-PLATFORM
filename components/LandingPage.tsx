@@ -136,7 +136,7 @@ export function LandingPage({ language }: LandingPageProps) {
             
             <div className="relative">
               <ImageWithFallback
-                src="/hero.png"
+                src="/hero.webp"
                 alt="Rural healthcare - Doctor examining a child at a Primary Health Centre"
                 className="rounded-lg shadow-2xl w-full h-96 object-cover"
               />

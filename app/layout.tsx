@@ -10,6 +10,7 @@ import { BottomTabBar } from "@/components/BottomTabBar"
 import { FloatingChat } from "@/components/FloatingChat"
 import { Toaster } from "@/components/ui/toaster"
 import { Analytics } from "@vercel/analytics/react"
+import { PwaUpdaterAndInstaller } from "@/components/PwaUpdaterAndInstaller"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
 
@@ -18,6 +19,15 @@ export const metadata: Metadata = {
   description: "AI-powered rural healthcare platform with specialist consultations, symptom checking, health information, and facility locator for rural India.",
   keywords: "rural healthcare, telemedicine, AI health, India healthcare, symptom checker",
   manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "RuralHealth",
+  },
+  icons: {
+    icon: "/icons/icon-192.png",
+    apple: "/apple-touch-icon.png",
+  },
 }
 
 export const viewport = {
@@ -28,13 +38,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={inter.variable}>
       <head>
+        {/* Sync html lang attribute with user preference before paint */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var l=localStorage.getItem("rhcp_language");if(l)document.documentElement.lang=l;}catch(e){}`,
+          }}
+        />
         {/* Preconnect to critical third-party origins to improve LCP */}
         <link rel="preconnect" href="https://boyzdmlvzvcplzolenef.supabase.co" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link rel="dns-prefetch" href="https://generativelanguage.googleapis.com" />
         <link rel="dns-prefetch" href="https://a.basemaps.cartocdn.com" />
-        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossOrigin="" />
       </head>
       <body className={`${inter.className} min-h-screen bg-gray-50 flex flex-col`}>
         <AppProvider>
@@ -47,6 +62,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <BottomTabBar />
           <FloatingChat />
           <Toaster />
+          <PwaUpdaterAndInstaller />
           <Analytics />
         </AppProvider>
       </body>
