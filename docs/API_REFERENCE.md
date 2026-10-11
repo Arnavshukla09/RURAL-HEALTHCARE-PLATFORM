@@ -1,279 +1,364 @@
 # API Reference: Rural Healthcare Platform
 
-This document serves as the comprehensive guide to all backend endpoints available in the Rural Healthcare Platform. It details the purpose, required payloads, validation schemas, and responses for every Next.js API Route.
+This document is the complete reference for all backend HTTP endpoints exposed by the Rural Healthcare Platform (`/app/api/*`). It details authentication requirements, route classification, rate limiting, request validation, response payloads, cursor pagination, and error codes.
 
 ---
 
-## Global API Rules
+## 1. Global Standards & Protocols
 
-- **Base URL:** All API requests are relative to `/api` (e.g., `https://ruralhealth.in/api/...`)
-- **Content-Type:** All POST/PUT requests must send `application/json` unless otherwise specified.
-- **Authentication:** All routes automatically check for the Supabase HTTP-Only Auth Cookie attached to the request. Most routes require a valid session.
-- **Rate Limiting:** IP-based in-memory rate limiting is applied globally to prevent abuse (via `lib/rate-limit.ts`).
+### 1.1 Base URL & Content Negotiation
+- Base path: `/api`
+- All JSON requests must send `Content-Type: application/json`.
+- All responses return JSON with standard HTTP status codes.
 
----
+### 1.2 Request Tracing & Correlation
+Every incoming request is tagged by `middleware.ts` with a unique UUID `x-request-id`. This header is reflected back in the response headers and stamped on all structured server logs.
 
-## 1. AI & Analysis
+### 1.3 Rate Limiting & Abuse Prevention
+Endpoints are protected by classified rate limit tiers enforced via Upstash Redis (falling back to an in-memory sliding window):
+- **Tier 1 (Public Read):** 60 requests/minute (e.g., `/api/facilities/nearby`, `/api/providers`)
+- **Tier 2 (Authenticated Read):** 120 requests/minute (e.g., `/api/appointments`, `/api/medical-records`)
+- **Tier 3 (Mutations / Writes):** 30 requests/minute (e.g., `POST /api/appointments`, `POST /api/offline-sync`)
+- **Tier 4 (AI / Compute):** 15 requests/minute, daily quota of 200 reqs/IP (e.g., `/api/ai-chat`, `/api/symptom-analyze`)
+- **Tier 5 (Notifications Polling):** 120 requests/minute (e.g., `/api/notifications`)
 
-### 1.1 Conversational Chat
-**Route:** `/api/ai-chat`  
-**Method:** `POST`  
-**Description:** Streams a conversational response from Google Gemini AI, acting as a rural healthcare assistant.  
-**Files:** `app/api/ai-chat/route.ts`  
-**Authentication:** Required.  
-**Validation:** Zod `z.object({ messages: z.array(z.any()) })`
+**Rate Limit Response Headers:**
+```http
+X-RateLimit-Limit: 60
+X-RateLimit-Remaining: 58
+X-RateLimit-Reset: 1728645000
+```
+On `429 Too Many Requests`:
+```http
+HTTP/1.1 429 Too Many Requests
+Retry-After: 42
+Content-Type: application/json
 
-**Request Body:**
-```json
 {
-  "messages": [
-    { "role": "user", "content": "मुझे बुखार है (I have a fever)" }
-  ]
+  "error": "Rate limit exceeded. Please wait 42 seconds before retrying.",
+  "code": "RATE_LIMITED",
+  "retryAfter": 42
 }
 ```
 
-**Response (Streaming text):**
-```text
-आपको कितना तेज़ बुखार है? क्या आपको ठंड भी लग रही है?
-```
-
-### 1.2 Symptom Analysis
-**Route:** `/api/symptom-analyze`  
-**Method:** `POST`  
-**Description:** Structural AI analysis of user symptoms returning a JSON triage response.  
-**Files:** `app/api/symptom-analyze/route.ts`  
-**Authentication:** Not Required (Accessible to Guests).  
-**Validation:** Zod `z.object({ symptoms: z.array(z.string()), language: z.string() })`
-
-**Request Body:**
-```json
-{
-  "symptoms": ["chest pain", "shortness of breath"],
-  "language": "en"
-}
-```
-
-**Response (200 OK):**
-```json
-{
-  "analysis": {
-    "possibleConditions": ["Angina", "Myocardial Infarction"],
-    "triageLevel": "critical",
-    "recommendations": ["Seek immediate medical attention", "Call emergency hotline (108)"]
+### 1.4 Cursor-Based Pagination
+All paginated collection endpoints use cursor pagination (`limit` + `cursor`) instead of offset pagination to eliminate $O(N)$ database scans and ensure consistency across insertions:
+- **`limit`**: Number of items to return (1 to 100, default 20). Clamped automatically.
+- **`cursor`**: Base64URL-encoded pointer `{ id, createdAt }`.
+- **Response Format**:
+  ```json
+  {
+    "data": [ ... ],
+    "nextCursor": "eyBpZCI6ICJhYmMiLCBjcmVhdGVkQXQiOiAiMjAyNi0xMC0xMVQxMjo..."
   }
-}
-```
+  ```
+  When `nextCursor` is `null`, there are no more records.
 
 ---
 
 ## 2. Teleconsultation & Appointments
 
-### 2.1 Appointments Management
-**Route:** `/api/appointments`  
-**Method:** `GET`, `POST`  
-**Description:** Fetches upcoming/past appointments for the authenticated user, or books a new teleconsultation.  
-**Files:** `app/api/appointments/route.ts`  
-**Authentication:** Required.  
-
-**POST Validation:** Zod
-```typescript
-z.object({
-  provider_id: z.string().uuid(),
-  appointment_date: z.string().datetime(),
-  notes: z.string().optional()
-})
-```
-
-**POST Body:**
-```json
-{
-  "provider_id": "c9a632e8-...",
-  "appointment_date": "2026-07-10T10:00:00Z",
-  "notes": "Follow up for blood test"
-}
-```
-
-**Response (200 OK):**
-```json
-{
-  "id": "f47ac10b-...",
-  "status": "scheduled"
-}
-```
-
-### 2.2 Teleconsult Room Generation
-**Route:** `/api/teleconsult/room`  
-**Method:** `POST`  
-**Description:** Verifies appointment ownership and generates a secure Jitsi Room ID.  
-**Files:** `app/api/teleconsult/room/route.ts`  
-**Authentication:** Required.  
-**Validation:** Zod `z.object({ appointment_id: z.string().uuid() })`
-
-**Response (200 OK):**
-```json
-{
-  "roomId": "ruralhealth-c9a632e8-168910101010",
-  "token": "..." // (Future JWT integration)
-}
-```
-
----
-
-## 3. Profiles & Roles
-
-### 3.1 Fetch / Update Profile
-**Route:** `/api/auth/profile`  
-**Method:** `GET`, `PUT`  
-**Description:** Retrieves or updates the patient/provider profile linked to the Auth UUID.  
-**Files:** `app/api/auth/profile/route.ts`  
-**Authentication:** Required.  
-
-**PUT Body:**
-```json
-{
-  "first_name": "Ramesh",
-  "last_name": "Kumar",
-  "phone": "9876543210"
-}
-```
-
-### 3.2 Ensure Patient Record
-**Route:** `/api/auth/ensure-patient`  
-**Method:** `POST`  
-**Description:** Ensures a `patients` row exists for a newly signed-up Supabase Auth user. Acts as a safety fallback.  
-**Files:** `app/api/auth/ensure-patient/route.ts`  
-**Authentication:** Required.  
-
----
-
-## 4. Facilities & Providers
-
-### 4.1 Nearby Facilities
-**Route:** `/api/facilities/nearby`  
-**Method:** `GET`  
-**Description:** Queries the PostGIS database via RPC to return facilities within a radius of the user's coordinates.  
-**Files:** `app/api/facilities/nearby/route.ts`, `scripts/006_facilities_postgis.sql`  
-**Authentication:** Not Required.  
-**Validation:** Query Params `lat`, `lng`, `radius` (optional, defaults to 25km).
-
-**GET Request:** `/api/facilities/nearby?lat=23.2599&lng=77.4126`
-
-**Response (200 OK):**
-```json
-[
+### 2.1 `GET /api/appointments`
+Returns a cursor-paginated list of appointments for the authenticated caller.
+- **Auth:** Required (Patient, Doctor, Admin)
+- **Rate Limit:** Tier 2 (120/min)
+- **Query Parameters:**
+  - `limit` (optional, integer, default `20`, max `50`)
+  - `cursor` (optional, string, base64-encoded pagination cursor)
+  - `status` (optional, `scheduled` | `in_progress` | `completed` | `cancelled`)
+- **Response (200 OK):**
+  ```json
   {
-    "id": "e9b632e8-...",
-    "name": "District Hospital Bhopal",
-    "type": "hospital",
-    "distance_km": 4.2,
-    "lat": 23.2100,
-    "lon": 77.4000
+    "appointments": [
+      {
+        "id": "7b09d3b8-6447-4952-ba53-61b659cbe719",
+        "appointment_date": "2026-10-15T10:00:00.000Z",
+        "duration_minutes": 30,
+        "status": "scheduled",
+        "teleconsult_room_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+        "notes": "Follow-up consultation",
+        "healthcare_providers": {
+          "id": "e83921b7-90c2-485a-8723-f75c5df3df96",
+          "specialization": "Cardiology",
+          "clinic_address": "AIIMS Bhopal",
+          "patients": { "first_name": "Dr. Ajay", "last_name": "Goenka" }
+        }
+      }
+    ],
+    "nextCursor": "eyBpZCI6ICI3YjA5ZDNiOC02NDQ3LTQ5NTItYmE1My02MWI2NTljYmU3MTkiLCAiY3JlYXRlZEF0IjogIjIwMjYtMTAtMTVUMTA6MDA6MDAuMDAwWiIgfQ=="
   }
-]
-```
+  ```
 
-### 4.2 Fetch Providers
-**Route:** `/api/providers`  
-**Method:** `GET`  
-**Description:** Fetches all verified doctors/providers for the directory.  
-**Files:** `app/api/providers/route.ts`  
-**Authentication:** Not Required.  
-
----
-
-## 5. Medical Data
-
-### 5.1 Health Data (Vitals)
-**Route:** `/api/health-data`  
-**Method:** `GET`, `POST`  
-**Description:** Records continuous health vitals (Heart rate, BP, sugar).  
-**Files:** `app/api/health-data/route.ts`  
-**Authentication:** Required.  
-
-**POST Body:**
-```json
-{
-  "metric_type": "blood_pressure",
-  "metric_value": "120/80",
-  "unit": "mmHg"
-}
-```
-
-### 5.2 Medical Records
-**Route:** `/api/medical-records`  
-**Method:** `GET`, `POST`  
-**Description:** Manages uploaded prescriptions and lab reports.  
-**Files:** `app/api/medical-records/route.ts`  
-**Authentication:** Required.  
-
-**POST Validation:** Zod
-```typescript
-z.object({
-  record_type: z.enum(['diagnosis', 'prescription', 'lab_result', 'vaccination', 'other']),
-  content: z.string().min(1),
-  file_url: z.string().url().optional()
-})
-```
-
----
-
-## 6. Offline & Sync
-
-### 6.1 Offline Sync Queue
-**Route:** `/api/offline-sync`  
-**Method:** `POST`  
-**Description:** Accepts a batched array of requests that the client queued in IndexedDB while offline.  
-**Files:** `app/api/offline-sync/route.ts`  
-**Authentication:** Required.  
-
-**POST Body:**
-```json
-{
-  "actions": [
-    {
-      "type": "SAVE_HEALTH_DATA",
-      "payload": { "metric_type": "heart_rate", "metric_value": "72" },
-      "timestamp": 1720000000
+### 2.2 `POST /api/appointments`
+Books a new appointment. Automatically generates a cryptographically random UUID for `teleconsult_room_id` and enforces double-booking conflict detection.
+- **Auth:** Required (Patient or Admin)
+- **Rate Limit:** Tier 3 (30/min)
+- **Request Body:**
+  ```json
+  {
+    "provider_id": "e83921b7-90c2-485a-8723-f75c5df3df96",
+    "appointment_date": "2026-10-15T10:00:00.000Z",
+    "notes": "Persistent cough for 4 days",
+    "consultation_type": "video"
+  }
+  ```
+- **Response (201 Created):**
+  ```json
+  {
+    "appointment": {
+      "id": "7b09d3b8-6447-4952-ba53-61b659cbe719",
+      "patient_id": "31f47ac1-0b29-4503-b09b-61b659cbe719",
+      "provider_id": "e83921b7-90c2-485a-8723-f75c5df3df96",
+      "appointment_date": "2026-10-15T10:00:00.000Z",
+      "status": "scheduled",
+      "teleconsult_room_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d"
     }
-  ]
-}
-```
+  }
+  ```
+- **Error Codes:**
+  - `400 VALIDATION_ERROR`: Missing or invalid fields.
+  - `400 NO_PROVIDERS`: No verified healthcare providers available in the system.
+  - `409 SLOT_TAKEN`: The requested time slot is already booked for this provider (`idx_appointments_provider_slot_active` violation).
 
-**Response (200 OK):**
-```json
-{
-  "success": true,
-  "processed": 1,
-  "failed": 0
-}
-```
+### 2.3 `PATCH /api/appointments`
+Updates the status or clinical notes of an existing appointment with strict role enforcement.
+- **Auth:** Required
+- **Rate Limit:** Tier 3 (30/min)
+- **Authorization Matrix:**
+  - `patient`: Can ONLY cancel their own appointment (`status: "cancelled"`). Cannot change notes or mark completed.
+  - `doctor`: Can update their assigned appointments (`status: "in_progress" | "completed" | "cancelled"`, and update `notes`).
+  - `admin`: Can update any appointment and any status.
+- **Request Body:**
+  ```json
+  {
+    "id": "7b09d3b8-6447-4952-ba53-61b659cbe719",
+    "status": "completed",
+    "notes": "Prescribed oral rehydration salts and paracetamol."
+  }
+  ```
+- **Response (200 OK):**
+  ```json
+  {
+    "appointment": { ... }
+  }
+  ```
+- **Error Codes:**
+  - `403 FORBIDDEN`: Attempted status transition unauthorized for caller's role.
+  - `404 NOT_FOUND`: Appointment does not exist or does not belong to caller.
+  - `409 CONFLICT`: Attempted update on an appointment that is already cancelled or completed.
 
 ---
 
-## Error Handling
+## 3. Medical Records & Vitals
 
-All API routes follow a standardized error response format.
+### 3.1 `GET /api/medical-records`
+Retrieves cursor-paginated medical records for the authenticated patient or doctor.
+- **Auth:** Required
+- **Rate Limit:** Tier 2 (120/min)
+- **Query Parameters:**
+  - `limit` (optional, integer, default `20`)
+  - `cursor` (optional, string)
+  - `patient_id` (optional, required if doctor/admin reading a patient's records)
+  - `record_type` (optional, `diagnosis` | `prescription` | `lab_result` | `vaccination` | `other`)
+- **Response (200 OK):**
+  ```json
+  {
+    "records": [ ... ],
+    "nextCursor": "eyBpZCI6IC..."
+  }
+  ```
 
-**400 Bad Request (Zod Validation Failure):**
-```json
-{
-  "error": "Validation failed",
-  "details": [
-    { "path": ["metric_type"], "message": "Required" }
-  ]
-}
-```
+### 3.2 `POST /api/medical-records`
+Creates a medical record entry.
+- **Auth:** Required (Doctor, Admin, or Patient for self-records)
+- **Rate Limit:** Tier 3 (30/min)
+- **Request Body:**
+  ```json
+  {
+    "patient_id": "31f47ac1-0b29-4503-b09b-61b659cbe719",
+    "record_type": "prescription",
+    "content": "Amoxicillin 500mg TDS for 5 days",
+    "record_date": "2026-10-11T12:00:00.000Z"
+  }
+  ```
 
-**401 Unauthorized (No Session):**
-```json
-{
-  "error": "Unauthorized"
-}
-```
+---
 
-**429 Too Many Requests:**
-```json
-{
-  "error": "Too many requests. Please try again later."
-}
-```
+## 4. Notifications (Polling-Optimized)
+
+### 4.1 `GET /api/notifications`
+Fetches user notifications. Optimized for visibility-aware polling with an incremental `since` timestamp filter.
+- **Auth:** Required
+- **Rate Limit:** Tier 5 (120/min)
+- **Cache-Control:** `private, no-cache, no-store, must-revalidate`
+- **Query Parameters:**
+  - `since` (optional, ISO 8601 string, e.g. `2026-10-11T14:00:00.000Z`): Returns only notifications created after this timestamp.
+  - `unread_only` (optional, boolean): If `true`, returns only unread notifications.
+  - `limit` (optional, integer, default `20`, max `50`)
+- **Response (200 OK):**
+  ```json
+  {
+    "notifications": [ ... ],
+    "unreadCount": 2,
+    "serverTime": "2026-10-11T14:30:00.000Z"
+  }
+  ```
+
+### 4.2 `PATCH /api/notifications`
+Marks single or batch notifications as read.
+- **Auth:** Required
+- **Rate Limit:** Tier 3 (30/min)
+- **Request Body (Single):**
+  ```json
+  { "notificationId": "8c593b4d-3b7d-4bad-9bdd-2b0d7b3dcb6d" }
+  ```
+- **Request Body (Batch, max 100):**
+  ```json
+  { "notificationIds": ["8c593b4d...", "9a613c2e..."] }
+  ```
+- **Response (200 OK):**
+  ```json
+  { "success": true, "updatedCount": 2 }
+  ```
+
+---
+
+## 5. Offline Sync Engine
+
+### 5.1 `POST /api/offline-sync`
+Processes a batch of offline-queued operations generated while disconnected. Strictly verifies client-generated UUIDs against `processed_client_ops` to guarantee idempotency.
+- **Auth:** Required
+- **Rate Limit:** Tier 3 (30/min)
+- **Request Body:**
+  ```json
+  {
+    "operations": [
+      {
+        "client_op_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+        "action": "create_record",
+        "timestamp": 1728645000000,
+        "payload": {
+          "record_type": "other",
+          "content": "Self-reported blood pressure 120/80"
+        }
+      }
+    ]
+  }
+  ```
+- **Response (200 OK):**
+  ```json
+  {
+    "success": true,
+    "processed": 1,
+    "skipped": 0,
+    "failed": 0,
+    "results": [
+      { "client_op_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d", "status": "processed" }
+    ]
+  }
+  ```
+  *If an operation with the same `client_op_id` was already processed, status is returned as `"already_processed"` with HTTP 200.*
+
+---
+
+## 6. Spatial Facilities & Directory
+
+### 6.1 `GET /api/facilities/nearby`
+Finds healthcare facilities within radius using PostGIS. Coordinates are rounded to ~1.1 km to maximize Edge CDN cache hits.
+- **Auth:** Public
+- **Rate Limit:** Tier 1 (60/min)
+- **Cache-Control:** `public, s-maxage=3600, stale-while-revalidate=86400`
+- **Query Parameters:**
+  - `lat` (required, float)
+  - `lng` (required, float)
+  - `radius` (optional, float in km, default `50`, max `200`)
+  - `type` (optional, `all` | `hospital` | `clinic` | `pharmacy` | `phc` | `chc`)
+  - `limit` (optional, integer, default `50`, max `100`)
+- **Response (200 OK):**
+  ```json
+  {
+    "facilities": [
+      {
+        "id": "11111111-2222-3333-4444-555555555555",
+        "name": "District Hospital Sehore",
+        "type": "hospital",
+        "address": "Civil Lines, Sehore",
+        "phone": "+91 7562-224430",
+        "lat": 23.2,
+        "lon": 77.08,
+        "distance_km": 1.4
+      }
+    ]
+  }
+  ```
+
+### 6.2 `GET /api/providers`
+Returns verified healthcare providers for directory and booking dropdowns.
+- **Auth:** Public
+- **Rate Limit:** Tier 1 (60/min)
+- **Cache-Control:** `public, s-maxage=3600, stale-while-revalidate=86400`
+- **Response (200 OK):**
+  ```json
+  {
+    "providers": [ ... ]
+  }
+  ```
+
+---
+
+## 7. AI & Symptom Triage
+
+### 7.1 `POST /api/ai-chat`
+Streams conversational healthcare guidance via Gemini multi-model cascade (`gemini-2.5-flash` &rarr; `gemini-3.1-flash-lite` &rarr; `gemini-3.5-flash`). Protected by 24h response cache and circuit breaker.
+- **Auth:** Required
+- **Rate Limit:** Tier 4 (15/min, daily quota 200)
+- **Request Body:**
+  ```json
+  {
+    "messages": [
+      { "role": "user", "content": "मुझे पिछले तीन दिनों से बुखार और ठंड लग रही है।" }
+    ]
+  }
+  ```
+
+### 7.2 `POST /api/symptom-analyze`
+Structured symptom evaluation returning triage classification (emergency, high, medium, low).
+- **Auth:** Public
+- **Rate Limit:** Tier 4 (15/min)
+- **Request Body:**
+  ```json
+  {
+    "symptoms": ["chest pain", "shortness of breath"],
+    "language": "en"
+  }
+  ```
+- **Response (200 OK):**
+  ```json
+  {
+    "triageLevel": "emergency",
+    "criticalAlert": true,
+    "possibleConditions": ["Acute Coronary Syndrome", "Angina"],
+    "recommendations": ["Call 108 Emergency immediately", "Do not exert yourself"]
+  }
+  ```
+
+---
+
+## 8. System & Observability
+
+### 8.1 `GET /api/health`
+Health check endpoint for uptime probes, container orchestrators, and Vercel monitors.
+- **Auth:** Public
+- **Response (200 OK):**
+  ```json
+  {
+    "status": "ok",
+    "version": "1.13.0",
+    "timestamp": "2026-10-11T14:30:00.000Z",
+    "uptime": 12480
+  }
+  ```
+
+### 8.2 `GET /api/cache-status` / `POST /api/cache-status`
+Admin endpoint to monitor Redis hit/miss telemetry or purge stale AI response caches.
+- **Auth:** Required (Admin only)

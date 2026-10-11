@@ -31,33 +31,37 @@ Access to quality healthcare in rural regions is heavily limited by geography, a
 - **Zero-Failure Offline Symptom Triage (`offline-ai.ts`):** Evaluates selected symptom combinations, categorizes clinical urgency (Emergency, High, Medium, Low), and delivers rural-appropriate home care and PHC/CHC guidance without internet connectivity.
 - **Multilingual Voice Recognition & Synthesis (`speech.ts`):** Voice input and text-to-speech audio with Hinglish transliteration for Indian English and Hindi speakers.
 
-### 📱 Progressive Web Application (PWA) & Mobile Installation
-- **Offline Mode:** Full service worker caching and local storage persistence allow key triage flows to run in Airplane Mode.
-- **Mobile Installation:** Native install prompts for Android (Chrome) and iOS (Safari) with standalone display, home screen icon, and splash screen.
+### 📱 Modern PWA & Offline Outbox Architecture
+- **Serwist Service Worker:** Pre-caches static assets and the bilingual `/offline` fallback page with CacheFirst policies.
+- **NetworkOnly Private API Defense:** Sensitive patient data (`/api/appointments`, `/api/medical-records`, `/api/notifications`, `/api/offline-sync`) is never written to disk, preventing data leakage on shared village smartphones.
+- **Atomic Offline Outbox (`lib/offline/outbox.ts`):** Operations created while offline are queued in IndexedDB with client-generated UUIDs and replayed with at-most-once idempotency (`processed_client_ops`).
+- **Live Sync Badge:** UI indicators inform users of pending outbox queue depth and synchronization status.
 
 ### 🗺️ Geographical Mapping (PostGIS)
-- **Interactive Map:** Built with React-Leaflet and OpenStreetMap.
-- **Proximity Search:** Finds the nearest hospitals, clinics, and pharmacies. The database utilizes **PostGIS geography data** to calculate precise, real-time spherical distances.
+- **Interactive Map:** Built with React-Leaflet and OpenStreetMap, dynamically imported with zero SSR overhead.
+- **Proximity Search:** Finds the nearest hospitals, clinics, and pharmacies. The database utilizes **PostGIS geography data** with rounded coordinates to maximize Edge CDN caching.
 
-### 📹 Teleconsultation
-- **Secure Video Calls:** Embedded video conferencing using the **Jitsi Meet API** for seamless remote doctor-patient visits without requiring external software.
+### 📹 Secure Teleconsultation
+- **Unguessable Cryptographic Rooms:** Embedded video conferencing using Jitsi Meet with randomized UUID rooms (`crypto.randomUUID()`) and enforced lobby screening to prevent room guessing.
 
 ---
 
 ## 🛠️ Architecture & Technology Stack
 
-The platform employs a modern, serverless architecture optimized for performance and security.
+The platform employs a modern, serverless architecture optimized for low bandwidth, zero data leaks, and 100% Free-Tier sustainability ($0 spend).
 
 | Layer | Technology |
-|----------|-----------|
-| **Frontend** | Next.js 14 (App Router), React 18, TypeScript |
-| **Styling** | Tailwind CSS, shadcn/ui, Radix UI, Framer Motion |
-| **Backend & Database**| Supabase, PostgreSQL, PostGIS |
-| **Authentication** | Supabase Auth (Email/Password, Google OAuth) |
-| **AI Integration** | Google Gemini API |
-| **Mapping** | Leaflet, React-Leaflet |
-| **Testing** | Playwright (E2E) |
-| **Deployment** | Vercel |
+|---|---|
+| **Frontend Framework** | Next.js 14 (App Router, Server Components + ISR, React 18, TypeScript) |
+| **PWA & Caching** | Serwist (`@serwist/next`), Service Worker API, IndexedDB |
+| **Styling & UI** | Tailwind CSS, shadcn/ui, Radix UI, Lucide Icons |
+| **Backend & Database** | Supabase (PostgreSQL 15, PostGIS, Row Level Security) |
+| **Authentication** | Supabase SSR Auth (HttpOnly cookies, Google OAuth, Email/Password) |
+| **AI Integration** | Google Gemini API (Multi-model cascade: `gemini-2.5-flash`, `gemini-3.1-flash-lite`, `gemini-3.5-flash`) |
+| **Rate Limiting & Cache** | Upstash Redis REST + in-memory fallback, circuit breaker |
+| **Mapping** | Leaflet, React-Leaflet, CartoDB Positron tiles |
+| **Testing** | Vitest (Unit tests), Playwright (E2E), k6 (Load testing) |
+| **Deployment** | Vercel (Hobby Tier) |
 
 ---
 
@@ -160,7 +164,7 @@ GEMINI_MODELS=gemini-3.5-flash,gemini-3.1-flash-lite
 ```
 
 ### 4. Database Setup
-Execute the SQL files located in the `supabase/` directory within your Supabase project's SQL editor in sequential order (`01_schema.sql` through `04_seed_data.sql`).
+Execute the SQL files located in the `supabase/` directory within your Supabase SQL editor in sequential order (`01_base_schema.sql` through `09_scale_and_security.sql`).
 
 ### 5. Run the Development Server
 ```bash
@@ -168,15 +172,29 @@ npm run dev
 ```
 The application will be available at `http://localhost:3000`.
 
-### 6. Run E2E Tests
+### 6. Automated Testing & Verification
 ```bash
+# Run Vitest unit tests (50 tests across 10 suites)
+npm run test:unit
+
+# Type check and lint
+npx tsc --noEmit
+npm run lint
+
+# Production build check
+npm run build
+
+# Run Playwright E2E tests
 npx playwright test
+
+# Staging Load-Test Smoke Check (Never run on production)
+npm run loadtest:smoke
 ```
 
 ---
 
 ## 📄 License
-Copyright (c) 2025. This project is licensed under the MIT License - see the LICENSE file for details.
+Copyright (c) 2026. This project is licensed under the MIT License - see the LICENSE file for details.
 
 ---
 

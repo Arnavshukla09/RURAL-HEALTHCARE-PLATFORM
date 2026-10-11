@@ -4,6 +4,36 @@ All notable changes to the Rural Healthcare Platform will be documented in this 
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres roughly to chronological feature milestones.
 
+## [v1.13.0] - 2026-10-11 — Phase 10: Comprehensive Test Suites, Production Documentation Alignment & Deployment Runbook
+
+### Testing & Verification (C1, C2, C3, C4, C5, H1, H2, H5, H8)
+- **Appointments & Authorization Matrix Suite (`tests/unit/appointments-and-auth.test.ts`)**:
+  - Added comprehensive test suite verifying the complete `PATCH /api/appointments` role matrix:
+    * Patients can only cancel their own scheduled appointments; denied from completing (403) or modifying others' (404).
+    * Doctors can complete their assigned appointments and record notes.
+    * Admins have full lifecycle update permissions.
+    * Modification of already-cancelled/completed appointments returns 409 conflict.
+  - Verified double-booking conflict detection mapping Postgres unique constraint code `23505` to HTTP 409 `SLOT_TAKEN` (H2).
+  - Verified cursor-based pagination engine (`lib/pagination.ts`), verifying encoding/decoding, limit clamping (1 to 100), and nextCursor generation (H8).
+- **Expanded Test Coverage**:
+  - Full suite expanded to 50 passing unit tests across 10 specialized suites covering rate limiting, PWA Serwist caching rules, emergency routing, offline outbox idempotency, logger pseudonymization, notifications polling, and appointment authorization.
+
+### Documentation & Production Readiness
+- **System Architecture (`docs/ARCHITECTURE.md`)**:
+  - Documented Next.js App Router BFF architecture with Server Components, client interactive islands, Serwist service worker, offline IndexedDB outbox, tiered rate limiting, visibility-aware polling, and 100% Free-Tier posture ($0 spend).
+- **API Reference (`docs/API_REFERENCE.md`)**:
+  - Documented all 17 API endpoints with authentication tiers, request schemas, rate limiting classes, cursor pagination, and error code contracts.
+- **Database Reference (`docs/DATABASE.md`)**:
+  - Documented full ER diagram, `processed_client_ops` idempotency table, role privilege hardening, double-booking partial unique index `idx_appointments_provider_slot_active`, and PostGIS spatial queries.
+- **Deployment Checklist (`docs/DEPLOY_CHECKLIST.md`)**:
+  - Authoritative runbook for Supabase migrations `01` through `09`, Google OAuth URL configuration, Vercel environment variables, CSP enforcement plan, and staging load-testing safety rules.
+- **Environment Example (`.env.example`)**:
+  - Added documented staging load-test variables (`LOADTEST_ENABLED`, `LOADTEST_KEY`).
+- **Project Readme (`README.md`)**:
+  - Updated architecture, features, automated test commands, and database migration sequences.
+
+---
+
 ## [v1.12.0] - 2026-10-11 — Phase 9: Staging Load-Test Harness & Automated Smoke CI (Audit §4, §5)
 
 ### Load Testing & Capacity Engineering
