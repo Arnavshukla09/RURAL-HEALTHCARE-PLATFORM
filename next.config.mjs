@@ -1,6 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   typescript: { ignoreBuildErrors: false },
+  // Ensure gzip/brotli compression is applied to all responses.
+  // Critical for rural mobile users on 2G (607KB uncompressed → ~150KB with Brotli).
+  compress: true,
   images: {
     unoptimized: true,
     remotePatterns: [{ protocol: 'https', hostname: '**.supabase.co' }],

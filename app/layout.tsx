@@ -9,6 +9,7 @@ import { AccessibilityBar } from "@/components/AccessibilityBar"
 import { BottomTabBar } from "@/components/BottomTabBar"
 import { FloatingChat } from "@/components/FloatingChat"
 import { Toaster } from "@/components/ui/toaster"
+import { Analytics } from "@vercel/analytics/react"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
 
@@ -46,6 +47,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <BottomTabBar />
           <FloatingChat />
           <Toaster />
+          <Analytics />
         </AppProvider>
       </body>
     </html>

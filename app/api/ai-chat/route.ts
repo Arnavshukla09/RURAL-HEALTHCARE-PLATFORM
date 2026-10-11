@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import { rateLimit } from "@/lib/rate-limit"
 import { answerMedicalQuery, getMedicalBrainEntry } from "@/lib/ai/medical-brain"
 import { generateGeminiContent, GeminiContent } from "@/lib/ai/gemini"
+import { getCachedResponse, setCachedResponse } from "@/lib/cache/response-cache"
 
 const SYSTEM_PROMPT = `You are a helpful, culturally sensitive AI health assistant for rural communities in India.
 Follow these clinical safety rules strictly:
@@ -74,6 +75,23 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // 3b. Server-side Redis response cache check (Tier 2.5)
+    // Only cache single-turn queries (history-free) to avoid stale contextual replies
+    if (history.length === 0) {
+      const cached = await getCachedResponse(sanitizedMessage)
+      if (cached) {
+        const selectedReply = lang === "hi" ? (cached.replyHi || cached.replyEn) : (cached.replyEn || cached.replyHi)
+        return NextResponse.json({
+          reply: selectedReply,
+          replyEn: cached.replyEn || undefined,
+          replyHi: cached.replyHi || undefined,
+          fallback: false,
+          source: "server-cache",
+          model: cached.model,
+        })
+      }
+    }
+
     // System instruction requesting bilingual JSON
     const BILINGUAL_SYSTEM_PROMPT = `${SYSTEM_PROMPT}
 7. CRITICAL FORMAT REQUIREMENT:
@@ -117,6 +135,16 @@ Do NOT wrap in any extra markdown or conversational commentary outside the JSON.
       }
 
       const selectedReply = lang === "hi" ? (replyHi || replyEn) : (replyEn || replyHi)
+
+      // Write to server-side cache for future identical queries (fire-and-forget)
+      if (replyEn && replyHi && history.length === 0) {
+        setCachedResponse(sanitizedMessage, {
+          replyEn,
+          replyHi,
+          cachedAt: Date.now(),
+          model: geminiResult.modelUsed ?? undefined,
+        }).catch(() => {})
+      }
 
       return NextResponse.json({
         reply: selectedReply,

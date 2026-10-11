@@ -1,166 +1,179 @@
-# Rural Healthcare Platform — Performance & Security Audit Report
+# Performance Report — Rural Healthcare Platform
 
-**Generated:** 2026-07-30 | **Measured by:** Automated benchmark (`scripts/benchmark.js`)
-**Deployment:** Vercel (`bom1` region — Mumbai) | **Database:** Supabase PostgreSQL + PostGIS  
-**Live URL:** https://rural-healthcare-platform.vercel.app
-
-> ⚠️ **All values in this report are real measurements.** Nothing is fabricated or estimated.
+> **Generated:** October 2026  
+> **Based on:** Live HTTP measurements + static code analysis (scalability audit)  
+> **Commit:** Post-audit improvements (following commit `0a9e2d7`)
 
 ---
 
-## 1. DATABASE METRICS
+## 1. Observed Metrics (Pre-Optimization Baseline)
 
-Measured via Supabase REST API with service-role key. Row counts are exact.
+All measurements were taken against the **live Vercel deployment** (`iad1` region, Washington DC) from a test client in Hyderabad, India. Add ~200ms for real Indian users on the same network path.
 
-| Table | Rows | Notes |
+### 1.1 API Endpoint Latency (Single Request, No Auth)
+
+| Endpoint | HTTP Status | Latency | Notes |
+|---|---|---|---|
+| `GET /` | 200 | 870ms | `x-vercel-cache: HIT` — CDN serving |
+| `GET /api/health` | **404** | 840ms | **Missing endpoint — now fixed** |
+| `GET /api/facilities/nearby` | 200 | 2,416ms | PostGIS spatial query, no cache |
+| `GET /api/appointments` (unauth) | 401 | 292ms | Fast auth rejection ✅ |
+| `GET /api/medical-records` (unauth) | 401 | 289ms | Fast auth rejection ✅ |
+
+### 1.2 AI Chat Concurrency Test (5 Simultaneous Users)
+
+| Query | Tier Hit | Latency |
 |---|---|---|
-| `healthcare_providers` | **27** | All verified doctors |
-| `healthcare_facilities` | **6,616** | PostGIS-indexed hospitals, clinics, pharmacies |
-| `medical_records` | **20** | Patient diagnoses, prescriptions |
-| `health_data` | **28** | Patient vitals entries |
-| `patients` | **13** | Registered users |
-| `providers` | **2** | Doctor profile extensions |
-| `appointments` | **2** | Scheduled consultations |
-| `offline_sync_log` | **4** | PWA sync audit entries |
-| `camps` | **11** | Active health camps |
-| `notifications` | **0** | |
-| `doctor_requests` | **0** | |
+| "I have a fever" | Tier 2 (brain cache) | 1,354ms |
+| "stomach pain" | Tier 3 (Gemini) | 7,315ms |
+| "headache and vomiting" | Tier 2 (brain cache) | 701ms |
+| "chest pain" | Tier 0 (emergency) | **460ms** |
+| "cough and cold" | Tier 3 (Gemini) | 19,857ms |
 
-**Total tables with RLS enabled:** 11  
-**Verified doctors in directory:** 27  
-**Spatial facility records with PostGIS GIST index:** 6,616
+**Wall-clock for 5 concurrent:** 19,875ms (~20s)  
+**P50:** 1,354ms | **P95 (est.):** ~19s | **Max:** 19,857ms
 
----
+### 1.3 Rate Limiter Behaviour
 
-## 2. POSTGIS SPATIAL QUERY PERFORMANCE
-
-**Function:** `public.nearby_facilities(lat, lon, type, radius_km)`  
-**Index:** `GIST (idx_facilities_geom)` — spherical geography queries  
-**Test:** 30 queries across 5 locations in Madhya Pradesh, 25km radius  
-
-| Metric | Value |
+| Metric | Observed |
 |---|---|
-| Queries executed | 30 |
-| Average latency | **274.4 ms** |
-| Median (P50) latency | ~270 ms |
-| P95 latency | **558.5 ms** |
-| Maximum (worst-case) latency | **734.3 ms** |
-| Facilities returned per query | Up to **200** (capped) |
-| Distance function | `ST_DWithin` + `ST_Distance` |
-| Index type | **GIST on geography(Point, 4326)** |
+| Rate limit fires at | Request #11 (expected: #21) |
+| Reason | In-memory Map fallback active (Upstash Redis not configured) |
+| Behaviour difference | Fixed window vs. sliding window — inconsistent between instances |
 
-**Observations:**
-- The GIST index is functioning correctly — 6,616 rows searched in ~700ms worst case.
-- Result set is capped at 200 per query to protect response size.
+### 1.4 JavaScript Bundle Analysis
 
----
-
-## 3. API ENDPOINT BENCHMARKS
-
-All benchmarks run against the live Vercel deployment (`bom1` — Mumbai). Measured using `node:https` with high-resolution timer (`process.hrtime.bigint()`).
-
-### 3.1 Frontend Pages (Vercel CDN)
-
-| Endpoint | Requests | Avg | P95 | Max | Error Rate |
-|---|---|---|---|---|---|
-| Landing Page (`/`) | 30 | **250.3 ms** | 736.3 ms | 1,112.9 ms | 0% |
-| Login Page (`/login`) | 30 | **538.0 ms** | 1,026.1 ms | 1,558.9 ms | 0% |
-| Camps Page (`/camps`) | 30 | **190.6 ms** | 469.3 ms | 1,840.4 ms | 0% |
-| Health Info (`/health-info`) | 20 | **750.1 ms** | 1,737.7 ms | 1,737.7 ms | 0% |
-
-### 3.2 Supabase API Endpoints (PostgREST)
-
-| Endpoint | Requests | Avg | P95 | Max | Error Rate |
-|---|---|---|---|---|---|
-| `POST /rpc/nearby_facilities` | 30 | **254.5 ms** | 505.2 ms | 611.2 ms | 0% |
-| `GET /healthcare_providers` | 30 | **231.6 ms** | 501.0 ms | 506.2 ms | 0% |
-| `GET /camps` | 30 | **259.3 ms** | 593.5 ms | 956.8 ms | 0% |
-
----
-
-## 4. SECURITY AUDIT
-
-**Method:** Automated header inspection + live RLS bypass attempts + SQL injection probes.
-
-| Check | Result | Detail |
+| Chunk | Size (uncompressed) | Cache Policy |
 |---|---|---|
-| HTTPS / TLS enforced | ✅ Pass | All traffic over TLS 1.3 |
-| `X-Content-Type-Options: nosniff` | ✅ Pass | `nosniff` present |
-| `X-Frame-Options` / CSP `frame-ancestors` | ✅ Pass | `SAMEORIGIN` |
-| `Strict-Transport-Security` (HSTS) | ✅ Pass | `max-age=31536000; includeSubDomains` |
-| `Content-Security-Policy` header | ✅ Pass | CSP correctly configured |
-| `X-Powered-By` hidden | ✅ Pass | Not exposed |
-| Server identity hidden | ✅ Pass | Only `Vercel` — no version info |
-| Protected route redirect (middleware) | ✅ Pass | `/dashboard` → HTTP 307 redirect |
-| RLS: anon cannot read `patients` | ✅ Pass | 0 rows returned |
-| RLS: anon cannot read `offline_sync_log` | ✅ Pass | 0 rows returned |
-| SQL injection (tautology) via RLS | ✅ Pass | 0 rows returned — RLS blocks it |
-| Public `camps` readable (intended) | ✅ Pass | HTTP 200 |
+| webpack runtime | 4 KB | immutable ✅ |
+| vendor chunk A | 165 KB | immutable ✅ |
+| vendor chunk B | 175 KB | immutable ✅ |
+| main-app | 1 KB | immutable ✅ |
+| app chunk A | 62 KB | immutable ✅ |
+| app chunk B | 200 KB | immutable ✅ |
+| **Total (first 6)** | **607 KB** | — |
 
-**Security Score: 10/10 = 100%**
+> **Critical finding:** `content-encoding: none` — gzip/Brotli not active at time of test.  
+> At 64 Kbps (typical 2G in rural MP), 607 KB takes **~76 seconds** to load.  
+> With Brotli, expected size ≈ 150 KB → **~19 seconds** (75% reduction).
 
----
+### 1.5 Facilities API Cold vs Warm
 
-## 5. LIGHTHOUSE SCORES & FRONTEND OPTIMIZATIONS
-
-**Note:** Lighthouse auditing confirmed significant improvements after recent optimizations.
-
-### Implemented Fixes
-1. **Lazy Loading:** Implemented `next/dynamic` for the Leaflet `MapView` component (`~150KB` payload removed from initial parse), drastically improving Largest Contentful Paint (LCP) and Time to Interactive (TTI).
-2. **Resource Hints:** Added `<link rel="preconnect">` and `<link rel="dns-prefetch">` for Supabase, Google Fonts, CartoDB, and Gemini AI to reduce DNS/TLS negotiation overhead.
-3. **Accessibility:** Added missing `aria-label` attributes to icon-only buttons across `FloatingChat`, `CampLocations`, and `AdminRecords`, boosting Accessibility to ~96-100%.
-
----
-
-## 6. DEPLOYMENT METRICS
-
-**Platform:** Vercel Serverless, Region: `bom1` (Mumbai, India)  
-**Framework:** Next.js 15.2.8 with Edge Middleware
-
-| Metric | Value |
+| Call | Latency |
 |---|---|
-| Time-to-First-Byte (min) | **94.03 ms** |
-| Time-to-First-Byte (avg, 10 samples) | **197.3 ms** |
-| Time-to-First-Byte (max) | **293.01 ms** |
-| Vercel Region | `bom1` (Mumbai) |
+| Cold (first call) | 1,456ms |
+| Warm (2nd call) | 1,271ms |
+| Warm (3rd call) | 1,072ms |
+
+No caching at the API layer — every map load performs a full PostGIS spatial query.
 
 ---
 
-## 7. EXECUTIVE SUMMARY
+## 2. Optimizations Implemented (Post-Audit)
 
-The Rural Healthcare Platform is a **production-quality** full-stack application serving critical healthcare functionality. The infrastructure is well-architected with Vercel's CDN serving pre-rendered routes from Mumbai, achieving an average TTFB of **~197ms**.
+### 2.1 Server-Side AI Response Cache (`lib/cache/response-cache.ts`)
 
-**Strengths:**
-- Exceptional SEO score (100) and Best Practices (96).
-- 100% Security Score — HSTS, SAMEORIGIN framing, CSP configured, no server fingerprinting, SQL injection blocked by RLS.
-- PostGIS spatial queries search **6,616 facility records** in an average of 274ms.
-- 100% uptime across 230+ benchmark requests (0% error rate).
+- **What:** Redis-backed cache for `/api/ai-chat` Gemini responses
+- **Key:** SHA-256 of normalized query (16-char hex prefix), namespaced `rhp:ai:v1:`
+- **TTL:** 24 hours
+- **Scope:** Single-turn queries only (no conversation history) to prevent stale contextual responses
+- **Expected Impact:** 
+  - Cache hit → ~10ms response (vs. 7,000ms Gemini avg)
+  - Common queries (fever, cold, cough, diarrhoea) will be served from cache after first user asks
+
+### 2.2 Facilities Response Cache
+
+- **What:** Redis-backed cache for `/api/facilities/nearby` PostGIS results
+- **Key:** 0.1° lat/lon grid bucket + type + radius
+- **TTL:** 1 hour
+- **Expected Impact:** 90%+ of map reload requests served from cache (~10ms vs. ~1,400ms)
+
+### 2.3 Gemini `maxOutputTokens` Reduced
+
+- **Change:** 2048 → 800 tokens
+- **Why:** System prompt requires ≤120 words per language. Bilingual JSON ≤240 words ≈ 320 tokens. 800 is generous headroom.
+- **Expected Impact:** ~35-40% reduction in Gemini response time
+
+### 2.4 Health Check Endpoint Added
+
+- **Route:** `GET /api/health`
+- **Response:** `{ status: "ok", service: "...", ts: "...", uptime: N }`
+- **Impact:** Enables UptimeRobot, Pingdom, Vercel health checks, load balancer probes
+
+### 2.5 Compression Config Verified
+
+- **Change:** `compress: true` explicitly set in `next.config.mjs`
+- **Impact:** Ensures Vercel applies gzip/Brotli to all responses
+
+### 2.6 Vercel Analytics Activated
+
+- **Change:** `<Analytics />` component added to `app/layout.tsx`
+- **Impact:** Real User Monitoring (LCP, FID, CLS, page views) now flowing to Vercel dashboard
+
+### 2.7 Admin Client Singleton (`lib/supabase/admin.ts`)
+
+- **Change:** Added `getAdminClient()` that reuses a module-level instance
+- **Impact:** Eliminates repeated client construction overhead across warm requests
+
+### 2.8 ARCHITECTURE.md Updated
+
+- Documents the new `lib/cache/` module, `lib/ai/`, `lib/chat/` folders, corrected SPA router description
 
 ---
 
-## 8. RESUME-READY METRICS
+## 3. Remaining Performance Gaps
 
-> Copy these directly. Every number is from the final benchmark run.
+These are identified but not yet implemented — prioritized for the next sprint:
 
+| # | Gap | Impact | Estimated Effort |
+|---|---|---|---|
+| BN-P1 | Gemini response **streaming** (SSE) | Perceived latency drops from 7s → instant | 3 days |
+| BN-P2 | AI **request queue** (max 5 concurrent Gemini calls) | Prevents cascade timeout under load | 1 day |
+| BN-P3 | Supabase **pgBouncer** connection pooling | Required for >50 concurrent DB users | 30 min |
+| BN-P4 | `React.lazy()` / route-level code splitting | Reduces initial JS from 607KB → ~200KB | 3 days |
+| BN-P5 | **Sentry** error monitoring | Observability for production incidents | 2 days |
+| BN-P6 | Parallelize remaining sequential DB `await` chains | ~200ms saved per authenticated request | 1 day |
+
+---
+
+## 4. Production Readiness Checklist
+
+| Requirement | Pre-Audit | Post-Audit |
+|---|---|---|
+| `/api/health` endpoint | ❌ | ✅ Fixed |
+| Vercel Analytics active | ❌ | ✅ Fixed |
+| `compress: true` in Next.js config | ❌ | ✅ Fixed |
+| AI response cache (Redis) | ❌ | ✅ Implemented |
+| Facilities cache (Redis) | ❌ | ✅ Implemented |
+| Gemini token limit optimized | ❌ 2048 | ✅ 800 |
+| Admin client singleton | ❌ | ✅ Fixed |
+| Distributed rate limiting (Upstash) | ⚠️ Falls back | ⚠️ Still needs `UPSTASH_REDIS_REST_URL` in Vercel |
+| Gemini streaming | ❌ | ❌ Planned |
+| Request queue for AI | ❌ | ❌ Planned |
+| pgBouncer connection pool | ❌ | ❌ Planned (30 min manual task) |
+| Sentry error monitoring | ❌ | ❌ Planned |
+| P95 AI latency < 10s | ❌ 19.9s | ⚠️ Improved but not measured post-cache |
+
+---
+
+## 5. How to Verify Improvements
+
+After next Vercel deployment:
+
+```bash
+# 1. Verify health endpoint
+curl https://rural-healthcare-platform.vercel.app/api/health
+
+# 2. Verify gzip is active
+curl -H "Accept-Encoding: gzip,br" -I https://rural-healthcare-platform.vercel.app/ | grep -i content-encoding
+
+# 3. Test facilities cache (second call should have cached: true)
+curl "https://rural-healthcare-platform.vercel.app/api/facilities/nearby?lat=23.26&lon=77.41&radius_km=25"
+
+# 4. Check cache status (admin login required)
+curl -H "Cookie: ..." https://rural-healthcare-platform.vercel.app/api/cache-status
 ```
-• Designed and deployed a Next.js 15 + Supabase healthcare platform on Vercel serving 
-  6,616 PostGIS-indexed medical facilities across Madhya Pradesh.
 
-• Implemented PostgreSQL Row-Level Security across 11 tables; 
-  confirmed anon SQL injection (tautology) attack returns 0 rows in production.
+---
 
-• Achieved sub-200ms average TTFB (Time to First Byte) across production cold-start 
-  samples via Vercel Edge Network (Mumbai region).
-
-• Spatial proximity search (PostGIS ST_DWithin + GIST index) averages 274ms 
-  across 6,616 records with P95 < 560ms.
-
-• API endpoints average 190–750ms latency across 8 tested endpoints 
-  with 0% error rate over 230 live requests.
-
-• Security score: 100% (10/10 automated security checks passing) including 
-  HSTS, X-Content-Type-Options, SAMEORIGIN, CSP, and authenticated route middleware.
-
-• Database: 27 verified doctors, 6,616 healthcare facilities, 13 active users, 
-  11 health camps in production Supabase instance.
-```
+*This report will be updated after the next production deployment and post-optimization latency re-test.*

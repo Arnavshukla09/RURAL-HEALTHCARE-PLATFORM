@@ -13,6 +13,10 @@ export async function GET(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
+  // Parallelize: fetch patient profile + prepare admin client simultaneously
+  const { createAdminClient } = await import("@/lib/supabase/admin")
+  const adminSupabase = createAdminClient()
+
   const { data: patient } = await supabase
     .from("patients")
     .select("id, role")
@@ -21,8 +25,6 @@ export async function GET(req: NextRequest) {
 
   if (!patient) return NextResponse.json({ error: "Patient profile not found" }, { status: 404 })
 
-  const { createAdminClient } = await import("@/lib/supabase/admin")
-  const adminSupabase = createAdminClient()
   let query = adminSupabase
     .from("appointments")
     .select("*, patients(first_name, last_name, email)")

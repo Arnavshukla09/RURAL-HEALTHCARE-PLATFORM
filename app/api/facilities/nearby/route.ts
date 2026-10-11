@@ -3,6 +3,11 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 import { createClient } from "@/lib/supabase/server"
 import { rateLimit } from "@/lib/rate-limit"
 import { z } from "zod"
+import {
+  buildFacilitiesCacheKey,
+  getCachedFacilities,
+  setCachedFacilities,
+} from "@/lib/cache/response-cache"
 
 const QuerySchema = z.object({
   lat: z.coerce.number().min(-90).max(90),
@@ -33,6 +38,14 @@ export async function GET(req: NextRequest) {
   }
 
   const { lat, lon, type, radius_km } = parsed.data
+
+  // Cache lookup — avoid repeated PostGIS queries for the same area
+  const cacheKey = buildFacilitiesCacheKey(lat, lon, type ?? null, radius_km)
+  const cachedFacilities = await getCachedFacilities(cacheKey)
+  if (cachedFacilities) {
+    return NextResponse.json({ facilities: cachedFacilities, cached: true })
+  }
+
   // Use admin client to bypass the broken execute permissions for anon users on the DB
   const supabase = createSupabaseClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -54,5 +67,9 @@ export async function GET(req: NextRequest) {
     )
   }
 
-  return NextResponse.json({ facilities: data ?? [] })
+  // Write to cache in background (1h TTL)
+  const facilities = data ?? []
+  setCachedFacilities(cacheKey, facilities).catch(() => {})
+
+  return NextResponse.json({ facilities })
 }

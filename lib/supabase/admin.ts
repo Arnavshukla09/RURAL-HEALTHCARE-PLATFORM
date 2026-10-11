@@ -24,3 +24,17 @@ export const createAdminClient = () => {
     },
   });
 };
+
+/**
+ * Module-level singleton — reused across requests in the same function
+ * instance to avoid repeated client construction overhead.
+ * Safe because the admin client is stateless (no session/token refresh).
+ */
+let _adminClientInstance: ReturnType<typeof createAdminClient> | null = null;
+
+export const getAdminClient = () => {
+  if (!_adminClientInstance) {
+    _adminClientInstance = createAdminClient();
+  }
+  return _adminClientInstance;
+};

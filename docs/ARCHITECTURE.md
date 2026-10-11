@@ -122,7 +122,16 @@ sequenceDiagram
 - **Implementation:** The client uses `react-leaflet` to render OpenStreetMap tiles. It requests `/api/facilities/nearby?lat=X&lng=Y`, which executes a highly optimized PostGIS RPC function `nearby_facilities()` on Supabase.
 
 ### 5.4 Rate Limiting
-To prevent abuse, all Next.js API routes implement rate limiting via `@upstash/ratelimit`. This leverages an Upstash Redis database (`UPSTASH_REDIS_REST_URL`) to globally synchronize token-bucket counts across distributed serverless functions. If the Redis keys are missing locally, it safely falls back to a Node.js `Map`-based memory cache.
+To prevent abuse, all Next.js API routes implement rate limiting via `@upstash/ratelimit`. This leverages an Upstash Redis database (`UPSTASH_REDIS_REST_URL`) to globally synchronize sliding-window counts across distributed serverless function instances. If the Redis keys are absent, a module-level `Map` falls back gracefully (single-instance only — not safe for production scale).
+
+### 5.5 Server-Side Response Cache (`lib/cache/response-cache.ts`)
+Added in October 2026 as part of the scalability audit.
+
+- **Purpose:** Avoid repeated Gemini API calls for identical or near-identical queries. Medical advice for common symptoms (fever, diarrhoea, cold) is stable for 24 hours.
+- **AI Cache:** Keyed by SHA-256 hash of the normalized query string. TTL: 24 hours. Only single-turn (history-free) queries are cached to avoid stale contextual responses.
+- **Facilities Cache:** Keyed by 0.1° lat/lon grid bucket + type + radius. TTL: 1 hour. PostGIS `nearby_facilities` RPC results are cached so repeated map loads for the same area skip the database entirely.
+- **Graceful degradation:** If Upstash Redis is not configured, all cache calls silently no-op — platform continues to function with direct Gemini/DB calls.
+- **Admin management:** `GET /api/cache-status` shows cache health; `POST /api/cache-status` purges AI cache (admin role required).
 
 ---
 
@@ -173,11 +182,17 @@ The file `middleware.ts` located at the project root executes before a request c
 | Directory/File | Responsibility |
 |----------------|----------------|
 | `app/api/` | Next.js API Routes (Server logic, Zod parsing, Supabase Server client). |
-| `app/page.tsx` | The Master SPA Router. Mounts all components and manages global state. |
+| `app/api/health/` | Health check endpoint for uptime monitoring and load balancers. |
+| `app/api/cache-status/` | Admin endpoint to inspect and purge the server-side Redis cache. |
+| `app/page.tsx` | Landing page + auth redirect (logged-in users sent to their role dashboard). |
 | `components/` | Domain-specific components (e.g., `Dashboard.tsx`, `SymptomChecker.tsx`). |
 | `components/ui/` | Generic, reusable UI primitives (shadcn). |
-| `lib/supabase/` | Supabase initialization clients (browser, server, middleware). |
+| `lib/supabase/` | Supabase initialization clients (browser, server, middleware, admin singleton). |
+| `lib/cache/` | Server-side Redis response cache for AI replies and spatial facility results. |
 | `lib/offline/` | IndexedDB management for spotty network queueing. |
+| `lib/ai/` | Gemini client, medical brain, query-learner (IndexedDB BM25 cache). |
+| `lib/chat/` | Multi-tier chat router, emergency detector, normalizer, types. |
 | `scripts/` | Database seeders and PostGIS SQL migration scripts. |
 | `hooks/` | Custom React hooks (e.g., `use-mobile.tsx`, `use-toast.ts`). |
 | `.agents/AGENTS.md` | Persistent rules guiding AI agent behavior in this repository. |
+
