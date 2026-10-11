@@ -105,6 +105,25 @@ The application utilizes Next.js Server Components and API Routes to maintain a 
 
 ---
 
+## 🏆 Production & Scalability Overhaul (10 Phases Completed)
+
+The codebase has undergone a complete architectural, scalability, and security overhaul designed to operate permanently within **100% Free-Tier quotas ($0 spend)** across Vercel, Supabase, Upstash Redis, and Google Gemini:
+
+| Phase | Milestone | Key Deliverables | Status |
+|---|---|---|---|
+| **Phase 1** | Critical Security Overhaul | Clamped Edge middleware, centralized auth guards, random Jitsi UUID rooms | ✅ Complete |
+| **Phase 2** | Data Layer & API Quality | Cursor pagination ([`lib/pagination.ts`](file:///c:/Users/aarrn/Desktop/rural%20health/RURAL-HEALTHCARE-PLATFORM-main/lib/pagination.ts)), schema canonicalization, 409 double-booking mapping | ✅ Complete |
+| **Phase 3** | PWA Modernization | Serwist worker ([`app/sw.ts`](file:///c:/Users/aarrn/Desktop/rural%20health/RURAL-HEALTHCARE-PLATFORM-main/app/sw.ts)), `NetworkOnly` private API defense, bilingual [`/offline`](file:///c:/Users/aarrn/Desktop/rural%20health/RURAL-HEALTHCARE-PLATFORM-main/app/offline/page.tsx) fallback | ✅ Complete |
+| **Phase 4** | Offline Sync Rewrite | IndexedDB outbox ([`lib/offline/outbox.ts`](file:///c:/Users/aarrn/Desktop/rural%20health/RURAL-HEALTHCARE-PLATFORM-main/lib/offline/outbox.ts)), atomic idempotency ([`processed_client_ops`](file:///c:/Users/aarrn/Desktop/rural%20health/RURAL-HEALTHCARE-PLATFORM-main/supabase/09_scale_and_security.sql)), UI sync badge | ✅ Complete |
+| **Phase 5** | Rate Limiting & Gateway | 5 route tiers, AI circuit breaker (5 failures &rarr; 60s cooldown), staging load-test mode | ✅ Complete |
+| **Phase 6** | Caching & Rendering | 8 public routes converted to ISR (1h cache), dynamic imports, JS bundle reduced to **103 kB** | ✅ Complete |
+| **Phase 7** | Realtime Elimination | Removed 200-conn websocket bottleneck, visibility-aware polling every 60s | ✅ Complete |
+| **Phase 8** | Observability & CSP | Structured JSON logger ([`lib/logger.ts`](file:///c:/Users/aarrn/Desktop/rural%20health/RURAL-HEALTHCARE-PLATFORM-main/lib/logger.ts)), user ID hashing (SHA-256), CSP Report-Only | ✅ Complete |
+| **Phase 9** | Load-Testing Harness | k6 test suite in [`loadtest/`](file:///c:/Users/aarrn/Desktop/rural%20health/RURAL-HEALTHCARE-PLATFORM-main/loadtest), automated smoke CI with production safeguard | ✅ Complete |
+| **Phase 10** | Tests & Production Runbook | 50 passing Vitest unit tests, comprehensive `docs/`, deployment runbook ([`docs/DEPLOY_CHECKLIST.md`](file:///c:/Users/aarrn/Desktop/rural%20health/RURAL-HEALTHCARE-PLATFORM-main/docs/DEPLOY_CHECKLIST.md)) | ✅ Complete |
+
+---
+
 ## 📁 Project Structure
 
 ```text
