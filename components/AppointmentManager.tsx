@@ -24,6 +24,8 @@ export function AppointmentManager({ user, language, setJitsiRoom }: Appointment
   const [bookingLoading, setBookingLoading] = useState(false)
   const [bookingError, setBookingError] = useState("")
   const [bookingSuccess, setBookingSuccess] = useState("")
+  const [nextCursor, setNextCursor] = useState<string | null>(null)
+  const [loadingMore, setLoadingMore] = useState(false)
 
   // Fetch appointments from API
   useEffect(() => {
@@ -32,9 +34,10 @@ export function AppointmentManager({ user, language, setJitsiRoom }: Appointment
         const res = await fetch("/api/appointments")
         if (res.ok) {
           const data = await res.json()
-          // API returns { appointments: [] } — extract the array
-          const arr = Array.isArray(data) ? data : (data.appointments ?? [])
+          // API returns { appointments: [], nextCursor } — extract array and cursor
+          const arr = Array.isArray(data) ? data : (data.appointments ?? data.data ?? [])
           setAppointments(arr)
+          setNextCursor(data.nextCursor || null)
         }
       } catch (err) {
         console.error("Failed to fetch appointments:", err)
@@ -44,6 +47,24 @@ export function AppointmentManager({ user, language, setJitsiRoom }: Appointment
     }
     fetchAppointments()
   }, [bookingSuccess])
+
+  const handleLoadMore = async () => {
+    if (!nextCursor || loadingMore) return
+    setLoadingMore(true)
+    try {
+      const res = await fetch(`/api/appointments?cursor=${encodeURIComponent(nextCursor)}`)
+      if (res.ok) {
+        const data = await res.json()
+        const arr = Array.isArray(data) ? data : (data.appointments ?? data.data ?? [])
+        setAppointments(prev => [...prev, ...arr])
+        setNextCursor(data.nextCursor || null)
+      }
+    } catch (err) {
+      console.error("Failed to load more appointments:", err)
+    } finally {
+      setLoadingMore(false)
+    }
+  }
 
   // Fetch providers for booking form
   useEffect(() => {
@@ -325,6 +346,17 @@ export function AppointmentManager({ user, language, setJitsiRoom }: Appointment
               <Calendar className="h-12 w-12 mx-auto mb-3 opacity-40" />
               <p>{en ? "No appointments found" : "कोई अपॉइंटमेंट नहीं"}</p>
             </div>
+          )}
+          {nextCursor && (
+            <Button
+              variant="outline"
+              className="w-full mt-2"
+              onClick={handleLoadMore}
+              disabled={loadingMore}
+            >
+              {loadingMore ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              {en ? "Load more" : "और देखें"}
+            </Button>
           )}
         </div>
 

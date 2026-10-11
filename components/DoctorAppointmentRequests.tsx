@@ -17,7 +17,9 @@ export function DoctorAppointmentRequests({ language, setJitsiRoom }: DoctorAppo
   const router = useRouter();
   const en = language === "en"
   const [appointments, setAppointments] = useState<any[]>([])
+  const [nextCursor, setNextCursor] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
   const [tab, setTab] = useState<"pending" | "approved" | "all">("pending")
   const [search, setSearch] = useState("")
   const [expanded, setExpanded] = useState<string | null>(null)
@@ -30,23 +32,45 @@ export function DoctorAppointmentRequests({ language, setJitsiRoom }: DoctorAppo
   const fetchAppointments = async () => {
     setLoading(true)
     try {
-      const supabase = createClient()
-      const { data } = await supabase
-        .from("appointments")
-        .select("*, patients(first_name, last_name, email, phone)")
-        .order("appointment_date", { ascending: true })
-      setAppointments(data ?? [])
+      const res = await fetch("/api/appointments?limit=20")
+      if (res.ok) {
+        const json = await res.json()
+        const arr = Array.isArray(json) ? json : (json.appointments ?? json.data ?? [])
+        setAppointments(arr)
+        setNextCursor(json.nextCursor || null)
+      }
     } catch (e) { console.error(e) }
     finally { setLoading(false) }
+  }
+
+  const handleLoadMore = async () => {
+    if (!nextCursor || loadingMore) return
+    setLoadingMore(true)
+    try {
+      const res = await fetch(`/api/appointments?cursor=${encodeURIComponent(nextCursor)}&limit=20`)
+      if (res.ok) {
+        const json = await res.json()
+        const arr = Array.isArray(json) ? json : (json.appointments ?? json.data ?? [])
+        setAppointments(prev => [...prev, ...arr])
+        setNextCursor(json.nextCursor || null)
+      }
+    } catch (e) { console.error(e) }
+    finally { setLoadingMore(false) }
   }
 
   const updateStatus = async (id: string, status: "scheduled" | "cancelled" | "completed") => {
     setUpdating(id)
     try {
-      const supabase = createClient()
-      await supabase.from("appointments").update({ status }).eq("id", id)
-      setAppointments(prev => prev.map(a => a.id === id ? { ...a, status } : a))
-    } finally { setUpdating(null) }
+      const res = await fetch("/api/appointments", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status }),
+      })
+      if (res.ok) {
+        setAppointments(prev => prev.map(a => a.id === id ? { ...a, status } : a))
+      }
+    } catch (e) { console.error(e) }
+    finally { setUpdating(null) }
   }
 
   // Supabase returns joined tables as arrays even for 1:1 relations
@@ -230,6 +254,17 @@ export function DoctorAppointmentRequests({ language, setJitsiRoom }: DoctorAppo
               </Card>
             )
           })}
+          {nextCursor && (
+            <Button
+              variant="outline"
+              className="w-full mt-3"
+              onClick={handleLoadMore}
+              disabled={loadingMore}
+            >
+              {loadingMore ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              {en ? "Load more" : "और देखें"}
+            </Button>
+          )}
         </div>
 
       </div>

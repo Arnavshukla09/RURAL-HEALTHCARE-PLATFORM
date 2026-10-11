@@ -29,6 +29,7 @@ export function DoctorPatients({ language }: DoctorPatientsProps) {
         .select("id, user_id, first_name, last_name, email, phone, created_at, role")
         .or("role.eq.patient,role.is.null")
         .order("created_at", { ascending: false })
+        .limit(50)
       setPatients(allPatients ?? [])
       setLoading(false)
     }
@@ -44,7 +45,7 @@ export function DoctorPatients({ language }: DoctorPatientsProps) {
     // Try patient_id first (matches patients.id)
     const { data: byPatientId } = await supabase
       .from("medical_records")
-      .select("*")
+      .select("id, patient_id, record_type, content, file_url, created_at")
       .eq("patient_id", patientId)
       .order("created_at", { ascending: false })
       .limit(20)

@@ -25,6 +25,8 @@ const RECORD_TYPES = [
 
 export function PatientRecords({ language }: PatientRecordsProps) {
   const [records, setRecords] = useState<any[]>([])
+  const [nextCursor, setNextCursor] = useState<string | null>(null)
+  const [loadingMore, setLoadingMore] = useState(false)
   const [healthData, setHealthData] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -87,7 +89,9 @@ export function PatientRecords({ language }: PatientRecordsProps) {
         const res = await fetch('/api/medical-records')
         if (res.ok) {
           const data = await res.json()
-          setRecords(data || [])
+          const list = Array.isArray(data) ? data : (data.records ?? data.data ?? [])
+          setRecords(list)
+          setNextCursor(data.nextCursor || null)
         } else if (res.status === 401) {
           setError(t.loginRequired)
         }
@@ -120,6 +124,24 @@ export function PatientRecords({ language }: PatientRecordsProps) {
     }
     fetchData()
   }, [saveSuccess])
+
+  const handleLoadMoreRecords = async () => {
+    if (!nextCursor || loadingMore) return
+    setLoadingMore(true)
+    try {
+      const res = await fetch(`/api/medical-records?cursor=${encodeURIComponent(nextCursor)}`)
+      if (res.ok) {
+        const data = await res.json()
+        const list = Array.isArray(data) ? data : (data.records ?? data.data ?? [])
+        setRecords(prev => [...prev, ...list])
+        setNextCursor(data.nextCursor || null)
+      }
+    } catch (err) {
+      console.error('Failed to load more records:', err)
+    } finally {
+      setLoadingMore(false)
+    }
+  }
 
   const [profileForm, setProfileForm] = useState({ height: '', weight: '', bloodGroup: '', chronic: '' })
   const [savingProfile, setSavingProfile] = useState(false)
@@ -586,6 +608,17 @@ export function PatientRecords({ language }: PatientRecordsProps) {
                   </div>
                 ))}
               </div>
+              {nextCursor && (
+                <Button
+                  variant="outline"
+                  className="w-full mt-3"
+                  onClick={handleLoadMoreRecords}
+                  disabled={loadingMore}
+                >
+                  {loadingMore ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                  {en ? "Load more" : "और देखें"}
+                </Button>
+              )}
             </CardContent>
           </Card>
         )}

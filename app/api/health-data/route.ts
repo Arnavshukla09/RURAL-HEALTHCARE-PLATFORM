@@ -11,55 +11,55 @@ const HealthDataSchema = z.object({
   notes: z.string().max(500).optional(),
 })
 
+import { requireUser, getPatientProfile, authErrorResponse } from "@/lib/auth/guard"
+import { parsePaginationParams, paginateResults } from "@/lib/pagination"
+
 export async function GET(request: NextRequest) {
   try {
-    const ip = request.headers.get('x-forwarded-for') ?? '127.0.0.1'
-    if (!(await rateLimit(ip))) {
-      return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+    const ip = request.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "127.0.0.1"
+    if (!(await rateLimit(ip, 30, 60000))) {
+      return NextResponse.json({ error: "Too many requests", code: "RATE_LIMITED" }, { status: 429 })
     }
 
-    const supabase = await createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
-    // Look up the patient record for this authenticated user
-    const { data: patient, error: patientError } = await supabase
-      .from("patients")
-      .select("id")
-      .eq("user_id", user.id)
-      .single()
-
-    if (patientError || !patient) {
-      return NextResponse.json({ error: "Patient record not found" }, { status: 404 })
+    const { user, supabase } = await requireUser()
+    const patient = await getPatientProfile(user.id)
+    if (!patient) {
+      return NextResponse.json({ error: "Patient record not found", code: "NOT_FOUND" }, { status: 404 })
     }
 
     const { searchParams } = new URL(request.url)
     const dataType = searchParams.get("dataType")
+    const { limit, cursor } = parsePaginationParams(searchParams, 20, 100)
 
     let query = supabase
       .from("health_data")
-      .select("*")
+      .select("id, patient_id, data_type, value, recorded_at, notes, created_at")
       .eq("patient_id", patient.id)
       .order("recorded_at", { ascending: false })
+      .order("id", { ascending: false })
+      .limit(limit + 1)
 
     if (dataType) {
       query = query.eq("data_type", dataType)
     }
 
+    if (cursor) {
+      query = query.lt("created_at", cursor.createdAt)
+    }
+
     const { data, error } = await query
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ error: "Failed to fetch health data", code: "DB_ERROR" }, { status: 500 })
     }
 
-    return NextResponse.json(data)
+    const paginated = paginateResults((data ?? []) as any, limit)
+    return NextResponse.json({
+      data: paginated.data,
+      nextCursor: paginated.nextCursor,
+    })
   } catch (error) {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    return authErrorResponse(error)
   }
 }
 

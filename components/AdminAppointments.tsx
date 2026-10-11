@@ -21,7 +21,9 @@ const STATUS_COLORS: Record<string, string> = {
 export function AdminAppointments({ language }: AdminAppointmentsProps) {
   const en = language === "en"
   const [appointments, setAppointments] = useState<any[]>([])
+  const [nextCursor, setNextCursor] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
   const [search, setSearch] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [expanded, setExpanded] = useState<string | null>(null)
@@ -29,23 +31,57 @@ export function AdminAppointments({ language }: AdminAppointmentsProps) {
 
   useEffect(() => {
     const load = async () => {
-      const supabase = createClient()
-      const { data } = await supabase
-        .from("appointments")
-        .select("*, patients(first_name, last_name, email, phone)")
-        .order("appointment_date", { ascending: false })
-      setAppointments(data ?? [])
-      setLoading(false)
+      try {
+        const res = await fetch("/api/appointments?limit=20")
+        if (res.ok) {
+          const json = await res.json()
+          const arr = Array.isArray(json) ? json : (json.appointments ?? json.data ?? [])
+          setAppointments(arr)
+          setNextCursor(json.nextCursor || null)
+        }
+      } catch (err) {
+        console.error("Failed to load appointments:", err)
+      } finally {
+        setLoading(false)
+      }
     }
     load()
   }, [])
 
+  const handleLoadMore = async () => {
+    if (!nextCursor || loadingMore) return
+    setLoadingMore(true)
+    try {
+      const res = await fetch(`/api/appointments?cursor=${encodeURIComponent(nextCursor)}&limit=20`)
+      if (res.ok) {
+        const json = await res.json()
+        const arr = Array.isArray(json) ? json : (json.appointments ?? json.data ?? [])
+        setAppointments(prev => [...prev, ...arr])
+        setNextCursor(json.nextCursor || null)
+      }
+    } catch (err) {
+      console.error("Failed to load more appointments:", err)
+    } finally {
+      setLoadingMore(false)
+    }
+  }
+
   const updateStatus = async (id: string, status: string) => {
     setUpdating(id)
-    const supabase = createClient()
-    await supabase.from("appointments").update({ status }).eq("id", id)
-    setAppointments(prev => prev.map(a => a.id === id ? { ...a, status } : a))
-    setUpdating(null)
+    try {
+      const res = await fetch("/api/appointments", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status }),
+      })
+      if (res.ok) {
+        setAppointments(prev => prev.map(a => a.id === id ? { ...a, status } : a))
+      }
+    } catch (err) {
+      console.error("Failed to update status:", err)
+    } finally {
+      setUpdating(null)
+    }
   }
 
   const filtered = appointments.filter(a => {
@@ -188,6 +224,17 @@ export function AdminAppointments({ language }: AdminAppointmentsProps) {
               </Card>
             )
           })}
+          {nextCursor && (
+            <Button
+              variant="outline"
+              className="w-full mt-3"
+              onClick={handleLoadMore}
+              disabled={loadingMore}
+            >
+              {loadingMore ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              {en ? "Load more" : "और देखें"}
+            </Button>
+          )}
         </div>
       </div>
     </div>

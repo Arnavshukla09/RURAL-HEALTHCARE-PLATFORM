@@ -4,6 +4,33 @@ All notable changes to the Rural Healthcare Platform will be documented in this 
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres roughly to chronological feature milestones.
 
+## [v1.5.0] - 2026-10-11 — Phase 2: Data Layer, Cursor Pagination, Schema Alignment & RLS Performance (H1, H8, H9, M2)
+
+### Data Layer & Scalability
+- **Cursor Pagination Engine (`lib/pagination.ts`)**: Base64-encoded composite cursor (`created_at` + `id`) with robust decoding, validation, and deterministic pagination helpers.
+- **API Endpoints Paginated & Bounded**:
+  - `GET /api/appointments`: Cursor-paginated (default limit 20, max 100) with explicit column projections, patient relation phone join, and dual response shape `{ data, appointments, nextCursor }`.
+  - `GET /api/medical-records`: Cursor-paginated with explicit column selections.
+  - `GET /api/notifications`: Cursor-paginated, filtered by patient profile ownership.
+  - `GET /api/health-data`: Cursor-paginated with explicit column selections.
+  - `GET /api/doctor-requests`: Cursor-paginated with explicit column selections.
+- **Frontend On-Demand Pagination**:
+  - Integrated "Load more" / "और देखें" bilingual pagination in `AppointmentManager`, `PatientRecords`, `NotificationBell`, `DoctorDashboard`, `DoctorAppointmentRequests`, `AdminAppointments`, and `AdminNotifications`.
+  - Bounded queries with `.limit(50)` and explicit columns in `AdminUserManagement` and `DoctorPatients`.
+- **Notifications Schema Canonicalization (H1)**:
+  - Canonical schema strictly aligned with `01_schema.sql` (`recipient_type`, `recipient_role`, `recipient_id`, `is_read`, with `type` CHECK `info|warning|success|emergency`).
+  - Fixed `PATCH /api/notifications` to compare `recipient_id` with session user's `patients.id` instead of auth user UUID.
+- **Postgres Migrations Alignment (M2)**:
+  - Created timestamped sequential migrations under `supabase/migrations/` (`20260701` through `20261011`).
+  - Converted `supabase/08_fix_permissions.sql` from corrupted UTF-16LE to clean UTF-8.
+  - Added `supabase/migrations/README.md` documenting schema versioning and local CLI workflow.
+- **RLS InitPlan Optimization (`supabase/11_rls_initplan.sql`)**:
+  - Recreates hot RLS policies wrapping `auth.uid()` in `(select auth.uid())` and `(select public.get_user_role())` to ensure PostgreSQL executes auth lookups once per statement (InitPlan) rather than re-evaluating per scanned row (SubPlan).
+- **OAuth Callback Error Diagnostics**:
+  - Hardened `app/auth/callback/route.ts` and `components/Authentication.tsx` with error parameter capture and user-friendly toast notifications for OAuth configuration mismatches.
+
+---
+
 ## [v1.4.0] - 2026-10-11 — Phase 1: Critical Security Overhaul & Access Control
 
 ### Security & Hardening

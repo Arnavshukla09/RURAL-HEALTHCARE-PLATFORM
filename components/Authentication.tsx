@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "./ui/button"
 import { Card, CardContent } from "./ui/card"
 import { Input } from "./ui/input"
@@ -61,6 +61,36 @@ export function Authentication({ setUser, setCurrentPage, language }: Authentica
     setErrors([])
     setSuccessMsg("")
   }
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search)
+      const error = params.get("error")
+      const errorDesc = params.get("error_description")
+
+      if (error || errorDesc) {
+        let msg = en
+          ? "Sign-in was interrupted. Please try again or use email/password."
+          : "साइन इन विफल रहा। कृपया पुनः प्रयास करें या ईमेल/पासवर्ड का उपयोग करें।"
+
+        if (errorDesc?.includes("exchange external code")) {
+          msg = en
+            ? "Google OAuth configuration error: Check Client Secret and Redirect URIs in Supabase Dashboard."
+            : "Google साइन-इन त्रुटि: कृपया Supabase में Google क्रेडेंशियल्स की जांच करें।"
+        }
+
+        setErrors([msg])
+        toast({
+          title: en ? "Sign-in Notice" : "साइन-इन सूचना",
+          description: msg,
+          variant: "destructive",
+        })
+
+        // Clean query parameters from URL
+        window.history.replaceState({}, document.title, window.location.pathname)
+      }
+    }
+  }, [en, toast])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()

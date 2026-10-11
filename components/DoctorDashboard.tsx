@@ -21,7 +21,9 @@ export function DoctorDashboard({ user, language, setJitsiRoom }: DoctorDashboar
   const router = useRouter();
   const en = language === "en"
   const [appointments, setAppointments] = useState<any[]>([])
+  const [nextCursor, setNextCursor] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
   const [stats, setStats] = useState({ total: 0, today: 0, completed: 0 })
 
   useEffect(() => {
@@ -30,8 +32,9 @@ export function DoctorDashboard({ user, language, setJitsiRoom }: DoctorDashboar
         const res = await fetch("/api/appointments")
         if (res.ok) {
           const data = await res.json()
-          const arr: any[] = Array.isArray(data) ? data : (data.appointments ?? [])
+          const arr: any[] = Array.isArray(data) ? data : (data.appointments ?? data.data ?? [])
           setAppointments(arr)
+          setNextCursor(data.nextCursor || null)
           const today = new Date().toDateString()
           setStats({
             total: arr.length,
@@ -44,6 +47,21 @@ export function DoctorDashboard({ user, language, setJitsiRoom }: DoctorDashboar
     }
     fetchData()
   }, [])
+
+  const handleLoadMoreAppointments = async () => {
+    if (!nextCursor || loadingMore) return
+    setLoadingMore(true)
+    try {
+      const res = await fetch(`/api/appointments?cursor=${encodeURIComponent(nextCursor)}`)
+      if (res.ok) {
+        const data = await res.json()
+        const arr: any[] = Array.isArray(data) ? data : (data.appointments ?? data.data ?? [])
+        setAppointments(prev => [...prev, ...arr])
+        setNextCursor(data.nextCursor || null)
+      }
+    } catch (e) { console.error(e) }
+    finally { setLoadingMore(false) }
+  }
 
   const joinCall = (roomId: string) => {
     if (setJitsiRoom && roomId) { setJitsiRoom(roomId); router.push("/appointments") }
@@ -162,6 +180,17 @@ export function DoctorDashboard({ user, language, setJitsiRoom }: DoctorDashboar
                     </div>
                   )
                 })
+              )}
+              {nextCursor && (
+                <Button
+                  variant="outline"
+                  className="w-full mt-2"
+                  onClick={handleLoadMoreAppointments}
+                  disabled={loadingMore}
+                >
+                  {loadingMore ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                  {en ? "Load more" : "और देखें"}
+                </Button>
               )}
             </CardContent>
           </Card>

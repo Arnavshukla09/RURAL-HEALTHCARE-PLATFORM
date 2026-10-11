@@ -40,8 +40,9 @@ export function AdminUserManagement({ language }: AdminUserManagementProps) {
     const supabase = createClient()
     const { data } = await supabase
       .from("patients")
-      .select("*")
+      .select("id, user_id, first_name, last_name, email, phone, role, created_at")
       .order("created_at", { ascending: false })
+      .limit(50)
     setUsers(data ?? [])
     setLoading(false)
   }

@@ -20,7 +20,9 @@ export function NotificationBell({ user, language }: NotificationBellProps) {
   const en = language === "en"
   const [open, setOpen] = useState(false)
   const [notifications, setNotifications] = useState<any[]>([])
+  const [nextCursor, setNextCursor] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [loadingMore, setLoadingMore] = useState(false)
   const [unread, setUnread] = useState(0)
   const panelRef = useRef<HTMLDivElement>(null)
 
@@ -60,17 +62,31 @@ export function NotificationBell({ user, language }: NotificationBellProps) {
     if (!user) return
     setLoading(true)
     try {
-      const supabase = createClient()
-      const { data } = await supabase
-        .from("notifications")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(30)
-      const notifs = data ?? []
-      setNotifications(notifs)
-      setUnread(notifs.filter((n: any) => !n.is_read).length)
+      const res = await fetch("/api/notifications?limit=20")
+      if (res.ok) {
+        const json = await res.json()
+        const notifs = Array.isArray(json) ? json : (json.data ?? [])
+        setNotifications(notifs)
+        setNextCursor(json.nextCursor || null)
+        setUnread(notifs.filter((n: any) => !n.is_read).length)
+      }
     } catch (e) { console.error(e) }
     finally { setLoading(false) }
+  }
+
+  const handleLoadMoreNotifs = async () => {
+    if (!nextCursor || loadingMore) return
+    setLoadingMore(true)
+    try {
+      const res = await fetch(`/api/notifications?cursor=${encodeURIComponent(nextCursor)}&limit=20`)
+      if (res.ok) {
+        const json = await res.json()
+        const notifs = Array.isArray(json) ? json : (json.data ?? [])
+        setNotifications(prev => [...prev, ...notifs])
+        setNextCursor(json.nextCursor || null)
+      }
+    } catch (e) { console.error(e) }
+    finally { setLoadingMore(false) }
   }
 
   const markAllRead = async () => {
@@ -162,6 +178,18 @@ export function NotificationBell({ user, language }: NotificationBellProps) {
                 </div>
               )
             })}
+            {nextCursor && (
+              <div className="p-2 border-t border-gray-100 bg-gray-50/50">
+                <button
+                  onClick={handleLoadMoreNotifs}
+                  disabled={loadingMore}
+                  className="w-full py-1.5 text-xs text-teal-600 hover:text-teal-800 font-medium flex items-center justify-center gap-1"
+                >
+                  {loadingMore ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+                  {en ? "Load more" : "और देखें"}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

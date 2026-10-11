@@ -43,6 +43,8 @@ async function getOrCreatePatient(supabase: any, user: any) {
   return patient
 }
 
+import { parsePaginationParams, paginateResults } from "@/lib/pagination"
+
 export async function GET(request: NextRequest) {
   try {
     const ip = request.headers.get('x-forwarded-for')?.split(",")[0].trim() ?? '127.0.0.1'
@@ -53,21 +55,37 @@ export async function GET(request: NextRequest) {
     const { user, supabase } = await requireUser()
     const patient = await getOrCreatePatient(supabase, user)
     if (!patient?.id) {
-      return NextResponse.json([])
+      return NextResponse.json({ data: [], records: [], nextCursor: null })
     }
 
-    // User-scoped client: RLS enforced (patients see only their own; doctors/admins see all)
-    const { data, error } = await supabase
+    const { searchParams } = new URL(request.url)
+    const { limit, cursor } = parsePaginationParams(searchParams, 20, 100)
+
+    // User-scoped client: RLS enforced + explicit column selection (H8)
+    let query = supabase
       .from("medical_records")
-      .select("*")
+      .select("id, patient_id, provider_id, appointment_id, record_type, content, file_url, created_at, updated_at")
       .eq("patient_id", patient.id)
       .order("created_at", { ascending: false })
+      .order("id", { ascending: false })
+      .limit(limit + 1)
+
+    if (cursor) {
+      query = query.lt("created_at", cursor.createdAt)
+    }
+
+    const { data, error } = await query
 
     if (error) {
       return NextResponse.json({ error: "Failed to fetch medical records", code: "DB_ERROR" }, { status: 500 })
     }
 
-    return NextResponse.json(data ?? [])
+    const paginated = paginateResults((data ?? []) as any, limit)
+    return NextResponse.json({
+      data: paginated.data,
+      records: paginated.data,
+      nextCursor: paginated.nextCursor,
+    })
   } catch (error) {
     return authErrorResponse(error)
   }

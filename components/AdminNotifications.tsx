@@ -38,7 +38,9 @@ export function AdminNotifications({ language }: AdminNotificationsProps) {
   const [tab, setTab] = useState<"compose" | "sent">("compose")
   const [users, setUsers] = useState<any[]>([])
   const [sent, setSent] = useState<Notification[]>([])
+  const [nextCursor, setNextCursor] = useState<string | null>(null)
   const [loadingUsers, setLoadingUsers] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
   const [sending, setSending] = useState(false)
   const [successMsg, setSuccessMsg] = useState("")
   const [userSearch, setUserSearch] = useState("")
@@ -53,16 +55,41 @@ export function AdminNotifications({ language }: AdminNotificationsProps) {
   useEffect(() => {
     const load = async () => {
       const supabase = createClient()
-      const [{ data: userList }, { data: notifList }] = await Promise.all([
-        supabase.from("patients").select("id, first_name, last_name, email, role").order("created_at", { ascending: false }),
-        supabase.from("notifications").select("*").order("created_at", { ascending: false }).limit(50),
-      ])
-      setUsers(userList ?? [])
-      setSent((notifList ?? []) as Notification[])
-      setLoadingUsers(false)
+      try {
+        const [{ data: userList }, notifRes] = await Promise.all([
+          supabase.from("patients").select("id, first_name, last_name, email, role").order("created_at", { ascending: false }),
+          fetch("/api/notifications?limit=20").then(r => r.ok ? r.json() : { data: [] }),
+        ])
+        setUsers(userList ?? [])
+        const notifArr = Array.isArray(notifRes) ? notifRes : (notifRes.data ?? [])
+        setSent(notifArr as Notification[])
+        setNextCursor(notifRes.nextCursor || null)
+      } catch (err) {
+        console.error("Failed to load notifications:", err)
+      } finally {
+        setLoadingUsers(false)
+      }
     }
     load()
   }, [])
+
+  const handleLoadMoreSent = async () => {
+    if (!nextCursor || loadingMore) return
+    setLoadingMore(true)
+    try {
+      const res = await fetch(`/api/notifications?cursor=${encodeURIComponent(nextCursor)}&limit=20`)
+      if (res.ok) {
+        const json = await res.json()
+        const notifArr = Array.isArray(json) ? json : (json.data ?? [])
+        setSent(prev => [...prev, ...notifArr])
+        setNextCursor(json.nextCursor || null)
+      }
+    } catch (err) {
+      console.error("Failed to load more notifications:", err)
+    } finally {
+      setLoadingMore(false)
+    }
+  }
 
   const flash = (msg: string) => { setSuccessMsg(msg); setTimeout(() => setSuccessMsg(""), 3000) }
 
@@ -335,6 +362,17 @@ export function AdminNotifications({ language }: AdminNotificationsProps) {
                 </Card>
               )
             })}
+            {nextCursor && (
+              <Button
+                variant="outline"
+                className="w-full mt-3"
+                onClick={handleLoadMoreSent}
+                disabled={loadingMore}
+              >
+                {loadingMore ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                {en ? "Load more" : "और देखें"}
+              </Button>
+            )}
           </div>
         )}
 

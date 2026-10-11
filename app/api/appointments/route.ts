@@ -16,6 +16,8 @@ const PatchAppointmentSchema = z.object({
   status: z.enum(["scheduled", "completed", "cancelled"]),
 })
 
+import { parsePaginationParams, paginateResults } from "@/lib/pagination"
+
 export async function GET(req: NextRequest) {
   try {
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "127.0.0.1"
@@ -29,14 +31,24 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Patient profile not found", code: "NOT_FOUND" }, { status: 404 })
     }
 
-    // Patients see only their own appointments (enforced by RLS + explicit filter)
+    const { searchParams } = new URL(req.url)
+    const { limit, cursor } = parsePaginationParams(searchParams, 20, 100)
+
+    // Explicit column selection (H8) - avoids unbounded select("*")
     let query = supabase
       .from("appointments")
-      .select("*, patients(first_name, last_name, email)")
-      .order("appointment_date", { ascending: true })
+      .select("id, patient_id, provider_id, appointment_date, duration_minutes, status, notes, teleconsult_room_id, created_at, patients(first_name, last_name, email, phone)")
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: false })
+      .limit(limit + 1)
 
+    // Patients see only their own appointments (enforced by RLS + explicit filter)
     if (patient.role === "patient") {
       query = query.eq("patient_id", patient.id)
+    }
+
+    if (cursor) {
+      query = query.lt("created_at", cursor.createdAt)
     }
 
     const { data, error } = await query
@@ -44,7 +56,12 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Failed to fetch appointments", code: "DB_ERROR" }, { status: 500 })
     }
 
-    return NextResponse.json({ appointments: data ?? [] })
+    const paginated = paginateResults((data ?? []) as any, limit)
+    return NextResponse.json({
+      data: paginated.data,
+      appointments: paginated.data,
+      nextCursor: paginated.nextCursor,
+    })
   } catch (err) {
     return authErrorResponse(err)
   }

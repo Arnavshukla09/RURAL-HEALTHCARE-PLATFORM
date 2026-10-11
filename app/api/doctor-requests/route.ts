@@ -3,46 +3,64 @@ import { createClient } from "@/lib/supabase/server"
 import { rateLimit } from "@/lib/rate-limit"
 import { z } from "zod"
 
-// GET — admin fetches all pending requests
+import { requireUser, getPatientProfile, authErrorResponse } from "@/lib/auth/guard"
+import { parsePaginationParams, paginateResults } from "@/lib/pagination"
+
+// GET — admin fetches all pending requests (with pagination)
 export async function GET(req: NextRequest) {
-  const ip = req.headers.get("x-forwarded-for") ?? "127.0.0.1"
-  if (!(await rateLimit(ip, 20, 60000))) {
-    return NextResponse.json({ error: "Too many requests" }, { status: 429 })
-  }
+  try {
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "127.0.0.1"
+    if (!(await rateLimit(ip, 20, 60000))) {
+      return NextResponse.json({ error: "Too many requests", code: "RATE_LIMITED" }, { status: 429 })
+    }
 
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    const { user, supabase } = await requireUser()
+    const patient = await getPatientProfile(user.id)
+    if (!patient) {
+      return NextResponse.json({ error: "Profile not found", code: "NOT_FOUND" }, { status: 404 })
+    }
 
-  // Only admin can list all requests
-  const { data: patient } = await supabase
-    .from("patients")
-    .select("role")
-    .eq("user_id", user.id)
-    .single()
-
-  if (patient?.role !== "admin") {
     // Non-admins can only see their own request
-    const { data, error } = await supabase
+    if (patient.role !== "admin") {
+      const { data, error } = await supabase
+        .from("doctor_requests")
+        .select("id, user_id, full_name, email, phone, specialization, license_number, qualification, experience_years, hospital_affiliation, status, notes, created_at")
+        .eq("user_id", user.id)
+        .single()
+
+      if (error) return NextResponse.json({ data: null, request: null })
+      return NextResponse.json({ data, request: data })
+    }
+
+    const { searchParams } = new URL(req.url)
+    const status = searchParams.get("status") || "pending"
+    const { limit, cursor } = parsePaginationParams(searchParams, 20, 100)
+
+    // Admin pagination with explicit column list (H8)
+    let query = supabase
       .from("doctor_requests")
-      .select("*")
-      .eq("user_id", user.id)
-      .single()
-    if (error) return NextResponse.json({ request: null })
-    return NextResponse.json({ request: data })
+      .select("id, user_id, full_name, email, phone, specialization, license_number, qualification, experience_years, hospital_affiliation, status, notes, created_at")
+      .eq("status", status)
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: false })
+      .limit(limit + 1)
+
+    if (cursor) {
+      query = query.lt("created_at", cursor.createdAt)
+    }
+
+    const { data, error } = await query
+    if (error) return NextResponse.json({ error: "Failed to fetch doctor requests", code: "DB_ERROR" }, { status: 500 })
+
+    const paginated = paginateResults((data ?? []) as any, limit)
+    return NextResponse.json({
+      data: paginated.data,
+      requests: paginated.data,
+      nextCursor: paginated.nextCursor,
+    })
+  } catch (err) {
+    return authErrorResponse(err)
   }
-
-  const { searchParams } = new URL(req.url)
-  const status = searchParams.get("status") || "pending"
-
-  const { data, error } = await supabase
-    .from("doctor_requests")
-    .select("*")
-    .eq("status", status)
-    .order("created_at", { ascending: false })
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ requests: data ?? [] })
 }
 
 // POST — doctor submits registration request
