@@ -24,8 +24,22 @@ const nextConfig = {
         { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
         // Permissions
         { key: 'Permissions-Policy', value: 'camera=(self "https://meet.jit.si"), microphone=(self "https://meet.jit.si"), geolocation=(self), payment=()' },
-        // CSP removed temporarily to fix production breakage
-        // Ensure Vercel/Next.js hydration and Supabase APIs work
+        // Content Security Policy in Report-Only mode (Audit M1)
+        {
+          key: 'Content-Security-Policy-Report-Only',
+          value: [
+            "default-src 'self'",
+            "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://va.vercel-scripts.com https://meet.jit.si https://8x8.vc",
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+            "img-src 'self' data: blob: https://*.supabase.co https://*.tile.openstreetmap.org https://*.basemaps.cartocdn.com https://unpkg.com",
+            "font-src 'self' data: https://fonts.gstatic.com",
+            "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://generativelanguage.googleapis.com https://*.upstash.io https://meet.jit.si https://8x8.vc https://vitals.vercel-insights.com",
+            "frame-src 'self' https://meet.jit.si https://8x8.vc",
+            "worker-src 'self' blob:",
+            "object-src 'none'",
+            "base-uri 'self'",
+          ].join('; '),
+        },
       ],
     }];
   },

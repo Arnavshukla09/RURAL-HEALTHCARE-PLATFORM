@@ -73,6 +73,31 @@ This document records the security audits and remediations applied to the Rural 
      - `/doctor/*` redirects users lacking doctor/admin role to `/dashboard`.
   5. Redirects authenticated users accessing `/login` or `/auth` directly to their respective role dashboard.
 
+### 2.7 M1: Content Security Policy (Report-Only Mode)
+* **Risk:** Arbitrary script injection or unmonitored external dependencies could compromise user session tokens or inject malicious frames.
+* **Remediation in `next.config.mjs`:**
+  1. Configured standard Content Security Policy in Report-Only mode (`Content-Security-Policy-Report-Only`):
+     - `default-src 'self'`
+     - `script-src 'self' 'unsafe-eval' 'unsafe-inline' https://va.vercel-scripts.com https://meet.jit.si https://8x8.vc`
+     - `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`
+     - `img-src 'self' data: blob: https://*.supabase.co https://*.tile.openstreetmap.org https://*.basemaps.cartocdn.com https://unpkg.com`
+     - `font-src 'self' data: https://fonts.gstatic.com`
+     - `connect-src 'self' https://*.supabase.co wss://*.supabase.co https://generativelanguage.googleapis.com https://*.upstash.io https://meet.jit.si https://8x8.vc https://vitals.vercel-insights.com`
+     - `frame-src 'self' https://meet.jit.si https://8x8.vc`
+     - `worker-src 'self' blob:`
+     - `object-src 'none'`
+     - `base-uri 'self'`
+  2. **Enforcement Procedure:**
+     - Monitor browser violation reports for 7 days in staging/production to confirm no legitimate assets or external services trigger false positives.
+     - To enforce blocking, rename the header key in `next.config.mjs` from `Content-Security-Policy-Report-Only` to `Content-Security-Policy`.
+
+### 2.8 M6: Structured JSON Observability & PII Protection
+* **Risk:** Raw console logs can leak sensitive patient health information, personal emails, or authentication tokens into serverless log aggregators.
+* **Remediation in `lib/logger.ts` & `middleware.ts`:**
+  1. Implemented structured JSON logger emitting single-line JSON entries with `timestamp`, `level`, `requestId`, `route`, `status`, `durationMs`, and `userIdHash`.
+  2. Cryptographic pseudonymization: User IDs are hashed with SHA-256 (12-char hex prefix) before output. Emails, names, phone numbers, and clinical symptoms are strictly omitted from log streams.
+  3. `x-request-id` header generated and propagated through middleware across all requests and responses for end-to-end request tracing.
+
 ---
 
 ## 3. Verification & Safety Verification
@@ -80,5 +105,7 @@ This document records the security audits and remediations applied to the Rural 
 | Test | Status | Result |
 |---|---|---|
 | `npx tsc --noEmit` | ✅ Passed | 0 TypeScript errors |
-| `npm run test:unit` | ✅ Passed | 15/15 unit tests passing |
-| `npm run build` | ✅ Passed | Static routes & API functions compiled clean |
+| `npm run lint` | ✅ Passed | 0 ESLint warnings or errors |
+| `npm run test:unit` | ✅ Passed | 40/40 unit tests passing |
+| `npm run build` | ✅ Passed | All 45 routes cleanly compiled |
+

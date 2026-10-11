@@ -4,6 +4,25 @@ All notable changes to the Rural Healthcare Platform will be documented in this 
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres roughly to chronological feature milestones.
 
+## [v1.11.0] - 2026-10-11 — Phase 8: Structured Observability, Request Tracing & CSP Report-Only (Audit M1, M6)
+
+### Observability & Security (M1, M6)
+- **Structured JSON Logging Helper (`lib/logger.ts`)**:
+  - Implemented single-line JSON logging with `timestamp`, `level`, `requestId`, `route`, `status`, `durationMs`, and `userIdHash`.
+  - Cryptographically hashes user IDs with SHA-256 (12-char hex prefix) via `hashUserId()`.
+  - Strictly prevents logging sensitive patient health information, emails, or credentials.
+- **Request ID Propagation (`middleware.ts`)**:
+  - Automatically captures incoming `x-request-id` header or generates `crypto.randomUUID()`.
+  - Propagates `x-request-id` across request headers and client response headers for end-to-end distributed tracing.
+- **Content Security Policy Report-Only (`next.config.mjs`)**:
+  - Configured `Content-Security-Policy-Report-Only` header protecting against script and frame injection without breaking third-party dependencies.
+  - Whitelists: Supabase (`https://*.supabase.co`, `wss://*.supabase.co`), Jitsi (`https://meet.jit.si`, `https://8x8.vc`), Google Fonts, OpenStreetMap/CartoCDN tiles, Upstash Redis, and Vercel Analytics.
+  - Documented 7-day observation and enforcement procedure in `docs/SECURITY_NOTES.md`.
+- **Automated Verification (`tests/unit/logger.test.ts`)**:
+  - Added 4 unit tests verifying user ID hash pseudonymization, header extraction, UUID generation, and structured log output.
+
+---
+
 ## [v1.10.0] - 2026-10-11 — Phase 7: Realtime Elimination & Visibility-Aware Notification Polling (Audit H10)
 
 ### Realtime & Notifications (H10)

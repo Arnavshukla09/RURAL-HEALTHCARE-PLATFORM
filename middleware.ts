@@ -15,11 +15,16 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr"
  * 4. Redirects logged-in users away from /login and /auth to their appropriate dashboard.
  */
 export async function middleware(request: NextRequest) {
+  const requestId = request.headers.get("x-request-id") || crypto.randomUUID()
+  const requestHeaders = new Headers(request.headers)
+  requestHeaders.set("x-request-id", requestId)
+
   let response = NextResponse.next({
     request: {
-      headers: request.headers,
+      headers: requestHeaders,
     },
   })
+  response.headers.set("x-request-id", requestId)
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
