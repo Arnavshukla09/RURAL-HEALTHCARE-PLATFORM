@@ -1,16 +1,15 @@
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
-import "leaflet/dist/leaflet.css"
 import { AppProvider } from "@/components/providers/AppProvider"
 import { Header } from "@/components/Header"
 import { Footer } from "@/components/Footer"
 import { AccessibilityBar } from "@/components/AccessibilityBar"
 import { BottomTabBar } from "@/components/BottomTabBar"
-import { FloatingChat } from "@/components/FloatingChat"
 import { Toaster } from "@/components/ui/toaster"
 import { Analytics } from "@vercel/analytics/react"
 import { PwaUpdaterAndInstaller } from "@/components/PwaUpdaterAndInstaller"
+import { FloatingChatClient } from "@/components/FloatingChatClient"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
 
@@ -46,8 +45,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
         {/* Preconnect to critical third-party origins to improve LCP */}
         <link rel="preconnect" href="https://boyzdmlvzvcplzolenef.supabase.co" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link rel="dns-prefetch" href="https://generativelanguage.googleapis.com" />
         <link rel="dns-prefetch" href="https://a.basemaps.cartocdn.com" />
       </head>
@@ -60,7 +57,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </main>
           <Footer />
           <BottomTabBar />
-          <FloatingChat />
+          <FloatingChatClient />
           <Toaster />
           <PwaUpdaterAndInstaller />
           <Analytics />

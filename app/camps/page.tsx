@@ -1,8 +1,7 @@
-"use client"
-import { useApp } from "@/components/providers/AppProvider"
-import { CampLocations } from "@/components/CampLocations"
+export const revalidate = 3600
 
-export default function Page() {
-  const { language } = useApp()
-  return <CampLocations language={language} />
+import { CampsClient } from "@/components/public-pages/CampsClient"
+
+export default function CampsPage() {
+  return <CampsClient />
 }

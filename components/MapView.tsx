@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo, useRef } from "react"
 import type { ReactNode } from "react"
 import dynamic from "next/dynamic"
+import "leaflet/dist/leaflet.css"
 import { Card, CardContent } from "./ui/card"
 import { Button } from "./ui/button"
 import { Badge } from "./ui/badge"

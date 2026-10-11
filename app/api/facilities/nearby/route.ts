@@ -37,11 +37,22 @@ export async function GET(req: NextRequest) {
 
   const { lat, lon, type, radius_km } = parsed.data
 
+  // Audit H6: Round lat/lon to 2 decimals (~1.1 km) before querying to collapse cache keys
+  const roundedLat = Math.round(lat * 100) / 100
+  const roundedLon = Math.round(lon * 100) / 100
+
   // Cache lookup — avoid repeated PostGIS queries for the same area
-  const cacheKey = buildFacilitiesCacheKey(lat, lon, type ?? null, radius_km)
+  const cacheKey = buildFacilitiesCacheKey(roundedLat, roundedLon, type ?? null, radius_km)
   const cachedFacilities = await getCachedFacilities(cacheKey)
   if (cachedFacilities) {
-    return NextResponse.json({ facilities: cachedFacilities, cached: true })
+    return NextResponse.json(
+      { facilities: cachedFacilities, cached: true },
+      {
+        headers: {
+          "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
+        },
+      }
+    )
   }
 
   // Use admin client to bypass the broken execute permissions for anon users on the DB
@@ -51,8 +62,8 @@ export async function GET(req: NextRequest) {
   )
 
   const { data, error } = await supabase.rpc("nearby_facilities", {
-    p_lat: lat,
-    p_lon: lon,
+    p_lat: roundedLat,
+    p_lon: roundedLon,
     p_type: type ?? null,
     p_radius_km: radius_km,
   })
@@ -65,9 +76,16 @@ export async function GET(req: NextRequest) {
     )
   }
 
-  // Write to cache in background (1h TTL)
-  const facilities = data ?? []
+  // Cap results to 50 entries and write to cache in background (1h TTL)
+  const facilities = (data ?? []).slice(0, 50)
   setCachedFacilities(cacheKey, facilities).catch(() => {})
 
-  return NextResponse.json({ facilities })
+  return NextResponse.json(
+    { facilities },
+    {
+      headers: {
+        "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
+      },
+    }
+  )
 }

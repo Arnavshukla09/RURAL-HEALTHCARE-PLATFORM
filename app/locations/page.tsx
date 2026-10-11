@@ -1,8 +1,7 @@
-"use client"
-import { useApp } from "@/components/providers/AppProvider"
-import { MapView } from "@/components/MapView"
+export const revalidate = 3600
 
-export default function Page() {
-  const { language } = useApp()
-  return <MapView language={language} userLocation={null} camps={[]} />
+import { LocationsClient } from "@/components/public-pages/LocationsClient"
+
+export default function LocationsPage() {
+  return <LocationsClient />
 }

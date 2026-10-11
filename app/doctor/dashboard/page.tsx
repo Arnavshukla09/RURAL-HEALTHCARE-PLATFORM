@@ -1,4 +1,5 @@
 "use client"
+import { useEffect } from "react"
 import { useApp } from "@/components/providers/AppProvider"
 import { DoctorDashboard } from "@/components/DoctorDashboard"
 import { useRouter } from "next/navigation"
@@ -6,7 +7,13 @@ import { useRouter } from "next/navigation"
 export default function Page() {
   const { user, language, loading } = useApp()
   const router = useRouter()
-  if (loading) return null
-  if (user?.role !== "doctor") { router.push("/dashboard"); return null; }
+
+  useEffect(() => {
+    if (!loading && user?.role !== "doctor") {
+      router.push("/dashboard")
+    }
+  }, [loading, user, router])
+
+  if (loading || user?.role !== "doctor") return null
   return <DoctorDashboard language={language} user={user} setJitsiRoom={() => {}} />
 }

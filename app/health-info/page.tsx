@@ -1,8 +1,7 @@
-"use client"
-import { useApp } from "@/components/providers/AppProvider"
-import { HealthInfoHub } from "@/components/HealthInfoHub"
+export const revalidate = 3600
 
-export default function Page() {
-  const { language, symptomCheckResult } = useApp()
-  return <HealthInfoHub language={language} symptomResult={symptomCheckResult} />
+import { HealthInfoClient } from "@/components/public-pages/HealthInfoClient"
+
+export default function HealthInfoPage() {
+  return <HealthInfoClient />
 }

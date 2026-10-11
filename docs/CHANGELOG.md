@@ -4,6 +4,38 @@ All notable changes to the Rural Healthcare Platform will be documented in this 
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres roughly to chronological feature milestones.
 
+## [v1.9.0] - 2026-10-11 — Phase 6: ISR Caching, Bundle Optimization & Non-Blocking First Paint (Audit H6, M5)
+
+### Performance, Rendering & Bundle Optimization (H6, M5)
+- **Incremental Static Regeneration (ISR) on Public Routes**:
+  - Converted 8 public pages from pure client components to Server Component shells with `export const revalidate = 3600`:
+    - `/` (Home)
+    - `/camps` (Camp Locations)
+    - `/directory` (Doctor & Hospital Directory)
+    - `/emergency` (Emergency Response & Dialers)
+    - `/health-info` (Preventive Health Guides)
+    - `/health-info/schemes` (Government Health Schemes)
+    - `/locations` (Facility Locator Map)
+    - `/symptom-checker` (Clinical Symptom Wizard)
+  - Isolated interactive logic cleanly into `components/public-pages/` client components.
+  - Public routes are prerendered and served directly from CDN edge caches (`x-vercel-cache: HIT`), bypassing Supabase database queries for anonymous traffic.
+- **Shared First Load JS Bundle Reduction**:
+  - Dropped shared First Load JS bundle from 607 KB uncompressed to **103 kB** across all routes.
+  - Isolated Leaflet CSS (`leaflet/dist/leaflet.css`) and Leaflet runtime from global `app/layout.tsx`; loaded dynamically with placeholder fallback only on `/locations`.
+  - Dynamically imported `FloatingChat` with `ssr: false` via `components/FloatingChatClient.tsx`, preventing chatbot script overhead from delaying First Contentful Paint.
+- **Public API HTTP Caching & Spatial Bucketing**:
+  - `GET /api/facilities/nearby`: Coordinates rounded to 2 decimal places (~1.1 km precision) to maximize CDN and Redis cache hit ratios. Enforced 50-item limit. Added header `Cache-Control: public, s-maxage=3600, stale-while-revalidate=86400`.
+  - `GET /api/providers`: Enforced 50-item limit. Added header `Cache-Control: public, s-maxage=3600, stale-while-revalidate=86400`.
+- **Non-Blocking First Paint (`components/providers/AppProvider.tsx`)**:
+  - Initialized with `loading: false` default state to eliminate blank screen flash on low-speed 2G/3G connections.
+  - Optimized profile bootstrapping to query existing patient record directly before invoking `POST /api/auth/ensure-patient`.
+- **SSR Redirect Robustness**:
+  - Moved client-side route redirects across 10 dashboard/doctor/admin pages into `useEffect` hooks, eliminating SSR `location is not defined` warnings during static prerendering.
+- **Performance Report (`docs/PERFORMANCE_REPORT.md`)**:
+  - Generated comprehensive benchmark report detailing route sizes, cache policies, and zero-cost free-tier guarantees.
+
+---
+
 ## [v1.8.0] - 2026-10-11 — Phase 5: Rate Limiting Factory, AI Gateway & Staging Load-Test Harness (Audit H4, M4)
 
 ### Security, Rate Limiting & Abuse Prevention (H4)

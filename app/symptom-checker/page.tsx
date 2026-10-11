@@ -1,8 +1,7 @@
-"use client"
-import { useApp } from "@/components/providers/AppProvider"
-import { SymptomChecker } from "@/components/SymptomChecker"
+export const revalidate = 3600
 
-export default function Page() {
-  const { language } = useApp()
-  return <SymptomChecker language={language} />
+import { SymptomCheckerClient } from "@/components/public-pages/SymptomCheckerClient"
+
+export default function SymptomCheckerPage() {
+  return <SymptomCheckerClient />
 }

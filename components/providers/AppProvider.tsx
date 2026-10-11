@@ -21,15 +21,39 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null)
   const [language, setLanguage] = useState("en")
   const [symptomCheckResult, setSymptomCheckResult] = useState<SymptomResult | null>(null)
-  const [loading, setLoading] = useState(true)
+  // Audit H6: Do not block first paint on auth — render shell immediately
+  const [loading, setLoading] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
 
   useEffect(() => {
     const supabase = createClient()
 
+    // Audit H6: Query patient row first; invoke ensure-patient ONLY if no row exists
     const fetchUserWithRole = async (sessionUser: any): Promise<UserProfile> => {
       try {
+        const { data: patient } = await supabase
+          .from("patients")
+          .select("role, first_name, last_name, phone")
+          .eq("user_id", sessionUser.id)
+          .single()
+
+        if (patient) {
+          return {
+            id: sessionUser.id,
+            name:
+              patient.first_name ||
+              sessionUser.user_metadata?.full_name ||
+              sessionUser.user_metadata?.first_name ||
+              sessionUser.email?.split("@")[0] ||
+              "User",
+            email: sessionUser.email || "",
+            role: patient.role || "patient",
+            phone: patient.phone || "",
+          }
+        }
+
+        // Patient row missing (e.g. initial Google OAuth signup) -> bootstrap profile
         const res = await fetch("/api/auth/ensure-patient", { method: "POST" })
         if (res.ok) {
           const data = await res.json()
@@ -42,26 +66,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
           }
         }
       } catch (err) {
-        console.error("ensure-patient failed:", err)
+        console.warn("[AppProvider] Profile resolution fallback:", err)
       }
-
-      const { data: patient } = await supabase
-        .from("patients")
-        .select("role, first_name, last_name, phone")
-        .eq("user_id", sessionUser.id)
-        .single()
 
       return {
         id: sessionUser.id,
         name:
-          patient?.first_name ||
           sessionUser.user_metadata?.full_name ||
           sessionUser.user_metadata?.first_name ||
           sessionUser.email?.split("@")[0] ||
           "User",
         email: sessionUser.email || "",
-        role: patient?.role || "patient",
-        phone: patient?.phone || "",
+        role: "patient",
+        phone: "",
       }
     }
 

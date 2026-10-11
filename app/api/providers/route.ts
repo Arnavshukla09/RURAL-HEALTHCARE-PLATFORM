@@ -33,6 +33,7 @@ export async function GET(request: NextRequest) {
       .from("healthcare_providers")
       .select("*")
       .eq("is_verified", true)
+      .limit(50)
 
     if (specialization) {
       query = query.eq("specialization", specialization)
@@ -45,7 +46,11 @@ export async function GET(request: NextRequest) {
     }
 
     if (!providers || providers.length === 0) {
-      return NextResponse.json([])
+      return NextResponse.json([], {
+        headers: {
+          "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
+        },
+      })
     }
 
     // Fetch names and phones from patients table
@@ -68,7 +73,11 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    return NextResponse.json(enrichedProviders)
+    return NextResponse.json(enrichedProviders, {
+      headers: {
+        "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
+      },
+    })
   } catch (error) {
     return NextResponse.json(
       { error: "Internal server error" },

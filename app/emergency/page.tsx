@@ -1,8 +1,7 @@
-"use client"
-import { useApp } from "@/components/providers/AppProvider"
-import { EmergencyModule } from "@/components/EmergencyModule"
+export const revalidate = 3600
 
-export default function Page() {
-  const { language } = useApp()
-  return <EmergencyModule language={language} />
+import { EmergencyClient } from "@/components/public-pages/EmergencyClient"
+
+export default function EmergencyPage() {
+  return <EmergencyClient />
 }

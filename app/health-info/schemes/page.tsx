@@ -1,9 +1,7 @@
-"use client"
-import { useApp } from "@/components/providers/AppProvider"
-import { GovernmentSchemes } from "@/components/GovernmentSchemes"
+export const revalidate = 3600
 
-export default function Page() {
-  const { language, loading } = useApp()
-  if (loading) return null
-  return <GovernmentSchemes language={language} />
+import { SchemesClient } from "@/components/public-pages/SchemesClient"
+
+export default function SchemesPage() {
+  return <SchemesClient />
 }

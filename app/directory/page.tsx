@@ -1,8 +1,7 @@
-"use client"
-import { useApp } from "@/components/providers/AppProvider"
-import { Directory } from "@/components/Directory"
+export const revalidate = 3600
 
-export default function Page() {
-  const { language } = useApp()
-  return <Directory language={language} />
+import { DirectoryClient } from "@/components/public-pages/DirectoryClient"
+
+export default function DirectoryPage() {
+  return <DirectoryClient />
 }
