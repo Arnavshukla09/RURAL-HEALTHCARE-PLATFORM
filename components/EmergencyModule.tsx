@@ -1,18 +1,61 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
 import { Button } from "./ui/button"
-import { Phone, MapPin, Share2, AlertTriangle, Truck, MessageSquare, MessageCircle, BookOpen } from "lucide-react"
+import { Input } from "./ui/input"
+import {
+  Phone,
+  MapPin,
+  Share2,
+  AlertTriangle,
+  Truck,
+  MessageSquare,
+  MessageCircle,
+  BookOpen,
+  HeartPulse,
+  Activity,
+  UserCheck,
+  ShieldAlert,
+  Smartphone,
+} from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import {
+  getEmergencyProfile,
+  saveEmergencyProfile,
+  triggerSosVibration,
+  dispatchSmsSos,
+  DEFAULT_PROFILE,
+  EmergencyProfile,
+} from "@/lib/emergency/vault"
 
 interface EmergencyModuleProps {
   language: string
 }
 
-
 export function EmergencyModule({ language }: EmergencyModuleProps) {
-  const router = useRouter();
+  const router = useRouter()
+  const { toast } = useToast()
+
+  const [profile, setProfile] = useState<EmergencyProfile>(DEFAULT_PROFILE)
+  const [editingProfile, setEditingProfile] = useState<EmergencyProfile>(DEFAULT_PROFILE)
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [shakeActive, setShakeActive] = useState(true)
+
+  useEffect(() => {
+    const loaded = getEmergencyProfile()
+    setProfile(loaded)
+    setEditingProfile(loaded)
+  }, [])
+
   const content = {
     en: {
       title: "Emergency Services",
@@ -41,6 +84,23 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
       waFallback: "WhatsApp SOS",
       firstAid: "First-Aid Guide",
       firstAidSub: "Tap any card for full step-by-step instructions →",
+      vaultTitle: "Personal Emergency Vault (Offline)",
+      vaultSubtitle: "Chronic health profile & contacts transmitted automatically during SOS",
+      editVault: "Edit Health Profile",
+      saveVault: "Save to Phone (Offline)",
+      fullName: "Full Name",
+      age: "Age",
+      bloodGroup: "Blood Group",
+      chronicConditions: "Chronic Conditions (Diabetes, Heart, Asthma, etc.)",
+      medications: "Current Daily Medications",
+      allergies: "Known Drug / Food Allergies",
+      primaryContact: "Primary Emergency Contact (Mobile Number)",
+      secondaryContact: "Secondary Emergency Contact (Mobile Number)",
+      sosBroadcast: "Broadcast Medical SOS with Health Profile",
+      shakeDetected: "Vigorous phone shake detected! Initiating SOS...",
+      shakeHint: "Shake phone 3 times to trigger instant emergency broadcast",
+      noneRecorded: "None recorded",
+      savedSuccess: "Emergency profile saved locally on this device!",
     },
     hi: {
       title: "आपातकालीन सेवाएं",
@@ -69,11 +129,105 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
       waFallback: "व्हाट्सएप एसओएस",
       firstAid: "प्राथमिक चिकित्सा दृश्य मार्गदर्शिका",
       firstAidSub: "पूर्ण चरण-दर-चरण निर्देश के लिए किसी कार्ड पर टैप करें →",
+      vaultTitle: "व्यक्तिगत आपातकालीन वॉल्ट (ऑफ़लाइन)",
+      vaultSubtitle: "एसओएस के दौरान पुरानी बीमारियां व संपर्क विवरण स्वतः भेजे जाएंगे",
+      editVault: "स्वास्थ्य प्रोफाइल संपादित करें",
+      saveVault: "फोन में सुरक्षित करें (ऑफ़लाइन)",
+      fullName: "पूरा नाम",
+      age: "आयु",
+      bloodGroup: "रक्त समूह (Blood Group)",
+      chronicConditions: "पुरानी बीमारियां (मधुमेह, हृदय, दमा, आदि)",
+      medications: "वर्तमान दवाइयां",
+      allergies: "गंभीर एलर्जी (दवा/भोजन)",
+      primaryContact: "प्राथमिक आपातकालीन संपर्क (मोबाइल नंबर)",
+      secondaryContact: "द्वितीयक आपातकालीन संपर्क (मोबाइल नंबर)",
+      sosBroadcast: "स्वास्थ्य विवरण सहित आपातकालीन एसओएस भेजें",
+      shakeDetected: "फोन झटका पहचाना गया! एसओएस शुरू हो रहा है...",
+      shakeHint: "तत्काल आपातकालीन अलर्ट के लिए फोन को 3 बार हिलाएं",
+      noneRecorded: "कोई दर्ज नहीं",
+      savedSuccess: "आपातकालीन प्रोफाइल इस डिवाइस पर सुरक्षित कर दी गई!",
     },
   }
 
   const t = content[language as keyof typeof content] || content.en
-  const { toast } = useToast()
+
+  // Physical Shake Gesture Detection
+  useEffect(() => {
+    if (!shakeActive || typeof window === "undefined") return
+
+    let lastTime = 0
+    let shakeCount = 0
+    let lastX = 0
+    let lastY = 0
+    let lastZ = 0
+
+    const handleMotion = (event: DeviceMotionEvent) => {
+      const current = event.accelerationIncludingGravity
+      if (!current || current.x === null || current.y === null || current.z === null) return
+
+      const now = performance.now()
+      if (now - lastTime > 150) {
+        const diffTime = now - lastTime
+        lastTime = now
+
+        const delta = Math.abs(current.x + current.y + current.z - lastX - lastY - lastZ)
+        const speed = (delta / diffTime) * 10000
+
+        if (speed > 850) {
+          shakeCount++
+          if (shakeCount >= 3) {
+            shakeCount = 0
+            triggerSosBroadcast("shake")
+          }
+        } else if (now - lastTime > 2500) {
+          shakeCount = 0
+        }
+
+        lastX = current.x
+        lastY = current.y
+        lastZ = current.z
+      }
+    }
+
+    window.addEventListener("devicemotion", handleMotion)
+    return () => window.removeEventListener("devicemotion", handleMotion)
+  }, [shakeActive, profile])
+
+  const triggerSosBroadcast = (source: "button" | "shake") => {
+    triggerSosVibration()
+
+    if (source === "shake") {
+      toast({
+        title: t.shakeDetected,
+        variant: "destructive",
+      })
+    }
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude }
+          const smsUrl = dispatchSmsSos(profile, coords)
+          window.location.href = smsUrl
+        },
+        () => {
+          const smsUrl = dispatchSmsSos(profile)
+          window.location.href = smsUrl
+        },
+        { timeout: 5000, enableHighAccuracy: true }
+      )
+    } else {
+      const smsUrl = dispatchSmsSos(profile)
+      window.location.href = smsUrl
+    }
+  }
+
+  const handleSaveProfile = () => {
+    const updated = saveEmergencyProfile(editingProfile)
+    setProfile(updated)
+    setIsDialogOpen(false)
+    toast({ title: t.savedSuccess })
+  }
 
   const emergencyNumbers = [
     { service: t.cmHelpline, number: "181", icon: Phone, color: "gray" },
@@ -107,21 +261,41 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
 
   return (
     <div className="min-h-screen bg-red-50 p-4">
-      <div className="max-w-4xl mx-auto space-y-8">
+      <div className="max-w-4xl mx-auto space-y-6">
         <div className="text-center">
           <h1 className="text-4xl font-bold text-red-600 mb-2">{t.title}</h1>
           <p className="text-gray-600">{t.subtitle}</p>
         </div>
 
+        {/* Shake Detection Banner */}
+        <div className="flex items-center justify-between p-3.5 bg-red-100/90 border border-red-300 rounded-lg text-sm text-red-900 shadow-sm">
+          <div className="flex items-center gap-2.5">
+            <Smartphone className="h-5 w-5 text-red-600 animate-pulse" />
+            <span className="font-medium">{t.shakeHint}</span>
+          </div>
+          <span className="text-xs font-semibold px-2.5 py-1 bg-red-200 text-red-800 rounded-full">
+            {shakeActive ? "SOS Sensor Active" : "Sensor Off"}
+          </span>
+        </div>
+
         {/* Main Emergency Call */}
-        <Card className="border-red-200 bg-white">
-          <CardContent className="p-8 space-y-6">
+        <Card className="border-red-200 bg-white shadow-sm">
+          <CardContent className="p-6 space-y-5">
             <Button
               onClick={() => window.open("tel:108")}
-              className="w-full h-24 text-2xl bg-red-600 hover:bg-red-700 animate-pulse"
+              className="w-full h-20 text-2xl bg-red-600 hover:bg-red-700 animate-pulse font-bold"
             >
-              <Phone className="mr-2 h-8 w-8" />
+              <Phone className="mr-2 h-7 w-7" />
               {t.call108}
+            </Button>
+
+            {/* Broadcast SOS with Chronic Information */}
+            <Button
+              onClick={() => triggerSosBroadcast("button")}
+              className="w-full h-14 text-base bg-red-950 hover:bg-black text-white font-semibold flex items-center justify-center gap-2 shadow"
+            >
+              <ShieldAlert className="h-5 w-5 text-red-400" />
+              {t.sosBroadcast}
             </Button>
             
             <div className="grid md:grid-cols-2 gap-4">
@@ -188,6 +362,132 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
                 <span className="text-xs text-blue-500 font-normal mt-1">{t.firstAidSub}</span>
               </div>
             </Button>
+          </CardContent>
+        </Card>
+
+        {/* Personal Emergency Vault (Offline) */}
+        <Card className="border-red-200 bg-white shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
+            <div>
+              <CardTitle className="flex items-center text-red-700 text-lg">
+                <HeartPulse className="h-5 w-5 mr-2 text-red-600" />
+                {t.vaultTitle}
+              </CardTitle>
+              <p className="text-xs text-gray-500 mt-0.5">{t.vaultSubtitle}</p>
+            </div>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" className="border-red-300 text-red-700 hover:bg-red-50">
+                  {t.editVault}
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle className="text-red-700 flex items-center">
+                    <HeartPulse className="mr-2 h-5 w-5" />
+                    {t.editVault}
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="space-y-3.5 py-2 text-sm">
+                  <div>
+                    <label className="text-xs font-semibold text-gray-600 mb-1 block">{t.fullName}</label>
+                    <Input
+                      value={editingProfile.fullName}
+                      onChange={(e) => setEditingProfile({ ...editingProfile, fullName: e.target.value })}
+                      placeholder="e.g. Ramesh Kumar"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs font-semibold text-gray-600 mb-1 block">{t.age}</label>
+                      <Input
+                        value={editingProfile.age}
+                        onChange={(e) => setEditingProfile({ ...editingProfile, age: e.target.value })}
+                        placeholder="e.g. 52"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-gray-600 mb-1 block">{t.bloodGroup}</label>
+                      <Input
+                        value={editingProfile.bloodGroup}
+                        onChange={(e) => setEditingProfile({ ...editingProfile, bloodGroup: e.target.value })}
+                        placeholder="e.g. O+, B+, AB-"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-gray-600 mb-1 block">{t.chronicConditions}</label>
+                    <Input
+                      value={editingProfile.chronicConditions}
+                      onChange={(e) => setEditingProfile({ ...editingProfile, chronicConditions: e.target.value })}
+                      placeholder="e.g. Type 2 Diabetes, Hypertension, Asthma"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-gray-600 mb-1 block">{t.allergies}</label>
+                    <Input
+                      value={editingProfile.severeAllergies}
+                      onChange={(e) => setEditingProfile({ ...editingProfile, severeAllergies: e.target.value })}
+                      placeholder="e.g. Penicillin, Sulfa, Peanuts"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-gray-600 mb-1 block">{t.medications}</label>
+                    <Input
+                      value={editingProfile.currentMedications}
+                      onChange={(e) => setEditingProfile({ ...editingProfile, currentMedications: e.target.value })}
+                      placeholder="e.g. Metformin 500mg, Inhaler"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-gray-600 mb-1 block">{t.primaryContact}</label>
+                    <Input
+                      value={editingProfile.primaryEmergencyContact}
+                      onChange={(e) => setEditingProfile({ ...editingProfile, primaryEmergencyContact: e.target.value })}
+                      placeholder="e.g. +91 9876543210"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-gray-600 mb-1 block">{t.secondaryContact}</label>
+                    <Input
+                      value={editingProfile.secondaryEmergencyContact}
+                      onChange={(e) => setEditingProfile({ ...editingProfile, secondaryEmergencyContact: e.target.value })}
+                      placeholder="e.g. +91 9123456789"
+                    />
+                  </div>
+                  <Button
+                    onClick={handleSaveProfile}
+                    className="w-full mt-4 bg-red-600 hover:bg-red-700 text-white font-semibold"
+                  >
+                    {t.saveVault}
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+              <div className="p-3 bg-gray-50 rounded-md border border-gray-100">
+                <span className="text-xs text-gray-500 block mb-0.5">{t.fullName}</span>
+                <span className="font-semibold text-gray-900 truncate block">{profile.fullName || t.noneRecorded}</span>
+              </div>
+              <div className="p-3 bg-gray-50 rounded-md border border-gray-100">
+                <span className="text-xs text-gray-500 block mb-0.5">{t.bloodGroup}</span>
+                <span className="font-bold text-red-600 block">{profile.bloodGroup || "Unknown"}</span>
+              </div>
+              <div className="p-3 bg-gray-50 rounded-md border border-gray-100 col-span-2">
+                <span className="text-xs text-gray-500 block mb-0.5">{t.chronicConditions}</span>
+                <span className="font-medium text-amber-800 line-clamp-1 block">{profile.chronicConditions || t.noneRecorded}</span>
+              </div>
+              <div className="p-3 bg-gray-50 rounded-md border border-gray-100 col-span-2">
+                <span className="text-xs text-gray-500 block mb-0.5">{t.allergies}</span>
+                <span className="font-medium text-red-700 line-clamp-1 block">{profile.severeAllergies || t.noneRecorded}</span>
+              </div>
+              <div className="p-3 bg-gray-50 rounded-md border border-gray-100 col-span-2">
+                <span className="text-xs text-gray-500 block mb-0.5">{t.primaryContact}</span>
+                <span className="font-medium text-gray-900 truncate block">{profile.primaryEmergencyContact || t.noneRecorded}</span>
+              </div>
+            </div>
           </CardContent>
         </Card>
 

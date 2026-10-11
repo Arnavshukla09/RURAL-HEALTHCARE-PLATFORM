@@ -129,22 +129,53 @@ const serwist = new Serwist({
       }),
     },
 
-    // 6. Navigation: NetworkFirst with 3s timeout for flaky 2G/3G connections
+    // 6. Navigation & RSC Payloads: NetworkFirst with 3s timeout for flaky 2G/3G connections
     // Falls back to cached page, or /offline if unvisited
     {
-      matcher: ({ request }) => request.mode === "navigate",
+      matcher: ({ request, url }) => {
+        if (request.mode === "navigate") return true
+        // Next.js App Router client-side RSC data prefetches and client navigations
+        if (
+          url.searchParams.has("_rsc") ||
+          request.headers.get("RSC") === "1" ||
+          request.headers.get("Next-Router-State-Tree") !== null
+        ) {
+          return true
+        }
+        return false
+      },
       handler: new NetworkFirst({
         cacheName: "pages-cache",
         networkTimeoutSeconds: 3,
         plugins: [
           new ExpirationPlugin({
-            maxEntries: 30,
-            maxAgeSeconds: 24 * 60 * 60,
+            maxEntries: 60,
+            maxAgeSeconds: 7 * 24 * 60 * 60, // 7 days
           }),
         ],
       }),
     },
   ],
+})
+
+// Pre-cache core emergency and public routes during Service Worker installation
+const CORE_OFFLINE_ROUTES = [
+  "/offline",
+  "/",
+  "/emergency",
+  "/symptom-checker",
+  "/camps",
+  "/directory",
+]
+
+self.addEventListener("install", (event: any) => {
+  event.waitUntil(
+    caches.open("pages-cache").then((cache) => {
+      return cache.addAll(CORE_OFFLINE_ROUTES).catch((err) => {
+        console.warn("[Serwist] Pre-cache initial warning (non-fatal):", err)
+      })
+    })
+  )
 })
 
 // Custom message listener for PWA lifecycle events
