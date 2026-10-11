@@ -1,7 +1,15 @@
 // Jitsi Meet integration configuration
+/**
+ * Jitsi Domain Configuration:
+ * - Default: "meet.jit.si" (public 8x8 Jitsi instance).
+ * - Production: Set NEXT_PUBLIC_JITSI_DOMAIN to your self-hosted Jitsi instance
+ *   or 8x8 JaaS (Jitsi as a Service) tenant domain (e.g., 8x8.vc/your-tenant).
+ *
+ * TODO (Production Security): Implement server-signed JaaS/JWT tokens so that
+ * unauthorized participants cannot enter teleconsultations even if they learn
+ * the room ID. See: https://developer.8x8.com/jaas/docs/api-keys-jwt
+ */
 export const JITSI_CONFIG = {
-  // Use Jitsi's public instance by default
-  // For production, consider hosting your own Jitsi Meet server
   domain: process.env.NEXT_PUBLIC_JITSI_DOMAIN || "meet.jit.si",
   appName: "RuralHealthcare",
 
@@ -11,7 +19,7 @@ export const JITSI_CONFIG = {
     disableAudioLevels: false,
     startWithAudioMuted: false,
     startWithVideoMuted: false,
-    enableLobbyMode: false,
+    enableLobbyMode: true, // ✅ C5 fix: lobby enabled so doctor must admit patient
     prejoinPageEnabled: true,
     toolbarButtons: [
       "microphone",
@@ -24,8 +32,8 @@ export const JITSI_CONFIG = {
       "profile",
       "info",
       "chat",
-      "recording",
-      "livestream",
+      // "recording" removed: prevents patients/guests recording consultations
+      // "livestream" removed: prevents streaming medical consultations
       "etherpad",
       "settings",
       "raisehand",
@@ -75,14 +83,14 @@ export const JITSI_CONFIG = {
       "fodeviceselection",
       "hangup",
       "chat",
-      "recording",
+      // "recording" removed for patient privacy
     ],
   },
 }
 
 export function generateRoomName(): string {
-  // Generate a unique room name for each consultation
-  return `rhcp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+  // Generate a cryptographically secure, unguessable room ID
+  return `rhcp_${crypto.randomUUID()}`
 }
 
 export function generateJitsiUrl(roomName: string, displayName: string): string {
@@ -90,3 +98,4 @@ export function generateJitsiUrl(roomName: string, displayName: string): string 
   url.searchParams.append("jwt", "") // Add JWT token if needed for authentication
   return url.toString()
 }
+

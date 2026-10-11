@@ -1,94 +1,115 @@
-import { createClient } from "@/lib/supabase/server"
 import { type NextRequest, NextResponse } from "next/server"
-import { z } from "zod"   // ✅ ADD
+import { z } from "zod"
 import { rateLimit } from "@/lib/rate-limit"
+import { requireUser, getPatientProfile, authErrorResponse } from "@/lib/auth/guard"
 
-// ✅ Schema
 const TeleconsultSchema = z.object({
   appointmentId: z.string().uuid(),
 })
 
 export async function POST(request: NextRequest) {
   try {
-    const ip = request.headers.get('x-forwarded-for') ?? '127.0.0.1'
-    if (!(await rateLimit(ip))) {
-      return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+    const ip = request.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "127.0.0.1"
+    if (!(await rateLimit(ip, 20, 60000))) {
+      return NextResponse.json({ error: "Too many requests", code: "RATE_LIMITED" }, { status: 429 })
     }
 
-    const supabase = await createClient()
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    const { user, supabase } = await requireUser()
+    const patient = await getPatientProfile(user.id)
+    if (!patient) {
+      return NextResponse.json({ error: "Profile not found", code: "NOT_FOUND" }, { status: 404 })
     }
 
     const body = await request.json()
-
-    // ✅ VALIDATE
     const parsed = TeleconsultSchema.safeParse(body)
-
     if (!parsed.success) {
       return NextResponse.json(
-        { error: parsed.error.flatten() },
+        { error: "Invalid appointmentId", details: parsed.error.flatten(), code: "VALIDATION_ERROR" },
         { status: 400 }
       )
     }
 
     const { appointmentId } = parsed.data
 
-    // 🔒 OPTIONAL BUT IMPORTANT: check ownership
-    const { data: appointment } = await supabase
+    // Fetch appointment details
+    const { data: appointment, error: fetchErr } = await supabase
       .from("appointments")
-      .select("*")
+      .select("id, patient_id, provider_id, appointment_date, duration_minutes, status, teleconsult_room_id")
       .eq("id", appointmentId)
       .single()
 
-    if (!appointment) {
-      return NextResponse.json({ error: "Appointment not found" }, { status: 404 })
+    if (fetchErr || !appointment) {
+      return NextResponse.json({ error: "Appointment not found", code: "NOT_FOUND" }, { status: 404 })
     }
 
-    // 👉 Look up the user's patient and provider records
-    const { data: patient } = await supabase
-      .from("patients")
-      .select("id")
-      .eq("user_id", user.id)
-      .single()
+    // Role and ownership verification (C5)
+    let isAuthorized = false
 
-    const { data: provider } = await supabase
-      .from("healthcare_providers")
-      .select("id")
-      .eq("user_id", user.id)
-      .single()
+    if (patient.role === "admin") {
+      isAuthorized = true
+    } else if (patient.role === "patient" && appointment.patient_id === patient.id) {
+      isAuthorized = true
+    } else if (patient.role === "doctor") {
+      // Check if this doctor is assigned to the provider record
+      const { data: providerRecord } = await supabase
+        .from("healthcare_providers")
+        .select("id")
+        .eq("user_id", user.id)
+        .single()
 
-    // 👉 ensure user is part of this appointment
-    const isPatient = patient && appointment.patient_id === patient.id
-    const isProvider = provider && appointment.provider_id === provider.id
-
-    if (!isPatient && !isProvider) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+      if (providerRecord && appointment.provider_id === providerRecord.id) {
+        isAuthorized = true
+      }
     }
 
-    // ✅ Generate room ID (better version)
-    const roomId = `rhcp_${Date.now()}_${crypto.randomUUID()}`
+    if (!isAuthorized) {
+      return NextResponse.json(
+        { error: "You are not authorized to enter this consultation room.", code: "FORBIDDEN" },
+        { status: 403 }
+      )
+    }
 
-    // ✅ Update DB
-    const { error } = await supabase
-      .from("appointments")
-      .update({ teleconsult_room_id: roomId })
-      .eq("id", appointmentId)
+    // Consultation status check
+    if (appointment.status === "cancelled") {
+      return NextResponse.json(
+        { error: "This appointment has been cancelled.", code: "APPOINTMENT_CANCELLED" },
+        { status: 409 }
+      )
+    }
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
+    // Time window gating: start − 15 min to end + 30 min
+    const apptDate = new Date(appointment.appointment_date).getTime()
+    const durationMs = (appointment.duration_minutes || 30) * 60 * 1000
+    const windowStart = apptDate - 15 * 60 * 1000 // 15 mins before
+    const windowEnd = apptDate + durationMs + 30 * 60 * 1000 // 30 mins after end
+    const now = Date.now()
+
+    if (now < windowStart || now > windowEnd) {
+      const minutesUntil = Math.round((windowStart - now) / 60000)
+      return NextResponse.json(
+        {
+          error:
+            now < windowStart
+              ? `The teleconsultation room opens 15 minutes before the scheduled time (in ~${minutesUntil} minutes).`
+              : "This teleconsultation window has expired.",
+          code: "OUTSIDE_TIME_WINDOW",
+        },
+        { status: 403 }
+      )
+    }
+
+    // Room ID: use existing or generate a cryptographically random UUID
+    let roomId = appointment.teleconsult_room_id
+    if (!roomId) {
+      roomId = `rhcp_${crypto.randomUUID()}`
+      await supabase
+        .from("appointments")
+        .update({ teleconsult_room_id: roomId })
+        .eq("id", appointmentId)
     }
 
     return NextResponse.json({ roomId })
-  } catch (error) {
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    )
+  } catch (err) {
+    return authErrorResponse(err)
   }
 }

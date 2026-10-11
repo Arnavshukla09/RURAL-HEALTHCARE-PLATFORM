@@ -1,34 +1,25 @@
-import { createClient } from "@/lib/supabase/server"
 import { type NextRequest, NextResponse } from "next/server"
-import { z } from "zod"   // ✅ ADD
+import { z } from "zod"
 import { rateLimit } from "@/lib/rate-limit"
+import { requireUser, authErrorResponse } from "@/lib/auth/guard"
 
-// ✅ Schema for profile update
+// Schema for profile update (strictly omits role to prevent tampering)
 const ProfileSchema = z.object({
   profileType: z.enum(["patient", "provider"]),
-
-  // optional fields (adjust based on your DB)
-  first_name: z.string().min(1).optional(),
-  last_name: z.string().optional(),
-  phone: z.string().min(10).optional(),
-  specialization: z.string().optional(), // for provider
+  first_name: z.string().min(1).max(50).optional(),
+  last_name: z.string().max(50).optional(),
+  phone: z.string().min(10).max(15).optional(),
+  specialization: z.string().max(100).optional(),
 })
 
 export async function GET(request: NextRequest) {
   try {
-    const ip = request.headers.get('x-forwarded-for') ?? '127.0.0.1'
-    if (!(await rateLimit(ip))) {
-      return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+    const ip = request.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "127.0.0.1"
+    if (!(await rateLimit(ip, 30, 60000))) {
+      return NextResponse.json({ error: "Too many requests", code: "RATE_LIMITED" }, { status: 429 })
     }
 
-    const supabase = await createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    const { user, supabase } = await requireUser()
 
     const { data: patient } = await supabase
       .from("patients")
@@ -52,40 +43,30 @@ export async function GET(request: NextRequest) {
       provider,
     })
   } catch (error) {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    return authErrorResponse(error)
   }
 }
 
 export async function PUT(request: NextRequest) {
   try {
-    const ip = request.headers.get('x-forwarded-for') ?? '127.0.0.1'
-    if (!(await rateLimit(ip))) {
-      return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+    const ip = request.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "127.0.0.1"
+    if (!(await rateLimit(ip, 15, 60000))) {
+      return NextResponse.json({ error: "Too many requests", code: "RATE_LIMITED" }, { status: 429 })
     }
 
-    const supabase = await createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
+    const { user, supabase } = await requireUser()
     const body = await request.json()
 
-    // ✅ VALIDATE INPUT
+    // Validate input against strict schema
     const parsed = ProfileSchema.safeParse(body)
-
     if (!parsed.success) {
       return NextResponse.json(
-        { error: parsed.error.flatten() },
+        { error: "Validation failed", details: parsed.error.flatten(), code: "VALIDATION_ERROR" },
         { status: 400 }
       )
     }
 
     const { profileType, ...data } = parsed.data
-
     const table = profileType === "provider" ? "healthcare_providers" : "patients"
 
     const { data: updated, error } = await supabase
@@ -93,13 +74,14 @@ export async function PUT(request: NextRequest) {
       .update(data)
       .eq("user_id", user.id)
       .select()
+      .single()
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ error: "Failed to update profile", code: "DB_ERROR" }, { status: 500 })
     }
 
     return NextResponse.json(updated)
   } catch (error) {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    return authErrorResponse(error)
   }
 }

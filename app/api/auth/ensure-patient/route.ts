@@ -1,33 +1,28 @@
-import { createClient } from "@/lib/supabase/server"
-import { createAdminClient } from "@/lib/supabase/admin"
+import { getAdminClient } from "@/lib/supabase/admin"
 import { type NextRequest, NextResponse } from "next/server"
 import { rateLimit } from "@/lib/rate-limit"
+import { requireUser, authErrorResponse } from "@/lib/auth/guard"
 
 /**
  * POST /api/auth/ensure-patient
  * Ensures the current authenticated user has a row in the patients table.
  * Called on login (especially OAuth) to guarantee the patient record exists
  * BEFORE any booking or records operations.
- * 
- * This runs server-side so it bypasses RLS — no SQL script needed.
+ *
+ * AUDITED SERVICE-ROLE USE: New OAuth users do not yet have a patient row, so
+ * getAdminClient is permitted here to bootstrap their initial patient profile.
  */
 export async function POST(request: NextRequest) {
   try {
-    const ip = request.headers.get("x-forwarded-for") ?? "127.0.0.1"
-    if (!(await rateLimit(ip))) {
-      return NextResponse.json({ error: "Too many requests" }, { status: 429 })
+    const ip = request.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "127.0.0.1"
+    if (!(await rateLimit(ip, 20, 60000))) {
+      return NextResponse.json({ error: "Too many requests", code: "RATE_LIMITED" }, { status: 429 })
     }
 
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const { user, supabase } = await requireUser()
 
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
-    // Check if patient row already exists
-    const adminSupabase = createAdminClient()
-    const { data: existing } = await adminSupabase
+    // Check if patient row already exists (using user-scoped client first)
+    const { data: existing } = await supabase
       .from("patients")
       .select("id, first_name, last_name, phone, role")
       .eq("user_id", user.id)
@@ -44,7 +39,8 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Create new patient row
+    // AUDITED SERVICE-ROLE USE: Bootstrapping new profile
+    const adminSupabase = getAdminClient()
     const fullName =
       user.user_metadata?.full_name ||
       user.user_metadata?.name ||

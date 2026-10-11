@@ -1,6 +1,19 @@
-import { NextResponse, type NextRequest } from 'next/server'
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { NextResponse, type NextRequest } from "next/server"
+import { createServerClient, type CookieOptions } from "@supabase/ssr"
 
+/**
+ * middleware.ts
+ *
+ * Hardened Edge Middleware (H5, H7):
+ * 1. Matcher is strictly narrowed to protected and auth-redirect routes.
+ *    Public routes (/, /camps, /directory, /emergency, /health-info, /locations, /symptom-checker)
+ *    never run getUser() network calls, saving latency and Supabase Auth quota.
+ * 2. Unprotects /camps (public rural camp information).
+ * 3. Enforces server-side role gating:
+ *    - /admin/* -> requires admin role
+ *    - /doctor/* -> requires doctor or admin role
+ * 4. Redirects logged-in users away from /login and /auth to their appropriate dashboard.
+ */
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({
     request: {
@@ -21,29 +34,69 @@ export async function middleware(request: NextRequest) {
           response.cookies.set({ name, value, ...options })
         },
         remove(name: string, options: CookieOptions) {
-          request.cookies.set({ name, value: '', ...options })
-          response.cookies.set({ name, value: '', ...options })
+          request.cookies.set({ name, value: "", ...options })
+          response.cookies.set({ name, value: "", ...options })
         },
       },
     }
   )
 
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
-  // Protect the dashboard, consultation, and other protected routes
-  const protectedRoutes = ['/dashboard', '/consultation', '/records', '/camps']
-  
-  if (protectedRoutes.some(route => request.nextUrl.pathname.startsWith(route))) {
-    if (!user) {
-      const loginUrl = new URL('/login', request.url)
-      return NextResponse.redirect(loginUrl)
-    }
+  const pathname = request.nextUrl.pathname
+
+  // 1. Auth routes redirect: logged-in users visiting /login or /auth go to their role dashboard
+  if (user && (pathname === "/login" || pathname === "/auth")) {
+    const { data: patient } = await supabase
+      .from("patients")
+      .select("role")
+      .eq("user_id", user.id)
+      .single()
+
+    const role = patient?.role || "patient"
+    let target = "/dashboard"
+    if (role === "admin") target = "/admin/dashboard"
+    else if (role === "doctor") target = "/doctor/dashboard"
+
+    return NextResponse.redirect(new URL(target, request.url))
   }
 
-  // Optional: Redirect logged in users away from auth/login
-  if (user && (request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/auth')) {
-    const dashboardUrl = new URL('/dashboard', request.url)
-    return NextResponse.redirect(dashboardUrl)
+  // 2. Unauthenticated check for all protected routes
+  const isAuthRequired =
+    pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/consultation") ||
+    pathname.startsWith("/records") ||
+    pathname.startsWith("/appointments") ||
+    pathname.startsWith("/admin") ||
+    pathname.startsWith("/doctor")
+
+  if (isAuthRequired && !user) {
+    const loginUrl = new URL("/login", request.url)
+    loginUrl.searchParams.set("redirect", pathname)
+    return NextResponse.redirect(loginUrl)
+  }
+
+  // 3. Server-side role gates (H5)
+  if (user && (pathname.startsWith("/admin") || pathname.startsWith("/doctor"))) {
+    const { data: patient } = await supabase
+      .from("patients")
+      .select("role")
+      .eq("user_id", user.id)
+      .single()
+
+    const role = patient?.role || "patient"
+
+    // /admin/* requires admin
+    if (pathname.startsWith("/admin") && role !== "admin") {
+      return NextResponse.redirect(new URL("/dashboard", request.url))
+    }
+
+    // /doctor/* requires doctor or admin
+    if (pathname.startsWith("/doctor") && role !== "doctor" && role !== "admin") {
+      return NextResponse.redirect(new URL("/dashboard", request.url))
+    }
   }
 
   return response
@@ -51,13 +104,13 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - api (API routes, unless we want to protect them here)
-     */
-    '/((?!_next/static|_next/image|favicon.ico|api|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    "/dashboard/:path*",
+    "/consultation/:path*",
+    "/records/:path*",
+    "/appointments/:path*",
+    "/admin/:path*",
+    "/doctor/:path*",
+    "/login",
+    "/auth",
   ],
 }

@@ -4,6 +4,29 @@ All notable changes to the Rural Healthcare Platform will be documented in this 
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres roughly to chronological feature milestones.
 
+## [v1.4.0] - 2026-10-11 — Phase 1: Critical Security Overhaul & Access Control
+
+### Security & Hardening
+- **Auth Guard Framework (`lib/auth/guard.ts`)**: Server-only authorization module with `requireUser()`, `requireRole()`, and memoized `getPatientProfile()`, mapping typed authentication failures cleanly to HTTP 401/403.
+- **Appointment Authorization Lockdown (`app/api/appointments/route.ts`)**:
+  - `PATCH` endpoints restricted with role matrix: patients can strictly cancel their own appointments; doctors only update appointments assigned to their clinic/provider; terminal states (`completed`, `cancelled`) return HTTP 409 (`APPOINTMENT_TERMINAL`).
+  - Switched from admin service-role client to user-scoped client so Postgres RLS policies are strictly enforced.
+  - Returns 404 (not 403) when records are not found or not visible to prevent ID enumeration.
+  - Mapped PostgreSQL error code `23505` (slot double-booking) to HTTP 409 (`SLOT_TAKEN`).
+  - Provider resolution canonicalized to `healthcare_providers` matching foreign key constraints.
+- **Teleconsultation Hardening (`lib/jitsi/config.ts` & `app/api/teleconsult/room/route.ts`)**:
+  - Switched video room IDs to cryptographically secure `crypto.randomUUID()`.
+  - Enabled Jitsi lobby mode by default (`enableLobbyMode: true`).
+  - Stripped recording and livestreaming buttons from toolbar interfaces to safeguard patient privacy.
+  - Gated room access to valid consultation time window (15 minutes prior to scheduled start until 30 minutes post-session).
+- **Service-Role Client Lockdown**:
+  - Replaced service role client with user-scoped client across `app/api/medical-records/route.ts` and `app/api/appointments/route.ts`.
+  - Audited and isolated remaining service-role uses to cross-user notification delivery and initial OAuth patient bootstrapping.
+- **Edge Middleware Hardening (`middleware.ts`)**:
+  - Narrowed route matcher exclusively to protected and auth-redirect routes. Public pages no longer invoke `getUser()`, saving Supabase Auth network latency and egress quota.
+  - Server-side role gating: `/admin/*` requires admin role; `/doctor/*` requires doctor or admin role.
+  - Unprotected `/camps` for public access.
+
 ---
 
 ## [v1.3.0] - 2026-10-10 — Master Chatbot Architecture Overhaul (Tiers 0–3)
