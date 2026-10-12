@@ -142,8 +142,73 @@ export async function stopIncidentRecording(coords?: { lat: number; lng: number 
   })
 }
 
+let voiceLoopActive = false
+let voiceLoopTimeout: any = null
+
 /**
- * Speak aloud an urgent message for patients who cannot speak
+ * Starts speaking a custom emergency message in a continuous loop alongside the siren
+ */
+export function startEmergencyVoiceLoop(text: string, lang: "en" | "hi" = "hi"): void {
+  if (typeof window === "undefined" || !("speechSynthesis" in window) || !text || !text.trim()) return
+
+  voiceLoopActive = true
+  if (voiceLoopTimeout) {
+    clearTimeout(voiceLoopTimeout)
+    voiceLoopTimeout = null
+  }
+
+  const speakIteration = () => {
+    if (!voiceLoopActive) return
+
+    try {
+      window.speechSynthesis.cancel()
+      const utterance = new SpeechSynthesisUtterance(text.trim())
+      utterance.lang = lang === "hi" ? "hi-IN" : "en-IN"
+      utterance.rate = 0.95
+      utterance.pitch = 1.05
+      utterance.volume = 1.0
+
+      utterance.onend = () => {
+        if (voiceLoopActive) {
+          voiceLoopTimeout = setTimeout(speakIteration, 1200)
+        }
+      }
+
+      utterance.onerror = () => {
+        if (voiceLoopActive) {
+          voiceLoopTimeout = setTimeout(speakIteration, 2000)
+        }
+      }
+
+      window.speechSynthesis.speak(utterance)
+    } catch {
+      if (voiceLoopActive) {
+        voiceLoopTimeout = setTimeout(speakIteration, 2500)
+      }
+    }
+  }
+
+  speakIteration()
+}
+
+/**
+ * Stops continuous emergency voice loop
+ */
+export function stopEmergencyVoiceLoop(): void {
+  voiceLoopActive = false
+  if (voiceLoopTimeout) {
+    clearTimeout(voiceLoopTimeout)
+    voiceLoopTimeout = null
+  }
+  if (typeof window !== "undefined" && "speechSynthesis" in window) {
+    try {
+      window.speechSynthesis.cancel()
+    } catch {}
+  }
+}
+
+/**
+ * Speak aloud an urgent message once
  */
 export function vocalizeEmergencyMessage(text: string, lang: "en" | "hi" = "hi"): void {
   if (typeof window === "undefined" || !("speechSynthesis" in window)) return

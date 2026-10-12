@@ -41,15 +41,15 @@ Access to quality healthcare in rural regions is heavily limited by geography, a
 - **Interactive Map:** Built with React-Leaflet and OpenStreetMap, dynamically imported with zero SSR overhead.
 - **Proximity Search:** Finds the nearest hospitals, clinics, and pharmacies. The database utilizes **PostGIS geography data** with rounded coordinates to maximize Edge CDN caching.
 
-### 🚨 Mobile Emergency System & Paramedic ICE Pass
-- **Streamlined 3-Tier Severity Architecture:** Solved mobile screen clutter by organizing emergency actions into clear severity modes:
-  * **Tier 1 (Critical Life Threat):** Single giant "Call 108 — Ambulance" button orchestrating simultaneous hardware alarms: camera LED flashlight strobe, Web Audio API piercing ambulance siren (650Hz–1150Hz), screen wake lock, Morse-code SOS vibration, and offline incident audio blackbox.
-  * **Tier 2 (Urgent Distress Dispatch):** Unified 1-tap dispatch dialog combining WhatsApp and SMS, automatically pre-filling live GPS coordinates, Google Maps link, and chronic health summary.
-  * **Tier 3 (Urgent Care & Navigation):** Instant nearest hospital routing and visual first-aid guidance.
-- **Paramedic ICE Medical Pass:** Direct full-screen, high-contrast digital medical identity card flashing vital patient info (Blood group, allergies, chronic ailments, emergency contacts) directly on the phone display for first responders and ASHA workers without requiring QR code scanners.
-- **Assistance for Non-Verbal Patients:** 1-tap bilingual audio vocalizers powered by the Web Speech Synthesis API (`speechSynthesis.speak()`) announcing emergency messages aloud in Hindi and English.
-- **Offline Incident Blackbox Audio Recorder (`lib/emergency/audio-blackbox.ts`):** Zero-cost local incident recording via `MediaRecorder` API stored in IndexedDB (`offline_incident_audio`) with exact timestamps and GPS tags, accessible offline for medical/legal review at $0 cloud operating cost.
-- **Mobile UI Collision Resolution:** Prevents floating AI chatbot and floating accessibility pills from obscuring emergency action buttons on the `/emergency` route.
+### 🚨 Mobile Emergency System & Offline Distress Architecture
+- **Streamlined Dual-Distress Engine:**
+  * **Distress SOS Broadcast (112):** One-tap national emergency dispatch bundling complete chronic health data, blood group, allergies, medications, and live GPS Google Maps coordinates into SMS 112, while simultaneously activating camera LED flashlight, Web Audio ambulance siren, Morse vibration, screen wake lock, and a **continuous looping spoken voice alert**.
+  * **Alert Saved Emergency Contacts (SMS & WhatsApp):** Direct 1-tap dispatch to the patient's primary emergency contact with options to send via WhatsApp (`wa.me`) or carrier SMS with the exact same comprehensive medical profile and live GPS location.
+  * **Call 108 — Ambulance:** Immediate priority dialer for state ambulance dispatch.
+- **Custom User-Typed Voice Alert Loop:** Patients can customize their own spoken emergency message inside the offline Emergency Vault (e.g. *"I am diabetic and having severe chest pain, please call Dr. Sharma immediately"*), which is read aloud continuously in a loop via Web Speech API alongside the siren when Distress SOS or Beacon is triggered.
+- **Night SOS Screen Beacon & Siren:** High-visibility pulsing screen beacon with hardware camera LED flash and Web Audio synthesizer.
+- **Personal Emergency Vault (Offline):** Secure, 100% offline local storage (`localStorage`) preserving chronic ailments, blood type, known allergies, medications, primary contacts, and custom voice alert without requiring any internet connection.
+- **Emergency Protection Perimeter:** Automatic suppression of floating chatbot and accessibility pills on `/emergency` to prevent button obstruction.
 
 ### 📹 Secure Teleconsultation
 - **Unguessable Cryptographic Rooms:** Embedded video conferencing using Jitsi Meet with randomized UUID rooms (`crypto.randomUUID()`) and enforced lobby screening to prevent room guessing.

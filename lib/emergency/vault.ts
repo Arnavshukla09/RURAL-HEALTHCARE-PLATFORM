@@ -18,6 +18,7 @@ export interface EmergencyProfile {
   primaryEmergencyContact: string
   secondaryEmergencyContact: string
   emergencyNotes: string
+  customVoiceAlert?: string
 }
 
 const STORAGE_KEY = "ruralhealth_emergency_vault_v1"
@@ -32,6 +33,7 @@ export const DEFAULT_PROFILE: EmergencyProfile = {
   primaryEmergencyContact: "",
   secondaryEmergencyContact: "",
   emergencyNotes: "",
+  customVoiceAlert: "",
 }
 
 export function getEmergencyProfile(): EmergencyProfile {

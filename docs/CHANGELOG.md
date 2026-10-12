@@ -4,22 +4,22 @@ All notable changes to the Rural Healthcare Platform will be documented in this 
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres roughly to chronological feature milestones.
 
-## [v1.14.0] - 2026-10-12 — Mobile Emergency Overhaul: Streamlined Severity Tiers, Paramedic Medical Pass & Offline Incident Audio Blackbox
+## [v1.14.0] - 2026-10-12 — Mobile Emergency Overhaul: Streamlined Dual-Distress Engine, Custom Voice Alert Loop & Clean Layout
 
 ### Emergency Services & Hardware Integration (`lib/emergency/`, `components/EmergencyModule.tsx`)
-- **Streamlined Severity Modes**:
-  - Eliminated the 8 stacked confusing emergency buttons on mobile screens, restructuring the emergency flow into intuitive severity tiers:
-    * **Tier 1 (Critical Life Threat)**: Giant single-tap "Call 108 — Ambulance" with automated emergency alarm orchestration (Camera LED Torch Strobe + Web Audio 650Hz–1150Hz Piercing Ambulance Siren + Screen Wake Lock + Haptic SOS Vibration + Incident Audio Blackbox).
-    * **Tier 2 (Urgent Distress Dispatch)**: Unified 1-tap dispatch dialog combining WhatsApp and SMS with live GPS coordinates, Google Maps link, and chronic medical condition summary.
-    * **Tier 3 (Urgent Care & Navigation)**: Quick-access buttons for nearest hospital navigation and visual first-aid guide.
-- **Paramedic ICE Medical Pass**:
-  - Replaced QR code scanning with a direct full-screen, high-contrast digital medical identity card flashing essential emergency data (Blood Group, Allergies, Chronic Conditions, Emergency Contacts) directly on the patient's screen for first responders and ASHA workers.
-- **Assistance for Non-Verbal / Impaired Speech**:
-  - Added 1-tap bilingual audio vocalizers using Web Speech Synthesis (`speechSynthesis.speak()`) announcing emergency messages aloud ("मदद चाहिए", "सांस लेने में तकलीफ", "अस्पताल ले जाएं").
-- **Offline Incident Audio Blackbox (`lib/emergency/audio-blackbox.ts`)**:
-  - Integrated zero-cost local incident recording using `MediaRecorder` API and IndexedDB storage (`offline_incident_audio`), preserving audio evidence and timestamps on the device for medical and legal review without requiring any cloud server costs ($0 operating spend).
+- **Streamlined Dual-Distress Engine**:
+  - Eliminated UI clutter, high-contrast banner buttons, and preset sentences, replacing them with two clear emergency distress paths:
+    * **Distress SOS Broadcast (112)**: One-tap national emergency dispatch bundling complete chronic health profile, blood group, allergies, medications, and live GPS Google Maps coordinates into SMS 112, while triggering the Web Audio ambulance siren, camera LED flashlight, Morse vibration, screen wake lock, and a **continuous looping spoken voice alert**.
+    * **Alert Saved Emergency Contacts (SMS & WhatsApp)**: Direct 1-tap dispatch to the user's primary emergency contact with options to send via WhatsApp (`wa.me`) or carrier SMS with the exact same comprehensive medical profile and live GPS location.
+    * **Call 108 — Ambulance**: Dedicated priority dialer for state ambulance dispatch.
+- **Custom User-Typed Voice Alert Loop**:
+  - Added user-customizable voice alert input to the Personal Emergency Vault (`lib/emergency/vault.ts`), allowing users to define their own specific medical announcement (e.g. *"I am diabetic and having severe chest pain, please call Dr. Sharma immediately"*). The Web Speech API continuously loops this announcement alongside the ambulance siren during Distress SOS or Beacon mode.
+- **Night SOS Screen Beacon & Siren**:
+  - Fullscreen pulsing beacon with Web Audio siren, flashlight torch, and looping custom voice alert with single-tap dismissal.
+- **Removed Clutter**:
+  - Removed redundant Sunlight / High Contrast button and Share My Location button to prevent accidental taps during emergencies.
 - **Mobile UI Collision Resolution (`components/AccessibilityBar.tsx`, `components/FloatingChat.tsx`)**:
-  - Prevented floating accessibility wheelchair widget and AI floating chatbot from covering critical action buttons on the `/emergency` route via clean pathname detection.
+  - Prevented floating accessibility wheelchair widget and AI floating chatbot from covering critical emergency action buttons on the `/emergency` route via clean pathname detection.
 
 ---
 

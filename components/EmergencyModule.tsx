@@ -8,28 +8,22 @@ import { Input } from "./ui/input"
 import {
   Phone,
   MapPin,
-  Share2,
   AlertTriangle,
   Truck,
   MessageSquare,
   MessageCircle,
   BookOpen,
   HeartPulse,
-  Activity,
-  UserCheck,
   ShieldAlert,
   Smartphone,
   Flashlight,
   X,
   Volume2,
   VolumeX,
-  Contrast,
-  Mic,
-  MicOff,
-  FileText,
-  BadgeAlert,
-  Check,
   Send,
+  User,
+  Users,
+  Mic,
 } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import {
@@ -43,7 +37,6 @@ import {
   getEmergencyProfile,
   saveEmergencyProfile,
   triggerSosVibration,
-  dispatchSmsSos,
   DEFAULT_PROFILE,
   EmergencyProfile,
 } from "@/lib/emergency/vault"
@@ -55,9 +48,8 @@ import {
   releaseScreenWakeLock,
 } from "@/lib/emergency/hardware"
 import {
-  startIncidentRecording,
-  stopIncidentRecording,
-  vocalizeEmergencyMessage,
+  startEmergencyVoiceLoop,
+  stopEmergencyVoiceLoop,
 } from "@/lib/emergency/audio-blackbox"
 
 interface EmergencyModuleProps {
@@ -71,15 +63,13 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
   const [profile, setProfile] = useState<EmergencyProfile>(DEFAULT_PROFILE)
   const [editingProfile, setEditingProfile] = useState<EmergencyProfile>(DEFAULT_PROFILE)
   const [isVaultOpen, setIsVaultOpen] = useState(false)
-  const [isDistressModalOpen, setIsDistressModalOpen] = useState(false)
-  const [isMedicalPassOpen, setIsMedicalPassOpen] = useState(false)
+  const [isContactModalOpen, setIsContactModalOpen] = useState(false)
   const [shakeActive, setShakeActive] = useState(true)
   const [strobeActive, setStrobeActive] = useState(false)
   const [strobeLightOn, setStrobeLightOn] = useState(false)
-  const [highContrast, setHighContrast] = useState(false)
   const [sirenActive, setSirenActive] = useState(false)
   const [torchActive, setTorchActive] = useState(false)
-  const [isRecordingIncident, setIsRecordingIncident] = useState(false)
+  const [voiceLoopActiveState, setVoiceLoopActiveState] = useState(false)
   const [lastCoords, setLastCoords] = useState<{ lat: number; lng: number } | undefined>()
 
   useEffect(() => {
@@ -97,18 +87,16 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
     }
   }, [])
 
-  // Strobe beacon timer, wake lock, hardware torch & audio siren
+  // Strobe beacon timer, wake lock, hardware torch & audio siren + voice loop
   useEffect(() => {
     if (!strobeActive) {
       stopAudioSiren()
       setSirenActive(false)
+      stopEmergencyVoiceLoop()
+      setVoiceLoopActiveState(false)
       toggleHardwareTorch(false)
       setTorchActive(false)
       releaseScreenWakeLock()
-      if (isRecordingIncident) {
-        stopIncidentRecording(lastCoords)
-        setIsRecordingIncident(false)
-      }
       return
     }
 
@@ -125,6 +113,7 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
     return () => {
       clearInterval(interval)
       stopAudioSiren()
+      stopEmergencyVoiceLoop()
       toggleHardwareTorch(false)
       releaseScreenWakeLock()
     }
@@ -161,168 +150,155 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
     }
   }
 
-  // Incident audio recording toggle
-  const handleToggleIncidentRecording = async () => {
-    if (isRecordingIncident) {
-      const saved = await stopIncidentRecording(lastCoords)
-      setIsRecordingIncident(false)
-      if (saved) {
-        toast({
-          title: language === "en"
-            ? `Offline audio incident saved (${saved.durationSeconds}s)`
-            : `ऑफ़लाइन ऑडियो रिकॉर्डिंग फोन में सुरक्षित (${saved.durationSeconds}s)`,
-        })
-      }
-    } else {
-      const started = await startIncidentRecording()
-      if (started) {
-        setIsRecordingIncident(true)
-        toast({
-          title: language === "en" ? "Recording emergency audio locally..." : "घटना की ऑडियो रिकॉर्डिंग शुरू हो गई...",
-        })
-      } else {
-        toast({
-          title: language === "en" ? "Microphone permission required" : "माइक्रोफ़ोन अनुमति आवश्यक है",
-          variant: "destructive",
-        })
-      }
+  // Get spoken voice message for looping read-aloud
+  const getVoiceAlertMessage = () => {
+    if (profile.customVoiceAlert && profile.customVoiceAlert.trim()) {
+      return profile.customVoiceAlert.trim()
     }
+    if (language === "hi") {
+      const namePart = profile.fullName ? `मरीज ${profile.fullName}। ` : ""
+      const conditionPart = profile.chronicConditions ? `बीमारी: ${profile.chronicConditions}। ` : ""
+      return `आपातकाल! तत्काल चिकित्सा सहायता चाहिए! ${namePart}${conditionPart}कृपया 108 एम्बुलेंस बुलाएं!`
+    }
+    const namePart = profile.fullName ? `Patient ${profile.fullName}. ` : ""
+    const conditionPart = profile.chronicConditions ? `Condition: ${profile.chronicConditions}. ` : ""
+    return `Emergency medical alert! ${namePart}${conditionPart}Please call 108 ambulance immediately!`
   }
 
-  // Critical SOS Mode: Automatically enables all alarms at once and dials 108
-  const launchCriticalSosWithAlarms = async () => {
+  // Helper to construct structured SOS message with GPS & chronic health info
+  const buildCompleteSosMessage = (coordsOverride?: { lat: number; lng: number }) => {
+    const coords = coordsOverride || lastCoords
+    const lines: string[] = ["🚨 *MEDICAL EMERGENCY DISTRESS ALERT* 🚨"]
+
+    if (profile.fullName) {
+      const ageStr = profile.age ? ` (${profile.age} yrs)` : ""
+      lines.push(`*Patient:* ${profile.fullName}${ageStr}`)
+    }
+    if (profile.bloodGroup && profile.bloodGroup !== "Unknown") {
+      lines.push(`*Blood Group:* ${profile.bloodGroup}`)
+    }
+    if (coords) {
+      lines.push(`*Live GPS Location:* https://maps.google.com/?q=${coords.lat.toFixed(5)},${coords.lng.toFixed(5)}`)
+    }
+    if (profile.chronicConditions) {
+      lines.push(`*Chronic Conditions:* ${profile.chronicConditions}`)
+    }
+    if (profile.severeAllergies) {
+      lines.push(`*Severe Allergies:* ${profile.severeAllergies}`)
+    }
+    if (profile.currentMedications) {
+      lines.push(`*Current Medications:* ${profile.currentMedications}`)
+    }
+    if (profile.primaryEmergencyContact) {
+      lines.push(`*Emergency Contact:* ${profile.primaryEmergencyContact}`)
+    }
+    if (profile.customVoiceAlert) {
+      lines.push(`*Alert Note:* ${profile.customVoiceAlert}`)
+    }
+
+    lines.push("⚠️ IMMEDIATE MEDICAL ASSISTANCE REQUIRED! Please dispatch ambulance / help!")
+    return lines.join("\n")
+  }
+
+  // BUTTON 1: Distress SOS to 112 / 108
+  // Triggers hardware siren + looping custom spoken voice alert + strobe + SMS 112 with full info
+  const handleTriggerDistressSos = async () => {
+    triggerSosVibration()
+
+    // 1. Activate alarms: Strobe beacon, siren, hardware flashlight
     setStrobeActive(true)
     startAudioSiren()
     setSirenActive(true)
-    const torchOn = await toggleHardwareTorch(true)
-    if (torchOn) setTorchActive(true)
+    toggleHardwareTorch(true).then((ok) => { if (ok) setTorchActive(true) })
     requestScreenWakeLock()
 
-    // Auto-record incident audio
-    startIncidentRecording().then((ok) => {
-      if (ok) setIsRecordingIncident(true)
+    // 2. Start continuous looping read-aloud of user's custom voice message
+    const voiceMsg = getVoiceAlertMessage()
+    startEmergencyVoiceLoop(voiceMsg, language === "hi" ? "hi" : "en")
+    setVoiceLoopActiveState(true)
+
+    // 3. Prepare full distress message with GPS
+    const sendSmsTo112 = (coords?: { lat: number; lng: number }) => {
+      const body = buildCompleteSosMessage(coords)
+      const encoded = encodeURIComponent(body)
+      window.location.href = `sms:112?body=${encoded}`
+    }
+
+    if (navigator.geolocation) {
+      toast({
+        title: language === "en" ? "Acquiring GPS for 112 distress dispatch..." : "112 संकट संदेश के लिए जीपीएस प्राप्त कर रहा है...",
+      })
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude }
+          setLastCoords(coords)
+          sendSmsTo112(coords)
+        },
+        () => {
+          sendSmsTo112(lastCoords)
+        },
+        { timeout: 4000, enableHighAccuracy: true }
+      )
+    } else {
+      sendSmsTo112(lastCoords)
+    }
+  }
+
+  // BUTTON 2: Alert Primary Emergency Contact (User choice: WhatsApp or SMS)
+  const handleOpenContactAlert = () => {
+    if (!profile.primaryEmergencyContact || !profile.primaryEmergencyContact.trim()) {
+      toast({
+        title: language === "en" ? "No emergency contact saved" : "कोई आपातकालीन संपर्क नंबर दर्ज नहीं है",
+        description: language === "en" ? "Please save a primary emergency contact in the vault below." : "कृपया नीचे वॉल्ट में प्राथमिक आपातकालीन संपर्क दर्ज करें।",
+        variant: "destructive",
+      })
+      setIsVaultOpen(true)
+      return
+    }
+    setIsContactModalOpen(true)
+  }
+
+  // Dispatch to contact via WhatsApp
+  const sendContactWhatsApp = () => {
+    const rawNumber = (profile.primaryEmergencyContact || "").replace(/[^0-9]/g, "")
+    const targetPhone = rawNumber.length === 10 ? `91${rawNumber}` : rawNumber
+    const waBase = targetPhone ? `https://wa.me/${targetPhone}` : "https://wa.me/"
+    const message = buildCompleteSosMessage()
+    window.open(`${waBase}?text=${encodeURIComponent(message)}`, "_blank")
+    setIsContactModalOpen(false)
+  }
+
+  // Dispatch to contact via normal SMS
+  const sendContactSms = () => {
+    const rawNumber = (profile.primaryEmergencyContact || "").replace(/[^\d+]/g, "")
+    const targetNumber = rawNumber || "112"
+    const message = buildCompleteSosMessage()
+    window.location.href = `sms:${targetNumber}?body=${encodeURIComponent(message)}`
+    setIsContactModalOpen(false)
+  }
+
+  // Stop all active alarms (Beacon, Siren, Flashlight, Voice Loop)
+  const handleStopAllAlarms = () => {
+    setStrobeActive(false)
+    stopAudioSiren()
+    setSirenActive(false)
+    stopEmergencyVoiceLoop()
+    setVoiceLoopActiveState(false)
+    toggleHardwareTorch(false)
+    setTorchActive(false)
+    releaseScreenWakeLock()
+  }
+
+  const handleSaveProfile = () => {
+    const updated = saveEmergencyProfile(editingProfile)
+    setProfile(updated)
+    setIsVaultOpen(false)
+    toast({ 
+      title: language === "en" ? "Profile saved successfully!" : "प्रोफ़ाइल सफलतापूर्वक सुरक्षित हो गई!" 
     })
-
-    // Dial 108
-    window.location.href = "tel:108"
   }
 
-  const content = {
-    en: {
-      title: "Emergency Services",
-      subtitle: "Get immediate medical assistance",
-      call108: "Call 108 — Ambulance",
-      call108Sub: "Auto-launches siren, flashlight beacon & calls 108 immediately",
-      alarmOnly: "Launch Siren & Beacon Only",
-      sendDistressTitle: "Send Distress Alert (WhatsApp & SMS)",
-      sendDistressSub: "Transmits live GPS & chronic health info in 1 tap",
-      medicalPassTitle: "Paramedic Medical Pass (On Screen)",
-      medicalPassSub: "Flashes critical health profile & contacts for first responders",
-      cannotSpeakTitle: "Cannot Speak? Tap to vocalize aloud:",
-      cannotSpeak1: "Call 108 ambulance now!",
-      cannotSpeak2: "Severe chest pain emergency!",
-      cannotSpeak3: "I have diabetes, I feel faint!",
-      findHospital: "Nearest 24/7 Hospital",
-      firstAid: "Visual First-Aid Guide",
-      recordAudio: "Record Incident Audio",
-      stopRecordAudio: "Stop & Save Recording",
-      helplineTitle: "Government Helplines",
-      ambulance: "Ambulance",
-      police: "Police Helpline- 100",
-      fire: "Fire Emergency",
-      cmHelpline: "CM Helpline",
-      childHelpline: "Child Helpline",
-      womenHelpline: "Women Helpline",
-      ayushman: "Ayushman Bharat Helpline",
-      nationalHealth: "National Health Helpline",
-      vaultTitle: "Emergency Health Vault (Offline)",
-      editVault: "Edit Health Profile",
-      fullName: "Full Name",
-      age: "Age",
-      bloodGroup: "Blood Group",
-      chronicConditions: "Chronic Conditions",
-      medications: "Current Medications",
-      allergies: "Known Drug / Food Allergies",
-      primaryContact: "Primary Emergency Contact",
-      secondaryContact: "Secondary Emergency Contact",
-      shakeDetected: "Phone shake detected! Initiating SOS...",
-      shakeHint: "Shake phone 3 times to trigger instant emergency broadcast",
-      noneRecorded: "None recorded",
-      savedSuccess: "Emergency profile saved locally on this device!",
-      beaconActive: "CRITICAL ALARM ACTIVE",
-      stopBeacon: "Stop Alarm",
-      highContrastToggle: "High Contrast (Sunlight)",
-      sirenOn: "Sound Siren",
-      sirenOff: "Mute Siren",
-      torchOn: "Camera Flash",
-      torchOff: "Flash Off",
-      distressModalTitle: "Transmit Emergency Distress Alert",
-      distressViaWa: "Send via WhatsApp",
-      distressViaSms: "Send via SMS (Offline 112)",
-      distressViaShare: "Share via Other Apps",
-      medicalPassHeader: "PARAMEDIC EMERGENCY MEDICAL PASS",
-      medicalPassClose: "Close Pass",
-    },
-    hi: {
-      title: "आपातकालीन सेवाएं",
-      subtitle: "तत्काल चिकित्सा सहायता प्राप्त करें",
-      call108: "108 पर कॉल करें — एम्बुलेंस",
-      call108Sub: "सायरन, फ्लैशलाइट बीकन चालू कर तुरंत 108 डायल करता है",
-      alarmOnly: "केवल सायरन और बीकन शुरू करें",
-      sendDistressTitle: "संकट संदेश भेजें (व्हाट्सएप और एसएमएस)",
-      sendDistressSub: "लाइव जीपीएस और पुरानी बीमारी विवरण 1-टैप में भेजता है",
-      medicalPassTitle: "पैरामेडिक स्वास्थ्य पास (स्क्रीन पर दिखाएं)",
-      medicalPassSub: "स्वास्थ्य कार्यकर्ताओं के लिए रक्त समूह व गंभीर बीमारियों का दृश्य पास",
-      cannotSpeakTitle: "बोलने में असमर्थ? आवाज़ निकालने के लिए टैप करें:",
-      cannotSpeak1: "तुरंत 108 एम्बुलेंस बुलाएं!",
-      cannotSpeak2: "सीने में तेज दर्द हो रहा है!",
-      cannotSpeak3: "मुझे शुगर है, चक्कर आ रहे हैं!",
-      findHospital: "निकटतम 24/7 अस्पताल",
-      firstAid: "प्राथमिक चिकित्सा मार्गदर्शिका",
-      recordAudio: "घटना की ऑडियो रिकॉर्ड करें",
-      stopRecordAudio: "रिकॉर्डिंग रोकें व सुरक्षित करें",
-      helplineTitle: "सरकारी हेल्पलाइन",
-      ambulance: "एम्बुलेंस",
-      police: "पुलिस हेल्पलाइन- 100",
-      fire: "अग्निशमन आपातकाल",
-      cmHelpline: "सीएम हेल्पलाइन",
-      childHelpline: "चाइल्ड हेल्पलाइन",
-      womenHelpline: "महिला हेल्पलाइन",
-      ayushman: "आयुष्मान भारत हेल्पलाइन",
-      nationalHealth: "राष्ट्रीय स्वास्थ्य हेल्पलाइन",
-      vaultTitle: "व्यक्तिगत आपातकालीन वॉल्ट (ऑफ़लाइन)",
-      editVault: "स्वास्थ्य प्रोफाइल संपादित करें",
-      fullName: "पूरा नाम",
-      age: "आयु",
-      bloodGroup: "रक्त समूह (Blood Group)",
-      chronicConditions: "पुरानी बीमारियां",
-      medications: "वर्तमान दवाइयां",
-      allergies: "गंभीर एलर्जी (दवा/भोजन)",
-      primaryContact: "प्राथमिक आपातकालीन संपर्क",
-      secondaryContact: "द्वितीयक आपातकालीन संपर्क",
-      shakeDetected: "फोन झटका पहचाना गया! एसओएस शुरू हो रहा है...",
-      shakeHint: "तत्काल आपातकालीन अलर्ट के लिए फोन को 3 बार हिलाएं",
-      noneRecorded: "कोई दर्ज नहीं",
-      savedSuccess: "आपातकालीन प्रोफाइल इस डिवाइस पर सुरक्षित कर दी गई!",
-      beaconActive: "गंभीर आपातकालीन अलार्म सक्रिय",
-      stopBeacon: "अलार्म बंद करें",
-      highContrastToggle: "उच्च कंट्रास्ट (तेज़ धूप)",
-      sirenOn: "सायरन बजाएं",
-      sirenOff: "सायरन बंद करें",
-      torchOn: "कैमरा फ्लैश चालू",
-      torchOff: "फ्लैश बंद करें",
-      distressModalTitle: "संकटकालीन एसओएस अलर्ट भेजें",
-      distressViaWa: "व्हाट्सएप द्वारा भेजें",
-      distressViaSms: "एसएमएस द्वारा भेजें (ऑफ़लाइन 112)",
-      distressViaShare: "अन्य ऐप्स पर साझा करें",
-      medicalPassHeader: "पैरामेडिक आपातकालीन स्वास्थ्य पास",
-      medicalPassClose: "पास बंद करें",
-    },
-  }
-
-  const t = content[language as keyof typeof content] || content.en
-
-  // Physical Shake Gesture Detection
+  // Physical Shake Gesture Detection (3 shakes &rarr; auto distress)
   useEffect(() => {
     if (!shakeActive || typeof window === "undefined") return
 
@@ -348,7 +324,11 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
           shakeCount++
           if (shakeCount >= 3) {
             shakeCount = 0
-            triggerSosBroadcast("shake")
+            toast({
+              title: language === "en" ? "Phone shake detected! Launching distress..." : "फोन झटका पहचाना गया! संकट अलार्म शुरू...",
+              variant: "destructive",
+            })
+            handleTriggerDistressSos()
           }
         } else if (now - lastTime > 2500) {
           shakeCount = 0
@@ -362,84 +342,124 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
 
     window.addEventListener("devicemotion", handleMotion)
     return () => window.removeEventListener("devicemotion", handleMotion)
-  }, [shakeActive, profile])
+  }, [shakeActive, profile, lastCoords, language])
 
-  const triggerSosBroadcast = (source: "button" | "shake") => {
-    triggerSosVibration()
-
-    if (source === "shake") {
-      toast({
-        title: t.shakeDetected,
-        variant: "destructive",
-      })
-    }
-
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude }
-          setLastCoords(coords)
-          const smsUrl = dispatchSmsSos(profile, coords)
-          window.location.href = smsUrl
-        },
-        () => {
-          const smsUrl = dispatchSmsSos(profile)
-          window.location.href = smsUrl
-        },
-        { timeout: 5000, enableHighAccuracy: true }
-      )
-    } else {
-      const smsUrl = dispatchSmsSos(profile)
-      window.location.href = smsUrl
-    }
+  const content = {
+    en: {
+      title: "Emergency Services",
+      subtitle: "Get immediate medical assistance",
+      call108: "Call 108 — Ambulance",
+      distressBtn: "Distress SOS Broadcast (112)",
+      distressBtnSub: "Sends full medical info & GPS location, sounds siren & custom voice loop",
+      contactBtn: "Alert Emergency Contact (SMS & WhatsApp)",
+      contactBtnSub: "Transmits complete health profile & live GPS to your saved contact",
+      beaconBtn: "Night SOS Screen Beacon & Siren",
+      beaconBtnSub: "Flashes high-visibility screen beacon, siren, torch & looping voice alert",
+      findHospital: "Nearest 24/7 Hospital",
+      firstAid: "Visual First-Aid Guide",
+      firstAidSub: "Offline step-by-step instructions for CPR, bleeding & fractures",
+      shakeHint: "Shake phone 3 times to trigger instant emergency broadcast",
+      vaultTitle: "Personal Emergency Vault (Offline)",
+      vaultSubtitle: "Chronic health profile & contacts transmitted automatically during SOS",
+      editVault: "Edit Health Profile",
+      fullName: "Full Name",
+      age: "Age",
+      bloodGroup: "Blood Group",
+      chronicConditions: "Chronic Conditions (Diabetes, Heart, Asthma, etc.)",
+      medications: "Current Medications",
+      allergies: "Known Drug / Food Allergies",
+      primaryContact: "Primary Emergency Contact (Mobile Number)",
+      secondaryContact: "Secondary Emergency Contact (Optional)",
+      customVoiceLabel: "Custom Emergency Voice Alert (Spoken Aloud in Loop)",
+      customVoicePlaceholder: "e.g., I have severe heart condition and asthma, please help me immediately!",
+      customVoiceHint: "This message will be spoken continuously aloud during Distress SOS alongside the siren.",
+      noneRecorded: "None recorded",
+      unknown: "Unknown",
+      beaconActive: "CRITICAL ALARM ACTIVE",
+      stopBeacon: "Stop Alarm, Siren & Voice",
+      sirenOn: "Sound Siren",
+      sirenOff: "Mute Siren",
+      torchOn: "Camera Flash",
+      torchOff: "Flash Off",
+      contactModalTitle: "Alert Saved Emergency Contact",
+      contactModalDesc: "Choose how to send your complete emergency profile & live GPS location:",
+      sendViaWa: "Send via WhatsApp",
+      sendViaSms: "Send via Normal SMS",
+      helplineTitle: "Government Helplines",
+      instructionsTitle: "Emergency Instructions",
+      inst1: "Stay calm and assess the situation",
+      inst2: "Call emergency services immediately (108 / 112)",
+      inst3: "Provide clear location details or landmark",
+      inst4: "Follow emergency operator instructions",
+      inst5: "Do not move injured person unless in danger",
+      cmHelpline: "CM Helpline",
+      childHelpline: "Child Helpline",
+      police: "Police Helpline- 100",
+      fire: "Fire Emergency",
+      ambulance: "Ambulance",
+      womenHelpline: "Women Helpline",
+      ayushman: "Ayushman Bharat Helpline",
+      nationalHealth: "National Health Helpline",
+    },
+    hi: {
+      title: "आपातकालीन सेवाएं",
+      subtitle: "तत्काल चिकित्सा सहायता प्राप्त करें",
+      call108: "108 पर कॉल करें — एम्बुलेंस",
+      distressBtn: "संकट एसओएस प्रसारण (112)",
+      distressBtnSub: "संपूर्ण मेडिकल विवरण व जीपीएस भेजता है, सायरन व कस्टम वॉइस लूप बजाता है",
+      contactBtn: "आपातकालीन संपर्क को सूचित करें (SMS और WhatsApp)",
+      contactBtnSub: "सेव किए गए संपर्क को संपूर्ण स्वास्थ्य प्रोफाइल और लाइव जीपीएस भेजें",
+      beaconBtn: "नाईट एसओएस स्क्रीन बीकन और सायरन",
+      beaconBtnSub: "फ्लैशिंग बीकन, सायरन, टॉर्च और कस्टम वॉइस अलर्ट लूप चलाता है",
+      findHospital: "निकटतम 24/7 अस्पताल",
+      firstAid: "प्राथमिक चिकित्सा मार्गदर्शिका",
+      firstAidSub: "सीपीआर, रक्तस्राव और फ्रैक्चर के लिए ऑफ़लाइन निर्देश",
+      shakeHint: "तत्काल आपातकालीन अलर्ट के लिए फोन को 3 बार हिलाएं",
+      vaultTitle: "व्यक्तिगत आपातकालीन वॉल्ट (ऑफ़लाइन)",
+      vaultSubtitle: "एसओएस के दौरान क्रोनिक स्वास्थ्य प्रोफाइल और संपर्क स्वचालित रूप से भेजे जाते हैं",
+      editVault: "स्वास्थ्य प्रोफाइल संपादित करें",
+      fullName: "पूरा नाम",
+      age: "आयु",
+      bloodGroup: "रक्त समूह (Blood Group)",
+      chronicConditions: "पुरानी बीमारियां (मधुमेह, हृदय, अस्थमा आदि)",
+      medications: "वर्तमान दवाइयां",
+      allergies: "गंभीर एलर्जी (दवा / भोजन)",
+      primaryContact: "प्राथमिक आपातकालीन संपर्क (मोबाइल नंबर)",
+      secondaryContact: "द्वितीयक आपातकालीन संपर्क (वैकल्पिक)",
+      customVoiceLabel: "कस्टम आपातकालीन वॉइस संदेश (लूप में बोलेगा)",
+      customVoicePlaceholder: "उदा. मुझे दिल की बीमारी और अस्थमा है, कृपया तुरंत मदद करें!",
+      customVoiceHint: "संकट एसओएस के दौरान यह संदेश सायरन के साथ लगातार लूप में बोला जाएगा।",
+      noneRecorded: "कोई दर्ज नहीं",
+      unknown: "अज्ञात",
+      beaconActive: "गंभीर आपातकालीन अलार्म सक्रिय",
+      stopBeacon: "अलार्म, सायरन व आवाज़ बंद करें",
+      sirenOn: "सायरन बजाएं",
+      sirenOff: "सायरन बंद करें",
+      torchOn: "कैमरा फ्लैश",
+      torchOff: "फ्लैश बंद",
+      contactModalTitle: "आपातकालीन संपर्क को संदेश भेजें",
+      contactModalDesc: "अपनी संपूर्ण आपातकालीन प्रोफाइल और लाइव जीपीएस भेजने का माध्यम चुनें:",
+      sendViaWa: "व्हाट्सएप द्वारा भेजें",
+      sendViaSms: "सामान्य एसएमएस द्वारा भेजें",
+      helplineTitle: "सरकारी हेल्पलाइन",
+      instructionsTitle: "आपातकालीन निर्देश",
+      inst1: "शांत रहें और स्थिति का आकलन करें",
+      inst2: "तुरंत आपातकालीन सेवाओं को कॉल करें (108 / 112)",
+      inst3: "सटीक स्थान या निकटतम पहचान चिह्न बताएं",
+      inst4: "ऑपरेटर के निर्देशों का पालन करें",
+      inst5: "खतरे के बिना घायल व्यक्ति को न हिलाएं",
+      cmHelpline: "सीएम हेल्पलाइन",
+      childHelpline: "चाइल्ड हेल्पलाइन",
+      police: "पुलिस हेल्पलाइन- 100",
+      fire: "अग्निशमन आपातकाल",
+      ambulance: "एम्बुलेंस",
+      womenHelpline: "महिला हेल्पलाइन",
+      ayushman: "आयुष्मान भारत हेल्पलाइन",
+      nationalHealth: "राष्ट्रीय स्वास्थ्य हेल्पलाइन",
+    },
   }
 
-  const buildDistressMessage = (mapUrl?: string) => {
-    let msg = "🚨 *MEDICAL EMERGENCY SOS ALERT* 🚨\n"
-    if (profile.fullName) msg += `*Patient:* ${profile.fullName}${profile.age ? ` (${profile.age} yrs)` : ""}\n`
-    if (profile.bloodGroup) msg += `*Blood Group:* ${profile.bloodGroup}\n`
-    if (profile.chronicConditions) msg += `*Chronic Conditions:* ${profile.chronicConditions}\n`
-    if (profile.currentMedications) msg += `*Medications:* ${profile.currentMedications}\n`
-    if (profile.severeAllergies) msg += `*Allergies:* ${profile.severeAllergies}\n`
-    if (mapUrl) msg += `*Live Location:* ${mapUrl}\n`
-    else if (lastCoords) msg += `*Live Location:* https://maps.google.com/?q=${lastCoords.lat},${lastCoords.lng}\n`
-    msg += "\nImmediate medical assistance or ambulance (108) required!"
-    return msg
-  }
-
-  const sendDistressWhatsApp = () => {
-    const contactParam = (profile.primaryEmergencyContact || "").replace(/[^0-9]/g, "")
-    const targetPhone = contactParam ? (contactParam.length === 10 ? `91${contactParam}` : contactParam) : ""
-    const waBase = targetPhone ? `https://wa.me/${targetPhone}` : "https://wa.me/"
-    window.open(`${waBase}?text=${encodeURIComponent(buildDistressMessage())}`)
-    setIsDistressModalOpen(false)
-  }
-
-  const sendDistressSms = () => {
-    triggerSosBroadcast("button")
-    setIsDistressModalOpen(false)
-  }
-
-  const shareDistressNative = () => {
-    const text = buildDistressMessage()
-    if (typeof navigator !== "undefined" && navigator.share) {
-      navigator.share({
-        title: "MEDICAL EMERGENCY SOS",
-        text,
-      }).catch(() => {})
-    } else {
-      navigator.clipboard?.writeText(text)
-      toast({ title: language === "en" ? "Distress message copied to clipboard" : "संदेश क्लिपबोर्ड में कॉपी किया गया" })
-    }
-    setIsDistressModalOpen(false)
-  }
-
-  const handleSaveProfile = () => {
-    const updated = saveEmergencyProfile(editingProfile)
-    setProfile(updated)
-    setIsVaultOpen(false)
-    toast({ title: t.savedSuccess })
-  }
+  const t = content[language as keyof typeof content] || content.en
 
   const emergencyNumbers = [
     { service: t.cmHelpline, number: "181", icon: Phone, color: "gray" },
@@ -453,411 +473,331 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
   ]
 
   return (
-    <div className={`min-h-screen transition-colors duration-200 p-3 sm:p-6 ${
-      highContrast 
-        ? "bg-black text-yellow-300 contrast-125" 
-        : "bg-red-50 text-gray-900"
-    }`}>
+    <div className="min-h-screen bg-red-50 text-gray-900 p-3 sm:p-6">
       <div className="max-w-3xl mx-auto space-y-4 sm:space-y-5 overflow-hidden">
         
-        {/* Top Header Row with Sunlight High-Contrast Switch */}
-        <div className="flex items-center justify-between gap-3 pt-1">
-          <div>
-            <h1 className={`text-2xl sm:text-3xl font-black tracking-tight ${
-              highContrast ? "text-yellow-400" : "text-red-700"
-            }`}>
-              {t.title}
-            </h1>
-            <p className={`text-xs sm:text-sm mt-0.5 ${
-              highContrast ? "text-yellow-200" : "text-gray-600"
-            }`}>
-              {t.subtitle}
-            </p>
-          </div>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setHighContrast(!highContrast)}
-            className={`border-2 font-bold px-3 py-1.5 text-xs rounded-lg transition-colors flex items-center gap-1.5 flex-shrink-0 ${
-              highContrast
-                ? "bg-yellow-400 text-black border-yellow-400 hover:bg-yellow-300"
-                : "bg-white text-gray-800 border-gray-300 hover:bg-gray-100"
-            }`}
-          >
-            <Contrast className="h-4 w-4" />
-            <span className="hidden sm:inline">{t.highContrastToggle}</span>
-            <span className="sm:hidden">Sunlight</span>
-          </Button>
+        {/* Top Header: Title & Subtitle (High-contrast button removed as requested) */}
+        <div className="pt-1">
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-red-700">
+            {t.title}
+          </h1>
+          <p className="text-xs sm:text-sm text-gray-600 mt-0.5">
+            {t.subtitle}
+          </p>
         </div>
 
         {/* Shake Detection Banner */}
-        <div className={`flex items-center justify-between p-3 border rounded-xl text-xs sm:text-sm shadow-sm gap-2 ${
-          highContrast
-            ? "bg-yellow-950/60 border-yellow-500 text-yellow-200"
-            : "bg-red-100/90 border-red-300 text-red-900"
-        }`}>
+        <div className="flex items-center justify-between p-3 border rounded-xl text-xs sm:text-sm shadow-sm gap-2 bg-red-100/90 border-red-300 text-red-900">
           <div className="flex items-center gap-2 min-w-0">
             <Smartphone className="h-4 w-4 sm:h-5 sm:w-5 text-red-600 animate-pulse flex-shrink-0" />
             <span className="font-medium truncate">{t.shakeHint}</span>
           </div>
-          <span className={`text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${
-            highContrast ? "bg-yellow-400 text-black" : "bg-red-200 text-red-800"
-          }`}>
+          <span className="text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0 bg-red-200 text-red-800">
             {shakeActive ? "Active" : "Off"}
           </span>
         </div>
 
-        {/* ============================================================== */}
-        {/* SEVERITY LEVEL 1: CRITICAL LIFE THREAT (108 CALL & AUTO-ALARM) */}
-        {/* ============================================================== */}
-        <Card className={`border-2 shadow-md overflow-hidden ${
-          highContrast ? "bg-black border-yellow-400 text-yellow-300" : "border-red-400 bg-white"
-        }`}>
-          <CardContent className="p-4 sm:p-5 space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-red-600 text-white">
-                Level 1: Critical Emergency
-              </span>
-              <span className="text-xs text-red-600 font-semibold">
-                Auto-Enables Siren & Torch
-              </span>
-            </div>
-
+        {/* Primary Actions Card */}
+        <Card className="border-2 border-red-200 bg-white shadow-sm overflow-hidden">
+          <CardContent className="p-4 sm:p-5 space-y-3.5">
+            
+            {/* 1. Giant Call 108 Ambulance Button */}
             <Button
-              onClick={launchCriticalSosWithAlarms}
-              className="w-full min-h-[4.5rem] py-3 px-4 text-xl sm:text-2xl bg-red-600 hover:bg-red-700 animate-pulse font-black text-white rounded-xl shadow-lg whitespace-normal leading-tight flex items-center justify-center text-center"
+              onClick={() => { window.location.href = "tel:108" }}
+              className="w-full min-h-[4.5rem] py-3 px-4 text-xl sm:text-2xl bg-red-600 hover:bg-red-700 animate-pulse font-black text-white rounded-xl shadow-md whitespace-normal leading-tight flex items-center justify-center text-center"
             >
-              <Phone className="mr-2.5 h-7 w-7 flex-shrink-0 animate-bounce" />
+              <Phone className="mr-2.5 h-7 w-7 flex-shrink-0" />
               <span>{t.call108}</span>
             </Button>
 
-            <div className="flex items-center justify-between gap-2 pt-1">
+            {/* 2. BUTTON 1: Distress SOS to 112 (Full health info + GPS + Looping custom voice + Siren) */}
+            <div className="space-y-1">
               <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setStrobeActive(true)}
-                className={`flex-1 text-xs font-bold py-2 border rounded-lg ${
-                  highContrast 
-                    ? "border-yellow-400 text-yellow-300 bg-black hover:bg-yellow-950" 
-                    : "border-red-200 text-red-700 hover:bg-red-50 bg-white"
-                }`}
+                onClick={handleTriggerDistressSos}
+                className="w-full min-h-[3.75rem] py-3 px-4 text-sm sm:text-base bg-red-950 hover:bg-black font-extrabold text-white rounded-xl shadow-md flex items-center justify-center text-center gap-2"
               >
-                <Flashlight className="h-3.5 w-3.5 mr-1.5 text-amber-600" />
-                <span>{t.alarmOnly}</span>
+                <ShieldAlert className="h-5 w-5 text-red-400 flex-shrink-0" />
+                <span>{t.distressBtn}</span>
               </Button>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleToggleIncidentRecording}
-                className={`flex-1 text-xs font-bold py-2 border rounded-lg ${
-                  isRecordingIncident
-                    ? "bg-red-600 text-white border-red-600 animate-pulse"
-                    : highContrast
-                    ? "border-yellow-400 text-yellow-300 bg-black hover:bg-yellow-950"
-                    : "border-gray-300 text-gray-800 hover:bg-gray-100 bg-white"
-                }`}
-              >
-                {isRecordingIncident ? <MicOff className="h-3.5 w-3.5 mr-1.5" /> : <Mic className="h-3.5 w-3.5 mr-1.5 text-red-600" />}
-                <span>{isRecordingIncident ? t.stopRecordAudio : t.recordAudio}</span>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* ============================================================== */}
-        {/* SEVERITY LEVEL 2: UNIFIED DISTRESS ALERT (WHATSAPP + SMS + GPS) */}
-        {/* ============================================================== */}
-        <Card className={`border-2 shadow-sm ${
-          highContrast ? "bg-black border-yellow-400 text-yellow-300" : "border-amber-300 bg-amber-50/60"
-        }`}>
-          <CardContent className="p-4 sm:p-5 space-y-2.5">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-amber-600 text-white">
-                Level 2: Distress Broadcast
-              </span>
-              <span className="text-xs text-amber-800 font-semibold">
-                WhatsApp + SMS + GPS
-              </span>
+              <p className="text-[11px] text-gray-500 text-center leading-tight">
+                {t.distressBtnSub}
+              </p>
             </div>
 
+            {/* 3. BUTTON 2: Alert Emergency Contact (WhatsApp & SMS with identical complete info) */}
+            <div className="space-y-1">
+              <Button
+                onClick={handleOpenContactAlert}
+                className="w-full min-h-[3.75rem] py-3 px-4 text-sm sm:text-base bg-amber-600 hover:bg-amber-700 font-extrabold text-white rounded-xl shadow-md flex items-center justify-center text-center gap-2"
+              >
+                <Users className="h-5 w-5 flex-shrink-0" />
+                <span>{t.contactBtn}</span>
+              </Button>
+              <p className="text-[11px] text-gray-500 text-center leading-tight">
+                {t.contactBtnSub}
+              </p>
+            </div>
+
+            {/* 4. Night SOS Screen Beacon & Siren Button */}
             <Button
-              onClick={() => setIsDistressModalOpen(true)}
-              className="w-full min-h-[3.75rem] py-3 px-4 text-base sm:text-lg bg-amber-600 hover:bg-amber-700 font-extrabold text-white rounded-xl shadow-md flex items-center justify-center text-center gap-2"
+              variant="outline"
+              className="w-full min-h-[3.75rem] py-3 px-3.5 flex items-center justify-start gap-3 font-semibold rounded-xl text-left bg-amber-50 border-amber-300 text-amber-900 hover:bg-amber-100"
+              onClick={() => {
+                setStrobeActive(true)
+                startAudioSiren()
+                setSirenActive(true)
+                const voiceMsg = getVoiceAlertMessage()
+                startEmergencyVoiceLoop(voiceMsg, language === "hi" ? "hi" : "en")
+                setVoiceLoopActiveState(true)
+              }}
             >
-              <Send className="h-5 w-5 flex-shrink-0" />
-              <span>{t.sendDistressTitle}</span>
-            </Button>
-            <p className="text-[11px] text-amber-800 text-center leading-tight">
-              {t.sendDistressSub}
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* ============================================================== */}
-        {/* PARAMEDIC DIRECT MEDICAL PASS (FLASHES ON PHONE FOR WORKERS) */}
-        {/* ============================================================== */}
-        <Card className={`border-2 shadow-sm cursor-pointer hover:border-red-500 transition-all ${
-          highContrast ? "bg-black border-yellow-400 text-yellow-300" : "border-blue-200 bg-white"
-        }`} onClick={() => setIsMedicalPassOpen(true)}>
-          <CardContent className="p-4 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="p-2.5 bg-blue-100 rounded-xl text-blue-700 flex-shrink-0">
-                <FileText className="h-6 w-6" />
-              </div>
+              <Flashlight className="h-6 w-6 text-amber-600 flex-shrink-0" />
               <div className="min-w-0">
-                <h3 className="font-black text-sm sm:text-base text-gray-900 truncate">
-                  {t.medicalPassTitle}
-                </h3>
-                <p className="text-xs text-gray-500 line-clamp-1">
-                  {t.medicalPassSub}
-                </p>
+                <div className="text-xs sm:text-sm font-bold truncate">{t.beaconBtn}</div>
+                <div className="text-[11px] text-amber-700/90 font-normal line-clamp-1">{t.beaconBtnSub}</div>
               </div>
-            </div>
-            <span className="text-xs font-bold px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg flex-shrink-0">
-              Open Pass →
-            </span>
+            </Button>
+
+            {/* 5. Nearest Hospital Navigation (Share Location removed as requested) */}
+            <Button
+              variant="outline"
+              className="w-full min-h-[3.25rem] py-2.5 px-3 text-xs sm:text-sm font-semibold rounded-xl border-gray-200 hover:bg-gray-50 flex items-center justify-center"
+              onClick={() => router.push("/locations")}
+            >
+              <MapPin className="mr-2 h-4 w-4 sm:h-5 sm:w-5 text-red-500 flex-shrink-0" />
+              <span>{t.findHospital}</span>
+            </Button>
+
+            {/* 6. Visual First-Aid Guide */}
+            <Button
+              variant="outline"
+              className="w-full min-h-[3.75rem] py-2.5 px-3.5 rounded-xl text-center bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
+              onClick={() => router.push("/health-info")}
+            >
+              <div className="flex flex-col items-center">
+                <span className="flex items-center text-xs sm:text-sm font-bold">
+                  <BookOpen className="mr-2 h-4 w-4 flex-shrink-0" /> {t.firstAid}
+                </span>
+                <span className="text-[11px] text-blue-600/90 font-normal mt-0.5">{t.firstAidSub}</span>
+              </div>
+            </Button>
           </CardContent>
         </Card>
 
         {/* ============================================================== */}
-        {/* "CANNOT SPEAK?" RAPID VOCALIZER BUTTONS (SPEECH SYNTHESIS)     */}
+        {/* PERSONAL EMERGENCY VAULT (OFFLINE) WITH CUSTOM VOICE ALERT    */}
         {/* ============================================================== */}
-        <div className={`p-3.5 border rounded-xl space-y-2 ${
-          highContrast ? "bg-black border-yellow-400" : "bg-purple-50/80 border-purple-200"
-        }`}>
-          <div className="flex items-center gap-2">
-            <Volume2 className="h-4 w-4 text-purple-700 flex-shrink-0" />
-            <span className="text-xs font-black text-purple-900 uppercase tracking-wide">
-              {t.cannotSpeakTitle}
-            </span>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => vocalizeEmergencyMessage(t.cannotSpeak1, language === "en" ? "en" : "hi")}
-              className="text-xs font-bold py-2 bg-white hover:bg-purple-100 border-purple-300 text-purple-900 rounded-lg whitespace-normal leading-tight text-center"
-            >
-              📢 {t.cannotSpeak1}
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => vocalizeEmergencyMessage(t.cannotSpeak2, language === "en" ? "en" : "hi")}
-              className="text-xs font-bold py-2 bg-white hover:bg-purple-100 border-purple-300 text-purple-900 rounded-lg whitespace-normal leading-tight text-center"
-            >
-              📢 {t.cannotSpeak2}
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => vocalizeEmergencyMessage(t.cannotSpeak3, language === "en" ? "en" : "hi")}
-              className="text-xs font-bold py-2 bg-white hover:bg-purple-100 border-purple-300 text-purple-900 rounded-lg whitespace-normal leading-tight text-center"
-            >
-              📢 {t.cannotSpeak3}
-            </Button>
-          </div>
-        </div>
-
-        {/* ============================================================== */}
-        {/* SEVERITY LEVEL 3: URGENT CARE & NAVIGATION (HOSPITAL + FIRST AID)*/}
-        {/* ============================================================== */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Button
-            size="lg"
-            variant="outline"
-            className={`min-h-[4rem] py-3 px-3.5 rounded-xl flex items-center justify-center gap-2 font-bold text-sm shadow-sm ${
-              highContrast 
-                ? "border-yellow-400 text-yellow-300 bg-black hover:bg-yellow-950" 
-                : "bg-white border-gray-200 hover:bg-gray-50 text-gray-800"
-            }`}
-            onClick={() => router.push("/locations")}
-          >
-            <MapPin className="h-5 w-5 text-red-500 flex-shrink-0" />
-            <span>{t.findHospital}</span>
-          </Button>
-
-          <Button
-            size="lg"
-            variant="outline"
-            className={`min-h-[4rem] py-3 px-3.5 rounded-xl flex items-center justify-center gap-2 font-bold text-sm shadow-sm ${
-              highContrast 
-                ? "border-yellow-400 text-yellow-300 bg-black hover:bg-yellow-950" 
-                : "bg-white border-gray-200 hover:bg-gray-50 text-blue-700"
-            }`}
-            onClick={() => router.push("/health-info")}
-          >
-            <BookOpen className="h-5 w-5 text-blue-600 flex-shrink-0" />
-            <span>{t.firstAid}</span>
-          </Button>
-        </div>
-
-        {/* ============================================================== */}
-        {/* HELPLINE NUMBERS                                               */}
-        {/* ============================================================== */}
-        <Card className={`border shadow-sm ${highContrast ? "bg-black border-yellow-400 text-yellow-300" : "bg-white"}`}>
-          <CardHeader className="py-3 px-4">
-            <CardTitle className="text-sm font-bold flex items-center">
-              <Phone className="h-4 w-4 mr-2 text-primary" />
-              {t.helplineTitle}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-3 pt-0 grid grid-cols-2 sm:grid-cols-4 gap-2">
-            {emergencyNumbers.map((c, i) => (
-              <Button
-                key={i}
-                variant="outline"
-                size="sm"
-                onClick={() => window.open(`tel:${c.number}`)}
-                className="flex items-center justify-between px-2.5 py-2 text-xs font-bold rounded-lg border-gray-200 hover:bg-red-50 hover:text-red-700 hover:border-red-300 transition-colors"
-              >
-                <span className="truncate">{c.service}</span>
-                <span className="text-red-600 ml-1">{c.number}</span>
-              </Button>
-            ))}
-          </CardContent>
-        </Card>
-
-        {/* ============================================================== */}
-        {/* PERSONAL EMERGENCY HEALTH VAULT (OFFLINE)                      */}
-        {/* ============================================================== */}
-        <div className="flex items-center justify-between p-3.5 bg-white border border-gray-200 rounded-xl shadow-xs">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <HeartPulse className="h-5 w-5 text-red-600 flex-shrink-0" />
-            <div className="min-w-0">
-              <span className="text-xs font-bold text-gray-900 block truncate">{t.vaultTitle}</span>
-              <span className="text-[11px] text-gray-500 block truncate">
-                {profile.fullName ? `${profile.fullName} (${profile.bloodGroup || "No blood group"})` : "No profile saved yet"}
-              </span>
+        <Card className="border-red-200 bg-white shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
+            <div>
+              <CardTitle className="flex items-center text-red-700 text-base sm:text-lg">
+                <HeartPulse className="h-5 w-5 mr-2 text-red-600 flex-shrink-0" />
+                {t.vaultTitle}
+              </CardTitle>
+              <p className="text-xs text-gray-500 mt-0.5">{t.vaultSubtitle}</p>
             </div>
-          </div>
-          <Dialog open={isVaultOpen} onOpenChange={setIsVaultOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" size="sm" className="text-xs font-bold border-red-200 text-red-700 hover:bg-red-50 flex-shrink-0">
-                {t.editVault}
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle className="text-red-700 flex items-center">
-                  <HeartPulse className="mr-2 h-5 w-5" />
+            
+            <Dialog open={isVaultOpen} onOpenChange={setIsVaultOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" className="border-red-300 text-red-700 hover:bg-red-50 text-xs font-semibold">
                   {t.editVault}
-                </DialogTitle>
-              </DialogHeader>
-              <div className="space-y-3.5 py-2 text-sm">
-                <div>
-                  <label className="text-xs font-semibold text-gray-600 mb-1 block">{t.fullName}</label>
-                  <Input
-                    value={editingProfile.fullName}
-                    onChange={(e) => setEditingProfile({ ...editingProfile, fullName: e.target.value })}
-                    placeholder="e.g. Ramesh Kumar"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs font-semibold text-gray-600 mb-1 block">{t.age}</label>
-                    <Input
-                      value={editingProfile.age}
-                      onChange={(e) => setEditingProfile({ ...editingProfile, age: e.target.value })}
-                      placeholder="e.g. 52"
-                    />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle className="text-red-700 flex items-center gap-2">
+                    <HeartPulse className="h-5 w-5 text-red-600" />
+                    {t.vaultTitle}
+                  </DialogTitle>
+                </DialogHeader>
+
+                <div className="space-y-3.5 py-2 text-xs sm:text-sm">
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <div>
+                      <label className="text-xs font-semibold text-gray-700 block mb-1">{t.fullName}</label>
+                      <Input
+                        value={editingProfile.fullName}
+                        onChange={(e) => setEditingProfile({ ...editingProfile, fullName: e.target.value })}
+                        placeholder="Ramesh Kumar"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-gray-700 block mb-1">{t.age}</label>
+                      <Input
+                        value={editingProfile.age}
+                        onChange={(e) => setEditingProfile({ ...editingProfile, age: e.target.value })}
+                        placeholder="45"
+                      />
+                    </div>
                   </div>
+
                   <div>
-                    <label className="text-xs font-semibold text-gray-600 mb-1 block">{t.bloodGroup}</label>
-                    <Input
+                    <label className="text-xs font-semibold text-gray-700 block mb-1">{t.bloodGroup}</label>
+                    <select
+                      className="w-full border rounded-md p-2 text-xs sm:text-sm bg-white"
                       value={editingProfile.bloodGroup}
                       onChange={(e) => setEditingProfile({ ...editingProfile, bloodGroup: e.target.value })}
-                      placeholder="e.g. O+, B+, AB-"
+                    >
+                      {["Unknown", "A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map((bg) => (
+                        <option key={bg} value={bg}>{bg}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold text-gray-700 block mb-1">{t.primaryContact}</label>
+                    <Input
+                      value={editingProfile.primaryEmergencyContact}
+                      onChange={(e) => setEditingProfile({ ...editingProfile, primaryEmergencyContact: e.target.value })}
+                      placeholder="+91 98765 43210"
                     />
                   </div>
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-gray-600 mb-1 block">{t.chronicConditions}</label>
-                  <Input
-                    value={editingProfile.chronicConditions}
-                    onChange={(e) => setEditingProfile({ ...editingProfile, chronicConditions: e.target.value })}
-                    placeholder="e.g. Type 2 Diabetes, Hypertension, Asthma"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-gray-600 mb-1 block">{t.allergies}</label>
-                  <Input
-                    value={editingProfile.severeAllergies}
-                    onChange={(e) => setEditingProfile({ ...editingProfile, severeAllergies: e.target.value })}
-                    placeholder="e.g. Penicillin, Sulfa"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-gray-600 mb-1 block">{t.medications}</label>
-                  <Input
-                    value={editingProfile.currentMedications}
-                    onChange={(e) => setEditingProfile({ ...editingProfile, currentMedications: e.target.value })}
-                    placeholder="e.g. Metformin 500mg"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-gray-600 mb-1 block">{t.primaryContact}</label>
-                  <Input
-                    value={editingProfile.primaryEmergencyContact}
-                    onChange={(e) => setEditingProfile({ ...editingProfile, primaryEmergencyContact: e.target.value })}
-                    placeholder="e.g. 9876543210"
-                  />
-                </div>
-                <Button onClick={handleSaveProfile} className="w-full bg-red-600 hover:bg-red-700 text-white font-bold">
-                  Save to Phone
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-        </div>
 
-        {/* ============================================================== */}
-        {/* UNIFIED DISTRESS ALERT DIALOG (WHATSAPP + SMS COMBINED)        */}
-        {/* ============================================================== */}
-        <Dialog open={isDistressModalOpen} onOpenChange={setIsDistressModalOpen}>
+                  <div>
+                    <label className="text-xs font-semibold text-gray-700 block mb-1">{t.secondaryContact}</label>
+                    <Input
+                      value={editingProfile.secondaryEmergencyContact}
+                      onChange={(e) => setEditingProfile({ ...editingProfile, secondaryEmergencyContact: e.target.value })}
+                      placeholder="+91 91234 56789"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold text-gray-700 block mb-1">{t.chronicConditions}</label>
+                    <Input
+                      value={editingProfile.chronicConditions}
+                      onChange={(e) => setEditingProfile({ ...editingProfile, chronicConditions: e.target.value })}
+                      placeholder="Diabetes Type 2, Hypertension, Heart Patient"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold text-gray-700 block mb-1">{t.allergies}</label>
+                    <Input
+                      value={editingProfile.severeAllergies}
+                      onChange={(e) => setEditingProfile({ ...editingProfile, severeAllergies: e.target.value })}
+                      placeholder="Penicillin, Sulfa drugs, Peanuts"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold text-gray-700 block mb-1">{t.medications}</label>
+                    <Input
+                      value={editingProfile.currentMedications}
+                      onChange={(e) => setEditingProfile({ ...editingProfile, currentMedications: e.target.value })}
+                      placeholder="Metformin 500mg, Telmisartan 40mg"
+                    />
+                  </div>
+
+                  {/* USER-DEFINED CUSTOM VOICE ALERT (Spoken Aloud in Loop During Distress) */}
+                  <div className="p-3 bg-amber-50 border border-amber-300 rounded-xl space-y-1.5">
+                    <label className="text-xs font-bold text-amber-900 flex items-center gap-1.5">
+                      <Mic className="h-4 w-4 text-amber-700" />
+                      {t.customVoiceLabel}
+                    </label>
+                    <Input
+                      value={editingProfile.customVoiceAlert || ""}
+                      onChange={(e) => setEditingProfile({ ...editingProfile, customVoiceAlert: e.target.value })}
+                      placeholder={t.customVoicePlaceholder}
+                      className="bg-white border-amber-300 text-xs sm:text-sm"
+                    />
+                    <p className="text-[11px] text-amber-800 leading-tight">
+                      {t.customVoiceHint}
+                    </p>
+                  </div>
+
+                  <Button onClick={handleSaveProfile} className="w-full bg-red-600 hover:bg-red-700 text-white font-bold">
+                    {language === "en" ? "Save Emergency Profile" : "आपातकालीन प्रोफाइल सुरक्षित करें"}
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </CardHeader>
+
+          <CardContent className="pt-0">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+              <div className="p-2.5 bg-gray-50 rounded-lg">
+                <span className="text-gray-500 block text-[11px]">{t.fullName}</span>
+                <span className="font-semibold text-gray-900">{profile.fullName || t.noneRecorded}</span>
+              </div>
+              <div className="p-2.5 bg-gray-50 rounded-lg">
+                <span className="text-gray-500 block text-[11px]">{t.bloodGroup}</span>
+                <span className={`font-black ${profile.bloodGroup && profile.bloodGroup !== "Unknown" ? "text-red-700" : "text-gray-600"}`}>
+                  {profile.bloodGroup || t.unknown}
+                </span>
+              </div>
+              <div className="p-2.5 bg-gray-50 rounded-lg">
+                <span className="text-gray-500 block text-[11px]">{t.chronicConditions}</span>
+                <span className="font-medium text-gray-900">{profile.chronicConditions || t.noneRecorded}</span>
+              </div>
+              <div className="p-2.5 bg-gray-50 rounded-lg">
+                <span className="text-gray-500 block text-[11px]">{t.allergies}</span>
+                <span className="font-medium text-red-600">{profile.severeAllergies || t.noneRecorded}</span>
+              </div>
+              <div className="p-2.5 bg-gray-50 rounded-lg sm:col-span-2">
+                <span className="text-gray-500 block text-[11px]">{t.primaryContact}</span>
+                <span className="font-semibold text-gray-900">{profile.primaryEmergencyContact || t.noneRecorded}</span>
+              </div>
+              {profile.customVoiceAlert && (
+                <div className="p-2.5 bg-amber-50/70 border border-amber-200 rounded-lg sm:col-span-2">
+                  <span className="text-amber-800 font-semibold block text-[11px] flex items-center gap-1">
+                    <Mic className="h-3 w-3 text-amber-600" />
+                    {t.customVoiceLabel}
+                  </span>
+                  <span className="font-medium text-amber-950 italic">"{profile.customVoiceAlert}"</span>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* DIALOG: Choose WhatsApp or SMS for Primary Emergency Contact */}
+        <Dialog open={isContactModalOpen} onOpenChange={setIsContactModalOpen}>
           <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle className="text-amber-700 flex items-center">
-                <Send className="mr-2 h-5 w-5" />
-                {t.distressModalTitle}
+              <DialogTitle className="text-amber-700 flex items-center gap-2">
+                <Users className="h-5 w-5 text-amber-600" />
+                {t.contactModalTitle}
               </DialogTitle>
             </DialogHeader>
 
-            <div className="space-y-3.5 py-2">
-              <div className="p-3 bg-gray-50 border border-gray-200 rounded-xl text-xs space-y-1">
-                <div className="font-bold text-gray-800">Preview of Emergency Broadcast Packet:</div>
-                <div className="text-gray-600 font-mono text-[11px] leading-tight break-words">
-                  {buildDistressMessage()}
+            <div className="space-y-3 py-2">
+              <p className="text-xs sm:text-sm text-gray-600">
+                {t.contactModalDesc}
+              </p>
+
+              <div className="p-2.5 bg-gray-100 rounded-lg text-xs space-y-1">
+                <div className="font-semibold text-gray-900 flex items-center gap-1.5">
+                  <User className="h-3.5 w-3.5 text-gray-600" />
+                  <span>{profile.fullName || (language === "en" ? "Patient" : "मरीज")}</span>
+                  {profile.bloodGroup && profile.bloodGroup !== "Unknown" && (
+                    <span className="text-red-700 font-bold">({profile.bloodGroup})</span>
+                  )}
+                </div>
+                <div className="text-gray-600">
+                  <span>To: </span>
+                  <span className="font-bold text-gray-900">{profile.primaryEmergencyContact}</span>
                 </div>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-2 pt-1">
+                {/* 1. WhatsApp Button */}
                 <Button
-                  onClick={sendDistressWhatsApp}
-                  className="w-full h-12 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow"
+                  onClick={sendContactWhatsApp}
+                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 flex items-center justify-center gap-2 text-sm rounded-xl"
                 >
                   <MessageCircle className="h-5 w-5" />
-                  <span>{t.distressViaWa}</span>
+                  <span>{t.sendViaWa}</span>
                 </Button>
 
+                {/* 2. Normal SMS Button */}
                 <Button
+                  onClick={sendContactSms}
                   variant="outline"
-                  onClick={sendDistressSms}
-                  className="w-full h-12 border-red-300 text-red-700 hover:bg-red-50 font-bold rounded-xl flex items-center justify-center gap-2"
+                  className="w-full border-2 border-amber-600 text-amber-800 hover:bg-amber-50 font-bold py-3 flex items-center justify-center gap-2 text-sm rounded-xl"
                 >
-                  <MessageSquare className="h-5 w-5 text-red-600" />
-                  <span>{t.distressViaSms}</span>
-                </Button>
-
-                <Button
-                  variant="ghost"
-                  onClick={shareDistressNative}
-                  className="w-full text-xs text-gray-600 hover:bg-gray-100 font-medium"
-                >
-                  <Share2 className="h-4 w-4 mr-1.5" />
-                  <span>{t.distressViaShare}</span>
+                  <MessageSquare className="h-5 w-5 text-amber-700" />
+                  <span>{t.sendViaSms}</span>
                 </Button>
               </div>
             </div>
@@ -865,213 +805,118 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
         </Dialog>
 
         {/* ============================================================== */}
-        {/* PARAMEDIC DIRECT MEDICAL PASS MODAL (FLASHED FOR WORKERS)     */}
+        {/* HELPLINES & INSTRUCTIONS (Clean 2-Column Responsive Layout)    */}
         {/* ============================================================== */}
-        {isMedicalPassOpen && (
-          <div className="fixed inset-0 z-50 h-[100dvh] w-full bg-black text-yellow-300 p-4 sm:p-6 flex flex-col justify-between overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-yellow-500 pb-3">
-              <span className="text-xs sm:text-sm font-black tracking-widest uppercase">
-                {t.medicalPassHeader}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsMedicalPassOpen(false)}
-                className="bg-yellow-400 text-black border-yellow-400 font-bold text-xs"
-              >
-                <X className="h-4 w-4 mr-1" />
-                {t.medicalPassClose}
-              </Button>
-            </div>
-
-            <div className="my-auto py-4 space-y-4 max-w-lg mx-auto w-full text-center">
-              {/* Giant Blood Group */}
-              <div className="p-4 bg-yellow-400 text-black rounded-2xl shadow-xl">
-                <span className="text-xs font-black uppercase tracking-wider block">BLOOD GROUP</span>
-                <span className="text-6xl sm:text-7xl font-black block leading-none my-1">
-                  {profile.bloodGroup || "UNKNOWN"}
-                </span>
-              </div>
-
-              {/* Patient Name & Age */}
-              <div className="border-2 border-yellow-400 rounded-xl p-4 bg-yellow-950/40 text-left space-y-2">
-                <div>
-                  <span className="text-[11px] text-yellow-400/80 uppercase font-bold block">Patient Name</span>
-                  <span className="text-xl sm:text-2xl font-black text-yellow-300 block">
-                    {profile.fullName || "Name Not Specified"} {profile.age ? `(${profile.age} yrs)` : ""}
-                  </span>
-                </div>
-
-                {profile.chronicConditions && (
-                  <div>
-                    <span className="text-[11px] text-yellow-400/80 uppercase font-bold block">Chronic Conditions</span>
-                    <span className="text-base font-extrabold text-white block">
-                      {profile.chronicConditions}
-                    </span>
-                  </div>
-                )}
-
-                {profile.severeAllergies && (
-                  <div>
-                    <span className="text-[11px] text-red-400 uppercase font-bold block">Severe Allergies</span>
-                    <span className="text-base font-extrabold text-red-300 block">
-                      ⚠️ {profile.severeAllergies}
-                    </span>
-                  </div>
-                )}
-
-                {profile.currentMedications && (
-                  <div>
-                    <span className="text-[11px] text-yellow-400/80 uppercase font-bold block">Current Medications</span>
-                    <span className="text-sm font-bold text-yellow-200 block">
-                      {profile.currentMedications}
-                    </span>
-                  </div>
-                )}
-
-                {profile.primaryEmergencyContact && (
-                  <div className="pt-2 border-t border-yellow-500/50 flex items-center justify-between">
-                    <div>
-                      <span className="text-[11px] text-yellow-400/80 uppercase font-bold block">Emergency Family Phone</span>
-                      <span className="text-base font-black text-white">{profile.primaryEmergencyContact}</span>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          
+          {/* Government Helplines */}
+          <Card className="border-gray-200 bg-white shadow-sm">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base sm:text-lg flex items-center text-teal-800">
+                <Phone className="h-4 w-4 mr-2 text-teal-600" />
+                {t.helplineTitle}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {emergencyNumbers.map((item, idx) => {
+                const Icon = item.icon
+                return (
+                  <div
+                    key={idx}
+                    onClick={() => { window.location.href = `tel:${item.number}` }}
+                    className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 border border-gray-100 cursor-pointer transition-colors"
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Icon className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                      <span className="text-xs sm:text-sm font-medium text-gray-800 truncate">{item.service}</span>
                     </div>
-                    <Button
-                      size="sm"
-                      onClick={() => window.open(`tel:${profile.primaryEmergencyContact}`)}
-                      className="bg-yellow-400 text-black font-black hover:bg-yellow-300"
-                    >
-                      <Phone className="h-4 w-4 mr-1" /> Call
-                    </Button>
+                    <span className="font-mono text-xs sm:text-sm font-bold bg-teal-50 text-teal-800 px-2.5 py-0.5 rounded-full flex-shrink-0">
+                      {item.number}
+                    </span>
                   </div>
-                )}
-              </div>
-            </div>
+                )
+              })}
+            </CardContent>
+          </Card>
 
-            <Button
-              size="lg"
-              onClick={() => setIsMedicalPassOpen(false)}
-              className="w-full h-14 bg-yellow-400 text-black hover:bg-yellow-300 font-black text-base rounded-xl"
-            >
-              Done / वापस जाएं
-            </Button>
-          </div>
-        )}
+          {/* Emergency Instructions */}
+          <Card className="border-gray-200 bg-white shadow-sm">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base sm:text-lg flex items-center text-red-800">
+                <AlertTriangle className="h-4 w-4 mr-2 text-red-600" />
+                {t.instructionsTitle}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {[t.inst1, t.inst2, t.inst3, t.inst4, t.inst5].map((text, idx) => (
+                <div key={idx} className="flex items-start gap-2.5">
+                  <span className="h-5 w-5 rounded-full bg-teal-600 text-white text-[11px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
+                    {idx + 1}
+                  </span>
+                  <p className="text-xs sm:text-sm text-gray-700 leading-snug">
+                    {text}
+                  </p>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
 
         {/* ============================================================== */}
-        {/* FULLSCREEN CRITICAL EMERGENCY BEACON & ALARM MODAL             */}
+        {/* FULLSCREEN FLASHING STROBE BEACON WITH SIREN & VOICE CONTROLS */}
         {/* ============================================================== */}
         {strobeActive && (
-          <div
-            className={`fixed inset-0 z-50 h-[100dvh] w-full max-w-full overflow-y-auto overflow-x-hidden flex flex-col justify-between p-3 sm:p-6 transition-colors duration-150 ${
-              strobeLightOn ? "bg-red-600 text-white" : "bg-white text-red-600"
-            }`}
-          >
-            {/* Top Bar with Status and Stop Button */}
-            <div className="w-full flex items-center justify-between gap-2 pt-1 pb-2 flex-shrink-0">
-              <span className="text-[11px] sm:text-xs font-black tracking-widest uppercase px-2.5 py-1 rounded bg-black/25 text-white truncate shadow-sm">
-                {t.beaconActive}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setStrobeActive(false)}
-                className={`border-2 font-black text-xs px-3 py-1 rounded-lg shadow-sm flex items-center ${
-                  strobeLightOn
-                    ? "bg-white text-red-600 border-white hover:bg-gray-100"
-                    : "bg-red-600 text-white border-red-600 hover:bg-red-700"
-                }`}
-              >
-                <X className="h-4 w-4 mr-1 flex-shrink-0" />
-                <span>{t.stopBeacon}</span>
-              </Button>
-            </div>
-
-            {/* Central Visual Flash and Emergency Banner */}
-            <div className="w-full my-auto py-2 sm:py-4 flex flex-col items-center justify-center text-center space-y-3 sm:space-y-4 max-w-md mx-auto">
-              <div className="text-5xl sm:text-7xl md:text-8xl font-black tracking-tight leading-none animate-pulse select-none">
-                SOS 108
+          <div className={`fixed inset-0 z-50 flex flex-col items-center justify-center p-6 text-center transition-colors duration-100 ${
+            strobeLightOn ? "bg-red-600 text-white" : "bg-black text-yellow-300"
+          }`}>
+            <div className="max-w-md w-full space-y-6">
+              <div className="space-y-2">
+                <Flashlight className="h-16 w-16 mx-auto animate-bounce text-yellow-300" />
+                <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-wider">
+                  {t.beaconActive}
+                </h2>
+                <p className="text-xs sm:text-sm opacity-90 max-w-sm mx-auto">
+                  {language === "en"
+                    ? "Audio siren and voice announcement are active. Display is kept at maximum visibility."
+                    : "सायरन और आवाज़ सक्रिय हैं। डिस्प्ले अधिकतम चमक पर चल रहा है।"}
+                </p>
+                {voiceLoopActiveState && (
+                  <p className="text-xs bg-black/40 text-yellow-300 p-2 rounded-lg font-mono italic">
+                    "{getVoiceAlertMessage()}"
+                  </p>
+                )}
               </div>
-              <p className="text-xs sm:text-base md:text-lg font-black max-w-sm mx-auto uppercase leading-snug px-2 break-words">
-                {language === "en"
-                  ? "EMERGENCY IN PROGRESS — AMBULANCE NEEDED"
-                  : "आपातकालीन स्थिति — तत्काल एम्बुलेंस 108 की आवश्यकता"}
-              </p>
 
-              {/* Hardware Controls Panel (Audio Siren, Flashlight Torch & Voice Blackbox) */}
-              <div className="w-full flex flex-wrap items-center justify-center gap-2 pt-1">
+              {/* Hardware Toggles: Siren & Camera LED Flashlight */}
+              <div className="grid grid-cols-2 gap-3">
                 <Button
-                  size="sm"
                   onClick={handleToggleSiren}
-                  className={`border-2 text-xs font-black px-3 py-1.5 rounded-lg transition-transform active:scale-95 shadow-sm flex items-center ${
-                    sirenActive
-                      ? "bg-yellow-400 text-black border-yellow-400 animate-pulse"
-                      : strobeLightOn
-                      ? "bg-black/40 text-white border-white/40 hover:bg-black/60"
-                      : "bg-red-700 text-white border-red-800 hover:bg-red-800"
+                  className={`font-bold py-3 text-xs sm:text-sm rounded-xl ${
+                    sirenActive ? "bg-yellow-400 text-black hover:bg-yellow-300" : "bg-gray-800 text-white"
                   }`}
                 >
-                  {sirenActive ? <Volume2 className="h-4 w-4 mr-1.5 flex-shrink-0" /> : <VolumeX className="h-4 w-4 mr-1.5 flex-shrink-0" />}
+                  {sirenActive ? <Volume2 className="mr-1.5 h-4 w-4" /> : <VolumeX className="mr-1.5 h-4 w-4" />}
                   <span>{sirenActive ? t.sirenOff : t.sirenOn}</span>
                 </Button>
 
                 <Button
-                  size="sm"
                   onClick={handleToggleTorch}
-                  className={`border-2 text-xs font-black px-3 py-1.5 rounded-lg transition-transform active:scale-95 shadow-sm flex items-center ${
-                    torchActive
-                      ? "bg-yellow-400 text-black border-yellow-400 animate-pulse"
-                      : strobeLightOn
-                      ? "bg-black/40 text-white border-white/40 hover:bg-black/60"
-                      : "bg-red-700 text-white border-red-800 hover:bg-red-800"
+                  className={`font-bold py-3 text-xs sm:text-sm rounded-xl ${
+                    torchActive ? "bg-yellow-400 text-black hover:bg-yellow-300" : "bg-gray-800 text-white"
                   }`}
                 >
-                  <Flashlight className="h-4 w-4 mr-1.5 flex-shrink-0" />
+                  <Flashlight className="mr-1.5 h-4 w-4" />
                   <span>{torchActive ? t.torchOff : t.torchOn}</span>
-                </Button>
-
-                <Button
-                  size="sm"
-                  onClick={handleToggleIncidentRecording}
-                  className={`border-2 text-xs font-black px-3 py-1.5 rounded-lg transition-transform active:scale-95 shadow-sm flex items-center ${
-                    isRecordingIncident
-                      ? "bg-red-700 text-white border-white animate-pulse"
-                      : strobeLightOn
-                      ? "bg-black/40 text-white border-white/40 hover:bg-black/60"
-                      : "bg-red-700 text-white border-red-800 hover:bg-red-800"
-                  }`}
-                >
-                  {isRecordingIncident ? <MicOff className="h-4 w-4 mr-1.5 flex-shrink-0" /> : <Mic className="h-4 w-4 mr-1.5 flex-shrink-0" />}
-                  <span>{isRecordingIncident ? t.stopRecordAudio : t.recordAudio}</span>
                 </Button>
               </div>
 
-              {/* Patient Profile Card (Offline Vault) */}
-              {profile.fullName && (
-                <div className={`p-3 rounded-xl text-xs sm:text-sm font-bold border-2 max-w-sm w-full mx-auto break-words text-left shadow-sm ${
-                  strobeLightOn 
-                    ? "bg-red-700 border-white text-white" 
-                    : "bg-red-50 border-red-600 text-red-950"
-                }`}>
-                  <div className="font-black text-sm">{profile.fullName} {profile.age ? `(${profile.age} yrs)` : ""}</div>
-                  {profile.bloodGroup && <div className="text-xs mt-0.5 opacity-90">Blood Group: {profile.bloodGroup}</div>}
-                  {profile.chronicConditions && <div className="text-[11px] mt-0.5 line-clamp-2 opacity-90">{profile.chronicConditions}</div>}
-                </div>
-              )}
-            </div>
-
-            {/* Bottom 108 Call Action */}
-            <div className="w-full max-w-md mx-auto pt-2 pb-1 flex-shrink-0">
+              {/* Dismiss / Stop Everything Button */}
               <Button
-                size="lg"
-                onClick={() => window.open("tel:108")}
-                className={`w-full min-h-[3.5rem] sm:min-h-[4rem] text-base sm:text-xl font-black rounded-xl shadow-lg flex items-center justify-center gap-2 ${
-                  strobeLightOn
-                    ? "bg-white text-red-700 hover:bg-gray-100"
-                    : "bg-red-600 text-white hover:bg-red-700"
-                }`}
+                onClick={handleStopAllAlarms}
+                className="w-full bg-white text-black hover:bg-gray-200 font-black text-lg py-4 rounded-xl shadow-2xl"
               >
-                <Phone className="h-5 w-5 sm:h-6 sm:w-6 flex-shrink-0 animate-bounce" />
-                <span>108 AMBULANCE</span>
+                <X className="mr-2 h-6 w-6 text-red-600" />
+                <span>{t.stopBeacon}</span>
               </Button>
             </div>
           </div>
