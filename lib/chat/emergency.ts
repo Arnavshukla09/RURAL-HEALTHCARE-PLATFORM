@@ -19,24 +19,28 @@ const EMERGENCY_PATTERNS = [
   /\b(chest pain|heart attack|heart failure)\b/i,
   /\b(shortness of breath|cannot breathe|suffocating|choking)\b/i,
   /\b(seene mein dard|chhati me dard|saans lene me (dikkat|takleef))\b/i,
+  /(सीने में दर्द|छाती में दर्द|सांस फूल|सांस नहीं आ|सांस लेने में)/i,
 
   // Neurological / Stroke
   /\b(stroke(?! of luck)|paralysis(?! tick)|unconscious|fainted|loss of consciousness)\b/i,
-  /\b(behhosh|behoshi|lakwa)\b/i,
+  /\b(behosh|behhosh|behoshi|lakwa)\b/i,
+  /(बेहोश|बेहोशी|लकवा|चक्कर खाकर गिर)/i,
 
   // Trauma / Poison / Environmental
   /\b(snake bite|snakebite|saanp ne kaat|poison|zeher)\b/i,
   /\b(severe bleeding|cough with blood|khoon ki ulti)\b/i,
+  /(सांप ने काट|सांप का डंक|जहर|खून की उल्टी|गंभीर रक्तस्राव)/i,
 
   // Self-harm / Crisis
   /\b(suicide|kill myself|end my life|want to die|atmahathya|khudkushi)\b/i,
+  /(आत्महत्या|खुदकुशी|जान देना|मरना चाहता)/i,
 ]
 
 export function detectTier0Emergency(text: string, language: string): EmergencyMatch | null {
   const query = text.toLowerCase()
 
   // 1. Check for self-harm / mental health emergency first (Tele-MANAS)
-  if (/\b(suicide|kill myself|end my life|want to die|atmahathya|khudkushi)\b/i.test(query)) {
+  if (/\b(suicide|kill myself|end my life|want to die|atmahathya|khudkushi)\b/i.test(query) || /(आत्महत्या|खुदकुशी|जान देना|मरना चाहता)/i.test(query)) {
     const replyHi = "🚨 आपातकालीन सहायता: यदि आप या आपका कोई प्रिय व्यक्ति मानसिक तनाव या संकट में है, तो कृपया तुरंत Tele-MANAS राष्ट्रीय हेल्पलाइन 14416 पर कॉल करें (24/7 मुफ्त एवं गोपनीय)। आप अकेले नहीं हैं, मदद उपलब्ध है।"
     const replyEn = "🚨 Mental Health Emergency: If you or someone you know is in distress, please call the national Tele-MANAS helpline at 14416 immediately (toll-free, 24/7, confidential support). You are not alone and help is available."
     return {
