@@ -17,6 +17,7 @@ export interface EmergencyProfile {
   severeAllergies: string
   primaryEmergencyContact: string
   secondaryEmergencyContact: string
+  tertiaryEmergencyContact?: string
   emergencyNotes: string
   customVoiceAlert?: string
 }
@@ -32,6 +33,7 @@ export const DEFAULT_PROFILE: EmergencyProfile = {
   severeAllergies: "",
   primaryEmergencyContact: "",
   secondaryEmergencyContact: "",
+  tertiaryEmergencyContact: "",
   emergencyNotes: "",
   customVoiceAlert: "",
 }
@@ -117,8 +119,13 @@ export function dispatchSmsSos(profile: EmergencyProfile, coords?: { lat: number
   const message = buildSosMessage(profile, coords)
   const encoded = encodeURIComponent(message)
 
-  const numbers = [profile.primaryEmergencyContact, profile.secondaryEmergencyContact]
-    .map((n) => n.trim().replace(/[^\d+]/g, ""))
+  const numbers = [
+    profile.primaryEmergencyContact,
+    profile.secondaryEmergencyContact,
+    profile.tertiaryEmergencyContact,
+  ]
+    .filter(Boolean)
+    .map((n) => (n as string).trim().replace(/[^\d+]/g, ""))
     .filter(Boolean)
 
   const targetRecipient = numbers.length > 0 ? numbers.join(",") : "112"

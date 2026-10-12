@@ -43,12 +43,13 @@ Access to quality healthcare in rural regions is heavily limited by geography, a
 
 ### 🚨 Mobile Emergency System & Offline Distress Architecture
 - **Streamlined Dual-Distress Engine:**
-  * **Distress SOS Broadcast (112):** One-tap national emergency dispatch bundling complete chronic health data, blood group, allergies, medications, and live GPS Google Maps coordinates into SMS 112, while simultaneously activating camera LED flashlight, Web Audio ambulance siren, Morse vibration, screen wake lock, and a **continuous looping spoken voice alert**.
-  * **Alert Saved Emergency Contacts (SMS & WhatsApp):** Direct 1-tap dispatch to the patient's primary emergency contact with options to send via WhatsApp (`wa.me`) or carrier SMS with the exact same comprehensive medical profile and live GPS location.
+  * **Distress SOS Broadcast (112):** One-tap national emergency dispatch bundling complete chronic health data, blood group, allergies, medications, and live GPS Google Maps coordinates into SMS 112 (isolated strictly to dispatch without sounding sirens).
+  * **Alert Saved Emergency Contacts (SMS & WhatsApp):** Direct multi-recipient dispatch supporting **up to 3 emergency contacts** with a recipient selector to send to all contacts simultaneously via carrier SMS or individually via WhatsApp, plus a non-emergency **Test Message mode** for connection verification.
   * **Call 108 — Ambulance:** Immediate priority dialer for state ambulance dispatch.
-- **Custom User-Typed Voice Alert Loop:** Patients can customize their own spoken emergency message inside the offline Emergency Vault (e.g. *"I am diabetic and having severe chest pain, please call Dr. Sharma immediately"*), which is read aloud continuously in a loop via Web Speech API alongside the siren when Distress SOS or Beacon is triggered.
-- **Night SOS Screen Beacon & Siren:** High-visibility pulsing screen beacon with hardware camera LED flash and Web Audio synthesizer.
-- **Personal Emergency Vault (Offline):** Secure, 100% offline local storage (`localStorage`) preserving chronic ailments, blood type, known allergies, medications, primary contacts, and custom voice alert without requiring any internet connection.
+- **Unified Shake-to-SOS Broadcast:** 3-shake gesture triggers a 5-second countdown prompt with accidental cancellation protection. Upon confirmation, unleashes the full combination: Web Audio ambulance siren, screen strobe beacon, rear camera LED torch, custom looping voice alert, screen wake lock, and distress SMS dispatch to 112 and all saved contacts simultaneously.
+- **Custom User-Typed Voice Alert Loop:** Patients can customize their own spoken emergency message inside the offline Emergency Vault (e.g. *"I am diabetic and having severe chest pain, please call Dr. Sharma immediately"*), which is read aloud continuously in a loop via Web Speech API alongside the siren when Beacon or Shake mode is triggered.
+- **Night SOS Screen Beacon & Siren:** High-visibility pulsing screen beacon with hardware camera LED flash, Web Audio synthesizer, and custom looping voice alert with 1-tap silence dismissal.
+- **Personal Emergency Vault (Offline):** Secure, 100% offline local storage (`localStorage`) preserving chronic ailments, blood type, known allergies, medications, up to 3 emergency contacts, and custom voice alert without requiring any internet connection.
 - **Emergency Protection Perimeter:** Automatic suppression of floating chatbot and accessibility pills on `/emergency` to prevent button obstruction.
 
 ### 📹 Secure Teleconsultation

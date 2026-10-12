@@ -9,11 +9,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Emergency Services & Hardware Integration (`lib/emergency/`, `components/EmergencyModule.tsx`)
 - **Streamlined Dual-Distress Engine**:
   - Eliminated UI clutter, high-contrast banner buttons, and preset sentences, replacing them with two clear emergency distress paths:
-    * **Distress SOS Broadcast (112)**: One-tap national emergency dispatch bundling complete chronic health profile, blood group, allergies, medications, and live GPS Google Maps coordinates into SMS 112, while triggering the Web Audio ambulance siren, camera LED flashlight, Morse vibration, screen wake lock, and a **continuous looping spoken voice alert**.
-    * **Alert Saved Emergency Contacts (SMS & WhatsApp)**: Direct 1-tap dispatch to the user's primary emergency contact with options to send via WhatsApp (`wa.me`) or carrier SMS with the exact same comprehensive medical profile and live GPS location.
+    * **Distress SOS Broadcast (112)**: One-tap national emergency dispatch bundling complete chronic health profile, blood group, allergies, medications, and live GPS Google Maps coordinates into SMS 112 (isolated strictly to message dispatch without firing siren/beacon).
+    * **Alert Saved Emergency Contacts (SMS & WhatsApp)**: Direct multi-recipient dispatch supporting **up to 3 emergency contacts** with a recipient selector to send to all contacts at once via normal carrier SMS or individually via WhatsApp, plus a non-emergency **Test Message mode** for connection verification.
     * **Call 108 — Ambulance**: Dedicated priority dialer for state ambulance dispatch.
+- **Unified Shake-to-SOS Broadcast with Accidental Cancel Safeguard**:
+  - 3-shake gesture prompts a 5-second floating countdown banner with prominent **Cancel (Accidental)** to reject unintended triggers.
+  - Upon completion or manual confirmation, automatically unleashes the **unified combination**: Web Audio piercing siren, screen strobe beacon, rear camera LED torch, continuous looping custom spoken voice alert, screen wake lock, and distress SMS dispatch to 112 and all saved contacts simultaneously.
 - **Custom User-Typed Voice Alert Loop**:
-  - Added user-customizable voice alert input to the Personal Emergency Vault (`lib/emergency/vault.ts`), allowing users to define their own specific medical announcement (e.g. *"I am diabetic and having severe chest pain, please call Dr. Sharma immediately"*). The Web Speech API continuously loops this announcement alongside the ambulance siren during Distress SOS or Beacon mode.
+  - Added user-customizable voice alert input to the Personal Emergency Vault (`lib/emergency/vault.ts`), allowing users to define their own specific medical announcement (e.g. *"I am diabetic and having severe chest pain, please call Dr. Sharma immediately"*). The Web Speech API continuously loops this announcement alongside the ambulance siren during unified shake broadcast or Beacon mode.
 - **Night SOS Screen Beacon & Siren**:
   - Fullscreen pulsing beacon with Web Audio siren, flashlight torch, and looping custom voice alert with single-tap dismissal.
 - **Removed Clutter**:

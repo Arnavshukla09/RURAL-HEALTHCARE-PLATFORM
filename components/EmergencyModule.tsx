@@ -20,10 +20,14 @@ import {
   X,
   Volume2,
   VolumeX,
-  Send,
   User,
   Users,
   Mic,
+  CheckSquare,
+  Square,
+  Share2,
+  CheckCircle2,
+  FlaskConical,
 } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import {
@@ -64,6 +68,8 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
   const [editingProfile, setEditingProfile] = useState<EmergencyProfile>(DEFAULT_PROFILE)
   const [isVaultOpen, setIsVaultOpen] = useState(false)
   const [isContactModalOpen, setIsContactModalOpen] = useState(false)
+  const [selectedContactIds, setSelectedContactIds] = useState<number[]>([1, 2, 3])
+  const [isTestSmsMode, setIsTestSmsMode] = useState(false)
   const [shakeActive, setShakeActive] = useState(true)
   const [strobeActive, setStrobeActive] = useState(false)
   const [strobeLightOn, setStrobeLightOn] = useState(false)
@@ -191,8 +197,11 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
     if (profile.currentMedications) {
       lines.push(`*Current Medications:* ${profile.currentMedications}`)
     }
-    if (profile.primaryEmergencyContact) {
-      lines.push(`*Emergency Contact:* ${profile.primaryEmergencyContact}`)
+    const contactsList = [profile.primaryEmergencyContact, profile.secondaryEmergencyContact, profile.tertiaryEmergencyContact]
+      .filter(Boolean)
+      .join(", ")
+    if (contactsList) {
+      lines.push(`*Emergency Contacts:* ${contactsList}`)
     }
     if (profile.customVoiceAlert) {
       lines.push(`*Alert Note:* ${profile.customVoiceAlert}`)
@@ -201,6 +210,25 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
     lines.push("⚠️ IMMEDIATE MEDICAL ASSISTANCE REQUIRED! Please dispatch ambulance / help!")
     return lines.join("\n")
   }
+
+  // Helper to construct non-emergency test message
+  const buildTestSosMessage = () => {
+    const coords = lastCoords
+    const lines: string[] = ["🧪 *[TEST MESSAGE - NOT AN EMERGENCY]*"]
+    lines.push(`Rural Healthcare Platform test verification from: ${profile.fullName || "User"}.`)
+    if (coords) {
+      lines.push(`Live GPS Link: https://maps.google.com/?q=${coords.lat.toFixed(5)},${coords.lng.toFixed(5)}`)
+    }
+    lines.push("All system checks are normal. Please reply to this message to confirm receipt.")
+    return lines.join("\n")
+  }
+
+  // Active saved emergency contacts list (up to 3)
+  const savedContacts = [
+    { id: 1, label: language === "en" ? "Contact 1 (Primary)" : "संपर्क 1 (प्राथमिक)", number: profile.primaryEmergencyContact },
+    { id: 2, label: language === "en" ? "Contact 2" : "संपर्क 2", number: profile.secondaryEmergencyContact },
+    { id: 3, label: language === "en" ? "Contact 3" : "संपर्क 3", number: profile.tertiaryEmergencyContact || "" },
+  ].filter((c) => Boolean(c.number && c.number.trim()))
 
   // BUTTON 1: Distress SOS to 112
   // Sends complete medical info & live GPS location to 112 dispatch without activating siren/beacon
@@ -233,36 +261,130 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
     }
   }
 
-  // BUTTON 2: Alert Primary Emergency Contact (User choice: WhatsApp or SMS)
+  // SHAKE TRIGGER: COMBINATION OF SIREN, BEACON, FLASH, VOICE LOOP & DISTRESS DISPATCH ALL TOGETHER
+  const handleTriggerShakeBroadcast = async () => {
+    triggerSosVibration()
+
+    // 1. Activate alarms: Strobe beacon, siren, hardware flashlight
+    setStrobeActive(true)
+    startAudioSiren()
+    setSirenActive(true)
+    toggleHardwareTorch(true).then((ok) => { if (ok) setTorchActive(true) })
+    requestScreenWakeLock()
+
+    // 2. Start continuous looping read-aloud of custom voice message
+    const voiceMsg = getVoiceAlertMessage()
+    startEmergencyVoiceLoop(voiceMsg, language === "hi" ? "hi" : "en")
+    setVoiceLoopActiveState(true)
+
+    // 3. Prepare full distress message with GPS and dispatch to 112 & contacts
+    const sendSmsBroadcast = (coords?: { lat: number; lng: number }) => {
+      const body = buildCompleteSosMessage(coords)
+      const encoded = encodeURIComponent(body)
+      
+      const numbers = [
+        profile.primaryEmergencyContact,
+        profile.secondaryEmergencyContact,
+        profile.tertiaryEmergencyContact,
+      ]
+        .filter(Boolean)
+        .map((n) => (n as string).trim().replace(/[^\d+]/g, ""))
+        .filter(Boolean)
+
+      const targetRecipient = numbers.length > 0 ? numbers.join(",") : "112"
+      window.location.href = `sms:${targetRecipient}?body=${encoded}`
+    }
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude }
+          setLastCoords(coords)
+          sendSmsBroadcast(coords)
+        },
+        () => {
+          sendSmsBroadcast(lastCoords)
+        },
+        { timeout: 4000, enableHighAccuracy: true }
+      )
+    } else {
+      sendSmsBroadcast(lastCoords)
+    }
+  }
+
+  // BUTTON 2: Alert Emergency Contacts
   const handleOpenContactAlert = () => {
-    if (!profile.primaryEmergencyContact || !profile.primaryEmergencyContact.trim()) {
+    if (savedContacts.length === 0) {
       toast({
-        title: language === "en" ? "No emergency contact saved" : "कोई आपातकालीन संपर्क नंबर दर्ज नहीं है",
-        description: language === "en" ? "Please save a primary emergency contact in the vault below." : "कृपया नीचे वॉल्ट में प्राथमिक आपातकालीन संपर्क दर्ज करें।",
+        title: language === "en" ? "No emergency contacts saved" : "कोई आपातकालीन संपर्क दर्ज नहीं है",
+        description: language === "en" ? "Please save up to 3 emergency contacts in the vault below." : "कृपया नीचे वॉल्ट में 3 आपातकालीन संपर्क तक दर्ज करें।",
         variant: "destructive",
       })
       setIsVaultOpen(true)
       return
     }
+    // Select all available contacts by default
+    setSelectedContactIds(savedContacts.map((c) => c.id))
+    setIsTestSmsMode(false)
     setIsContactModalOpen(true)
   }
 
-  // Dispatch to contact via WhatsApp
-  const sendContactWhatsApp = () => {
-    const rawNumber = (profile.primaryEmergencyContact || "").replace(/[^0-9]/g, "")
-    const targetPhone = rawNumber.length === 10 ? `91${rawNumber}` : rawNumber
-    const waBase = targetPhone ? `https://wa.me/${targetPhone}` : "https://wa.me/"
-    const message = buildCompleteSosMessage()
-    window.open(`${waBase}?text=${encodeURIComponent(message)}`, "_blank")
+  // Toggle selection for a contact in the modal
+  const toggleContactSelection = (id: number) => {
+    setSelectedContactIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    )
+  }
+
+  // Select/Deselect all contacts
+  const toggleSelectAllContacts = () => {
+    if (selectedContactIds.length === savedContacts.length) {
+      setSelectedContactIds([])
+    } else {
+      setSelectedContactIds(savedContacts.map((c) => c.id))
+    }
+  }
+
+  // Send normal SMS to all selected contacts at once
+  const sendNormalSmsToSelected = () => {
+    const selected = savedContacts.filter((c) => selectedContactIds.includes(c.id))
+    if (selected.length === 0) {
+      toast({
+        title: language === "en" ? "Please select at least 1 contact" : "कृपया कम से कम 1 संपर्क चुनें",
+        variant: "destructive",
+      })
+      return
+    }
+
+    const recipients = selected.map((c) => c.number.replace(/[^\d+]/g, "")).filter(Boolean)
+    const message = isTestSmsMode ? buildTestSosMessage() : buildCompleteSosMessage()
+    window.location.href = `sms:${recipients.join(",")}?body=${encodeURIComponent(message)}`
     setIsContactModalOpen(false)
   }
 
-  // Dispatch to contact via normal SMS
-  const sendContactSms = () => {
-    const rawNumber = (profile.primaryEmergencyContact || "").replace(/[^\d+]/g, "")
-    const targetNumber = rawNumber || "112"
-    const message = buildCompleteSosMessage()
-    window.location.href = `sms:${targetNumber}?body=${encodeURIComponent(message)}`
+  // Dispatch via WhatsApp to a single specific contact
+  const sendWhatsAppToContact = (rawNumber: string) => {
+    const cleaned = rawNumber.replace(/[^0-9]/g, "")
+    const targetPhone = cleaned.length === 10 ? `91${cleaned}` : cleaned
+    const waBase = targetPhone ? `https://wa.me/${targetPhone}` : "https://wa.me/"
+    const message = isTestSmsMode ? buildTestSosMessage() : buildCompleteSosMessage()
+    window.open(`${waBase}?text=${encodeURIComponent(message)}`, "_blank")
+  }
+
+  // Share to multiple chats/contacts via Native Share Sheet (WhatsApp Multi-Select)
+  const shareToAllViaApps = () => {
+    const message = isTestSmsMode ? buildTestSosMessage() : buildCompleteSosMessage()
+    if (typeof navigator !== "undefined" && navigator.share) {
+      navigator.share({
+        title: isTestSmsMode ? "TEST MESSAGE - Rural Health" : "MEDICAL EMERGENCY SOS",
+        text: message,
+      }).catch(() => {})
+    } else {
+      navigator.clipboard?.writeText(message)
+      toast({
+        title: language === "en" ? "Message copied to clipboard! Paste in WhatsApp." : "संदेश क्लिपबोर्ड में कॉपी हो गया! व्हाट्सएप में पेस्ट करें।",
+      })
+    }
     setIsContactModalOpen(false)
   }
 
@@ -287,7 +409,7 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
     })
   }
 
-  // Physical Shake Gesture Detection (3 shakes &rarr; auto distress)
+  // Physical Shake Gesture Detection (3 shakes &rarr; opens floating confirmation countdown)
   useEffect(() => {
     if (!shakeActive || typeof window === "undefined") return
 
@@ -336,7 +458,7 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
     if (!shakePromptOpen) return
     if (shakeCountdown <= 0) {
       setShakePromptOpen(false)
-      handleTriggerDistressSos()
+      handleTriggerShakeBroadcast()
       return
     }
     const timer = setTimeout(() => {
@@ -357,7 +479,7 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
   const handleConfirmShakeDistress = () => {
     setShakePromptOpen(false)
     setShakeCountdown(5)
-    handleTriggerDistressSos()
+    handleTriggerShakeBroadcast()
   }
 
   const content = {
@@ -367,8 +489,8 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
       call108: "Call 108 — Ambulance",
       distressBtn: "Distress SOS Broadcast (112)",
       distressBtnSub: "Sends full medical info & live GPS location to 112 dispatch",
-      contactBtn: "Alert Emergency Contact (SMS & WhatsApp)",
-      contactBtnSub: "Transmits complete health profile & live GPS to your saved contact",
+      contactBtn: "Alert Emergency Contacts (SMS & WhatsApp)",
+      contactBtnSub: "Send to up to 3 saved contacts at once or test message",
       beaconBtn: "Night SOS Screen Beacon & Siren",
       beaconBtnSub: "Flashes high-visibility screen beacon, siren, torch & looping voice alert",
       findHospital: "Nearest 24/7 Hospital",
@@ -376,7 +498,7 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
       firstAidSub: "Offline step-by-step instructions for CPR, bleeding & fractures",
       shakeHint: "Shake phone 3 times to trigger instant emergency broadcast",
       vaultTitle: "Personal Emergency Vault (Offline)",
-      vaultSubtitle: "Chronic health profile & contacts transmitted automatically during SOS",
+      vaultSubtitle: "Chronic health profile & up to 3 contacts transmitted automatically during SOS",
       editVault: "Edit Health Profile",
       fullName: "Full Name",
       age: "Age",
@@ -384,8 +506,9 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
       chronicConditions: "Chronic Conditions (Diabetes, Heart, Asthma, etc.)",
       medications: "Current Medications",
       allergies: "Known Drug / Food Allergies",
-      primaryContact: "Primary Emergency Contact (Mobile Number)",
-      secondaryContact: "Secondary Emergency Contact (Optional)",
+      primaryContact: "Emergency Contact 1 (Primary Mobile)",
+      secondaryContact: "Emergency Contact 2 (Mobile Number)",
+      tertiaryContact: "Emergency Contact 3 (Mobile Number)",
       customVoiceLabel: "Custom Emergency Voice Alert (Spoken Aloud in Loop)",
       customVoicePlaceholder: "e.g., I have severe heart condition and asthma, please help me immediately!",
       customVoiceHint: "This message will be spoken continuously aloud during Distress SOS alongside the siren.",
@@ -397,10 +520,15 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
       sirenOff: "Mute Siren",
       torchOn: "Camera Flash",
       torchOff: "Flash Off",
-      contactModalTitle: "Alert Saved Emergency Contact",
-      contactModalDesc: "Choose how to send your complete emergency profile & live GPS location:",
-      sendViaWa: "Send via WhatsApp",
-      sendViaSms: "Send via Normal SMS",
+      contactModalTitle: "Alert Saved Emergency Contacts",
+      contactModalDesc: "Select recipients (up to 3) and choose message type:",
+      selectAll: "Select All Contacts",
+      sendSmsAll: "Send Normal SMS to Selected",
+      sendTestSms: "Send Test Message",
+      testModeActive: "Test Mode Active (Non-Emergency)",
+      emergencyModeActive: "Emergency SOS Mode Active",
+      shareWaAll: "Share via WhatsApp / Other Apps",
+      waDirect: "WhatsApp",
       helplineTitle: "Government Helplines",
       instructionsTitle: "Emergency Instructions",
       inst1: "Stay calm and assess the situation",
@@ -423,8 +551,8 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
       call108: "108 पर कॉल करें — एम्बुलेंस",
       distressBtn: "संकट एसओएस प्रसारण (112)",
       distressBtnSub: "112 आपातकालीन सेवा को संपूर्ण मेडिकल विवरण व लाइव जीपीएस भेजता है",
-      contactBtn: "आपातकालीन संपर्क को सूचित करें (SMS और WhatsApp)",
-      contactBtnSub: "सेव किए गए संपर्क को संपूर्ण स्वास्थ्य प्रोफाइल और लाइव जीपीएस भेजें",
+      contactBtn: "आपातकालीन संपर्कों को सूचित करें (SMS और WhatsApp)",
+      contactBtnSub: "3 संपर्कों को एक साथ संदेश भेजें या टेस्ट संदेश भेजें",
       beaconBtn: "नाईट एसओएस स्क्रीन बीकन और सायरन",
       beaconBtnSub: "फ्लैशिंग बीकन, सायरन, टॉर्च और कस्टम वॉइस अलर्ट लूप चलाता है",
       findHospital: "निकटतम 24/7 अस्पताल",
@@ -432,7 +560,7 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
       firstAidSub: "सीपीआर, रक्तस्राव और फ्रैक्चर के लिए ऑफ़लाइन निर्देश",
       shakeHint: "तत्काल आपातकालीन अलर्ट के लिए फोन को 3 बार हिलाएं",
       vaultTitle: "व्यक्तिगत आपातकालीन वॉल्ट (ऑफ़लाइन)",
-      vaultSubtitle: "एसओएस के दौरान क्रोनिक स्वास्थ्य प्रोफाइल और संपर्क स्वचालित रूप से भेजे जाते हैं",
+      vaultSubtitle: "एसओएस के दौरान क्रोनिक स्वास्थ्य प्रोफाइल और 3 संपर्क स्वचालित रूप से भेजे जाते हैं",
       editVault: "स्वास्थ्य प्रोफाइल संपादित करें",
       fullName: "पूरा नाम",
       age: "आयु",
@@ -440,8 +568,9 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
       chronicConditions: "पुरानी बीमारियां (मधुमेह, हृदय, अस्थमा आदि)",
       medications: "वर्तमान दवाइयां",
       allergies: "गंभीर एलर्जी (दवा / भोजन)",
-      primaryContact: "प्राथमिक आपातकालीन संपर्क (मोबाइल नंबर)",
-      secondaryContact: "द्वितीयक आपातकालीन संपर्क (वैकल्पिक)",
+      primaryContact: "आपातकालीन संपर्क 1 (प्राथमिक मोबाइल)",
+      secondaryContact: "आपातकालीन संपर्क 2 (मोबाइल नंबर)",
+      tertiaryContact: "आपातकालीन संपर्क 3 (मोबाइल नंबर)",
       customVoiceLabel: "कस्टम आपातकालीन वॉइस संदेश (लूप में बोलेगा)",
       customVoicePlaceholder: "उदा. मुझे दिल की बीमारी और अस्थमा है, कृपया तुरंत मदद करें!",
       customVoiceHint: "संकट एसओएस के दौरान यह संदेश सायरन के साथ लगातार लूप में बोला जाएगा।",
@@ -453,10 +582,15 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
       sirenOff: "सायरन बंद करें",
       torchOn: "कैमरा फ्लैश",
       torchOff: "फ्लैश बंद",
-      contactModalTitle: "आपातकालीन संपर्क को संदेश भेजें",
-      contactModalDesc: "अपनी संपूर्ण आपातकालीन प्रोफाइल और लाइव जीपीएस भेजने का माध्यम चुनें:",
-      sendViaWa: "व्हाट्सएप द्वारा भेजें",
-      sendViaSms: "सामान्य एसएमएस द्वारा भेजें",
+      contactModalTitle: "आपातकालीन संपर्कों को संदेश भेजें",
+      contactModalDesc: "प्राप्तकर्ता चुनें (3 तक) और संदेश का प्रकार चुनें:",
+      selectAll: "सभी संपर्क चुनें",
+      sendSmsAll: "चयनित संपर्कों को सामान्य SMS भेजें",
+      sendTestSms: "टेस्ट संदेश भेजें",
+      testModeActive: "टेस्ट मोड सक्रिय (गैर-आपातकालीन)",
+      emergencyModeActive: "आपातकालीन एसओएस मोड सक्रिय",
+      shareWaAll: "WhatsApp व अन्य ऐप्स पर साझा करें",
+      waDirect: "व्हाट्सएप",
       helplineTitle: "सरकारी हेल्पलाइन",
       instructionsTitle: "आपातकालीन निर्देश",
       inst1: "शांत रहें और स्थिति का आकलन करें",
@@ -470,7 +604,7 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
       fire: "अग्निशमन आपातकाल",
       ambulance: "एम्बुलेंस",
       womenHelpline: "महिला हेल्पलाइन",
-      ayushman: "आयुष्मान भारत हेल्पलाइन",
+      ayushman: "आयुushman भारत हेल्पलाइन",
       nationalHealth: "राष्ट्रीय स्वास्थ्य हेल्पलाइन",
     },
   }
@@ -492,7 +626,7 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
     <div className="min-h-screen bg-red-50 text-gray-900 p-3 sm:p-6">
       <div className="max-w-3xl mx-auto space-y-4 sm:space-y-5 overflow-hidden">
         
-        {/* Top Header: Title & Subtitle (High-contrast button removed as requested) */}
+        {/* Top Header: Title & Subtitle */}
         <div className="pt-1">
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-red-700">
             {t.title}
@@ -526,7 +660,7 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
               <span>{t.call108}</span>
             </Button>
 
-            {/* 2. BUTTON 1: Distress SOS to 112 (Full health info + GPS + Looping custom voice + Siren) */}
+            {/* 2. BUTTON 1: Distress SOS to 112 (Sends SMS with full medical info & GPS, no siren) */}
             <div className="space-y-1">
               <Button
                 onClick={handleTriggerDistressSos}
@@ -540,7 +674,7 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
               </p>
             </div>
 
-            {/* 3. BUTTON 2: Alert Emergency Contact (WhatsApp & SMS with identical complete info) */}
+            {/* 3. BUTTON 2: Alert Emergency Contacts (Sends to up to 3 contacts at once, normal SMS & test) */}
             <div className="space-y-1">
               <Button
                 onClick={handleOpenContactAlert}
@@ -554,7 +688,7 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
               </p>
             </div>
 
-            {/* 4. Night SOS Screen Beacon & Siren Button */}
+            {/* 4. Night SOS Screen Beacon & Siren Button (With looping voice alert) */}
             <Button
               variant="outline"
               className="w-full min-h-[3.75rem] py-3 px-3.5 flex items-center justify-start gap-3 font-semibold rounded-xl text-left bg-amber-50 border-amber-300 text-amber-900 hover:bg-amber-100"
@@ -574,7 +708,7 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
               </div>
             </Button>
 
-            {/* 5. Nearest Hospital Navigation (Share Location removed as requested) */}
+            {/* 5. Nearest Hospital Navigation */}
             <Button
               variant="outline"
               className="w-full min-h-[3.25rem] py-2.5 px-3 text-xs sm:text-sm font-semibold rounded-xl border-gray-200 hover:bg-gray-50 flex items-center justify-center"
@@ -601,7 +735,7 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
         </Card>
 
         {/* ============================================================== */}
-        {/* PERSONAL EMERGENCY VAULT (OFFLINE) WITH CUSTOM VOICE ALERT    */}
+        {/* PERSONAL EMERGENCY VAULT (OFFLINE) WITH UP TO 3 CONTACTS       */}
         {/* ============================================================== */}
         <Card className="border-red-200 bg-white shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-3">
@@ -660,22 +794,39 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
                     </select>
                   </div>
 
-                  <div>
-                    <label className="text-xs font-semibold text-gray-700 block mb-1">{t.primaryContact}</label>
-                    <Input
-                      value={editingProfile.primaryEmergencyContact}
-                      onChange={(e) => setEditingProfile({ ...editingProfile, primaryEmergencyContact: e.target.value })}
-                      placeholder="+91 98765 43210"
-                    />
-                  </div>
+                  {/* UP TO 3 EMERGENCY CONTACTS */}
+                  <div className="space-y-2 p-3 bg-red-50/60 border border-red-200 rounded-xl">
+                    <span className="text-xs font-bold text-red-900 block flex items-center gap-1.5">
+                      <Users className="h-4 w-4 text-red-600" />
+                      {language === "en" ? "Emergency Contacts (Up to 3 People)" : "आपातकालीन संपर्क (अधिकतम 3 लोग)"}
+                    </span>
 
-                  <div>
-                    <label className="text-xs font-semibold text-gray-700 block mb-1">{t.secondaryContact}</label>
-                    <Input
-                      value={editingProfile.secondaryEmergencyContact}
-                      onChange={(e) => setEditingProfile({ ...editingProfile, secondaryEmergencyContact: e.target.value })}
-                      placeholder="+91 91234 56789"
-                    />
+                    <div>
+                      <label className="text-[11px] font-semibold text-gray-700 block mb-1">{t.primaryContact}</label>
+                      <Input
+                        value={editingProfile.primaryEmergencyContact}
+                        onChange={(e) => setEditingProfile({ ...editingProfile, primaryEmergencyContact: e.target.value })}
+                        placeholder="+91 98765 43210"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-semibold text-gray-700 block mb-1">{t.secondaryContact}</label>
+                      <Input
+                        value={editingProfile.secondaryEmergencyContact}
+                        onChange={(e) => setEditingProfile({ ...editingProfile, secondaryEmergencyContact: e.target.value })}
+                        placeholder="+91 91234 56789"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-semibold text-gray-700 block mb-1">{t.tertiaryContact}</label>
+                      <Input
+                        value={editingProfile.tertiaryEmergencyContact || ""}
+                        onChange={(e) => setEditingProfile({ ...editingProfile, tertiaryEmergencyContact: e.target.value })}
+                        placeholder="+91 99887 76655"
+                      />
+                    </div>
                   </div>
 
                   <div>
@@ -750,10 +901,28 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
                 <span className="text-gray-500 block text-[11px]">{t.allergies}</span>
                 <span className="font-medium text-red-600">{profile.severeAllergies || t.noneRecorded}</span>
               </div>
-              <div className="p-2.5 bg-gray-50 rounded-lg sm:col-span-2">
-                <span className="text-gray-500 block text-[11px]">{t.primaryContact}</span>
-                <span className="font-semibold text-gray-900">{profile.primaryEmergencyContact || t.noneRecorded}</span>
+              
+              {/* SAVED CONTACTS DISPLAY */}
+              <div className="p-2.5 bg-gray-50 rounded-lg sm:col-span-2 space-y-1">
+                <span className="text-gray-500 block text-[11px] font-semibold">
+                  {language === "en" ? "Emergency Contacts (Up to 3):" : "आपातकालीन संपर्क (3 तक):"}
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5 text-[11px]">
+                  <div className="bg-white p-1.5 rounded border border-gray-200">
+                    <span className="text-gray-400 block text-[10px]">#1 Primary</span>
+                    <span className="font-semibold text-gray-900">{profile.primaryEmergencyContact || t.noneRecorded}</span>
+                  </div>
+                  <div className="bg-white p-1.5 rounded border border-gray-200">
+                    <span className="text-gray-400 block text-[10px]">#2 Secondary</span>
+                    <span className="font-semibold text-gray-900">{profile.secondaryEmergencyContact || t.noneRecorded}</span>
+                  </div>
+                  <div className="bg-white p-1.5 rounded border border-gray-200">
+                    <span className="text-gray-400 block text-[10px]">#3 Tertiary</span>
+                    <span className="font-semibold text-gray-900">{profile.tertiaryEmergencyContact || t.noneRecorded}</span>
+                  </div>
+                </div>
               </div>
+
               {profile.customVoiceAlert && (
                 <div className="p-2.5 bg-amber-50/70 border border-amber-200 rounded-lg sm:col-span-2">
                   <span className="text-amber-800 font-semibold block text-[11px] flex items-center gap-1">
@@ -767,9 +936,9 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
           </CardContent>
         </Card>
 
-        {/* DIALOG: Choose WhatsApp or SMS for Primary Emergency Contact */}
+        {/* DIALOG: Choose Contacts, Multi-Send Normal SMS & Test Mode */}
         <Dialog open={isContactModalOpen} onOpenChange={setIsContactModalOpen}>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="text-amber-700 flex items-center gap-2">
                 <Users className="h-5 w-5 text-amber-600" />
@@ -777,43 +946,121 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
               </DialogTitle>
             </DialogHeader>
 
-            <div className="space-y-3 py-2">
-              <p className="text-xs sm:text-sm text-gray-600">
+            <div className="space-y-3.5 py-1 text-xs sm:text-sm">
+              <p className="text-xs text-gray-600">
                 {t.contactModalDesc}
               </p>
 
-              <div className="p-2.5 bg-gray-100 rounded-lg text-xs space-y-1">
-                <div className="font-semibold text-gray-900 flex items-center gap-1.5">
-                  <User className="h-3.5 w-3.5 text-gray-600" />
-                  <span>{profile.fullName || (language === "en" ? "Patient" : "मरीज")}</span>
-                  {profile.bloodGroup && profile.bloodGroup !== "Unknown" && (
-                    <span className="text-red-700 font-bold">({profile.bloodGroup})</span>
+              {/* Mode Selector Toggle: Emergency SOS vs Test Message */}
+              <div className="flex items-center justify-between p-2 rounded-xl border bg-gray-50">
+                <div className="flex items-center gap-2">
+                  {isTestSmsMode ? (
+                    <FlaskConical className="h-4 w-4 text-purple-600" />
+                  ) : (
+                    <ShieldAlert className="h-4 w-4 text-red-600" />
                   )}
+                  <span className={`text-xs font-bold ${isTestSmsMode ? "text-purple-700" : "text-red-700"}`}>
+                    {isTestSmsMode ? t.testModeActive : t.emergencyModeActive}
+                  </span>
                 </div>
-                <div className="text-gray-600">
-                  <span>To: </span>
-                  <span className="font-bold text-gray-900">{profile.primaryEmergencyContact}</span>
-                </div>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsTestSmsMode(!isTestSmsMode)}
+                  className={`text-[11px] font-bold py-1 px-2.5 h-auto rounded-lg border ${
+                    isTestSmsMode 
+                      ? "border-red-400 text-red-700 bg-red-50 hover:bg-red-100" 
+                      : "border-purple-400 text-purple-700 bg-purple-50 hover:bg-purple-100"
+                  }`}
+                >
+                  {isTestSmsMode ? (language === "en" ? "Switch to SOS" : "एसओएस पर बदलें") : (language === "en" ? "Switch to Test" : "टेस्ट पर बदलें")}
+                </Button>
               </div>
 
+              {/* Contact Selection Checkboxes (Up to 3) */}
+              <div className="space-y-2 p-2.5 bg-amber-50/70 border border-amber-200 rounded-xl">
+                <div className="flex items-center justify-between pb-1 border-b border-amber-200/60">
+                  <span className="text-[11px] font-bold text-amber-900">
+                    {language === "en" ? "Select Recipients:" : "प्राप्तकर्ता चुनें:"}
+                  </span>
+                  <button
+                    onClick={toggleSelectAllContacts}
+                    className="text-[11px] font-semibold text-amber-800 underline hover:text-amber-950"
+                  >
+                    {selectedContactIds.length === savedContacts.length
+                      ? (language === "en" ? "Deselect All" : "सभी हटाएं")
+                      : (language === "en" ? "Select All (3)" : "सभी चुनें (3)")}
+                  </button>
+                </div>
+
+                {savedContacts.map((contact) => {
+                  const isSelected = selectedContactIds.includes(contact.id)
+                  return (
+                    <div
+                      key={contact.id}
+                      onClick={() => toggleContactSelection(contact.id)}
+                      className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors border ${
+                        isSelected 
+                          ? "bg-amber-100/90 border-amber-400 text-amber-950" 
+                          : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        {isSelected ? (
+                          <CheckSquare className="h-4 w-4 text-amber-700 flex-shrink-0" />
+                        ) : (
+                          <Square className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                        )}
+                        <div>
+                          <span className="font-semibold text-xs block">{contact.label}</span>
+                          <span className="font-mono text-[11px]">{contact.number}</span>
+                        </div>
+                      </div>
+
+                      {/* 1-Tap Direct WhatsApp for this contact */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          sendWhatsAppToContact(contact.number)
+                        }}
+                        className="text-[11px] font-bold text-emerald-700 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 px-2 py-1 rounded-md flex items-center gap-1"
+                        title="Direct WhatsApp"
+                      >
+                        <MessageCircle className="h-3 w-3" />
+                        <span>{t.waDirect}</span>
+                      </button>
+                    </div>
+                  )
+                })}
+              </div>
+
+              {/* Action Buttons: 1-Tap Normal SMS to All Selected */}
               <div className="space-y-2 pt-1">
-                {/* 1. WhatsApp Button */}
                 <Button
-                  onClick={sendContactWhatsApp}
-                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 flex items-center justify-center gap-2 text-sm rounded-xl"
+                  onClick={sendNormalSmsToSelected}
+                  className={`w-full font-bold py-3 flex items-center justify-center gap-2 text-xs sm:text-sm rounded-xl shadow ${
+                    isTestSmsMode 
+                      ? "bg-purple-700 hover:bg-purple-800 text-white" 
+                      : "bg-red-600 hover:bg-red-700 text-white"
+                  }`}
                 >
-                  <MessageCircle className="h-5 w-5" />
-                  <span>{t.sendViaWa}</span>
+                  <MessageSquare className="h-4 w-4" />
+                  <span>
+                    {isTestSmsMode 
+                      ? `${t.sendTestSms} (${selectedContactIds.length})` 
+                      : `${t.sendSmsAll} (${selectedContactIds.length})`}
+                  </span>
                 </Button>
 
-                {/* 2. Normal SMS Button */}
+                {/* Broadcast to multiple chats via Native WhatsApp Share */}
                 <Button
-                  onClick={sendContactSms}
+                  onClick={shareToAllViaApps}
                   variant="outline"
-                  className="w-full border-2 border-amber-600 text-amber-800 hover:bg-amber-50 font-bold py-3 flex items-center justify-center gap-2 text-sm rounded-xl"
+                  className="w-full border-2 border-emerald-600 text-emerald-800 hover:bg-emerald-50 font-bold py-2.5 flex items-center justify-center gap-2 text-xs rounded-xl"
                 >
-                  <MessageSquare className="h-5 w-5 text-amber-700" />
-                  <span>{t.sendViaSms}</span>
+                  <Share2 className="h-4 w-4 text-emerald-600" />
+                  <span>{t.shareWaAll}</span>
                 </Button>
               </div>
             </div>
@@ -893,8 +1140,8 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
                 </h2>
                 <p className="text-xs sm:text-sm opacity-90 max-w-sm mx-auto">
                   {language === "en"
-                    ? "Audio siren and voice announcement are active. Display is kept at maximum visibility."
-                    : "सायरन और आवाज़ सक्रिय हैं। डिस्प्ले अधिकतम चमक पर चल रहा है।"}
+                    ? "Audio siren, flashlight, and voice announcement are active. Display is kept at maximum visibility."
+                    : "सायरन, फ्लैशलाइट और आवाज़ सक्रिय हैं। डिस्प्ले अधिकतम चमक पर चल रहा है।"}
                 </p>
                 {voiceLoopActiveState && (
                   <p className="text-xs bg-black/40 text-yellow-300 p-2 rounded-lg font-mono italic">
@@ -951,8 +1198,8 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
                     </h4>
                     <p className="text-xs text-red-200 mt-0.5">
                       {language === "en" 
-                        ? `Initiating 112 distress dispatch in ${shakeCountdown}s...` 
-                        : `${shakeCountdown} सेकंड में 112 संकट संदेश भेजा जा रहा है...`}
+                        ? `Initiating Siren, Beacon & SOS Broadcast in ${shakeCountdown}s...` 
+                        : `${shakeCountdown} सेकंड में सायरन, बीकन व एसओएस अलर्ट शुरू हो रहा है...`}
                     </p>
                   </div>
                 </div>
