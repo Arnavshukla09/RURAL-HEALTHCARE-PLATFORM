@@ -4,6 +4,25 @@ All notable changes to the Rural Healthcare Platform will be documented in this 
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres roughly to chronological feature milestones.
 
+## [v1.14.0] - 2026-10-12 — Mobile Emergency Overhaul: Streamlined Severity Tiers, Paramedic Medical Pass & Offline Incident Audio Blackbox
+
+### Emergency Services & Hardware Integration (`lib/emergency/`, `components/EmergencyModule.tsx`)
+- **Streamlined Severity Modes**:
+  - Eliminated the 8 stacked confusing emergency buttons on mobile screens, restructuring the emergency flow into intuitive severity tiers:
+    * **Tier 1 (Critical Life Threat)**: Giant single-tap "Call 108 — Ambulance" with automated emergency alarm orchestration (Camera LED Torch Strobe + Web Audio 650Hz–1150Hz Piercing Ambulance Siren + Screen Wake Lock + Haptic SOS Vibration + Incident Audio Blackbox).
+    * **Tier 2 (Urgent Distress Dispatch)**: Unified 1-tap dispatch dialog combining WhatsApp and SMS with live GPS coordinates, Google Maps link, and chronic medical condition summary.
+    * **Tier 3 (Urgent Care & Navigation)**: Quick-access buttons for nearest hospital navigation and visual first-aid guide.
+- **Paramedic ICE Medical Pass**:
+  - Replaced QR code scanning with a direct full-screen, high-contrast digital medical identity card flashing essential emergency data (Blood Group, Allergies, Chronic Conditions, Emergency Contacts) directly on the patient's screen for first responders and ASHA workers.
+- **Assistance for Non-Verbal / Impaired Speech**:
+  - Added 1-tap bilingual audio vocalizers using Web Speech Synthesis (`speechSynthesis.speak()`) announcing emergency messages aloud ("मदद चाहिए", "सांस लेने में तकलीफ", "अस्पताल ले जाएं").
+- **Offline Incident Audio Blackbox (`lib/emergency/audio-blackbox.ts`)**:
+  - Integrated zero-cost local incident recording using `MediaRecorder` API and IndexedDB storage (`offline_incident_audio`), preserving audio evidence and timestamps on the device for medical and legal review without requiring any cloud server costs ($0 operating spend).
+- **Mobile UI Collision Resolution (`components/AccessibilityBar.tsx`, `components/FloatingChat.tsx`)**:
+  - Prevented floating accessibility wheelchair widget and AI floating chatbot from covering critical action buttons on the `/emergency` route via clean pathname detection.
+
+---
+
 ## [v1.13.0] - 2026-10-11 — Phase 10: Comprehensive Test Suites, Production Documentation Alignment & Deployment Runbook
 
 ### Testing & Verification (C1, C2, C3, C4, C5, H1, H2, H5, H8)

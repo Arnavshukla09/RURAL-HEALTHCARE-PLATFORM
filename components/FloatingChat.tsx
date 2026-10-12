@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react"
 import { MessageCircle, X, Send, Loader2, Bot, User, Minimize2, Map, Stethoscope, Calendar, FileText, AlertTriangle, Heart, Home, Info, Mic, MicOff, Volume2, ThumbsUp, ThumbsDown } from "lucide-react"
 
 import { useApp } from "@/components/providers/AppProvider"
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
 import { lookupOffline } from "@/lib/offline/offline-ai"
 import { startSpeechRecognition, stopSpeechRecognition, speak, stopSpeaking } from "@/lib/ai/speech"
 import { applyFeedback } from "@/lib/ai/query-learner"
@@ -79,6 +79,7 @@ function detectNavIntent(text: string): { page: string; label: string } | null {
 }
 
 export function FloatingChat() {
+  const pathname = usePathname()
   const { language } = useApp()
   const router = useRouter()
   const [open, setOpen] = useState(false)
@@ -296,6 +297,10 @@ export function FloatingChat() {
   const quickActions = en
     ? ["Check my symptoms", "Find nearest hospital", "I need emergency help", "Book an appointment"]
     : ["मेरे लक्षण जांचें", "निकटतम अस्पताल खोजें", "मुझे आपातकालीन मदद चाहिए", "अपॉइंटमेंट बुक करें"]
+
+  if (pathname === "/emergency") {
+    return null
+  }
 
   return (
     <>

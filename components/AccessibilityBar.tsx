@@ -1,5 +1,6 @@
 "use client"
 import { useState, useEffect, useRef } from "react"
+import { usePathname } from "next/navigation"
 import { Button } from "./ui/button"
 import { Card, CardContent } from "./ui/card"
 import { Accessibility, Type, Volume2, Contrast, VolumeX, ChevronUp } from "lucide-react"
@@ -8,6 +9,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { useApp } from "@/components/providers/AppProvider"
 
 export function AccessibilityBar() {
+  const pathname = usePathname()
   const { language, setLanguage } = useApp()
   const [isOpen, setIsOpen] = useState(false)
   const [fontSize, setFontSize] = useState(16)
@@ -70,6 +72,10 @@ export function AccessibilityBar() {
   useEffect(() => {
     return () => { window.speechSynthesis?.cancel() }
   }, [])
+
+  if (pathname === "/emergency") {
+    return null
+  }
 
   return (
     <>
