@@ -102,6 +102,20 @@ This document catalogs the domain-specific React components used throughout the 
 - **Styling:** Clean tabbed interface with collapsible accordions.
 - **Files Where Used:** `app/page.tsx`
 
+### 2.5 `EmergencyModule.tsx`
+- **Purpose:** Primary emergency response hub partitioned into 3 streamlined severity modes (Critical Life Threat, Urgent Distress Dispatch, Urgent Care Navigation). Includes direct Paramedic ICE Medical Pass display, 1-tap bilingual voice vocalizers, camera LED strobe, ambulance siren audio synthesis, screen wake lock, and offline IndexedDB incident audio blackbox.
+- **Props:**
+  ```typescript
+  {
+    language: "en" | "hi";
+    onNavigate?: (page: string) => void;
+  }
+  ```
+- **State:** `alarmActive`, `torchActive`, `sirenActive`, `strobeActive`, `isRecording`, `audioRecordings`, `showDistressDialog`, `showParamedicModal`, `userCoords`.
+- **Dependencies:** `lib/emergency/hardware.ts`, `lib/emergency/audio-blackbox.ts`, `lucide-react`, `shadcn/ui`.
+- **Styling:** High-contrast mobile-optimized severity cards with emergency animations and fullscreen modal overlays.
+- **Files Where Used:** `app/emergency/page.tsx`
+
 ---
 
 ## 3. Telemedicine & Maps

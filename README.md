@@ -41,6 +41,16 @@ Access to quality healthcare in rural regions is heavily limited by geography, a
 - **Interactive Map:** Built with React-Leaflet and OpenStreetMap, dynamically imported with zero SSR overhead.
 - **Proximity Search:** Finds the nearest hospitals, clinics, and pharmacies. The database utilizes **PostGIS geography data** with rounded coordinates to maximize Edge CDN caching.
 
+### 🚨 Mobile Emergency System & Paramedic ICE Pass
+- **Streamlined 3-Tier Severity Architecture:** Solved mobile screen clutter by organizing emergency actions into clear severity modes:
+  * **Tier 1 (Critical Life Threat):** Single giant "Call 108 — Ambulance" button orchestrating simultaneous hardware alarms: camera LED flashlight strobe, Web Audio API piercing ambulance siren (650Hz–1150Hz), screen wake lock, Morse-code SOS vibration, and offline incident audio blackbox.
+  * **Tier 2 (Urgent Distress Dispatch):** Unified 1-tap dispatch dialog combining WhatsApp and SMS, automatically pre-filling live GPS coordinates, Google Maps link, and chronic health summary.
+  * **Tier 3 (Urgent Care & Navigation):** Instant nearest hospital routing and visual first-aid guidance.
+- **Paramedic ICE Medical Pass:** Direct full-screen, high-contrast digital medical identity card flashing vital patient info (Blood group, allergies, chronic ailments, emergency contacts) directly on the phone display for first responders and ASHA workers without requiring QR code scanners.
+- **Assistance for Non-Verbal Patients:** 1-tap bilingual audio vocalizers powered by the Web Speech Synthesis API (`speechSynthesis.speak()`) announcing emergency messages aloud in Hindi and English.
+- **Offline Incident Blackbox Audio Recorder (`lib/emergency/audio-blackbox.ts`):** Zero-cost local incident recording via `MediaRecorder` API stored in IndexedDB (`offline_incident_audio`) with exact timestamps and GPS tags, accessible offline for medical/legal review at $0 cloud operating cost.
+- **Mobile UI Collision Resolution:** Prevents floating AI chatbot and floating accessibility pills from obscuring emergency action buttons on the `/emergency` route.
+
 ### 📹 Secure Teleconsultation
 - **Unguessable Cryptographic Rooms:** Embedded video conferencing using Jitsi Meet with randomized UUID rooms (`crypto.randomUUID()`) and enforced lobby screening to prevent room guessing.
 
@@ -121,6 +131,7 @@ The codebase has undergone a complete architectural, scalability, and security o
 | **Phase 8** | Observability & CSP | Structured JSON logger ([`lib/logger.ts`](file:///c:/Users/aarrn/Desktop/rural%20health/RURAL-HEALTHCARE-PLATFORM-main/lib/logger.ts)), user ID hashing (SHA-256), CSP Report-Only | ✅ Complete |
 | **Phase 9** | Load-Testing Harness | k6 test suite in [`loadtest/`](file:///c:/Users/aarrn/Desktop/rural%20health/RURAL-HEALTHCARE-PLATFORM-main/loadtest), automated smoke CI with production safeguard | ✅ Complete |
 | **Phase 10** | Tests & Production Runbook | 50 passing Vitest unit tests, comprehensive `docs/`, deployment runbook ([`docs/DEPLOY_CHECKLIST.md`](file:///c:/Users/aarrn/Desktop/rural%20health/RURAL-HEALTHCARE-PLATFORM-main/docs/DEPLOY_CHECKLIST.md)) | ✅ Complete |
+| **Phase 11** | Mobile Emergency Overhaul | Streamlined severity modes, Paramedic ICE pass, Web Speech vocalizer, offline IndexedDB audio blackbox, 60 passing Vitest tests | ✅ Complete |
 
 ---
 
@@ -193,7 +204,7 @@ The application will be available at `http://localhost:3000`.
 
 ### 6. Automated Testing & Verification
 ```bash
-# Run Vitest unit tests (50 tests across 10 suites)
+# Run Vitest unit tests (60 tests across 12 suites)
 npm run test:unit
 
 # Type check and lint
