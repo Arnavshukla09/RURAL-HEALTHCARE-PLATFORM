@@ -71,6 +71,8 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
   const [torchActive, setTorchActive] = useState(false)
   const [voiceLoopActiveState, setVoiceLoopActiveState] = useState(false)
   const [lastCoords, setLastCoords] = useState<{ lat: number; lng: number } | undefined>()
+  const [shakePromptOpen, setShakePromptOpen] = useState(false)
+  const [shakeCountdown, setShakeCountdown] = useState(5)
 
   useEffect(() => {
     const loaded = getEmergencyProfile()
@@ -200,24 +202,11 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
     return lines.join("\n")
   }
 
-  // BUTTON 1: Distress SOS to 112 / 108
-  // Triggers hardware siren + looping custom spoken voice alert + strobe + SMS 112 with full info
+  // BUTTON 1: Distress SOS to 112
+  // Sends complete medical info & live GPS location to 112 dispatch without activating siren/beacon
   const handleTriggerDistressSos = async () => {
     triggerSosVibration()
 
-    // 1. Activate alarms: Strobe beacon, siren, hardware flashlight
-    setStrobeActive(true)
-    startAudioSiren()
-    setSirenActive(true)
-    toggleHardwareTorch(true).then((ok) => { if (ok) setTorchActive(true) })
-    requestScreenWakeLock()
-
-    // 2. Start continuous looping read-aloud of user's custom voice message
-    const voiceMsg = getVoiceAlertMessage()
-    startEmergencyVoiceLoop(voiceMsg, language === "hi" ? "hi" : "en")
-    setVoiceLoopActiveState(true)
-
-    // 3. Prepare full distress message with GPS
     const sendSmsTo112 = (coords?: { lat: number; lng: number }) => {
       const body = buildCompleteSosMessage(coords)
       const encoded = encodeURIComponent(body)
@@ -324,11 +313,9 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
           shakeCount++
           if (shakeCount >= 3) {
             shakeCount = 0
-            toast({
-              title: language === "en" ? "Phone shake detected! Launching distress..." : "फोन झटका पहचाना गया! संकट अलार्म शुरू...",
-              variant: "destructive",
-            })
-            handleTriggerDistressSos()
+            triggerSosVibration()
+            setShakePromptOpen(true)
+            setShakeCountdown(5)
           }
         } else if (now - lastTime > 2500) {
           shakeCount = 0
@@ -344,13 +331,42 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
     return () => window.removeEventListener("devicemotion", handleMotion)
   }, [shakeActive, profile, lastCoords, language])
 
+  // Countdown timer for accidental shake rejection
+  useEffect(() => {
+    if (!shakePromptOpen) return
+    if (shakeCountdown <= 0) {
+      setShakePromptOpen(false)
+      handleTriggerDistressSos()
+      return
+    }
+    const timer = setTimeout(() => {
+      setShakeCountdown((prev) => prev - 1)
+    }, 1000)
+    return () => clearTimeout(timer)
+  }, [shakePromptOpen, shakeCountdown])
+
+  const handleCancelShakeDistress = () => {
+    setShakePromptOpen(false)
+    setShakeCountdown(5)
+    toast({
+      title: language === "en" ? "Emergency alert cancelled" : "आपातकालीन अलर्ट रद्द किया गया",
+      description: language === "en" ? "Accidental shake detected and rejected." : "आकस्मिक झटका रद्द कर दिया गया।",
+    })
+  }
+
+  const handleConfirmShakeDistress = () => {
+    setShakePromptOpen(false)
+    setShakeCountdown(5)
+    handleTriggerDistressSos()
+  }
+
   const content = {
     en: {
       title: "Emergency Services",
       subtitle: "Get immediate medical assistance",
       call108: "Call 108 — Ambulance",
       distressBtn: "Distress SOS Broadcast (112)",
-      distressBtnSub: "Sends full medical info & GPS location, sounds siren & custom voice loop",
+      distressBtnSub: "Sends full medical info & live GPS location to 112 dispatch",
       contactBtn: "Alert Emergency Contact (SMS & WhatsApp)",
       contactBtnSub: "Transmits complete health profile & live GPS to your saved contact",
       beaconBtn: "Night SOS Screen Beacon & Siren",
@@ -406,7 +422,7 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
       subtitle: "तत्काल चिकित्सा सहायता प्राप्त करें",
       call108: "108 पर कॉल करें — एम्बुलेंस",
       distressBtn: "संकट एसओएस प्रसारण (112)",
-      distressBtnSub: "संपूर्ण मेडिकल विवरण व जीपीएस भेजता है, सायरन व कस्टम वॉइस लूप बजाता है",
+      distressBtnSub: "112 आपातकालीन सेवा को संपूर्ण मेडिकल विवरण व लाइव जीपीएस भेजता है",
       contactBtn: "आपातकालीन संपर्क को सूचित करें (SMS और WhatsApp)",
       contactBtnSub: "सेव किए गए संपर्क को संपूर्ण स्वास्थ्य प्रोफाइल और लाइव जीपीएस भेजें",
       beaconBtn: "नाईट एसओएस स्क्रीन बीकन और सायरन",
@@ -918,6 +934,48 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
                 <X className="mr-2 h-6 w-6 text-red-600" />
                 <span>{t.stopBeacon}</span>
               </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Floating Shake-to-SOS Confirmation Modal / Prompt */}
+        {shakePromptOpen && (
+          <div className="fixed inset-x-0 bottom-4 sm:bottom-6 z-50 px-4 flex justify-center animate-bounce-short">
+            <div className="max-w-md w-full bg-red-950 text-white border-2 border-red-500 rounded-2xl p-4 shadow-2xl space-y-3">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <Smartphone className="h-6 w-6 text-red-400 animate-pulse flex-shrink-0" />
+                  <div>
+                    <h4 className="text-sm font-bold text-white leading-tight">
+                      {language === "en" ? "Shake Detected: Emergency Distress?" : "फोन झटका पहचाना गया: आपातकालीन अलर्ट?"}
+                    </h4>
+                    <p className="text-xs text-red-200 mt-0.5">
+                      {language === "en" 
+                        ? `Initiating 112 distress dispatch in ${shakeCountdown}s...` 
+                        : `${shakeCountdown} सेकंड में 112 संकट संदेश भेजा जा रहा है...`}
+                    </p>
+                  </div>
+                </div>
+                <span className="text-xs font-mono font-black bg-red-800 text-white rounded-full h-7 w-7 flex items-center justify-center border border-red-400">
+                  {shakeCountdown}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 pt-1">
+                <Button
+                  onClick={handleCancelShakeDistress}
+                  variant="outline"
+                  className="bg-white/10 hover:bg-white/20 border-white/40 text-white font-bold text-xs py-2 h-auto rounded-xl"
+                >
+                  {language === "en" ? "Cancel (Accidental)" : "रद्द करें (गलती से हुआ)"}
+                </Button>
+                <Button
+                  onClick={handleConfirmShakeDistress}
+                  className="bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs py-2 h-auto rounded-xl shadow"
+                >
+                  {language === "en" ? "Send Now" : "अभी भेजें"}
+                </Button>
+              </div>
             </div>
           </div>
         )}
