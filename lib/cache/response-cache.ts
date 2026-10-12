@@ -79,21 +79,73 @@ export async function getCachedResponse(
   }
 }
 
+import {
+  findSemanticMatchInMemory,
+  getCanonicalConceptKey,
+  saveToSemanticMemory,
+} from "@/lib/ai/semantic-matcher"
+
 /**
- * Store a bilingual AI response in the cache with a 24-hour TTL.
- * Silently no-ops if Redis is unavailable.
+ * Look up a cached response semantically.
+ * 1. Checks in-memory semantic cache.
+ * 2. If Redis is available, checks canonical concept key in Redis.
+ */
+export async function getSemanticCachedResponse(
+  rawQuery: string
+): Promise<{ response: CachedAIResponse | null; source: "in-memory-semantic" | "redis-semantic" | null }> {
+  // 1. Fast in-memory semantic check (< 1ms)
+  const mem = findSemanticMatchInMemory(rawQuery)
+  if (mem.match) {
+    return { response: mem.match, source: "in-memory-semantic" }
+  }
+
+  // 2. Canonical concept lookup in Redis
+  const redis = await getRedis()
+  if (!redis) return { response: null, source: null }
+
+  try {
+    const canonicalKey = getCanonicalConceptKey(rawQuery)
+    if (!canonicalKey) return { response: null, source: null }
+
+    const raw = await redis.get(canonicalKey)
+    if (!raw) return { response: null, source: null }
+
+    const parsed: CachedAIResponse =
+      typeof raw === "string" ? JSON.parse(raw) : (raw as CachedAIResponse)
+
+    // Warm up in-memory cache with this entry
+    saveToSemanticMemory(rawQuery, parsed)
+
+    return { response: parsed, source: "redis-semantic" }
+  } catch {
+    return { response: null, source: null }
+  }
+}
+
+/**
+ * Store a bilingual AI response in both exact and semantic caches.
  */
 export async function setCachedResponse(
   normalizedQuery: string,
   response: CachedAIResponse,
   ttlSeconds = 86400 // 24 hours
 ): Promise<void> {
+  // 1. In-memory semantic registration
+  saveToSemanticMemory(normalizedQuery, response)
+
   const redis = await getRedis()
   if (!redis) return
 
   try {
     const key = buildCacheKey(normalizedQuery)
-    await redis.set(key, JSON.stringify(response), { ex: ttlSeconds })
+    const canonicalKey = getCanonicalConceptKey(normalizedQuery)
+
+    const payload = JSON.stringify(response)
+    const promises: Promise<any>[] = [redis.set(key, payload, { ex: ttlSeconds })]
+    if (canonicalKey) {
+      promises.push(redis.set(canonicalKey, payload, { ex: ttlSeconds }))
+    }
+    await Promise.allSettled(promises)
   } catch {
     // Silently fail — cache is best-effort
   }

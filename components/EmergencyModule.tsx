@@ -19,6 +19,9 @@ import {
   UserCheck,
   ShieldAlert,
   Smartphone,
+  Flashlight,
+  Radio,
+  X,
 } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import {
@@ -49,12 +52,42 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
   const [editingProfile, setEditingProfile] = useState<EmergencyProfile>(DEFAULT_PROFILE)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [shakeActive, setShakeActive] = useState(true)
+  const [strobeActive, setStrobeActive] = useState(false)
+  const [strobeLightOn, setStrobeLightOn] = useState(false)
 
   useEffect(() => {
     const loaded = getEmergencyProfile()
     setProfile(loaded)
     setEditingProfile(loaded)
   }, [])
+
+  // Strobe beacon timer and vibration
+  useEffect(() => {
+    if (!strobeActive) return
+
+    let wakeLock: any = null
+    if (typeof navigator !== "undefined" && "wakeLock" in navigator) {
+      try {
+        (navigator as any).wakeLock.request("screen").then((wl: any) => {
+          wakeLock = wl
+        }).catch(() => {})
+      } catch {}
+    }
+
+    const interval = setInterval(() => {
+      setStrobeLightOn((prev) => !prev)
+      if (typeof navigator !== "undefined" && navigator.vibrate) {
+        navigator.vibrate(100)
+      }
+    }, 250)
+
+    return () => {
+      clearInterval(interval)
+      if (wakeLock) {
+        try { wakeLock.release() } catch {}
+      }
+    }
+  }, [strobeActive])
 
   const content = {
     en: {
@@ -101,6 +134,11 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
       shakeHint: "Shake phone 3 times to trigger instant emergency broadcast",
       noneRecorded: "None recorded",
       savedSuccess: "Emergency profile saved locally on this device!",
+      strobeBeacon: "Night SOS Screen Beacon & Siren",
+      strobeDesc: "Flashes high-visibility screen beacon & vibrates to guide ambulances in dark village roads",
+      stopBeacon: "Stop Beacon",
+      beaconActive: "EMERGENCY BEACON ACTIVE",
+      waVaultShare: "WhatsApp SOS + Health Summary",
     },
     hi: {
       title: "आपातकालीन सेवाएं",
@@ -146,6 +184,11 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
       shakeHint: "तत्काल आपातकालीन अलर्ट के लिए फोन को 3 बार हिलाएं",
       noneRecorded: "कोई दर्ज नहीं",
       savedSuccess: "आपातकालीन प्रोफाइल इस डिवाइस पर सुरक्षित कर दी गई!",
+      strobeBeacon: "नाइट एसओएस स्क्रीन बीकन और सायरन",
+      strobeDesc: "अंधेरे ग्रामीण रास्तों पर एम्बुलेंस को आकर्षित करने के लिए तेज चमकती स्क्रीन व कम्पन",
+      stopBeacon: "बीकन बंद करें",
+      beaconActive: "आपातकालीन बीकन सक्रिय",
+      waVaultShare: "व्हाट्सएप एसओएस + स्वास्थ्य सारांश",
     },
   }
 
@@ -241,21 +284,37 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
   ]
 
   const shareLocationViaWhatsApp = () => {
+    const contactParam = (profile.primaryEmergencyContact || "").replace(/[^0-9]/g, "")
+    const targetPhone = contactParam ? (contactParam.length === 10 ? `91${contactParam}` : contactParam) : ""
+    const waBase = targetPhone ? `https://wa.me/${targetPhone}` : "https://wa.me/"
+
+    const buildMsg = (mapUrl?: string) => {
+      let msg = "🚨 *MEDICAL EMERGENCY SOS ALERT* 🚨\n"
+      if (profile.fullName) msg += `*Patient:* ${profile.fullName}${profile.age ? ` (Age: ${profile.age})` : ""}\n`
+      if (profile.bloodGroup) msg += `*Blood Group:* ${profile.bloodGroup}\n`
+      if (profile.chronicConditions) msg += `*Chronic Conditions:* ${profile.chronicConditions}\n`
+      if (profile.currentMedications) msg += `*Medications:* ${profile.currentMedications}\n`
+      if (profile.severeAllergies) msg += `*Allergies:* ${profile.severeAllergies}\n`
+      if (mapUrl) msg += `*Live Location:* ${mapUrl}\n`
+      msg += "\nImmediate medical assistance or ambulance (108) required!"
+      return msg
+    }
+
     if (!navigator.geolocation) {
-      window.open("https://wa.me/?text=EMERGENCY!%20I%20need%20immediate%20medical%20assistance.");
+      window.open(`${waBase}?text=${encodeURIComponent(buildMsg())}`);
       return;
     }
     toast({ title: language === 'en' ? 'Fetching location...' : 'लोकेशन प्राप्त कर रहा है...' });
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const url = `https://maps.google.com/?q=${pos.coords.latitude},${pos.coords.longitude}`;
-        const message = `EMERGENCY! I need immediate medical assistance. My location: ${url}`;
-        window.open(`https://wa.me/?text=${encodeURIComponent(message)}`);
+        window.open(`${waBase}?text=${encodeURIComponent(buildMsg(url))}`);
       },
       () => {
-        window.open("https://wa.me/?text=EMERGENCY!%20I%20need%20immediate%20medical%20assistance.");
-        toast({ title: language === 'en' ? 'Could not fetch location' : 'लोकेशन प्राप्त नहीं किया जा सका', variant: "destructive" });
-      }
+        window.open(`${waBase}?text=${encodeURIComponent(buildMsg())}`);
+        toast({ title: language === 'en' ? 'Could not fetch location (sent without GPS)' : 'लोकेशन नहीं मिला (बिना GPS भेजा गया)', variant: "destructive" });
+      },
+      { timeout: 5000, enableHighAccuracy: true }
     );
   };
 
@@ -354,7 +413,20 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
             <Button
               size="lg"
               variant="outline"
-              className="w-full h-20 bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 mt-4"
+              className="w-full h-16 bg-amber-50 border-amber-300 text-amber-900 hover:bg-amber-100 mt-2 flex items-center justify-center gap-3 font-semibold shadow-sm"
+              onClick={() => setStrobeActive(true)}
+            >
+              <Flashlight className="h-6 w-6 text-amber-600 animate-bounce" />
+              <div className="text-left">
+                <div className="text-sm font-bold">{t.strobeBeacon}</div>
+                <div className="text-xs text-amber-700 font-normal">{t.strobeDesc}</div>
+              </div>
+            </Button>
+
+            <Button
+              size="lg"
+              variant="outline"
+              className="w-full h-20 bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 mt-2"
               onClick={() => router.push("/health-info")}
             >
               <div className="flex flex-col items-center">
@@ -544,6 +616,69 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
             </CardContent>
           </Card>
         </div>
+
+        {/* Fullscreen High-Contrast Emergency Strobe Beacon Modal */}
+        {strobeActive && (
+          <div
+            className={`fixed inset-0 z-50 flex flex-col items-center justify-between p-6 transition-colors duration-100 ${
+              strobeLightOn ? "bg-red-600 text-white" : "bg-white text-red-600"
+            }`}
+          >
+            <div className="w-full flex justify-between items-center pt-2">
+              <span className="text-sm font-bold tracking-widest uppercase">
+                {t.beaconActive}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setStrobeActive(false)}
+                className={`border-2 font-bold ${
+                  strobeLightOn
+                    ? "bg-white text-red-600 border-white hover:bg-gray-100"
+                    : "bg-red-600 text-white border-red-600 hover:bg-red-700"
+                }`}
+              >
+                <X className="h-5 w-5 mr-1" />
+                {t.stopBeacon}
+              </Button>
+            </div>
+
+            <div className="text-center my-auto space-y-6">
+              <div className="text-7xl sm:text-9xl font-black tracking-tight animate-bounce">
+                SOS 108
+              </div>
+              <p className="text-xl sm:text-3xl font-extrabold max-w-xl mx-auto uppercase">
+                {language === "en"
+                  ? "EMERGENCY IN PROGRESS — AMBULANCE NEEDED"
+                  : "आपातकालीन स्थिति — तत्काल एम्बुलेंस 108 की आवश्यकता"}
+              </p>
+              {profile.fullName && (
+                <div className={`p-4 rounded-xl text-lg font-bold border-2 max-w-md mx-auto ${
+                  strobeLightOn ? "bg-red-700 border-white text-white" : "bg-red-50 border-red-600 text-red-900"
+                }`}>
+                  <div>{profile.fullName} {profile.age ? `(${profile.age} yrs)` : ""}</div>
+                  {profile.bloodGroup && <div className="text-sm mt-1">Blood: {profile.bloodGroup}</div>}
+                  {profile.chronicConditions && <div className="text-xs mt-1 font-medium">{profile.chronicConditions}</div>}
+                </div>
+              )}
+            </div>
+
+            <div className="w-full max-w-md pb-4 flex gap-3">
+              <Button
+                size="lg"
+                onClick={() => window.open("tel:108")}
+                className={`w-full h-16 text-xl font-bold ${
+                  strobeLightOn
+                    ? "bg-white text-red-700 hover:bg-gray-100"
+                    : "bg-red-600 text-white hover:bg-red-700"
+                }`}
+              >
+                <Phone className="h-6 w-6 mr-2" />
+                108 AMBULANCE
+              </Button>
+            </div>
+          </div>
+        )}
 
       </div>
     </div>

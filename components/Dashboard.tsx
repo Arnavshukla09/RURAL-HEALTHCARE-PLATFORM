@@ -211,6 +211,34 @@ export function Dashboard({ user, language }: DashboardProps) {
           </div>
         </div>
 
+        {/* Top 1-Tap Emergency Alert Banner (Mobile-Optimized) */}
+        <div className="bg-red-50 border-2 border-red-500 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm">
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <div className="p-3 bg-red-600 rounded-xl text-white flex-shrink-0 animate-pulse">
+              <AlertCircle className="h-6 w-6" />
+            </div>
+            <div>
+              <h3 className="font-bold text-red-900 text-base leading-tight">
+                {language === 'en' ? 'Need Urgent Medical Help?' : 'तत्काल चिकित्सा सहायता चाहिए?'}
+              </h3>
+              <p className="text-xs text-red-700 mt-0.5">
+                {language === 'en' 
+                  ? '1-Tap 108 Ambulance Call, Shake-to-SOS & Offline Chronic Health Vault' 
+                  : '1-टैप 108 एम्बुलेंस कॉल, शेक एसओएस और ऑफ़लाइन स्वास्थ्य वॉल्ट'}
+              </p>
+            </div>
+          </div>
+          <Button
+            variant="destructive"
+            size="lg"
+            onClick={() => router.push("/emergency")}
+            className="w-full sm:w-auto bg-red-600 hover:bg-red-700 font-bold px-6 py-2.5 text-white shadow-md flex-shrink-0"
+          >
+            <AlertCircle className="h-5 w-5 mr-2 animate-pulse" />
+            {language === 'en' ? 'Emergency SOS' : 'आपातकालीन SOS'}
+          </Button>
+        </div>
+
         {/* Stats Cards */}
         <div className={`grid grid-cols-1 gap-6 ${user.role === 'patient' ? 'md:grid-cols-2 max-w-3xl mx-auto w-full' : 'md:grid-cols-3'}`}>
           <Card>

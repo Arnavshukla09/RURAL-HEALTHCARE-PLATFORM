@@ -131,6 +131,15 @@ export function LandingPage({ language }: LandingPageProps) {
                   <Phone className="mr-2 h-5 w-5" />
                   {t.hero.secondaryCTA}
                 </Button>
+                <Button 
+                  variant="destructive" 
+                  size="lg"
+                  onClick={() => router.push("/emergency")}
+                  className="text-lg px-8 py-3 bg-red-600 hover:bg-red-700 font-bold shadow-md text-white"
+                >
+                  <AlertTriangle className="mr-2 h-5 w-5 animate-pulse" />
+                  {language === 'en' ? 'Emergency SOS' : 'आपातकालीन SOS'}
+                </Button>
               </div>
             </div>
             
@@ -182,11 +191,11 @@ export function LandingPage({ language }: LandingPageProps) {
               </CardHeader>
             </Card>
 
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push("/emergency")}>
+            <Card className="hover:shadow-lg transition-all cursor-pointer border-2 border-red-400 bg-red-50/60 shadow-sm hover:scale-[1.02]" onClick={() => router.push("/emergency")}>
               <CardHeader className="text-center pb-4">
-                <AlertTriangle className="h-10 w-10 text-red-600 mx-auto mb-2" />
-                <CardTitle className="text-sm">
-                  {language === 'en' ? 'Emergency Help' : 'आपातकालीन सहायता'}
+                <AlertTriangle className="h-10 w-10 text-red-600 mx-auto mb-2 animate-pulse" />
+                <CardTitle className="text-sm font-bold text-red-700">
+                  {language === 'en' ? 'Emergency Help (SOS)' : 'आपातकालीन सहायता (SOS)'}
                 </CardTitle>
               </CardHeader>
             </Card>

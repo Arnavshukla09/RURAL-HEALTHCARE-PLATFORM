@@ -259,6 +259,18 @@ export function Header() {
               </Button>
             )}
 
+            {/* Mobile Direct 1-Tap SOS Button */}
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => go("/emergency")}
+              className="md:hidden flex items-center gap-1 bg-red-600 hover:bg-red-700 text-white font-bold text-xs px-2.5 py-1.5 rounded-lg shadow-sm"
+              aria-label={en ? "Emergency SOS" : "आपातकालीन एसओएस"}
+            >
+              <AlertTriangle className="h-3.5 w-3.5 text-white animate-pulse" />
+              <span>SOS</span>
+            </Button>
+
             <Button variant="outline" size="sm"
               className={`md:hidden ${role !== "patient" ? "border-white/30 text-white bg-transparent hover:bg-white/10" : ""}`}
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>

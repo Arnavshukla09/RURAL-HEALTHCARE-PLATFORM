@@ -2,7 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import { checkRateLimit, rateLimitResponse, clientKey } from "@/lib/rate-limit"
 import { answerMedicalQuery, getMedicalBrainEntry } from "@/lib/ai/medical-brain"
 import { generateGeminiContent, GeminiContent } from "@/lib/ai/gemini"
-import { getCachedResponse, setCachedResponse } from "@/lib/cache/response-cache"
+import { getCachedResponse, setCachedResponse, getSemanticCachedResponse } from "@/lib/cache/response-cache"
 import { isLoadTest, stubDelay } from "@/lib/loadtest"
 import { executeWithAiGateway } from "@/lib/ai/gateway"
 
@@ -75,9 +75,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 3b. Server-side Redis response cache check (Tier 2.5)
+    // 3b. Server-side response cache check (Tier 2.5: Exact Hash + Option 1 Semantic Meaning Match)
     // Only cache single-turn queries (history-free) to avoid stale contextual replies
     if (history.length === 0) {
+      // (i) Exact query hash hit
       const cached = await getCachedResponse(sanitizedMessage)
       if (cached) {
         const selectedReply = lang === "hi" ? (cached.replyHi || cached.replyEn) : (cached.replyEn || cached.replyHi)
@@ -88,6 +89,22 @@ export async function POST(request: NextRequest) {
           fallback: false,
           source: "server-cache",
           model: cached.model,
+        })
+      }
+
+      // (ii) Option 1: Semantic meaning / concept similarity match
+      // Catches rephrased queries with identical medical symptoms (e.g. "fever and chills" vs "high temperature with shivering")
+      const semanticMatch = await getSemanticCachedResponse(sanitizedMessage)
+      if (semanticMatch.response) {
+        const semCached = semanticMatch.response
+        const selectedReply = lang === "hi" ? (semCached.replyHi || semCached.replyEn) : (semCached.replyEn || semCached.replyHi)
+        return NextResponse.json({
+          reply: selectedReply,
+          replyEn: semCached.replyEn || undefined,
+          replyHi: semCached.replyHi || undefined,
+          fallback: false,
+          source: semanticMatch.source || "semantic-cache",
+          model: semCached.model,
         })
       }
     }
