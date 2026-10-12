@@ -212,16 +212,16 @@ export function Dashboard({ user, language }: DashboardProps) {
         </div>
 
         {/* Top 1-Tap Emergency Alert Banner (Mobile-Optimized) */}
-        <div className="bg-red-50 border-2 border-red-500 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm">
-          <div className="flex items-center gap-3 w-full sm:w-auto">
-            <div className="p-3 bg-red-600 rounded-xl text-white flex-shrink-0 animate-pulse">
-              <AlertCircle className="h-6 w-6" />
+        <div className="bg-red-50 border-2 border-red-500 rounded-xl p-3.5 sm:p-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm">
+          <div className="flex items-center gap-3 w-full sm:w-auto min-w-0">
+            <div className="p-2.5 sm:p-3 bg-red-600 rounded-xl text-white flex-shrink-0 animate-pulse">
+              <AlertCircle className="h-5 w-5 sm:h-6 sm:w-6" />
             </div>
-            <div>
-              <h3 className="font-bold text-red-900 text-base leading-tight">
+            <div className="min-w-0 flex-1">
+              <h3 className="font-black text-red-900 text-sm sm:text-base leading-snug break-words">
                 {language === 'en' ? 'Need Urgent Medical Help?' : 'तत्काल चिकित्सा सहायता चाहिए?'}
               </h3>
-              <p className="text-xs text-red-700 mt-0.5">
+              <p className="text-[11px] sm:text-xs text-red-700/90 mt-0.5 leading-tight line-clamp-2 sm:line-clamp-none">
                 {language === 'en' 
                   ? '1-Tap 108 Ambulance Call, Shake-to-SOS & Offline Chronic Health Vault' 
                   : '1-टैप 108 एम्बुलेंस कॉल, शेक एसओएस और ऑफ़लाइन स्वास्थ्य वॉल्ट'}
@@ -232,10 +232,10 @@ export function Dashboard({ user, language }: DashboardProps) {
             variant="destructive"
             size="lg"
             onClick={() => router.push("/emergency")}
-            className="w-full sm:w-auto bg-red-600 hover:bg-red-700 font-bold px-6 py-2.5 text-white shadow-md flex-shrink-0"
+            className="w-full sm:w-auto bg-red-600 hover:bg-red-700 font-bold px-5 py-2.5 text-xs sm:text-sm text-white shadow-md flex-shrink-0 rounded-xl flex items-center justify-center"
           >
-            <AlertCircle className="h-5 w-5 mr-2 animate-pulse" />
-            {language === 'en' ? 'Emergency SOS' : 'आपातकालीन SOS'}
+            <AlertCircle className="h-4 w-4 mr-2 animate-pulse flex-shrink-0" />
+            <span>{language === 'en' ? 'Emergency SOS' : 'आपातकालीन SOS'}</span>
           </Button>
         </div>
 

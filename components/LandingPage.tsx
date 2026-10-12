@@ -113,31 +113,31 @@ export function LandingPage({ language }: LandingPageProps) {
                 </p>
               </div>
               
-              <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full">
                 <Button 
                   size="lg" 
                   onClick={() => router.push("/login")}
-                  className="text-lg px-8 py-3"
+                  className="text-sm sm:text-base md:text-lg px-5 sm:px-8 py-2.5 sm:py-3 w-full sm:w-auto justify-center rounded-xl shadow-sm"
                 >
-                  <Heart className="mr-2 h-5 w-5" />
+                  <Heart className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                   {t.hero.primaryCTA}
                 </Button>
                 <Button 
                   variant="outline" 
                   size="lg"
                   onClick={() => router.push("/consultation")}
-                  className="text-lg px-8 py-3"
+                  className="text-sm sm:text-base md:text-lg px-5 sm:px-8 py-2.5 sm:py-3 w-full sm:w-auto justify-center rounded-xl shadow-sm"
                 >
-                  <Phone className="mr-2 h-5 w-5" />
+                  <Phone className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                   {t.hero.secondaryCTA}
                 </Button>
                 <Button 
                   variant="destructive" 
                   size="lg"
                   onClick={() => router.push("/emergency")}
-                  className="text-lg px-8 py-3 bg-red-600 hover:bg-red-700 font-bold shadow-md text-white"
+                  className="text-sm sm:text-base md:text-lg px-5 sm:px-8 py-2.5 sm:py-3 bg-red-600 hover:bg-red-700 font-bold shadow-md text-white w-full sm:w-auto justify-center rounded-xl"
                 >
-                  <AlertTriangle className="mr-2 h-5 w-5 animate-pulse" />
+                  <AlertTriangle className="mr-2 h-4 w-4 sm:h-5 sm:w-5 animate-pulse" />
                   {language === 'en' ? 'Emergency SOS' : 'आपातकालीन SOS'}
                 </Button>
               </div>

@@ -22,6 +22,10 @@ import {
   Flashlight,
   Radio,
   X,
+  Volume2,
+  VolumeX,
+  Sun,
+  Contrast,
 } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import {
@@ -39,6 +43,13 @@ import {
   DEFAULT_PROFILE,
   EmergencyProfile,
 } from "@/lib/emergency/vault"
+import {
+  toggleHardwareTorch,
+  startAudioSiren,
+  stopAudioSiren,
+  requestScreenWakeLock,
+  releaseScreenWakeLock,
+} from "@/lib/emergency/hardware"
 
 interface EmergencyModuleProps {
   language: string
@@ -54,6 +65,9 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
   const [shakeActive, setShakeActive] = useState(true)
   const [strobeActive, setStrobeActive] = useState(false)
   const [strobeLightOn, setStrobeLightOn] = useState(false)
+  const [highContrast, setHighContrast] = useState(false)
+  const [sirenActive, setSirenActive] = useState(false)
+  const [torchActive, setTorchActive] = useState(false)
 
   useEffect(() => {
     const loaded = getEmergencyProfile()
@@ -61,18 +75,19 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
     setEditingProfile(loaded)
   }, [])
 
-  // Strobe beacon timer and vibration
+  // Strobe beacon timer, wake lock, hardware torch & audio siren
   useEffect(() => {
-    if (!strobeActive) return
-
-    let wakeLock: any = null
-    if (typeof navigator !== "undefined" && "wakeLock" in navigator) {
-      try {
-        (navigator as any).wakeLock.request("screen").then((wl: any) => {
-          wakeLock = wl
-        }).catch(() => {})
-      } catch {}
+    if (!strobeActive) {
+      stopAudioSiren()
+      setSirenActive(false)
+      toggleHardwareTorch(false)
+      setTorchActive(false)
+      releaseScreenWakeLock()
+      return
     }
+
+    // Keep screen awake at full brightness
+    requestScreenWakeLock()
 
     const interval = setInterval(() => {
       setStrobeLightOn((prev) => !prev)
@@ -83,11 +98,42 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
 
     return () => {
       clearInterval(interval)
-      if (wakeLock) {
-        try { wakeLock.release() } catch {}
-      }
+      stopAudioSiren()
+      toggleHardwareTorch(false)
+      releaseScreenWakeLock()
     }
   }, [strobeActive])
+
+  // Siren toggle handler
+  const handleToggleSiren = () => {
+    if (sirenActive) {
+      stopAudioSiren()
+      setSirenActive(false)
+    } else {
+      const started = startAudioSiren()
+      if (started) setSirenActive(true)
+      else toast({ title: language === "en" ? "Audio siren unavailable" : "ऑडियो सायरन अनुपलब्ध", variant: "destructive" })
+    }
+  }
+
+  // Hardware LED Torch toggle handler
+  const handleToggleTorch = async () => {
+    if (torchActive) {
+      await toggleHardwareTorch(false)
+      setTorchActive(false)
+    } else {
+      const enabled = await toggleHardwareTorch(true)
+      if (enabled) {
+        setTorchActive(true)
+        toast({ title: language === "en" ? "Camera LED Flashlight Active" : "कैमरा एलईडी फ्लैशलाइट सक्रिय" })
+      } else {
+        toast({ 
+          title: language === "en" ? "Camera flash permission needed or unsupported" : "कैमरा फ्लैश अनुमति आवश्यक या असमर्थित", 
+          variant: "destructive" 
+        })
+      }
+    }
+  }
 
   const content = {
     en: {
@@ -139,6 +185,11 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
       stopBeacon: "Stop Beacon",
       beaconActive: "EMERGENCY BEACON ACTIVE",
       waVaultShare: "WhatsApp SOS + Health Summary",
+      highContrastToggle: "High Contrast (Sunlight)",
+      sirenOn: "Sound Siren",
+      sirenOff: "Mute Siren",
+      torchOn: "Camera LED Flash",
+      torchOff: "Turn Flash Off",
     },
     hi: {
       title: "आपातकालीन सेवाएं",
@@ -189,6 +240,11 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
       stopBeacon: "बीकन बंद करें",
       beaconActive: "आपातकालीन बीकन सक्रिय",
       waVaultShare: "व्हाट्सएप एसओएस + स्वास्थ्य सारांश",
+      highContrastToggle: "उच्च कंट्रास्ट (तेज़ धूप)",
+      sirenOn: "सायरन बजाएं",
+      sirenOff: "सायरन बंद करें",
+      torchOn: "कैमरा एलईडी फ्लैश",
+      torchOff: "फ्लैश बंद करें",
     },
   }
 
@@ -319,76 +375,137 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
   };
 
   return (
-    <div className="min-h-screen bg-red-50 p-4">
-      <div className="max-w-4xl mx-auto space-y-6">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold text-red-600 mb-2">{t.title}</h1>
-          <p className="text-gray-600">{t.subtitle}</p>
+    <div className={`min-h-screen transition-colors duration-200 p-3 sm:p-6 ${
+      highContrast 
+        ? "bg-black text-yellow-300 contrast-125" 
+        : "bg-red-50 text-gray-900"
+    }`}>
+      <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6 overflow-hidden">
+        
+        {/* Title and High-Contrast Accessibility Switch */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
+          <div>
+            <h1 className={`text-2xl sm:text-4xl font-black tracking-tight ${
+              highContrast ? "text-yellow-400" : "text-red-600"
+            }`}>
+              {t.title}
+            </h1>
+            <p className={`text-xs sm:text-sm mt-0.5 ${
+              highContrast ? "text-yellow-200" : "text-gray-600"
+            }`}>
+              {t.subtitle}
+            </p>
+          </div>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setHighContrast(!highContrast)}
+            className={`border-2 font-bold px-3 py-1.5 text-xs rounded-lg transition-colors flex items-center gap-1.5 ${
+              highContrast
+                ? "bg-yellow-400 text-black border-yellow-400 hover:bg-yellow-300"
+                : "bg-white text-gray-800 border-gray-300 hover:bg-gray-100"
+            }`}
+          >
+            <Contrast className="h-4 w-4" />
+            <span>{t.highContrastToggle}</span>
+          </Button>
         </div>
 
         {/* Shake Detection Banner */}
-        <div className="flex items-center justify-between p-3.5 bg-red-100/90 border border-red-300 rounded-lg text-sm text-red-900 shadow-sm">
-          <div className="flex items-center gap-2.5">
-            <Smartphone className="h-5 w-5 text-red-600 animate-pulse" />
-            <span className="font-medium">{t.shakeHint}</span>
+        <div className={`flex items-center justify-between p-3 sm:p-3.5 border rounded-xl text-xs sm:text-sm shadow-sm gap-2 ${
+          highContrast
+            ? "bg-yellow-950/60 border-yellow-500 text-yellow-200"
+            : "bg-red-100/90 border-red-300 text-red-900"
+        }`}>
+          <div className="flex items-center gap-2 min-w-0">
+            <Smartphone className="h-4 w-4 sm:h-5 sm:w-5 text-red-600 animate-pulse flex-shrink-0" />
+            <span className="font-medium truncate">{t.shakeHint}</span>
           </div>
-          <span className="text-xs font-semibold px-2.5 py-1 bg-red-200 text-red-800 rounded-full">
-            {shakeActive ? "SOS Sensor Active" : "Sensor Off"}
+          <span className={`text-[10px] sm:text-xs font-semibold px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full flex-shrink-0 ${
+            highContrast ? "bg-yellow-400 text-black" : "bg-red-200 text-red-800"
+          }`}>
+            {shakeActive ? "Active" : "Off"}
           </span>
         </div>
 
         {/* Main Emergency Call */}
-        <Card className="border-red-200 bg-white shadow-sm">
-          <CardContent className="p-6 space-y-5">
+        <Card className={`border-2 shadow-sm ${
+          highContrast ? "bg-black border-yellow-400 text-yellow-300" : "border-red-200 bg-white"
+        }`}>
+          <CardContent className="p-4 sm:p-6 space-y-4 sm:space-y-5">
             <Button
               onClick={() => window.open("tel:108")}
-              className="w-full h-20 text-2xl bg-red-600 hover:bg-red-700 animate-pulse font-bold"
+              className="w-full min-h-[4.5rem] py-3 px-4 text-xl sm:text-2xl bg-red-600 hover:bg-red-700 animate-pulse font-black text-white rounded-xl shadow-md whitespace-normal leading-tight flex items-center justify-center text-center"
             >
-              <Phone className="mr-2 h-7 w-7" />
-              {t.call108}
+              <Phone className="mr-2 h-6 w-6 sm:h-7 sm:w-7 flex-shrink-0" />
+              <span>{t.call108}</span>
             </Button>
 
             {/* Broadcast SOS with Chronic Information */}
             <Button
               onClick={() => triggerSosBroadcast("button")}
-              className="w-full h-14 text-base bg-red-950 hover:bg-black text-white font-semibold flex items-center justify-center gap-2 shadow"
+              className={`w-full min-h-[3.25rem] py-2.5 px-3 text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow rounded-xl whitespace-normal leading-tight text-center ${
+                highContrast 
+                  ? "bg-yellow-400 text-black hover:bg-yellow-300"
+                  : "bg-red-950 hover:bg-black text-white"
+              }`}
             >
-              <ShieldAlert className="h-5 w-5 text-red-400" />
-              {t.sosBroadcast}
+              <ShieldAlert className="h-4 w-4 sm:h-5 sm:w-5 text-red-400 flex-shrink-0" />
+              <span>{t.sosBroadcast}</span>
             </Button>
             
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Button
                 variant="outline"
-                className="w-full border-red-200 text-red-600 hover:bg-red-50"
+                className={`w-full min-h-[3rem] py-2.5 px-3 text-xs sm:text-sm font-semibold rounded-xl whitespace-normal leading-tight ${
+                  highContrast 
+                    ? "border-yellow-400 text-yellow-300 bg-black hover:bg-yellow-950" 
+                    : "border-red-200 text-red-600 hover:bg-red-50 bg-white"
+                }`}
                 onClick={() => window.open("sms:112?body=EMERGENCY! I need immediate medical assistance at my location.")}
               >
-                <MessageSquare className="mr-2 h-5 w-5" />
-                {t.smsFallback}
+                <MessageSquare className="mr-2 h-4 w-4 flex-shrink-0" />
+                <span className="truncate">{t.smsFallback}</span>
               </Button>
               <Button
                 variant="outline"
-                className="w-full border-green-200 text-green-600 hover:bg-green-50"
+                className={`w-full min-h-[3rem] py-2.5 px-3 text-xs sm:text-sm font-semibold rounded-xl whitespace-normal leading-tight ${
+                  highContrast 
+                    ? "border-green-400 text-green-300 bg-black hover:bg-green-950" 
+                    : "border-green-200 text-green-600 hover:bg-green-50 bg-white"
+                }`}
                 onClick={shareLocationViaWhatsApp}
               >
-                <MessageCircle className="mr-2 h-5 w-5" />
-                {t.waFallback}
+                <MessageCircle className="mr-2 h-4 w-4 flex-shrink-0" />
+                <span className="truncate">{t.waFallback}</span>
               </Button>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Button
                 size="lg"
                 variant="outline"
-                className="h-20 bg-transparent"
+                className={`min-h-[3.5rem] sm:min-h-[4.5rem] py-2.5 px-3 text-xs sm:text-sm font-semibold rounded-xl whitespace-normal leading-tight ${
+                  highContrast 
+                    ? "border-yellow-400 text-yellow-300 bg-black hover:bg-yellow-950" 
+                    : "bg-transparent border-gray-200 hover:bg-gray-50"
+                }`}
                 onClick={() => router.push("/locations")}
               >
-                <MapPin className="mr-2 h-5 w-5" />
-                {t.findHospital}
+                <MapPin className="mr-2 h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0 text-red-500" />
+                <span>{t.findHospital}</span>
               </Button>
-              <Button size="lg" variant="outline" className="h-20 bg-transparent"
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className={`min-h-[3.5rem] sm:min-h-[4.5rem] py-2.5 px-3 text-xs sm:text-sm font-semibold rounded-xl whitespace-normal leading-tight ${
+                  highContrast 
+                    ? "border-yellow-400 text-yellow-300 bg-black hover:bg-yellow-950" 
+                    : "bg-transparent border-gray-200 hover:bg-gray-50"
+                }`}
                 onClick={() => {
-                      if (!navigator.geolocation) {
+                  if (!navigator.geolocation) {
                     toast({ title: language === 'en' ? 'Geolocation not supported by your browser' : 'आपका ब्राउज़र लोकेशन सपोर्ट नहीं करता', variant: "destructive" })
                     return
                   }
@@ -405,33 +522,41 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
                   )
                 }}
               >
-                <Share2 className="mr-2 h-5 w-5" />
-                {t.shareLocation}
+                <Share2 className="mr-2 h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0 text-blue-500" />
+                <span>{t.shareLocation}</span>
               </Button>
             </div>
 
             <Button
               size="lg"
               variant="outline"
-              className="w-full h-16 bg-amber-50 border-amber-300 text-amber-900 hover:bg-amber-100 mt-2 flex items-center justify-center gap-3 font-semibold shadow-sm"
+              className={`w-full min-h-[4rem] py-3 px-3.5 mt-2 flex items-center justify-start gap-3 font-semibold shadow-sm rounded-xl text-left ${
+                highContrast 
+                  ? "bg-black border-2 border-yellow-400 text-yellow-300 hover:bg-yellow-950" 
+                  : "bg-amber-50 border-amber-300 text-amber-900 hover:bg-amber-100"
+              }`}
               onClick={() => setStrobeActive(true)}
             >
-              <Flashlight className="h-6 w-6 text-amber-600 animate-bounce" />
-              <div className="text-left">
-                <div className="text-sm font-bold">{t.strobeBeacon}</div>
-                <div className="text-xs text-amber-700 font-normal">{t.strobeDesc}</div>
+              <Flashlight className="h-6 w-6 text-amber-600 animate-bounce flex-shrink-0" />
+              <div className="min-w-0">
+                <div className="text-xs sm:text-sm font-bold truncate">{t.strobeBeacon}</div>
+                <div className="text-[11px] sm:text-xs text-amber-700/90 font-normal line-clamp-1">{t.strobeDesc}</div>
               </div>
             </Button>
 
             <Button
               size="lg"
               variant="outline"
-              className="w-full h-20 bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 mt-2"
+              className={`w-full min-h-[4rem] py-3 px-3.5 mt-2 rounded-xl text-center ${
+                highContrast 
+                  ? "bg-black border-2 border-yellow-400 text-yellow-300 hover:bg-yellow-950" 
+                  : "bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
+              }`}
               onClick={() => router.push("/health-info")}
             >
               <div className="flex flex-col items-center">
-                <span className="flex items-center text-lg font-semibold"><BookOpen className="mr-2 h-5 w-5" /> {t.firstAid}</span>
-                <span className="text-xs text-blue-500 font-normal mt-1">{t.firstAidSub}</span>
+                <span className="flex items-center text-sm sm:text-base font-bold"><BookOpen className="mr-2 h-4 w-4 sm:h-5 sm:w-5" /> {t.firstAid}</span>
+                <span className="text-[11px] sm:text-xs text-blue-500 font-normal mt-0.5">{t.firstAidSub}</span>
               </div>
             </Button>
           </CardContent>
@@ -617,64 +742,104 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
           </Card>
         </div>
 
-        {/* Fullscreen High-Contrast Emergency Strobe Beacon Modal */}
+        {/* Fullscreen High-Contrast Emergency Strobe Beacon Modal (100% Mobile Safe) */}
         {strobeActive && (
           <div
-            className={`fixed inset-0 z-50 flex flex-col items-center justify-between p-6 transition-colors duration-100 ${
+            className={`fixed inset-0 z-50 h-[100dvh] w-full max-w-full overflow-y-auto overflow-x-hidden flex flex-col justify-between p-3 sm:p-6 transition-colors duration-150 ${
               strobeLightOn ? "bg-red-600 text-white" : "bg-white text-red-600"
             }`}
           >
-            <div className="w-full flex justify-between items-center pt-2">
-              <span className="text-sm font-bold tracking-widest uppercase">
+            {/* Top Bar with Status and Stop Button */}
+            <div className="w-full flex items-center justify-between gap-2 pt-1 pb-2 flex-shrink-0">
+              <span className="text-[11px] sm:text-xs font-black tracking-widest uppercase px-2.5 py-1 rounded bg-black/25 text-white truncate shadow-sm">
                 {t.beaconActive}
               </span>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setStrobeActive(false)}
-                className={`border-2 font-bold ${
+                className={`border-2 font-black text-xs px-3 py-1 rounded-lg shadow-sm flex items-center ${
                   strobeLightOn
                     ? "bg-white text-red-600 border-white hover:bg-gray-100"
                     : "bg-red-600 text-white border-red-600 hover:bg-red-700"
                 }`}
               >
-                <X className="h-5 w-5 mr-1" />
-                {t.stopBeacon}
+                <X className="h-4 w-4 mr-1 flex-shrink-0" />
+                <span>{t.stopBeacon}</span>
               </Button>
             </div>
 
-            <div className="text-center my-auto space-y-6">
-              <div className="text-7xl sm:text-9xl font-black tracking-tight animate-bounce">
+            {/* Central Visual Flash and Emergency Banner */}
+            <div className="w-full my-auto py-2 sm:py-4 flex flex-col items-center justify-center text-center space-y-3 sm:space-y-4 max-w-md mx-auto">
+              <div className="text-5xl sm:text-7xl md:text-8xl font-black tracking-tight leading-none animate-pulse select-none">
                 SOS 108
               </div>
-              <p className="text-xl sm:text-3xl font-extrabold max-w-xl mx-auto uppercase">
+              <p className="text-xs sm:text-base md:text-lg font-black max-w-sm mx-auto uppercase leading-snug px-2 break-words">
                 {language === "en"
                   ? "EMERGENCY IN PROGRESS — AMBULANCE NEEDED"
                   : "आपातकालीन स्थिति — तत्काल एम्बुलेंस 108 की आवश्यकता"}
               </p>
+
+              {/* Hardware Controls Panel (Audio Siren & Camera LED Flash) */}
+              <div className="w-full flex flex-wrap items-center justify-center gap-2 pt-1">
+                <Button
+                  size="sm"
+                  onClick={handleToggleSiren}
+                  className={`border-2 text-xs font-black px-3 py-1.5 rounded-lg transition-transform active:scale-95 shadow-sm flex items-center ${
+                    sirenActive
+                      ? "bg-yellow-400 text-black border-yellow-400 animate-pulse"
+                      : strobeLightOn
+                      ? "bg-black/40 text-white border-white/40 hover:bg-black/60"
+                      : "bg-red-700 text-white border-red-800 hover:bg-red-800"
+                  }`}
+                >
+                  {sirenActive ? <Volume2 className="h-4 w-4 mr-1.5 flex-shrink-0" /> : <VolumeX className="h-4 w-4 mr-1.5 flex-shrink-0" />}
+                  <span>{sirenActive ? t.sirenOff : t.sirenOn}</span>
+                </Button>
+
+                <Button
+                  size="sm"
+                  onClick={handleToggleTorch}
+                  className={`border-2 text-xs font-black px-3 py-1.5 rounded-lg transition-transform active:scale-95 shadow-sm flex items-center ${
+                    torchActive
+                      ? "bg-yellow-400 text-black border-yellow-400 animate-pulse"
+                      : strobeLightOn
+                      ? "bg-black/40 text-white border-white/40 hover:bg-black/60"
+                      : "bg-red-700 text-white border-red-800 hover:bg-red-800"
+                  }`}
+                >
+                  <Flashlight className="h-4 w-4 mr-1.5 flex-shrink-0" />
+                  <span>{torchActive ? t.torchOff : t.torchOn}</span>
+                </Button>
+              </div>
+
+              {/* Patient Profile Card (Offline Vault) */}
               {profile.fullName && (
-                <div className={`p-4 rounded-xl text-lg font-bold border-2 max-w-md mx-auto ${
-                  strobeLightOn ? "bg-red-700 border-white text-white" : "bg-red-50 border-red-600 text-red-900"
+                <div className={`p-3 rounded-xl text-xs sm:text-sm font-bold border-2 max-w-sm w-full mx-auto break-words text-left shadow-sm ${
+                  strobeLightOn 
+                    ? "bg-red-700 border-white text-white" 
+                    : "bg-red-50 border-red-600 text-red-950"
                 }`}>
-                  <div>{profile.fullName} {profile.age ? `(${profile.age} yrs)` : ""}</div>
-                  {profile.bloodGroup && <div className="text-sm mt-1">Blood: {profile.bloodGroup}</div>}
-                  {profile.chronicConditions && <div className="text-xs mt-1 font-medium">{profile.chronicConditions}</div>}
+                  <div className="font-black text-sm">{profile.fullName} {profile.age ? `(${profile.age} yrs)` : ""}</div>
+                  {profile.bloodGroup && <div className="text-xs mt-0.5 opacity-90">Blood Group: {profile.bloodGroup}</div>}
+                  {profile.chronicConditions && <div className="text-[11px] mt-0.5 line-clamp-2 opacity-90">{profile.chronicConditions}</div>}
                 </div>
               )}
             </div>
 
-            <div className="w-full max-w-md pb-4 flex gap-3">
+            {/* Bottom 108 Call Action */}
+            <div className="w-full max-w-md mx-auto pt-2 pb-1 flex-shrink-0">
               <Button
                 size="lg"
                 onClick={() => window.open("tel:108")}
-                className={`w-full h-16 text-xl font-bold ${
+                className={`w-full min-h-[3.5rem] sm:min-h-[4rem] text-base sm:text-xl font-black rounded-xl shadow-lg flex items-center justify-center gap-2 ${
                   strobeLightOn
                     ? "bg-white text-red-700 hover:bg-gray-100"
                     : "bg-red-600 text-white hover:bg-red-700"
                 }`}
               >
-                <Phone className="h-6 w-6 mr-2" />
-                108 AMBULANCE
+                <Phone className="h-5 w-5 sm:h-6 sm:w-6 flex-shrink-0 animate-bounce" />
+                <span>108 AMBULANCE</span>
               </Button>
             </div>
           </div>
