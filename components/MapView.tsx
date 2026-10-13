@@ -167,34 +167,54 @@ export function MapView({ language }: MapViewProps) {
     setLeafletReady(true)
   }, [])
 
-  const fetchDistrictPack = async (distCode: string) => {
+  const fetchDistrictPack = async (distCode: string, stateCodeParam?: string) => {
     setLoading(true)
     setError(null)
+    const currentStateCode = stateCodeParam || selectedState
     try {
       const res = await fetch(`/api/facilities/district/${distCode}`)
       if (res.ok) {
         const json = await res.json()
         if (json.facilities && json.facilities.length > 0) {
-          // Map district pack schema to Facility structure
-          const mapped: Facility[] = json.facilities.map((f: any) => ({
-            id: f.id,
-            name: en ? f.nameEn : f.nameHi,
-            type: f.tier === "medical_college" || f.tier === "district_hospital" ? "hospital" : (f.tier === "phc" ? "health_post" : "clinic"),
-            address: en ? f.addressEn : f.addressHi,
-            phone: f.phone,
-            district: f.blockName || distCode,
-            distance_km: 0,
-            lat: f.lat,
-            lon: f.lon,
-            tier: f.tier,
-            capabilities: f.capabilities,
-          }))
+          const origin = userCoords || center
+          const mapped: Facility[] = json.facilities.map((f: any) => {
+            // Calculate approximate great-circle distance in km (Haversine formula approximation)
+            const dLat = ((f.lat - origin.lat) * Math.PI) / 180
+            const dLon = ((f.lon - origin.lng) * Math.PI) / 180
+            const a =
+              Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos((origin.lat * Math.PI) / 180) *
+                Math.cos((f.lat * Math.PI) / 180) *
+                Math.sin(dLon / 2) *
+                Math.sin(dLon / 2)
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+            const distKm = Math.round(6371 * c * 10) / 10
+
+            return {
+              id: f.id,
+              name: en ? f.nameEn : f.nameHi,
+              type:
+                f.tier === "medical_college" || f.tier === "district_hospital"
+                  ? "hospital"
+                  : f.tier === "phc"
+                  ? "health_post"
+                  : "clinic",
+              address: en ? f.addressEn : f.addressHi,
+              phone: f.phone,
+              district: f.blockName || distCode,
+              distance_km: distKm,
+              lat: f.lat,
+              lon: f.lon,
+              tier: f.tier,
+              capabilities: f.capabilities,
+            }
+          })
           setFacilities(mapped)
           return
         }
       }
       // If pack not seeded or empty, fallback to nearby RPC for the district center
-      const st = LGD_STATES.find(s => s.code === selectedState)
+      const st = LGD_STATES.find(s => s.code === currentStateCode)
       const dist = st?.districts.find(d => d.code === distCode)
       if (dist) {
         fetchFacilities(dist.center.lat, dist.center.lng)
@@ -233,7 +253,7 @@ export function MapView({ language }: MapViewProps) {
 
   // Initial load — load Bhopal district pack
   useEffect(() => {
-    fetchDistrictPack("2301")
+    fetchDistrictPack("2301", "23")
   }, [])
 
   const handleDistrictChange = (distCode: string) => {
@@ -243,7 +263,7 @@ export function MapView({ language }: MapViewProps) {
     if (dist) {
       setCenter(dist.center)
     }
-    fetchDistrictPack(distCode)
+    fetchDistrictPack(distCode, selectedState)
   }
 
   const handleStateChange = (stateCode: string) => {
@@ -253,7 +273,7 @@ export function MapView({ language }: MapViewProps) {
       const firstDist = st.districts[0]
       setSelectedDistrict(firstDist.code)
       setCenter(firstDist.center)
-      fetchDistrictPack(firstDist.code)
+      fetchDistrictPack(firstDist.code, stateCode)
     }
   }
 
