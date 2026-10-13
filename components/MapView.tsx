@@ -8,8 +8,9 @@ import { Card, CardContent } from "./ui/card"
 import { Button } from "./ui/button"
 import { Badge } from "./ui/badge"
 import { useToast } from "@/components/ui/use-toast"
-import { Navigation, Phone, Loader2, LocateFixed, Star, Search } from "lucide-react"
+import { Navigation, Phone, Loader2, LocateFixed, Star, Search, ShieldCheck, Activity } from "lucide-react"
 import { Input } from "./ui/input"
+import { LGD_STATES, IPHS_TIER_CONFIG, IphsCapabilities, IphsFacilityTier } from "@/lib/geo/lgd-iphs"
 
 // All react-leaflet components loaded client-side only
 const MapContainer = dynamic(() => import("react-leaflet").then(m => m.MapContainer), { ssr: false })
@@ -29,6 +30,8 @@ interface Facility {
   distance_km: number
   lat: number
   lon: number
+  tier?: IphsFacilityTier
+  capabilities?: IphsCapabilities
 }
 
 interface MapViewProps {
@@ -144,12 +147,15 @@ export function MapView({ language }: MapViewProps) {
   const en = language === "en"
   const [center, setCenter] = useState(MP_CENTER)
   const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null)
+  const [selectedState, setSelectedState] = useState<string>("23")
+  const [selectedDistrict, setSelectedDistrict] = useState<string>("2301")
   const [facilities, setFacilities] = useState<Facility[]>([])
   const [loading, setLoading] = useState(false)
   const [locating, setLocating] = useState(false)
   const { toast } = useToast()
   const [error, setError] = useState<string | null>(null)
   const [filter, setFilter] = useState<Facility["type"] | "all">("all")
+  const [showOnlyFRU, setShowOnlyFRU] = useState(false)
   const [radiusKm, setRadiusKm] = useState(25)
   const [leafletReady, setLeafletReady] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
@@ -160,6 +166,46 @@ export function MapView({ language }: MapViewProps) {
   useEffect(() => {
     setLeafletReady(true)
   }, [])
+
+  const fetchDistrictPack = async (distCode: string) => {
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await fetch(`/api/facilities/district/${distCode}`)
+      if (res.ok) {
+        const json = await res.json()
+        if (json.facilities && json.facilities.length > 0) {
+          // Map district pack schema to Facility structure
+          const mapped: Facility[] = json.facilities.map((f: any) => ({
+            id: f.id,
+            name: en ? f.nameEn : f.nameHi,
+            type: f.tier === "medical_college" || f.tier === "district_hospital" ? "hospital" : (f.tier === "phc" ? "health_post" : "clinic"),
+            address: en ? f.addressEn : f.addressHi,
+            phone: f.phone,
+            district: f.blockName || distCode,
+            distance_km: 0,
+            lat: f.lat,
+            lon: f.lon,
+            tier: f.tier,
+            capabilities: f.capabilities,
+          }))
+          setFacilities(mapped)
+          return
+        }
+      }
+      // If pack not seeded or empty, fallback to nearby RPC for the district center
+      const st = LGD_STATES.find(s => s.code === selectedState)
+      const dist = st?.districts.find(d => d.code === distCode)
+      if (dist) {
+        fetchFacilities(dist.center.lat, dist.center.lng)
+      }
+    } catch {
+      // Fallback to nearby RPC
+      fetchFacilities(center.lat, center.lng)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const fetchFacilities = async (lat: number, lon: number, type?: string, km?: number) => {
     setLoading(true)
@@ -185,10 +231,31 @@ export function MapView({ language }: MapViewProps) {
     }
   }
 
-  // Initial load — Bhopal as default center
+  // Initial load — load Bhopal district pack
   useEffect(() => {
-    fetchFacilities(MP_CENTER.lat, MP_CENTER.lng)
+    fetchDistrictPack("2301")
   }, [])
+
+  const handleDistrictChange = (distCode: string) => {
+    setSelectedDistrict(distCode)
+    const st = LGD_STATES.find(s => s.code === selectedState)
+    const dist = st?.districts.find(d => d.code === distCode)
+    if (dist) {
+      setCenter(dist.center)
+    }
+    fetchDistrictPack(distCode)
+  }
+
+  const handleStateChange = (stateCode: string) => {
+    setSelectedState(stateCode)
+    const st = LGD_STATES.find(s => s.code === stateCode)
+    if (st && st.districts.length > 0) {
+      const firstDist = st.districts[0]
+      setSelectedDistrict(firstDist.code)
+      setCenter(firstDist.center)
+      fetchDistrictPack(firstDist.code)
+    }
+  }
 
   const useMyLocation = () => {
     if (!navigator.geolocation) {
@@ -264,26 +331,74 @@ export function MapView({ language }: MapViewProps) {
     <div className="p-4 md:p-6 max-w-5xl mx-auto space-y-4">
       <div>
         <h2 className="text-2xl font-bold mb-1">
-          {en ? "Nearby Health Facilities" : "निकटतम स्वास्थ्य सुविधाएं"}
+          {en ? "National Healthcare Facility Discovery" : "राष्ट्रीय स्वास्थ्य सुविधा खोज"}
         </h2>
         <p className="text-sm text-gray-500">
           {en
-            ? "Hospitals, PHCs, clinics, pharmacies & labs across Madhya Pradesh — real OSM data"
-            : "मध्य प्रदेश के अस्पताल, PHC, क्लिनिक, फार्मेसी और लैब — वास्तविक डेटा"}
+            ? "Capability-aware facility locator indexed by Local Government Directory (LGD) and Indian Public Health Standards (IPHS)"
+            : "स्थानीय निकाय निर्देशिका (LGD) एवं भारतीय लोक स्वास्थ्य मानक (IPHS) आधारित स्वास्थ्य केंद्र खोज"}
         </p>
+      </div>
+
+      {/* LGD Geographic Navigation & Search Row */}
+      <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center bg-blue-50/60 p-3 rounded-xl border border-blue-100">
+        <div className="flex-1 flex gap-2">
+          {/* LGD State Selector */}
+          <div className="w-1/2 md:w-48">
+            <label className="text-[11px] font-semibold text-blue-900 block mb-1">
+              {en ? "State (LGD)" : "राज्य (LGD)"}
+            </label>
+            <select
+              value={selectedState}
+              onChange={e => handleStateChange(e.target.value)}
+              className="w-full text-xs font-medium border border-blue-200 rounded-lg p-2 bg-white text-gray-800"
+            >
+              {LGD_STATES.map(s => (
+                <option key={s.code} value={s.code}>
+                  {en ? s.nameEn : s.nameHi}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* LGD District Selector */}
+          <div className="w-1/2 md:w-56">
+            <label className="text-[11px] font-semibold text-blue-900 block mb-1">
+              {en ? "District (LGD)" : "जिला (LGD)"}
+            </label>
+            <select
+              value={selectedDistrict}
+              onChange={e => handleDistrictChange(e.target.value)}
+              className="w-full text-xs font-medium border border-blue-200 rounded-lg p-2 bg-white text-gray-800"
+            >
+              {LGD_STATES.find(s => s.code === selectedState)?.districts.map(d => (
+                <option key={d.code} value={d.code}>
+                  {en ? d.nameEn : d.nameHi}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Search by facility name */}
+        <div className="relative flex-1">
+          <label className="text-[11px] font-semibold text-blue-900 block mb-1">
+            {en ? "Search Facility" : "सुविधा खोजें"}
+          </label>
+          <div className="relative">
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+            <Input 
+              placeholder={en ? "Search hospital or CHC name..." : "अस्पताल या CHC का नाम खोजें..."}
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="pl-9 h-9 text-xs bg-white"
+            />
+          </div>
+        </div>
       </div>
 
       {/* Controls row */}
       <div className="flex flex-col gap-3">
-        <div className="relative w-full md:w-96">
-          <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-          <Input 
-            placeholder={en ? "Search hospital/clinic name..." : "अस्पताल/क्लिनिक का नाम खोजें..."}
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            className="pl-9"
-          />
-        </div>
         <div className="flex flex-wrap gap-2 items-center">
           <Button size="sm" variant="outline" onClick={useMyLocation}
           disabled={locating}
@@ -460,11 +575,37 @@ export function MapView({ language }: MapViewProps) {
                         {idx + 1}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-sm truncate">{f.name}</p>
-                        <p className="text-xs" style={{ color: cfg.color }}>
-                          {cfg.icon} {en ? cfg.en : cfg.hi}
-                        </p>
-                        <div className="flex items-center gap-3 mt-0.5 text-xs text-gray-500">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <p className="font-semibold text-sm truncate">{f.name}</p>
+                          {f.tier && (
+                            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${IPHS_TIER_CONFIG[f.tier]?.badgeColor || "bg-gray-100 text-gray-800"}`}>
+                              {en ? IPHS_TIER_CONFIG[f.tier]?.en : IPHS_TIER_CONFIG[f.tier]?.hi}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-2 mt-1 flex-wrap">
+                          <p className="text-xs" style={{ color: cfg.color }}>
+                            {cfg.icon} {en ? cfg.en : cfg.hi}
+                          </p>
+                          {f.capabilities?.isFRU && (
+                            <span className="text-[10px] font-bold bg-pink-100 text-pink-700 px-1.5 py-0.5 rounded">
+                              👶 FRU (Maternal)
+                            </span>
+                          )}
+                          {f.capabilities?.isPmJayEmpaneled && (
+                            <span className="text-[10px] font-bold bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded">
+                              ✓ PM-JAY
+                            </span>
+                          )}
+                          {f.capabilities?.hasBloodBankOrStorage && (
+                            <span className="text-[10px] font-bold bg-red-100 text-red-700 px-1.5 py-0.5 rounded">
+                              🩸 Blood
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
                           {f.phone && (
                             <a href={`tel:${f.phone}`} className="flex items-center gap-0.5 text-blue-600">
                               <Phone className="h-3 w-3" />{f.phone}

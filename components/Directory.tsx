@@ -53,8 +53,8 @@ export function Directory({ language }: DirectoryProps) {
 
   const content = {
     en: {
-      title: "Healthcare Directory",
-      subtitle: "Find verified doctors and hospitals in your area",
+      title: "Healthcare & OPD Directory",
+      subtitle: "Hospital specialist departments, OPD timings, and clinical facilities",
       searchPlaceholder: "Search by name, specialty, or location...",
       doctors: "Doctors",
       hospitals: "Hospitals",
