@@ -56,11 +56,16 @@ Set up environment variables in **Vercel Dashboard &rarr; Project Settings &rarr
 | `NEXT_PUBLIC_SUPABASE_URL` | Production, Preview, Dev | **Yes** | Supabase project URL (`https://xyz.supabase.co`) |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Production, Preview, Dev | **Yes** | Client publishable anon key (`sb_publishable_...`) |
 | `SUPABASE_SERVICE_ROLE_KEY` | Production, Preview, Dev | **Yes** | Server-only secret key (`sb_secret_...`) |
-| `GEMINI_API_KEY` | Production, Preview, Dev | **Yes** | Google AI Studio Gemini API key |
-| `GEMINI_MODELS` | Production, Preview, Dev | **Yes** | Fallback cascade: `gemini-2.5-flash,gemini-3.1-flash-lite,gemini-3.5-flash` |
+| `GEMINI_API_KEY` | Production, Preview, Dev | **Yes** | Google AI Studio Gemini API key ($0 free tier supported) |
+| `GEMINI_MODELS` | Production, Preview, Dev | **Yes** | Fallback cascade: `gemini-3.5-flash,gemini-3.1-flash-lite,gemini-2.5-flash` |
 | `NEXT_PUBLIC_SITE_URL` | Production, Preview, Dev | Optional | Canonical site URL (defaults to `http://localhost:3000` in dev) |
-| `UPSTASH_REDIS_REST_URL` | Production, Preview, Dev | Optional | Upstash Redis REST endpoint for distributed rate limits & response cache |
+| `UPSTASH_REDIS_REST_URL` | Production, Preview, Dev | Optional | Upstash Redis REST endpoint (distributed rate limiter & semantic cache; falls back to in-memory) |
 | `UPSTASH_REDIS_REST_TOKEN` | Production, Preview, Dev | Optional | Upstash Redis REST authentication token |
+| `NEXT_PUBLIC_JITSI_DOMAIN` | Production, Preview, Dev | Optional | Jitsi domain (defaults to `meet.jit.si`) |
+| `JITSI_APP_ID` | Production, Preview, Dev | Optional | Jitsi / JaaS App ID for JWT claims |
+| `JITSI_APP_SECRET` / `JAAS_API_KEY` | Production, Preview, Dev | Optional | Signing key for cryptographic JWT room tokens; zero-cost fallback uses time-gating |
+| `ABDM_CLIENT_ID` / `ABDM_CLIENT_SECRET` | Production, Preview, Dev | Optional | NHA Sandbox credentials; zero-cost fallback runs local simulated validation & FHIR bundle generator |
+| `BHASHINI_API_KEY` / `BHASHINI_USER_ID` | Production, Preview, Dev | Optional | GoI ULCA Voice API credentials; zero-cost fallback uses browser Web Speech API |
 | `LOADTEST_ENABLED` | **Staging Only** | **NO in Prod** | Must be `false` or unset in production. Set `true` only on staging. |
 | `LOADTEST_KEY` | **Staging Only** | **NO in Prod** | Shared secret token passed in `x-loadtest-key` for staging k6 runs. |
 | `NEXT_PUBLIC_GEMINI_API_KEY` | **DELETE** | **PROHIBITED** | **Must be completely deleted** to prevent client API key leaks. |
