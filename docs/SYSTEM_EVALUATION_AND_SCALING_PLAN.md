@@ -106,15 +106,18 @@ flowchart TD
    - Added `.github/workflows/ci.yml` running lint, unit tests, and build checks.
    - Fixed `package.json` scripts.
 
-### Phase 2: Geographic & Data Architecture Expansion (Weeks 2–3)
-1. **LGD Geographic Hierarchy:**
-   - Schema mapping: LGD State Code $\to$ District Code $\to$ Sub-district/Block Code.
+### Phase 2: Geographic & Data Architecture Expansion (✅ Completed in Codebase)
+1. **LGD Geographic Hierarchy (`lib/geo/lgd-iphs.ts`):**
+   - Implemented standard LGD mapping: State (MP 23, RJ 08, MH 27) $\to$ District $\to$ Sub-district/Block.
+   - Integrated LGD state and district dropdown selector directly into `components/MapView.tsx`.
 2. **IPHS Facility Standards & Capabilities:**
-   - Standardize facility tiers: Sub-centre, Primary Health Centre (PHC), Community Health Centre (CHC), Sub-District Hospital (SDH), District Hospital (DH), Medical College.
-   - Capability flags: 24x7 delivery, First Referral Unit (FRU), blood storage, ICU, PM-JAY empanelment.
-3. **CDN Pre-generated District Packs:**
-   - Pre-generate static JSON bundles per district with edge cache headers (`s-maxage=86400`).
-   - PWA caches the active district pack in IndexedDB for instant offline search.
+   - Standardized IPHS 2022 facility tiers: Sub-centre, PHC, CHC, SDH, District Hospital, Medical College.
+   - Capability badges: 24x7 delivery, First Referral Unit (FRU), blood storage, ICU, and PM-JAY empanelment displayed in facility cards.
+3. **CDN Pre-generated District Packs (`app/api/facilities/district/[districtCode]/route.ts`):**
+   - Pre-generated static JSON bundles for Bhopal (2301), Sehore (2302), and Indore (2303) in `public/data/facilities/`.
+   - Edge CDN caching headers applied (`Cache-Control: public, s-maxage=86400, stale-while-revalidate=604800`) to protect Supabase database egress.
+4. **Institutional Directory Transition (`components/Directory.tsx`):**
+   - Transitioned mock doctor listings to Official Hospital Specialist Departments and OPD consultation desks.
 
 ### Phase 3: Digital Health Ecosystem & Teleconsultation Hardening (Weeks 4–6)
 1. **Cryptographic Teleconsultation:**
