@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { checkRateLimit, rateLimitResponse, clientKey } from "@/lib/rate-limit"
+import { detectTier0Emergency } from "@/lib/chat/emergency"
 import { answerMedicalQuery, getMedicalBrainEntry } from "@/lib/ai/medical-brain"
 import { generateGeminiContent, GeminiContent } from "@/lib/ai/gemini"
 import { getCachedResponse, setCachedResponse, getSemanticCachedResponse } from "@/lib/cache/response-cache"
@@ -33,7 +34,23 @@ export async function POST(request: NextRequest) {
     const sanitizedMessage = message.trim().slice(0, 1000)
     const lang = language === "hi" ? "hi" : "en"
 
-    // 2. Immediate Clinical Knowledge Engine Match (Tier 0 & Tier 2)
+    // 2. Server-side Tier 0 Emergency Gate (Deterministic, 0ms, No LLM Call)
+    // Ensures direct API callers, mobile apps, or fallback requests never bypass critical emergency triage
+    const emergencyMatch = detectTier0Emergency(sanitizedMessage, lang)
+    if (emergencyMatch) {
+      return NextResponse.json({
+        reply: emergencyMatch.reply,
+        replyHi: emergencyMatch.replyHi,
+        replyEn: emergencyMatch.replyEn,
+        tier: 0,
+        emergency: true,
+        hotline: emergencyMatch.hotline,
+        fallback: false,
+        source: "tier0-emergency-gate",
+      })
+    }
+
+    // 3. Immediate Clinical Knowledge Engine Match (Tier 2 & Urgent Referrals)
     const brainEntry = getMedicalBrainEntry(sanitizedMessage)
     if (brainEntry) {
       return NextResponse.json({

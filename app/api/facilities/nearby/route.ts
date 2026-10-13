@@ -55,10 +55,11 @@ export async function GET(req: NextRequest) {
     )
   }
 
-  // Use admin client to bypass the broken execute permissions for anon users on the DB
+  // Use anonymous public client with NEXT_PUBLIC_SUPABASE_ANON_KEY (no service-role key on public routes)
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY!
   const supabase = createSupabaseClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
+    supabaseKey
   )
 
   const { data, error } = await supabase.rpc("nearby_facilities", {
@@ -71,7 +72,7 @@ export async function GET(req: NextRequest) {
   if (error) {
     console.error("[/api/facilities/nearby] RPC error:", error.message)
     return NextResponse.json(
-      { error: "Failed to fetch facilities", detail: error.message },
+      { error: "Unable to retrieve nearby facilities. Please try again later." },
       { status: 500 }
     )
   }

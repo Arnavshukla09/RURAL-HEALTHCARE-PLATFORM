@@ -57,6 +57,20 @@ export const CLINICAL_KNOWLEDGE_BASE: MedicalBrainEntry[] = [
     hi: "तुरंत अस्पताल या सामुदायिक स्वास्थ्य केंद्र (CHC) जाएं यदि:\n\n1. उल्टी, खांसी या मल में खून आए\n2. 12 घंटे से पानी भी पेट में न रुक रहा हो\n3. 103°F से अधिक तेज बुखार जो दवा से न उतरे\n4. बेहोशी, भ्रम या अत्यधिक कमजोरी हो\n5. 8 घंटे से पेशाब न आया हो (गंभीर निर्जलीकरण)",
   },
 
+  // ── PRIORITY 80: URGENT CLINICAL REFERRAL (NTEP / TB & Sub-acute red flags) ──
+  {
+    id: "urgent-referral-chronic-cough-tb",
+    priority: 80,
+    patterns: [
+      /\b(cough for (2|3|4|two|three|four)\s*(weeks|plus weeks|months)|chronic cough|coughing for (2|3|4|two|three|four)\s*weeks)\b/i,
+      /\b((2|3|4|do|teen|char)\s*(hafte|hafto|saptaah)\s*se\s*khansi|purani khansi)\b/i,
+      /((दो|तीन|चार)\s*(हफ्ते|हफ्तों|सप्ताह)\s*से\s*खांसी|लगातार खांसी)/i,
+    ],
+    keywords: ["cough", "weeks", "khansi", "hafte", "sputum", "tb"],
+    en: "⚠️ URGENT CLINICAL REFERRAL — COUGH LASTING OVER 2 WEEKS:\n\n• According to National Tuberculosis Elimination Program (NTEP) guidelines, a cough persisting for more than 2 weeks must be screened for Tuberculosis (TB).\n• Recommended Action: Visit your nearest Primary Health Centre (PHC) or Community Health Centre (CHC) for a free sputum test (microscopy/CBNAAT) and chest evaluation.\n• Do not take over-the-counter cough syrups to mask symptoms.\n• Note: If accompanied by blood in sputum, high fever, or night sweats, seek evaluation immediately at the government hospital.",
+    hi: "⚠️ तुरंत डॉक्टर को दिखाएं — 2 हफ्ते से अधिक समय से खांसी:\n\n• राष्ट्रीय क्षय रोग उन्मूलन कार्यक्रम (NTEP) के अनुसार, 2 सप्ताह से अधिक समय तक लगातार रहने वाली खांसी की टीबी (Tuberculosis) जांच कराना आवश्यक है।\n• जरूरी कदम: अपने नजदीकी प्राथमिक स्वास्थ्य केंद्र (PHC) या सामुदायिक स्वास्थ्य केंद्र (CHC) जाएं और बलगम की मुफ्त जांच (Sputum Test) कराएं।\n• बिना डॉक्टर की सलाह के खांसी की दवा खाकर इसे न दबाएं।\n• यदि बलगम में खून, शाम को बुखार या वजन घटने के लक्षण हों तो तुरंत सरकारी अस्पताल संपर्क करें।",
+  },
+
   // ── PRIORITY 60: ACUTE SYMPTOM GUIDELINES ──
   {
     id: "symptom-fever",

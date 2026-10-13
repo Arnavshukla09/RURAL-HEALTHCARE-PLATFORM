@@ -84,4 +84,66 @@ describe("Tier 0 Emergency Gate", () => {
       expect(match, `Unexpected emergency trigger for: "${phrase}"`).toBeNull()
     }
   })
+
+  it("should detect new critical emergencies (pediatric, obstetric, seizures, FAST, toxins)", () => {
+    const newEmergencies = [
+      "baby not breathing",
+      "infant cannot breathe",
+      "pregnant woman bleeding heavily",
+      "garbhvati mahila heavy bleeding",
+      "patient having continuous seizures",
+      "mirgi ke daure aa rahe hain",
+      "face drooping and slurred speech",
+      "swallowed pesticide in farm",
+      "keetnashak pi liya",
+      "scorpion sting in village",
+      "bichhu ne kaat liya",
+      "severe burns from fire accident",
+      "mujhe saans nahi aa rahi",
+    ]
+
+    for (const phrase of newEmergencies) {
+      const match = detectTier0Emergency(phrase, "en")
+      expect(match, `Expected emergency trigger for new condition: "${phrase}"`).not.toBeNull()
+      expect(match?.isEmergency).toBe(true)
+      expect(match?.hotline).toBe("108")
+    }
+  })
+
+  it("should strictly preserve inherently negative emergency phrases (allowlist)", () => {
+    const inherentNegativeEmergencies = [
+      "baby not breathing",
+      "bachha saans nahi le raha",
+      "not breathing after accident",
+      "saans nahi aa rahi",
+      "unable to breathe",
+      "सांस नहीं आ रही",
+      "बच्चा सांस नहीं ले रहा",
+    ]
+
+    for (const phrase of inherentNegativeEmergencies) {
+      const match = detectTier0Emergency(phrase, "hi")
+      expect(match, `Inherently negative phrase must NOT be suppressed: "${phrase}"`).not.toBeNull()
+      expect(match?.isEmergency).toBe(true)
+    }
+  })
+
+  it("should suppress false alarms when symptom is specifically negated", () => {
+    const negatedSymptomPhrases = [
+      "I do not have chest pain",
+      "don't have chest pain",
+      "no chest pain doctor",
+      "patient denies chest pain",
+      "without any chest pain",
+      "seene mein dard nahi hai",
+      "chhati me dard nahi hai",
+      "dard nahi hai",
+      "सीने में दर्द नहीं है",
+    ]
+
+    for (const phrase of negatedSymptomPhrases) {
+      const match = detectTier0Emergency(phrase, "en")
+      expect(match, `Negated symptom should NOT trigger emergency: "${phrase}"`).toBeNull()
+    }
+  })
 })
