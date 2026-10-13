@@ -9,11 +9,20 @@ import { Alert, AlertDescription } from "./ui/alert"
 interface JitsiMeetingProps {
   roomName: string
   displayName: string
+  jwt?: string | null
+  domain?: string
   onLeave?: () => void
   language?: string
 }
 
-export function JitsiMeeting({ roomName, displayName, onLeave, language = "en" }: JitsiMeetingProps) {
+export function JitsiMeeting({
+  roomName,
+  displayName,
+  jwt,
+  domain = "meet.jit.si",
+  onLeave,
+  language = "en",
+}: JitsiMeetingProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -58,7 +67,7 @@ export function JitsiMeeting({ roomName, displayName, onLeave, language = "en" }
 
         const JitsiMeetExternalAPI = (window as any).JitsiMeetExternalAPI
 
-        const options = {
+        const options: Record<string, any> = {
           roomName: roomName,
           width: "100%",
           height: "100%",
@@ -89,7 +98,11 @@ export function JitsiMeeting({ roomName, displayName, onLeave, language = "en" }
           },
         }
 
-        const api = new JitsiMeetExternalAPI("meet.jit.si", options)
+        if (jwt) {
+          options.jwt = jwt
+        }
+
+        const api = new JitsiMeetExternalAPI(domain, options)
 
         // Handle ready event
         api.addEventListener("videoConferenceJoined", () => {
@@ -123,7 +136,7 @@ export function JitsiMeeting({ roomName, displayName, onLeave, language = "en" }
     }
 
     initJitsi()
-  }, [roomName, displayName, language])
+  }, [roomName, displayName, language, jwt, domain])
 
   if (error) {
     return (

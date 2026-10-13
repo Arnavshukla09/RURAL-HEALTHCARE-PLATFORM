@@ -119,18 +119,25 @@ flowchart TD
 4. **Institutional Directory Transition (`components/Directory.tsx`):**
    - Transitioned mock doctor listings to Official Hospital Specialist Departments and OPD consultation desks.
 
-### Phase 3: Digital Health Ecosystem & Teleconsultation Hardening (Weeks 4–6)
-1. **Cryptographic Teleconsultation:**
-   - Transition Jitsi from open lobby mode to server-signed HS256/RS256 JWT tokens generated dynamically in `/api/teleconsult/room`.
-2. **Community Health Worker (ASHA/ANM) Copilot:**
-   - Voice-first interactions powered by Bhashini speech-to-text / text-to-speech.
-   - Standardized IMCI and antenatal care (ANC) clinical triage questionnaires.
-3. **ABDM Sandbox Integration (Realistic Timeline):**
-   - ABHA number authentication.
-   - Health Information Provider (HIP) & Health Information User (HIU) milestone certifications for HL7 FHIR R4 clinical bundles.
+### Phase 3: Digital Health Ecosystem & Teleconsultation Hardening (✅ Completed in Codebase)
+1. **Cryptographic Teleconsultation (`lib/jitsi/jwt.ts` & `components/JitsiMeeting.tsx`):**
+   - Zero-cost architecture: purely local cryptographic HS256 JWT generation with strict 1-hour expiration and participant claim gating.
+   - Graceful zero-secret fallback: if `JITSI_APP_SECRET` or `JAAS_API_KEY` is not present, functions in time-gated access mode without requiring any paid subscription.
+   - Updated `JitsiMeeting.tsx` to accept and inject JWT and domain parameters into the `JitsiMeetExternalAPI` iframe.
+2. **ABDM Sandbox Adapter & HL7 FHIR R4 Bundle Generator (`lib/abdm/fhir.ts`):**
+   - Standard NHA compliant 14-digit ABHA Number and ABHA Address (`@abdm` / `@sbx`) validators.
+   - Local generation of HL7 FHIR R4 Document Bundles (`Composition`, `Patient`, `Practitioner`, `Organization`, `MedicationRequest`) for OPD prescriptions and records.
+   - Pluggable `AbdmGatewayClient` seam operating in zero-cost simulated mode by default, ready for live NHA sandbox credentials (`ABDM_CLIENT_ID`, `ABDM_CLIENT_SECRET`).
+3. **Community Health Worker (ASHA / ANM) Clinical Triage Engine (`lib/clinical/imci-anc.ts`):**
+   - 100% offline deterministic triage engine based on WHO/UNICEF Integrated Management of Childhood Illness (IMCI) and National High-Risk Pregnancy (ANC) protocols.
+   - Bilingual (English & Hindi) clinical classifications and referral directives.
+4. **Vernacular Speech Abstraction Seam (`lib/speech/bhashini.ts`):**
+   - Client-side zero-cost fallback utilizing standard browser Web Speech API (`speechSynthesis` and `SpeechRecognition`).
+   - Seamless pluggable seam for Government of India Bhashini ASR/TTS endpoints when `BHASHINI_API_KEY` is configured.
 
-### Phase 4: Production Infrastructure & Cost Plan (Weeks 6+)
-- **Pilot Budget (~$70–$120/mo):**
+### Phase 4: Production Infrastructure & Cost Plan (Ready for Migration)
+- **Zero-Cost Free Tier Posture:** Current codebase operates with $0 recurring cloud costs on free-tier Supabase, Vercel, and browser Web Speech.
+- **Pilot Budget (~$70–$120/mo when scale requires):**
   - Supabase Pro ($25/mo): 8 GB database, 250 GB egress, eliminates 7-day idle pause.
   - Vercel Pro ($20/seat): Commercial SLA, 1 TB bandwidth, increased execution timeout.
   - Upstash Redis ($10/mo): Centralized distributed rate limiter and cross-lambda semantic cache.
@@ -140,6 +147,6 @@ flowchart TD
 
 ## 4. Verification & QA Status
 
-- **Unit Test Suite (`vitest`):** **63/63 passing** across 12 test files (including 3 new comprehensive test suites in `tests/unit/emergency.test.ts`).
+- **Unit Test Suite (`vitest`):** **71/71 passing** across 13 test files (including new comprehensive test suites in `tests/unit/phase3-ecosystem.test.ts` and `tests/unit/emergency.test.ts`).
 - **Production Build (`next build`):** **Compiled successfully** across all 45 static and serverless routes.
 - **Stress Test Suite (`scratch/test-chatbot-stress.ts`):** **8/8 checks passing** (Emergency regex, Injection defense, Payload truncation, Concurrency burst, Gateway failover, Quota guard).

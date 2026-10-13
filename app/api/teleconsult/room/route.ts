@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit"
 import { requireUser, getPatientProfile, authErrorResponse } from "@/lib/auth/guard"
+import { generateJitsiToken } from "@/lib/jitsi/jwt"
 
 const TeleconsultSchema = z.object({
   appointmentId: z.string().uuid(),
@@ -106,7 +107,21 @@ export async function POST(request: NextRequest) {
         .eq("id", appointmentId)
     }
 
-    return NextResponse.json({ roomId })
+    // Phase 3 Cryptographic JWT Generation (Zero-Cost posture: returns token if secret configured, null otherwise)
+    const { token, requiresToken } = generateJitsiToken({
+      roomName: roomId,
+      userId: user.id,
+      userName: `${patient.first_name || ""} ${patient.last_name || ""}`.trim() || user.email || "Participant",
+      role: patient.role as "patient" | "doctor" | "admin",
+      durationSeconds: 3600,
+    })
+
+    return NextResponse.json({
+      roomId,
+      token,
+      domain: process.env.NEXT_PUBLIC_JITSI_DOMAIN || "meet.jit.si",
+      requiresToken,
+    })
   } catch (err) {
     return authErrorResponse(err)
   }
