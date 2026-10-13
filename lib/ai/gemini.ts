@@ -28,8 +28,13 @@ export interface GeminiCallResult {
   reason?: string
 }
 
-const DEFAULT_MODELS = ["gemini-3.5-flash", "gemini-3.1-flash-lite", "gemini-2.5-flash"]
-const MODEL_TIMEOUT_MS = 3500
+const DEFAULT_MODELS = [
+  "gemini-3.1-flash-lite",
+  "gemini-3.5-flash",
+  "gemini-3.1-flash-lite-preview",
+  "gemini-3-flash-preview",
+]
+const MODEL_TIMEOUT_MS = 12000
 
 export async function generateGeminiContent(
   contents: GeminiContent[],

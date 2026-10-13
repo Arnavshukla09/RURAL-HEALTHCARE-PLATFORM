@@ -29,7 +29,7 @@ interface CircuitBreaker {
 
 const FAILURE_THRESHOLD = 5
 const OPEN_COOLDOWN_MS = 60000 // 60 seconds
-const DEFAULT_TIMEOUT_MS = 12000 // 12 seconds
+const DEFAULT_TIMEOUT_MS = 25000 // 25 seconds across candidate models
 const DAILY_QUOTA_LIMIT = 30 // 30 queries per day per user/IP on free tier
 
 const breaker: CircuitBreaker = {
