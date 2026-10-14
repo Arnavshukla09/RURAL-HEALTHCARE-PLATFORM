@@ -47,10 +47,14 @@ export function Header() {
   }
 
   const go = (page: string) => {
-    router.push(page)
     setMobileMenuOpen(false)
     setCareDropOpen(false)
     setUserDropOpen(false)
+    if (language !== "en") {
+      window.location.href = page
+      return
+    }
+    router.push(page)
   }
 
   const isActive = (key: string) => pathname === key || pathname.startsWith(key + "/")

@@ -4,6 +4,23 @@ All notable changes to the Rural Healthcare Platform will be documented in this 
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres roughly to chronological feature milestones.
 
+## [v1.19.3] - 2026-10-15 — Continuous Regional Language Translation Across Route Transitions
+
+### 1. Root Cause Resolution
+- **Issue**: When switching pages (e.g. from Home to Healthcare Directory `/directory`), Next.js executed client-side SPA route transitions (`router.push`). This replaced the `<main>` DOM tree with untranslated English text, leaving Google Translate unaware of the newly injected nodes while the header stayed in Telugu.
+- **Navigation Translation Preserver (`lib/i18n/google-translate.ts` & `app/layout.tsx`)**:
+  - Implemented `installNavigationTranslationPreserver` which intercepts `history.pushState` on client-side route transitions when a regional language (Telugu, Marathi, Bengali, Tamil, etc.) is active.
+  - Automatically loads the destination route with a clean page load so that Google Translate's engine parses and translates 100% of the new page's server DOM natively on load.
+  - When in English (`en`), preserves standard instant Next.js SPA transitions.
+
+### 2. Route Observer & Retranslation Daemon (`components/TranslationRouteObserver.tsx`)
+- Added `TranslationRouteObserver` inside `RootLayout` which watches `pathname` and re-triggers translation (`retranslateCurrentPage`) for any dynamic or client-rendered route elements.
+- Updated `go()` in `components/Header.tsx` and tab clicks in `components/BottomTabBar.tsx` to directly navigate in regional languages.
+
+### 3. Test Suite Verification (`tests/unit/multilingual-engine.test.ts`)
+- Added unit tests verifying `installNavigationTranslationPreserver` intercepts non-English route transitions while allowing normal SPA navigation for English.
+- 86/86 unit tests passing across 15 test files in <850ms. 0 TypeScript errors, 0 ESLint errors.
+
 ## [v1.19.2] - 2026-10-15 — Permanent Google Translate Banner Suppression & Navigation Bar Protection
 
 ### 1. Zero Navbar Interference

@@ -239,4 +239,73 @@ describe("Multilingual Engine & Dialect Mapping", () => {
       ;(globalThis as any).Node = originalNode
     }
   })
+
+  it("preserves active regional language across route transitions", async () => {
+    const originalWindow = (globalThis as any).window
+    const originalDocument = (globalThis as any).document
+
+    let navigatedHref = "https://ruralhealth.in/dashboard"
+    let pushStateCalled = false
+
+    const mockHistory = {
+      pushState: (_state: any, _title: string, _url?: any) => {
+        pushStateCalled = true
+      },
+    }
+
+    const mockStorage: Record<string, string> = {
+      rhcp_language: "te", // Telugu
+    }
+
+    ;(globalThis as any).window = {
+      location: {
+        origin: "https://ruralhealth.in",
+        pathname: "/dashboard",
+        get href() {
+          return navigatedHref
+        },
+        set href(val: string) {
+          navigatedHref = val
+        },
+      },
+      history: mockHistory,
+      localStorage: {
+        getItem: (k: string) => mockStorage[k] || null,
+        setItem: (k: string, v: string) => {
+          mockStorage[k] = v
+        },
+      },
+    }
+
+    ;(globalThis as any).document = {
+      cookie: "",
+      querySelectorAll: () => [],
+      querySelector: () => null,
+      body: { style: {} },
+    }
+
+    try {
+      const { installNavigationTranslationPreserver } = await import("@/lib/i18n/google-translate")
+      installNavigationTranslationPreserver()
+
+      // When regional language (Telugu) is active, route navigation to /directory triggers full page load
+      mockHistory.pushState({}, "", "/directory")
+      expect(navigatedHref).toBe("https://ruralhealth.in/directory")
+
+      // When language is English, normal SPA navigation (pushState) proceeds
+      mockStorage.rhcp_language = "en"
+      navigatedHref = ""
+      pushStateCalled = false
+      // Reset patched flag for testing
+      delete (mockHistory as any).__rhcp_translate_patched
+      installNavigationTranslationPreserver()
+
+      mockHistory.pushState({}, "", "/consultation")
+      expect(pushStateCalled).toBe(true)
+      expect(navigatedHref).toBe("")
+    } finally {
+      ;(globalThis as any).window = originalWindow
+      ;(globalThis as any).document = originalDocument
+    }
+  })
 })

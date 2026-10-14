@@ -11,6 +11,7 @@ import { Analytics } from "@vercel/analytics/react"
 import { PwaUpdaterAndInstaller } from "@/components/PwaUpdaterAndInstaller"
 import { FloatingChatClient } from "@/components/FloatingChatClient"
 import { LanguageSuggestionBanner } from "@/components/LanguageSuggestionBanner"
+import { TranslationRouteObserver } from "@/components/TranslationRouteObserver"
 import Script from "next/script"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
@@ -107,6 +108,28 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   });
                 }
               } catch(e) {}
+              // Pre-hydration route navigation patch: ensures page transitions in regional languages cleanly load translated DOM
+              try {
+                if (typeof window !== 'undefined' && window.history && !window.history.__rhcp_translate_patched) {
+                  var origPush = window.history.pushState;
+                  window.history.__rhcp_translate_patched = true;
+                  window.history.pushState = function(state, title, url) {
+                    if (url) {
+                      try {
+                        var curLang = localStorage.getItem("rhcp_language");
+                        if (curLang && curLang !== "en") {
+                          var target = new URL(url.toString(), window.location.origin);
+                          if (target.origin === window.location.origin && target.pathname !== window.location.pathname) {
+                            window.location.href = target.href;
+                            return;
+                          }
+                        }
+                      } catch(e) {}
+                    }
+                    return origPush.apply(this, arguments);
+                  };
+                }
+              } catch(e) {}
               window.googleTranslateElementInit = function() {
                 try {
                   if (window.google && window.google.translate) {
@@ -135,6 +158,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           strategy="afterInteractive"
         />
         <AppProvider>
+          <TranslationRouteObserver />
           <LanguageSuggestionBanner />
           <AccessibilityBar />
           <Header />

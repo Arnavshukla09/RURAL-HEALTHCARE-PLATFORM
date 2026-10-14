@@ -24,7 +24,13 @@ export function BottomTabBar() {
         const isActive = pathname === tab.key || (tab.key === "/dashboard" && pathname.includes("/dashboard"))
         
         return (
-          <button key={tab.key} onClick={() => router.push(tab.key)}
+          <button key={tab.key} onClick={() => {
+            if (language !== "en") {
+              window.location.href = tab.key
+              return
+            }
+            router.push(tab.key)
+          }}
             className={`flex-1 flex flex-col items-center py-2 text-xs transition-colors ${
               isActive ? "text-teal-600 font-semibold" : "text-gray-500 hover:text-gray-700"
             }`}>

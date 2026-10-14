@@ -111,10 +111,44 @@ export function startGoogleTranslateBannerSuppression() {
   }
 }
 
-// Ensure crash guard and banner suppression are initialized at client module load
+/**
+ * Patch window.history.pushState so that when a non-English regional language
+ * (Telugu, Marathi, Bengali, etc.) is active, SPA route transitions perform a full
+ * document load. This guarantees Google Translate parses and translates 100% of the
+ * destination route's DOM without leaving untranslated English/Hindi elements.
+ */
+export function installNavigationTranslationPreserver() {
+  if (typeof window === "undefined" || typeof window.history === "undefined") return
+
+  const history = window.history
+  if ((history as any).__rhcp_translate_patched) return
+  ;(history as any).__rhcp_translate_patched = true
+
+  const originalPushState = history.pushState
+  history.pushState = function (state: any, title: string, url?: string | URL | null) {
+    if (url) {
+      try {
+        const currentLang =
+          (typeof window !== "undefined" && window.localStorage ? window.localStorage.getItem("rhcp_language") : null) ||
+          (typeof localStorage !== "undefined" ? localStorage.getItem("rhcp_language") : null)
+        if (currentLang && currentLang !== "en") {
+          const targetUrl = new URL(url.toString(), window.location.origin)
+          if (targetUrl.origin === window.location.origin && targetUrl.pathname !== window.location.pathname) {
+            window.location.href = targetUrl.href
+            return
+          }
+        }
+      } catch {}
+    }
+    return originalPushState.apply(this, [state, title, url] as any)
+  }
+}
+
+// Ensure crash guard, banner suppression, and route translation preserver are initialized on client
 if (typeof window !== "undefined") {
   installTranslateCrashGuard()
   startGoogleTranslateBannerSuppression()
+  installNavigationTranslationPreserver()
 }
 
 /**
@@ -137,6 +171,31 @@ export function setTranslateCookie(langCode: string) {
       document.cookie = `googtrans=/en/${langCode}; path=/${domainPart}`
     }
   })
+}
+
+/**
+ * Force Google Translate to re-evaluate and re-translate newly rendered DOM nodes.
+ * Used on SPA route transitions when a regional language is selected.
+ */
+export function retranslateCurrentPage(langCode: string) {
+  if (typeof window === "undefined" || typeof document === "undefined" || !langCode || langCode === "en") return
+
+  setTranslateCookie(langCode)
+  hideGoogleTranslateBanner()
+
+  const select = document.querySelector<HTMLSelectElement>(".goog-te-combo")
+  if (select) {
+    // Toggle select element to force Google Translate to re-scan newly mounted nodes
+    select.value = ""
+    select.dispatchEvent(new Event("change"))
+
+    setTimeout(() => {
+      select.value = langCode
+      select.dispatchEvent(new Event("change"))
+      setTimeout(hideGoogleTranslateBanner, 50)
+      setTimeout(hideGoogleTranslateBanner, 300)
+    }, 100)
+  }
 }
 
 /**
