@@ -89,6 +89,9 @@ export async function POST(request: NextRequest) {
       created: true,
     })
   } catch (error: any) {
+    if (error?.name === "AuthError" || error?.status) {
+      return authErrorResponse(error)
+    }
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

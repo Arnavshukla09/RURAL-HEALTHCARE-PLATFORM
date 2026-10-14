@@ -92,6 +92,36 @@ export function Authentication({ setUser, setCurrentPage, language }: Authentica
     }
   }, [en, toast])
 
+  const fillDemo = (demoType: "patient" | "doctor" | "admin") => {
+    if (demoType === "patient") {
+      setFormData({
+        name: "Priya Sharma",
+        email: "patient@ruralhealth.demo",
+        phone: "+91 9876543210",
+        password: "Patient@123",
+        confirmPassword: "Patient@123",
+      })
+    } else if (demoType === "doctor") {
+      setFormData({
+        name: "Dr. Arjun",
+        email: "doctor@ruralhealth.demo",
+        phone: "+91 9876543211",
+        password: "Doctor@123",
+        confirmPassword: "Doctor@123",
+      })
+    } else if (demoType === "admin") {
+      setFormData({
+        name: "Admin User",
+        email: "admin@ruralhealth.demo",
+        phone: "+91 9876543212",
+        password: "Admin@123",
+        confirmPassword: "Admin@123",
+      })
+    }
+    setErrors([])
+    setSuccessMsg("")
+  }
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!formData.email.trim() || !formData.password.trim()) {
@@ -102,35 +132,80 @@ export function Authentication({ setUser, setCurrentPage, language }: Authentica
     }
 
     setIsLoading(true)
+    setErrors([])
     try {
       const supabase = createClient()
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: formData.email,
+
+      // 10-second timeout failsafe to guarantee button never hangs indefinitely
+      const authPromise = supabase.auth.signInWithPassword({
+        email: formData.email.trim(),
         password: formData.password,
       })
+      const timeoutPromise = new Promise<{ data: any; error: any }>((_, reject) =>
+        setTimeout(
+          () =>
+            reject(
+              new Error(
+                en
+                  ? "Sign-in timed out. Please check your connection and try again."
+                  : "साइन-इन समय समाप्त। कृपया कनेक्शन जांचें।"
+              )
+            ),
+          10000
+        )
+      )
 
-      if (error) { 
-        setErrors([error.message]); 
+      const { data, error } = (await Promise.race([authPromise, timeoutPromise])) as any
+
+      if (error) {
+        setErrors([error.message])
         toast({ title: "Authentication Failed", description: error.message, variant: "destructive" })
-        setIsLoading(false); 
-        return 
+        setIsLoading(false)
+        return
       }
 
-      // Fetch role + phone from ensure-patient API to bypass RLS issues
-      const res = await fetch("/api/auth/ensure-patient", { method: "POST" })
-      if (!res.ok) throw new Error("Failed to load user profile")
-      const patient = await res.json()
+      if (!data?.user) {
+        throw new Error(en ? "Sign-in failed. Please try again." : "साइन-इन विफल। पुनः प्रयास करें।")
+      }
+
+      // Read role directly from DB using authenticated client, fallback gracefully to metadata
+      let userRole: "patient" | "doctor" | "admin" = "patient"
+      let userName = data.user.user_metadata?.full_name || data.user.email?.split("@")[0] || "User"
+      let userPhone = data.user.user_metadata?.phone || ""
+
+      try {
+        const { data: patient } = await supabase
+          .from("patients")
+          .select("role, first_name, last_name, phone")
+          .eq("user_id", data.user.id)
+          .single()
+
+        if (patient) {
+          if (patient.role) userRole = patient.role as any
+          if (patient.first_name) userName = patient.first_name + (patient.last_name ? ` ${patient.last_name}` : "")
+          if (patient.phone) userPhone = patient.phone
+        }
+      } catch (err) {
+        console.warn("[Authentication] Patient profile lookup fallback:", err)
+      }
 
       setUser({
         id: data.user.id,
-        name: patient.name || data.user.user_metadata?.full_name || data.user.email?.split("@")[0] || "User",
+        name: userName,
         email: data.user.email || "",
-        role: patient.role || "patient",
-        phone: patient.phone || "",
+        role: userRole,
+        phone: userPhone,
       })
-      setCurrentPage("dashboard")
-    } catch {
-      const msg = en ? "Login failed. Try again." : "लॉगिन विफल। पुनः प्रयास करें।"
+
+      if (userRole === "admin") {
+        setCurrentPage("admin/dashboard")
+      } else if (userRole === "doctor") {
+        setCurrentPage("doctor/dashboard")
+      } else {
+        setCurrentPage("dashboard")
+      }
+    } catch (err: any) {
+      const msg = err?.message || (en ? "Login failed. Try again." : "लॉगिन विफल। पुनः प्रयास करें।")
       setErrors([msg])
       toast({ title: "Error", description: msg, variant: "destructive" })
     } finally {
@@ -273,6 +348,41 @@ export function Authentication({ setUser, setCurrentPage, language }: Authentica
 
               {/* ── LOGIN TAB ── */}
               <TabsContent value="login" className="space-y-4">
+                {/* Quick 1-Tap Demo Accounts */}
+                <div className="bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-xs space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-slate-700">
+                      {en ? "Demo Accounts (1-Tap Fill):" : "डेमो खाते (1-क्लिक):"}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => fillDemo("patient")}
+                      className="px-2 py-1.5 rounded-md bg-teal-50 border border-teal-200 text-teal-800 hover:bg-teal-100 font-medium transition-colors text-center text-xs"
+                      disabled={isLoading}
+                    >
+                      👤 Patient
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => fillDemo("doctor")}
+                      className="px-2 py-1.5 rounded-md bg-blue-50 border border-blue-200 text-blue-800 hover:bg-blue-100 font-medium transition-colors text-center text-xs"
+                      disabled={isLoading}
+                    >
+                      🩺 Doctor
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => fillDemo("admin")}
+                      className="px-2 py-1.5 rounded-md bg-purple-50 border border-purple-200 text-purple-800 hover:bg-purple-100 font-medium transition-colors text-center text-xs"
+                      disabled={isLoading}
+                    >
+                      ⚡ Admin
+                    </button>
+                  </div>
+                </div>
+
                 <form onSubmit={handleLogin}>
                   <div className="space-y-2">
                     <Label htmlFor="login-email">{t.email}</Label>
