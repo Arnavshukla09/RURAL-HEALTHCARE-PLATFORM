@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { createClient } from "@/lib/supabase/client"
 import { UserProfile, SymptomResult } from "@/types"
 import { useRouter, usePathname } from "next/navigation"
+import { triggerGoogleTranslate } from "@/lib/i18n/google-translate"
 
 interface AppContextProps {
   user: UserProfile | null
@@ -32,6 +33,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (saved) {
         setLanguageState(saved)
         document.documentElement.lang = saved
+        if (saved !== "en") {
+          triggerGoogleTranslate(saved, false)
+        }
       }
     } catch {}
   }, [])
@@ -43,6 +47,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         localStorage.setItem("rhcp_language", next)
         document.documentElement.lang = next
         window.dispatchEvent(new CustomEvent("rhcp-language-change", { detail: { language: next } }))
+        triggerGoogleTranslate(next, true)
       } catch {}
       return next
     })

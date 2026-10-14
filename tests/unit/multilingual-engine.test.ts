@@ -123,4 +123,91 @@ describe("Multilingual Engine & Dialect Mapping", () => {
       expect(resolved.button).toBeTruthy()
     }
   })
+
+  it("sets and clears Google Translate cookies and synchronizes DOM safely", async () => {
+    const originalDocument = (globalThis as any).document
+    const originalWindow = (globalThis as any).window
+    const originalNode = (globalThis as any).Node
+
+    let cookieStore = ""
+    const mockDocument: any = {
+      get cookie() {
+        return cookieStore
+      },
+      set cookie(val: string) {
+        if (val.includes("expires=Thu, 01 Jan 1970")) {
+          cookieStore = ""
+        } else {
+          cookieStore = (cookieStore ? cookieStore + "; " : "") + val
+        }
+      },
+      querySelector: () => null,
+    }
+
+    class MockNode {
+      parentNode: MockNode | null = null
+      children: MockNode[] = []
+      removeChild(child: MockNode) {
+        if (child.parentNode !== this) {
+          throw new Error("NotFoundError: The node to be removed is not a child of this node.")
+        }
+        child.parentNode = null
+        this.children = this.children.filter((c) => c !== child)
+        return child
+      }
+      insertBefore(newNode: MockNode, refNode: MockNode | null) {
+        newNode.parentNode = this
+        this.children.push(newNode)
+        return newNode
+      }
+    }
+
+    ;(globalThis as any).Node = MockNode
+    ;(globalThis as any).document = mockDocument
+    ;(globalThis as any).window = {
+      location: { hostname: "ruralhealth.in", reload: () => {} },
+    }
+
+    try {
+      const { setTranslateCookie, installTranslateCrashGuard, triggerGoogleTranslate } = await import(
+        "@/lib/i18n/google-translate"
+      )
+
+      // 1. Crash guard test
+      installTranslateCrashGuard()
+      const parent = new MockNode()
+      const child = new MockNode()
+      child.parentNode = parent
+      parent.children.push(child)
+
+      const foreignChild = new MockNode()
+      // Should not throw Error due to installTranslateCrashGuard
+      expect(() => parent.removeChild(foreignChild)).not.toThrow()
+
+      // 2. Cookie setting
+      setTranslateCookie("mr")
+      expect(mockDocument.cookie).toContain("googtrans=/auto/mr")
+
+      setTranslateCookie("en")
+      expect(mockDocument.cookie).toBe("")
+
+      // 3. Trigger Google Translate on select combo
+      let eventFired = false
+      const mockSelect = {
+        value: "",
+        dispatchEvent: () => {
+          eventFired = true
+        },
+      }
+      mockDocument.querySelector = (sel: string) => (sel === ".goog-te-combo" ? mockSelect : null)
+
+      triggerGoogleTranslate("mr", false)
+      expect(mockSelect.value).toBe("mr")
+      expect(eventFired).toBe(true)
+    } finally {
+      ;(globalThis as any).document = originalDocument
+      ;(globalThis as any).window = originalWindow
+      ;(globalThis as any).Node = originalNode
+    }
+  })
 })

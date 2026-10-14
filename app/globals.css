@@ -27,8 +27,33 @@
 
 @layer base {
   * { @apply border-border; }
-  body { @apply bg-background text-foreground antialiased; }
+  body { @apply bg-background text-foreground antialiased; top: 0px !important; position: static !important; }
 }
+
+/* Google Translate Widget & Frame Styling Cleanup ($0 Free Tier) */
+.goog-te-banner-frame,
+iframe.goog-te-banner-frame,
+.goog-te-banner-frame.skiptranslate {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+}
+
+#goog-gt-tt,
+.goog-te-balloon-frame {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+.goog-text-highlight {
+  background: none !important;
+  box-shadow: none !important;
+}
+
+#google_translate_element {
+  display: none !important;
+}
+
 
 @layer utilities {
   .gradient-primary { background: linear-gradient(135deg, hsl(172, 66%, 30%), hsl(152, 60%, 42%)); }

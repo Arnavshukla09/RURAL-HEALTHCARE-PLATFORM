@@ -4,6 +4,37 @@ All notable changes to the Rural Healthcare Platform will be documented in this 
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres roughly to chronological feature milestones.
 
+## [v1.19.1] - 2026-10-15 — Zero-Cost Full Site Regional Translation Engine & React DOM Crash Guard
+
+### 1. Client-Side Live Regional Translation Engine (`lib/i18n/google-translate.ts`)
+- **Zero-Cost Free Tier ($0 Cost)**:
+  - Solved the fallback-to-English issue where switching languages to Marathi (`mr`), Bengali (`bn`), Telugu (`te`), Tamil (`ta`), etc., left UI strings untranslated.
+  - Implemented client-side DOM translation using the Google Translate Element API without requiring paid Cloud Translation or Bhashini credentials.
+- **React DOM Crash Protection (`installTranslateCrashGuard`)**:
+  - Overrode `Node.prototype.removeChild` and `Node.prototype.insertBefore` to gracefully handle nodes wrapped or shifted into `<font>` tags by the translator.
+  - Completely prevents React's reconciler crash: `NotFoundError: Failed to execute 'removeChild' on 'Node'`.
+- **Bidirectional Cookie & Combo Synchronization (`setTranslateCookie`, `triggerGoogleTranslate`)**:
+  - Sets root and domain-level `googtrans=/auto/{langCode}` and `googtrans=/en/{langCode}` cookies on language selection.
+  - Clears `googtrans` cookies on switching back to English (`en`).
+  - Programmatically selects `.goog-te-combo` and fires standard change events for instant on-the-fly DOM translation.
+
+### 2. Layout & Shell Integration (`app/layout.tsx` & `app/globals.css`)
+- **Pre-Hydration Cookie & Crash Guard Injection**:
+  - Injected early `<head>` script to synchronize `document.documentElement.lang`, set initial `googtrans` cookies before paint, and define `window.googleTranslateElementInit`.
+- **Script & Element Mounting**:
+  - Added hidden container `<div id="google_translate_element" className="hidden" />` and loaded script `https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit` with `next/script` (`strategy="afterInteractive"`).
+- **CSS Cleanups (`app/globals.css`)**:
+  - Suppressed Google Translate banner iframes (`.goog-te-banner-frame`), balloon popups (`#goog-gt-tt`), and text highlights (`.goog-text-highlight`).
+  - Enforced `body { top: 0px !important; position: static !important; }` to eliminate unwanted layout shifts or empty top margins.
+
+### 3. Provider Synchronization (`components/providers/AppProvider.tsx`)
+- Integrated `triggerGoogleTranslate(next, true)` directly inside `setLanguage`.
+- Switching languages via the header dropdown, mobile menu, or regional suggestion banner now translates the entire website immediately across all 13 supported Indian languages.
+
+### 4. Test Suite (`tests/unit/multilingual-engine.test.ts`)
+- Added comprehensive unit tests for `installTranslateCrashGuard`, `setTranslateCookie`, and `triggerGoogleTranslate`.
+- Total unit tests: 85 passing across 15 test files in <850ms. 0 TypeScript errors, 0 ESLint errors.
+
 ## [v1.19.0] - 2026-10-15 — National & State-Wise Emergency Helpline Directory with Spatial Auto-Detection
 
 ### 1. Comprehensive Helpline Directory Catalog (`lib/emergency/helplines.ts`)

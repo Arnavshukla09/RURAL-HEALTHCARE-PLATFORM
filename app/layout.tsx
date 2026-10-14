@@ -11,6 +11,7 @@ import { Analytics } from "@vercel/analytics/react"
 import { PwaUpdaterAndInstaller } from "@/components/PwaUpdaterAndInstaller"
 import { FloatingChatClient } from "@/components/FloatingChatClient"
 import { LanguageSuggestionBanner } from "@/components/LanguageSuggestionBanner"
+import Script from "next/script"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
 
@@ -38,18 +39,69 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={inter.variable}>
       <head>
-        {/* Sync html lang attribute with user preference before paint */}
+        {/* Sync html lang attribute, translation cookies, and crash guard before paint */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `try{var l=localStorage.getItem("rhcp_language");if(l)document.documentElement.lang=l;}catch(e){}`,
+            __html: `
+              try {
+                var l = localStorage.getItem("rhcp_language");
+                if (l) {
+                  document.documentElement.lang = l;
+                  if (l !== "en") {
+                    var host = window.location.hostname;
+                    document.cookie = "googtrans=/auto/" + l + "; path=/;";
+                    document.cookie = "googtrans=/auto/" + l + "; path=/; domain=" + host + ";";
+                    document.cookie = "googtrans=/en/" + l + "; path=/;";
+                    document.cookie = "googtrans=/en/" + l + "; path=/; domain=" + host + ";";
+                  }
+                }
+              } catch(e) {}
+              try {
+                if (typeof Node !== 'undefined' && Node.prototype) {
+                  var origRemoveChild = Node.prototype.removeChild;
+                  Node.prototype.removeChild = function(c) {
+                    if (c.parentNode !== this) {
+                      if (c.parentNode) return c.parentNode.removeChild(c);
+                      return c;
+                    }
+                    return origRemoveChild.call(this, c);
+                  };
+                  var origInsertBefore = Node.prototype.insertBefore;
+                  Node.prototype.insertBefore = function(n, r) {
+                    if (r && r.parentNode !== this) {
+                      return origInsertBefore.call(this, n, null);
+                    }
+                    return origInsertBefore.call(this, n, r);
+                  };
+                }
+              } catch(e) {}
+              window.googleTranslateElementInit = function() {
+                try {
+                  if (window.google && window.google.translate) {
+                    new window.google.translate.TranslateElement({
+                      pageLanguage: 'en',
+                      includedLanguages: 'en,hi,mr,bn,te,ta,gu,kn,pa,or,ml,as,ur',
+                      autoDisplay: false
+                    }, 'google_translate_element');
+                  }
+                } catch(e) {}
+              };
+            `,
           }}
         />
         {/* Preconnect to critical third-party origins to improve LCP */}
         <link rel="preconnect" href="https://boyzdmlvzvcplzolenef.supabase.co" />
+        <link rel="preconnect" href="https://translate.google.com" />
+        <link rel="dns-prefetch" href="https://translate.google.com" />
         <link rel="dns-prefetch" href="https://generativelanguage.googleapis.com" />
         <link rel="dns-prefetch" href="https://a.basemaps.cartocdn.com" />
       </head>
       <body className={`${inter.className} min-h-screen bg-gray-50 flex flex-col`}>
+        <div id="google_translate_element" className="hidden" style={{ display: "none" }} aria-hidden="true" />
+        <Script
+          src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"
+          strategy="afterInteractive"
+        />
         <AppProvider>
           <LanguageSuggestionBanner />
           <AccessibilityBar />
