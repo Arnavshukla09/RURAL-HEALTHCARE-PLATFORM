@@ -292,6 +292,26 @@ export function Directory({ language }: DirectoryProps) {
           </CardContent>
         </Card>
 
+        {/* Demo Data Disclaimer Banner */}
+        <div className="bg-amber-50/80 border border-amber-200 rounded-xl p-3.5 text-xs text-amber-900 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 shadow-sm">
+          <div className="flex items-center gap-2">
+            <span className="text-base">ℹ️</span>
+            <span>
+              {language === "hi"
+                ? "प्रदर्शित प्रोफाइल पायलट डेमो डेटा (Demo Data) हैं। पूरे भारत के 136,000+ वास्तविक स्वास्थ्य केंद्रों और डॉक्टरों के लिए मैप डिस्कवरी का उपयोग करें।"
+                : "The doctor profiles below represent simulated pilot demonstration data. To locate 136,000+ live verified facilities and practitioners across India, use National Map Discovery."}
+            </span>
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => router.push("/locations")}
+            className="text-xs h-8 border-amber-300 hover:bg-amber-100/60 shrink-0 font-medium"
+          >
+            {language === "hi" ? "मैप देखें" : "View Live Map"}
+          </Button>
+        </div>
+
         {/* Directory Content */}
         <Tabs defaultValue="doctors" className="space-y-6">
           <TabsList className="grid w-full grid-cols-2 max-w-md mx-auto">
@@ -321,6 +341,9 @@ export function Directory({ language }: DirectoryProps) {
                         <div className="space-y-2">
                           <div className="flex flex-wrap items-center gap-2">
                             <h3 className="text-xl font-semibold">{doctor.name}</h3>
+                            <Badge variant="outline" className="text-amber-700 bg-amber-50 border-amber-200 text-[10px]">
+                              {language === "hi" ? "डेमो प्रोफाइल" : "Demo Profile"}
+                            </Badge>
                             {doctor.verified && (
                               <Badge variant="secondary" className="text-green-600 bg-green-50">
                                 <Heart className="h-3 w-3 mr-1" />

@@ -7,7 +7,7 @@
  * Key safety & efficiency rules:
  * - Stays strictly within Supabase free-tier limits (500MB DB quota).
  * - Uses on_conflict=osm_id & resolution=merge-duplicates to prevent duplicate rows.
- * - Resolves missing district and state names using pan-india-lgd.json (722 districts).
+ * - Resolves missing district and state names using pan-india-lgd.json (725 districts across 36 States/UTs).
  * - Batches in 250-record chunks with a 150ms backoff to prevent connection pool exhaustion.
  */
 
@@ -32,7 +32,7 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
   process.exit(1)
 }
 
-const SOURCE_GEOJSON = 'C:/Users/aarrn/Desktop/rural health/export.geojson'
+const SOURCE_GEOJSON = process.argv[2] || process.env.DOCTORS_DATASET_PATH || path.resolve(process.cwd(), 'data/doctors_export.geojson')
 const LGD_PATH = path.resolve(process.cwd(), 'lib/geo/pan-india-lgd.json')
 
 // 2. Load LGD Districts for Spatial Fallback
@@ -132,7 +132,10 @@ async function run() {
   console.log(`📁 Source: ${SOURCE_GEOJSON}`)
 
   if (!fs.existsSync(SOURCE_GEOJSON)) {
-    console.error(`❌ File not found at: ${SOURCE_GEOJSON}`)
+    console.error(`❌ Doctors GeoJSON file not found at: ${SOURCE_GEOJSON}`)
+    console.error(`👉 Usage: node scripts/ingest_pan_india_doctors.mjs <path-to-export.geojson>`)
+    console.error(`   Or set DOCTORS_DATASET_PATH in environment`)
+    console.error(`   Download data via Overpass Turbo query documented in docs/CHANGELOG.md`)
     process.exit(1)
   }
 
@@ -200,13 +203,15 @@ async function run() {
       }
     }
 
-    // Tags & Specialization
+    // Tags & Specialization (OSM unverified open crowd-sourced attribution)
     const tags = {
       speciality: p['healthcare:speciality'] || null,
       emergency: p.emergency || null,
       operator: p.operator || p['operator:type'] || null,
       opening_hours: p.opening_hours || null,
-      website: p.website || null
+      website: p.website || null,
+      attribution: "Data © OpenStreetMap contributors (ODbL 1.0)",
+      is_verified: false,
     }
 
     currentBatch.push({

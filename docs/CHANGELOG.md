@@ -4,6 +4,50 @@ All notable changes to the Rural Healthcare Platform will be documented in this 
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres roughly to chronological feature milestones.
 
+## [v1.17.0] - 2026-10-14 — Comprehensive Codebase Audit Resolutions, Emergency Gate Hardening & National LGD Expansion
+
+### 1. Emergency Gate & Clinical Referral Hardening (`lib/chat/emergency.ts`, `lib/ai/medical-brain.ts`)
+- **Self-Harm Hindi Detection**: Added `SELF_HARM_HINDI_REGEX` to catch phrases like *"jeene ka mann nahi karta"*, *"jeena nahi chahta"*, immediately directing patients to the 24/7 national Tele-MANAS helpline (`14416`).
+- **Scorpion Sting Coverage**: Expanded sting regex (`bichhu|bichhoo|bicchu`) to ensure regional Hindi phrases like *"bichhu ne kaata"* trigger acute 108 emergency warnings.
+- **Informational Question Bypass**: Introduced `INFORMATIONAL_QUESTION_PATTERNS` to detect educational inquiries (e.g., *"Is chest pain always a heart attack?"*), bypassing siren locks when no active personal symptoms are reported.
+- **Toxin / Poison Scoped Negation**: Added scoped negation handling for poison expressions (e.g., *"zeher wali sabzi nahi hai"*) to prevent false positive 108 triggers.
+- **Dog Bite Clinical Referral**: Configured urgent referral guidance (Priority 85) for animal/dog bites with immediate 15-minute soapy water wash protocols and Anti-Rabies Vaccine (ARV) / Rabies Immunoglobulin (RIG) Post-Exposure Prophylaxis at the nearest PHC/CHC within 24 hours.
+
+### 2. Teleconsult JWT Enforcement (`components/JitsiMeeting.tsx`)
+- Configured dynamic script loading from configured domains (`meet.jit.si` or 8x8 JaaS).
+- Strictly enforced token validation in production mode: rooms refuse to open without a valid JWT token.
+
+### 3. Transparent Demo Profile Demarcation (`components/Directory.tsx`)
+- Labeled all mock/hardcoded physician profiles with `<Badge variant="outline">Demo Profile</Badge>`.
+- Added an amber alert banner notifying users of demo data and directing them to live National Map Discovery.
+
+### 4. Reproducible Geospatial Ingestion (`scripts/`, `package.json`)
+- Updated `scripts/ingest_pan_india_geojson.mjs` and `scripts/ingest_pan_india_doctors.mjs` to dynamically accept file paths via CLI arguments (`process.argv[2]`) or environment variables (`DATASET_PATH`).
+- Added `npm run ingest:facilities` and `npm run ingest:doctors` scripts to `package.json`.
+- Added explicit OpenStreetMap attribution: `Data © OpenStreetMap contributors (ODbL 1.0)` and marked ingested OSM records with `is_verified: false`.
+- Verified Postgres storage footprint: 136,743 facilities consume <50 MB (<10% of Supabase 500 MB quota).
+
+### 5. API Key Security Lockdown (`app/api/facilities/nearby/route.ts`)
+- Removed `SUPABASE_SERVICE_ROLE_KEY` fallback; the public nearby facility locator now strictly runs with `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+
+### 6. Official 36 States/UTs & 725 Districts Hierarchy (`lib/geo/pan-india-lgd.json`, `lib/geo/lgd-iphs.ts`)
+- Restructured national Local Government Directory (LGD) structure to represent all 36 Indian States and Union Territories:
+  * Merged Dadra & Nagar Haveli and Daman & Diu into a single UT (LGD Code 38).
+  * Added Ladakh UT (LGD Code 37, 2 districts: Leh, Kargil).
+  * Added Andaman & Nicobar Islands UT (LGD Code 35, 3 districts: Nicobars, North and Middle Andaman, South Andaman).
+- Total coverage: 36 States/UTs and 725 Districts.
+
+### 7. CI Pipeline Upgrade (`.github/workflows/ci.yml`)
+- Added `npm run lint` step into GitHub Actions workflow.
+
+### 8. Defensive Chat Route (`app/api/ai-chat/route.ts`)
+- Added null-safe fallback `safeHistory = Array.isArray(history) ? history : []`, preventing runtime `TypeError: Cannot read properties of undefined (reading 'length')`.
+
+### 9. Repository Hygiene
+- Untracked and removed redundant `ANTIGRAVITY_SCALE_PROMPT.md` and `scale-kit/` directory.
+
+---
+
 ## [v1.16.0] - 2026-10-14 — Searchable Geographic Dropdowns & PAN-India Doctors Registry Ingestion
 
 ### National Doctor Registry Ingestion (`scripts/ingest_pan_india_doctors.mjs`, Supabase PostGIS)

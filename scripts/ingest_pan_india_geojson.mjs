@@ -35,7 +35,9 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
   process.exit(1)
 }
 
-const GEOJSON_PATH = 'C:/Users/aarrn/.gemini/antigravity/brain/a12f7fd7-d474-409b-b53c-f7d2ec3d00d3/.user_uploaded/extracted_dataset/health_facilities.geojson'
+const GEOJSON_PATH = process.argv[2] || process.env.DATASET_PATH || path.resolve(process.cwd(), 'data/health_facilities.geojson')
+
+// OpenStreetMap Attribution: Data © OpenStreetMap contributors, licensed under ODbL 1.0
 
 function mapFacilityType(props) {
   const amenity = (props.amenity || '').toLowerCase()

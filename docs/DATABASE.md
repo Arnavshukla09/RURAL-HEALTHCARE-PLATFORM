@@ -196,8 +196,9 @@ National geospatial directory of healthcare facilities, hospitals, clinics, and 
 **Current Scale Metrics:**
 - Total facilities indexed: **136,743**
 - Registered doctors & private practitioners (`type='doctors'`): **9,083**
-- Coverage: All **35 States & Union Territories** and **722 Districts** of India.
-- Storage footprint: **<50 MB** (<10% of Supabase 500 MB free tier).
+- Coverage: All **36 States & Union Territories** (28 States + 8 UTs, including Ladakh, Andaman & Nicobar, and merged DNH & DD) and **725 Districts** of India.
+- Attribution: **Data © OpenStreetMap contributors (ODbL 1.0)**.
+- Storage footprint: **<50 MB** (<10% of Supabase 500 MB free tier, verified via `pg_database_size()`).
 
 ---
 

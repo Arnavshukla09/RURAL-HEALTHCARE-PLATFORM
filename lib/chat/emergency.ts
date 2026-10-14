@@ -30,7 +30,23 @@ const SCOPED_NEGATIONS = [
   /\b(chest pain|seene mein dard|chhati me dard|dard)\s+(nahi|nhi)\s+(hai|ho raha|tha)\b/i,
   /(सीने में दर्द|छाती में दर्द|दर्द)\s+नहीं\s+है/i,
   /\b(nahi hai|nhi hai)\s+(seene mein dard|chhati me dard)\b/i,
+  /\b(zeher|zehar|poison|pesticide|keetnashak)\b.*?\b(nahi|nhi)\s+(hai|tha|hoga)\b/i,
+  /(ज़हर|जहर|कीटनाशक).*?नहीं\s+है/i,
+  /\b(nahi hai|nhi hai)\s+(zeher|zehar|poison)\b/i,
+  /\b(no|not|free of|without)\s+.*?\b(poison|toxic|pesticide)\b/i,
 ]
+
+// Educational inquiries about symptoms (e.g. "Is chest pain always a heart attack?")
+// These are informational questions, not acute personal medical emergencies.
+const INFORMATIONAL_QUESTION_PATTERNS = [
+  /^(is|can|could|does|what causes|why does|how does|what is)\s+.*?\b(always|mean|caused by|difference between|normal|curable|contagious|prevented)\b/i,
+  /\b(always|hamesha|har baar)\s+(a\s+)?(heart attack|stroke|fatal|emergency|khatarnak)\b/i,
+  /^(क्या\s+.*?(हमेशा|होता है|हो सकता है)|kya\s+.*?(hamesha|hota hai|ho sakta hai))/i,
+]
+
+// Self-harm & Crisis patterns (Tele-MANAS)
+const SELF_HARM_REGEX = /\b(suicide|kill myself|end my life|want to die|atmahathya|khudkushi|jeene ka man(n)? nahi|jeena nahi chahta|mar jana chahta|jeene ki ichha nahi|better off dead)\b/i
+const SELF_HARM_HINDI_REGEX = /(आत्महत्या|खुदकुशी|जान देना|मरना चाहता|जीने का मन नहीं|जीना नहीं चाहता|मर जाना चाहता|जीने की इच्छा नहीं)/i
 
 // Emergency red flags with word boundary enforcement
 const EMERGENCY_PATTERNS = [
@@ -59,23 +75,23 @@ const EMERGENCY_PATTERNS = [
   /(सीने में दर्द|छाती में दर्द|सांस फूल|सांस नहीं आ|सांस लेने में|दम घुट)/i,
 
   // 5. Toxicology, Envenomation & Environmental (Snakebite, Scorpion, Pesticide, Severe Burns)
-  /\b(snake bite|snakebite|saanp ne kaat)\b/i,
-  /\b(scorpion sting|scorpion bite|bichhu ne kaat|bichhoo)\b/i,
-  /\b(pesticide|keetnashak|insecticide|rat poison|consumed poison|zeher)\b/i,
+  /\b(snake bite|snakebite|saanp ne kaat|saanp)\b/i,
+  /\b(scorpion sting|scorpion bite|bichhu|bichhoo|bicchu)\b/i,
+  /\b(pesticide|keetnashak|insecticide|rat poison|consumed poison|zeher|zehar)\b/i,
   /\b(severe burn|severe burns|third degree burn|aag se jala|body burnt)\b/i,
   /\b(cough with blood|khoon ki ulti|vomiting blood)\b/i,
-  /(सांप ने काट|सांप का डंक|बिच्छू|कीटनाशक|जहर|खून की उल्टी|गंभीर रक्तस्राव|आग से जल)/i,
+  /(सांप ने काट|सांप का डंक|सांप|बिच्छू|कीटनाशक|जहर|खून की उल्टी|गंभीर रक्तस्राव|आग से जल)/i,
 
-  // 6. Crisis & Self-harm (handled in Step 1, but included for complete pattern registry)
-  /\b(suicide|kill myself|end my life|want to die|atmahathya|khudkushi)\b/i,
-  /(आत्महत्या|खुदकुशी|जान देना|मरना चाहता)/i,
+  // 6. Crisis & Self-harm
+  SELF_HARM_REGEX,
+  SELF_HARM_HINDI_REGEX,
 ]
 
 export function detectTier0Emergency(text: string, language: string): EmergencyMatch | null {
   const query = text.toLowerCase().trim()
 
   // 1. Check for self-harm / mental health emergency first (Tele-MANAS)
-  if (/\b(suicide|kill myself|end my life|want to die|atmahathya|khudkushi)\b/i.test(query) || /(आत्महत्या|खुदकुशी|जान देना|मरना चाहता)/i.test(query)) {
+  if (SELF_HARM_REGEX.test(query) || SELF_HARM_HINDI_REGEX.test(query)) {
     const replyHi = "🚨 आपातकालीन सहायता: यदि आप या आपका कोई प्रिय व्यक्ति मानसिक तनाव या संकट में है, तो कृपया तुरंत Tele-MANAS राष्ट्रीय हेल्पलाइन 14416 पर कॉल करें (24/7 मुफ्त एवं गोपनीय)। आप अकेले नहीं हैं, मदद उपलब्ध है।"
     const replyEn = "🚨 Mental Health Emergency: If you or someone you know is in distress, please call the national Tele-MANAS helpline at 14416 immediately (toll-free, 24/7, confidential support). You are not alone and help is available."
     return {
@@ -85,6 +101,15 @@ export function detectTier0Emergency(text: string, language: string): EmergencyM
       replyHi,
       replyEn,
     }
+  }
+
+  // 2. Check for informational/educational question (bypass 108 emergency lock if asking a general question)
+  const isInformational = 
+    INFORMATIONAL_QUESTION_PATTERNS.some(rx => rx.test(query)) &&
+    !/\b(i have|i am having|mujhe|mere|help me|right now|abhi|bachao)\b/i.test(query)
+
+  if (isInformational) {
+    return null
   }
 
   // 2. Check for inherently negative emergency phrases FIRST (Allowlist protection)

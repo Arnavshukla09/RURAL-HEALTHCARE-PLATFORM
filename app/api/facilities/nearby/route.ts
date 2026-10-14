@@ -55,12 +55,17 @@ export async function GET(req: NextRequest) {
     )
   }
 
-  // Use anonymous public client with NEXT_PUBLIC_SUPABASE_ANON_KEY (no service-role key on public routes)
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY!
-  const supabase = createSupabaseClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    supabaseKey
-  )
+  // Strictly use anonymous public client with NEXT_PUBLIC_SUPABASE_ANON_KEY (no service-role key on public routes)
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  if (!supabaseKey || !supabaseUrl) {
+    return NextResponse.json(
+      { error: "Service configuration error. Please try again later." },
+      { status: 503 }
+    )
+  }
+
+  const supabase = createSupabaseClient(supabaseUrl, supabaseKey)
 
   const { data, error } = await supabase.rpc("nearby_facilities", {
     p_lat: roundedLat,

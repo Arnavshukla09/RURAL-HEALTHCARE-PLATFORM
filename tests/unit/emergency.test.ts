@@ -146,4 +146,28 @@ describe("Tier 0 Emergency Gate", () => {
       expect(match, `Negated symptom should NOT trigger emergency: "${phrase}"`).toBeNull()
     }
   })
+
+  it("should handle audit edge cases: bichhu ne kaata, self-harm Hindi, informational queries, and zeher negation", () => {
+    // 1. Bichhu ne kaata -> 108 emergency
+    const scorpionMatch = detectTier0Emergency("bichhu ne kaata", "hi")
+    expect(scorpionMatch?.isEmergency).toBe(true)
+    expect(scorpionMatch?.hotline).toBe("108")
+
+    // 2. Hindi self-harm phrase -> Tele-MANAS 14416
+    const selfHarmMatch = detectTier0Emergency("jeene ka mann nahi karta", "hi")
+    expect(selfHarmMatch?.isEmergency).toBe(true)
+    expect(selfHarmMatch?.hotline).toBe("14416")
+
+    // 3. Informational question bypass -> null (not locked into 108 emergency)
+    const infoMatch = detectTier0Emergency("Is chest pain always a heart attack?", "en")
+    expect(infoMatch).toBeNull()
+
+    // 4. Negated poison phrase -> null
+    const poisonNegMatch = detectTier0Emergency("zeher wali sabzi nahi hai", "hi")
+    expect(poisonNegMatch).toBeNull()
+
+    // 5. Dog bite should not trigger acute 108 emergency siren (handled by PHC clinical referral)
+    const dogBiteMatch = detectTier0Emergency("dog bite on hand", "en")
+    expect(dogBiteMatch).toBeNull()
+  })
 })

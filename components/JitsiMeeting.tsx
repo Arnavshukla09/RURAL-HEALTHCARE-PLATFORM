@@ -19,7 +19,7 @@ export function JitsiMeeting({
   roomName,
   displayName,
   jwt,
-  domain = "meet.jit.si",
+  domain,
   onLeave,
   language = "en",
 }: JitsiMeetingProps) {
@@ -27,16 +27,20 @@ export function JitsiMeeting({
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  const effectiveDomain = domain || process.env.NEXT_PUBLIC_JITSI_DOMAIN || "meet.jit.si"
+
   const content = {
     en: {
       loading: "Initializing video conference...",
       error: "Failed to load video conference",
+      tokenRequired: "Security Policy: A cryptographically signed token (JWT) is required for teleconsultation in production. Please join via your scheduled appointment.",
       retry: "Retry",
       leave: "Leave Meeting",
     },
     hi: {
       loading: "वीडियो कॉन्फ्रेंस शुरू किया जा रहा है...",
       error: "वीडियो कॉन्फ्रेंस लोड करने में विफल",
+      tokenRequired: "सुरक्षा नीति: वीडियो परामर्श के लिए अधिकृत टोकन (JWT) अनिवार्य है। कृपया अपने अपॉइंटमेंट के माध्यम से जुड़ें।",
       retry: "पुनः प्रयास",
       leave: "मीटिंग छोड़ें",
     },
@@ -50,16 +54,26 @@ export function JitsiMeeting({
         setLoading(true)
         setError(null)
 
-        // Load Jitsi script
+        // Production Security Gate: Refuse room initialization without valid token
+        const isProd = process.env.NODE_ENV === "production"
+        if (isProd && !jwt) {
+          setError(t.tokenRequired)
+          setLoading(false)
+          return
+        }
+
+        // Load Jitsi script from configured domain (or 8x8 JaaS)
         if (!(window as any).JitsiMeetExternalAPI) {
           const script = document.createElement("script")
-          script.src = "https://meet.jit.si/external_api.js"
+          const isJaaS = effectiveDomain.includes("8x8.vc") || effectiveDomain.includes("jaas")
+          script.src = isJaaS ? "https://8x8.vc/external_api.js" : `https://${effectiveDomain}/external_api.js`
           script.async = true
           document.body.appendChild(script)
 
           // Wait for script to load
-          await new Promise((resolve) => {
+          await new Promise((resolve, reject) => {
             script.onload = resolve
+            script.onerror = () => reject(new Error(`Failed to load Jitsi script from ${script.src}`))
           })
         }
 
@@ -102,7 +116,7 @@ export function JitsiMeeting({
           options.jwt = jwt
         }
 
-        const api = new JitsiMeetExternalAPI(domain, options)
+        const api = new JitsiMeetExternalAPI(effectiveDomain, options)
 
         // Handle ready event
         api.addEventListener("videoConferenceJoined", () => {

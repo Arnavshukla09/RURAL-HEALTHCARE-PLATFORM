@@ -105,5 +105,6 @@ export const IPHS_TIER_CONFIG: Record<IphsFacilityTier, { en: string; hi: string
 
 import panIndiaLgd from "./pan-india-lgd.json"
 
-// Complete National LGD States & 722 Districts
+// Official National LGD Directory: 36 States & Union Territories (28 States + 8 UTs) and 725 Districts
+// Source: Local Government Directory (LGD), Ministry of Panchayati Raj, Government of India (Updated Oct 2026)
 export const LGD_STATES: LgdState[] = panIndiaLgd as LgdState[]

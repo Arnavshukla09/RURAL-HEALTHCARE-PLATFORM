@@ -30,6 +30,9 @@ jobs:
       - name: Run Unit Tests (Vitest)
         run: npm run test:unit
 
+      - name: Run ESLint
+        run: npm run lint
+
       - name: Build Next.js Application
         run: npm run build
         env:

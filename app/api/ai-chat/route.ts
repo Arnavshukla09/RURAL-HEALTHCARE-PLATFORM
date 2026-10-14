@@ -26,6 +26,7 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json()
     const { message, history, language } = body
+    const safeHistory = Array.isArray(history) ? history : []
 
     if (!message || typeof message !== "string") {
       return NextResponse.json({ error: "Message is required" }, { status: 400 })
@@ -65,10 +66,10 @@ export async function POST(request: NextRequest) {
     // 3. Prepare sanitized conversation history for Gemini (alternating turns)
     const contents: GeminiContent[] = []
 
-    if (Array.isArray(history)) {
+    if (safeHistory.length > 0) {
       let expectedRole: "user" | "model" = "user"
 
-      for (const item of history.slice(-6)) {
+      for (const item of safeHistory.slice(-6)) {
         if (!item || typeof item.content !== "string") continue
         const itemContent = item.content.slice(0, 500)
         const role = item.role === "assistant" || item.role === "model" ? "model" : "user"
@@ -94,7 +95,7 @@ export async function POST(request: NextRequest) {
 
     // 3b. Server-side response cache check (Tier 2.5: Exact Hash + Option 1 Semantic Meaning Match)
     // Only cache single-turn queries (history-free) to avoid stale contextual replies
-    if (history.length === 0) {
+    if (safeHistory.length === 0) {
       // (i) Exact query hash hit
       const cached = await getCachedResponse(sanitizedMessage)
       if (cached) {
@@ -186,7 +187,7 @@ Do NOT wrap in any extra markdown or conversational commentary outside the JSON.
       const selectedReply = lang === "hi" ? (replyHi || replyEn) : (replyEn || replyHi)
 
       // Write to server-side cache for future identical queries (fire-and-forget)
-      if (replyEn && replyHi && history.length === 0) {
+      if (replyEn && replyHi && safeHistory.length === 0) {
         setCachedResponse(sanitizedMessage, {
           replyEn,
           replyHi,

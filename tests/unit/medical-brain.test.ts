@@ -27,4 +27,12 @@ describe("Hardened Medical Brain Regressions", () => {
     const res = answerMedicalQuery("spicy sauce recipe", "en", ["knee pain"])
     expect(res).toBeNull()
   })
+
+  it("triggers urgent clinical referral and rabies PEP protocol on animal/dog bite", () => {
+    const res = answerMedicalQuery("I got a dog bite today in the village", "en")
+    expect(res).not.toBeNull()
+    expect(res).toContain("ANIMAL / DOG BITE (RABIES PROTOCOL)")
+    expect(res).toContain("Wash the wound thoroughly under running tap water with soap for at least 15 minutes")
+    expect(res).toContain("Anti-Rabies Vaccine (ARV)")
+  })
 })

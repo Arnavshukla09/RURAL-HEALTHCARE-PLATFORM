@@ -70,6 +70,17 @@ export const CLINICAL_KNOWLEDGE_BASE: MedicalBrainEntry[] = [
     en: "⚠️ URGENT CLINICAL REFERRAL — COUGH LASTING OVER 2 WEEKS:\n\n• According to National Tuberculosis Elimination Program (NTEP) guidelines, a cough persisting for more than 2 weeks must be screened for Tuberculosis (TB).\n• Recommended Action: Visit your nearest Primary Health Centre (PHC) or Community Health Centre (CHC) for a free sputum test (microscopy/CBNAAT) and chest evaluation.\n• Do not take over-the-counter cough syrups to mask symptoms.\n• Note: If accompanied by blood in sputum, high fever, or night sweats, seek evaluation immediately at the government hospital.",
     hi: "⚠️ तुरंत डॉक्टर को दिखाएं — 2 हफ्ते से अधिक समय से खांसी:\n\n• राष्ट्रीय क्षय रोग उन्मूलन कार्यक्रम (NTEP) के अनुसार, 2 सप्ताह से अधिक समय तक लगातार रहने वाली खांसी की टीबी (Tuberculosis) जांच कराना आवश्यक है।\n• जरूरी कदम: अपने नजदीकी प्राथमिक स्वास्थ्य केंद्र (PHC) या सामुदायिक स्वास्थ्य केंद्र (CHC) जाएं और बलगम की मुफ्त जांच (Sputum Test) कराएं।\n• बिना डॉक्टर की सलाह के खांसी की दवा खाकर इसे न दबाएं।\n• यदि बलगम में खून, शाम को बुखार या वजन घटने के लक्षण हों तो तुरंत सरकारी अस्पताल संपर्क करें।",
   },
+  {
+    id: "urgent-referral-animal-dog-bite",
+    priority: 85,
+    patterns: [
+      /\b(dog bite|dog bites|kutta ne kata|kutta kaat|kutte ne kaat|animal bite|monkey bite|rabies)\b/i,
+      /(कुत्ते ने काट|कुत्ता काटा|कुत्ते का काटना|जानवर ने काटा|बंदर ने काटा|रेबीज)/i,
+    ],
+    keywords: ["dog bite", "animal bite", "kutta", "rabies", "pep"],
+    en: "⚠️ URGENT CLINICAL REFERRAL — ANIMAL / DOG BITE (RABIES PROTOCOL):\n\n1. IMMEDIATE FIRST AID (Crucial):\n• Wash the wound thoroughly under running tap water with soap for at least 15 minutes immediately. This flushes out the virus.\n• DO NOT apply chili powder, lime, soil, turmeric, or tight bandages.\n• Apply antiseptic (Povidone-iodine or Dettol/Savlon) if available.\n\n2. URGENT MEDICAL CARE (Within 24 Hours):\n• Visit your nearest Primary Health Centre (PHC), CHC, or District Hospital immediately.\n• Anti-Rabies Vaccine (ARV) must be administered (Day 0, 3, 7, 28) for effective Post-Exposure Prophylaxis (PEP).\n• For deep bleeding bites (Category III), Rabies Immunoglobulin (RIG) is also mandatory.",
+    hi: "⚠️ तुरंत अस्पताल जाएं — कुत्ते या जानवर का काटना (रेबीज रोकथाम प्रोटोकॉल):\n\n1. तुरंत प्राथमिक उपचार (अत्यंत महत्वपूर्ण):\n• घाव को तुरंत बहते साफ पानी और साबुन से कम से कम 15 मिनट तक लगातार धोएं। यह वायरस को खत्म करने का सबसे प्रभावी कदम है।\n• घाव पर मिर्च, चूना, मिट्टी या हल्दी बिल्कुल न लगाएं और कसकर पट्टी न बांधें।\n• यदि उपलब्ध हो तो पोविडोन-आयोडीन (Betadine) लगाएं।\n\n2. तुरंत डॉक्टर को दिखाएं (24 घंटे के भीतर):\n• तुरंत अपने नजदीकी प्राथमिक स्वास्थ्य केंद्र (PHC), CHC या सरकारी अस्पताल जाएं।\n• रेबीज का टीका (Anti-Rabies Vaccine) Day 0, 3, 7 और 28 पर लगवाना अनिवार्य है।\n• गहरे घाव होने पर रेबीज इम्यूनोग्लोबुलिन (RIG) लगवाना आवश्यक होता है।",
+  },
 
   // ── PRIORITY 60: ACUTE SYMPTOM GUIDELINES ──
   {
