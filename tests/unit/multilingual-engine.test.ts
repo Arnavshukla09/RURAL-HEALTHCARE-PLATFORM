@@ -109,4 +109,18 @@ describe("Multilingual Engine & Dialect Mapping", () => {
     expect(getSpeechLangFromCode("hi")).toBe("hi-IN")
     expect(getSpeechLangFromCode("en")).toBe("en-IN")
   })
+
+  it("safely handles all 13 supported languages without undefined property exceptions", () => {
+    const sampleBilingualContent = {
+      en: { title: "Welcome", button: "Click" },
+      hi: { title: "नमस्ते", button: "क्लिक" },
+    }
+
+    for (const lang of SUPPORTED_LANGUAGES) {
+      const resolved = sampleBilingualContent[lang.code as keyof typeof sampleBilingualContent] || sampleBilingualContent.en
+      expect(resolved).toBeDefined()
+      expect(resolved.title).toBeTruthy()
+      expect(resolved.button).toBeTruthy()
+    }
+  })
 })

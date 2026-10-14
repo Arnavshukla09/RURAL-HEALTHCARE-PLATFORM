@@ -95,7 +95,7 @@ export function LandingPage({ language }: LandingPageProps) {
     }
   };
 
-  const t = content[language as keyof typeof content];
+  const t = content[language as keyof typeof content] || content.en;
 
   return (
     <div className="min-h-screen">

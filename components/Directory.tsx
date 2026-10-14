@@ -110,7 +110,7 @@ export function Directory({ language }: DirectoryProps) {
     }
   };
 
-  const t = content[language as keyof typeof content];
+  const t = content[language as keyof typeof content] || content.en;
 
   const hospitals = [
     {

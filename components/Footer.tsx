@@ -46,7 +46,7 @@ export function Footer() {
     }
   };
 
-  const t = content[language as keyof typeof content];
+  const t = content[language as keyof typeof content] || content.en;
 
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
 

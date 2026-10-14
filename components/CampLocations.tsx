@@ -135,7 +135,7 @@ export function CampLocations({ language }: CampLocationsProps) {
     },
   }
 
-  const t = content[language as keyof typeof content]
+  const t = content[language as keyof typeof content] || content.en
 
   // Real Madhya Pradesh government health programs & camps (Initial static fallback)
   const [campLocations, setCampLocations] = useState<CampLocation[]>([

@@ -46,7 +46,7 @@ export function JitsiMeeting({
     },
   }
 
-  const t = content[language as keyof typeof content]
+  const t = content[language as keyof typeof content] || content.en
 
   useEffect(() => {
     const initJitsi = async () => {

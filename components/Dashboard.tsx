@@ -78,7 +78,7 @@ export function Dashboard({ user, language }: DashboardProps) {
     }
   };
 
-  const t = content[language as keyof typeof content];
+  const t = content[language as keyof typeof content] || content.en;
 
   // State for real data
   const [notifications, setNotifications] = useState<any[]>([]);
