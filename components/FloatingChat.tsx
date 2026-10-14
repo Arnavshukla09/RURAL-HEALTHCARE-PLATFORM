@@ -6,7 +6,7 @@ import { MessageCircle, X, Send, Loader2, Bot, User, Minimize2, Map, Stethoscope
 import { useApp } from "@/components/providers/AppProvider"
 import { useRouter, usePathname } from "next/navigation"
 import { lookupOffline } from "@/lib/offline/offline-ai"
-import { startSpeechRecognition, stopSpeechRecognition, speak, stopSpeaking } from "@/lib/ai/speech"
+import { startSpeechRecognition, stopSpeechRecognition, speak, stopSpeaking, getSpeechLangFromCode } from "@/lib/ai/speech"
 import { applyFeedback } from "@/lib/ai/query-learner"
 import { routeChatMessage } from "@/lib/chat/router"
 import { getLiveSuggestions, SuggestionItem } from "@/lib/chat/suggestions"
@@ -115,7 +115,7 @@ export function FloatingChat() {
       setIsListening(false)
     } else {
       startSpeechRecognition({
-        lang: language === 'en' ? 'en-IN' : 'hi-IN',
+        lang: getSpeechLangFromCode(language),
         onResult: (res) => {
           setInput((prev) => prev ? prev + ' ' + res.transcript : res.transcript)
           setIsListening(false)
@@ -137,7 +137,7 @@ export function FloatingChat() {
     } else {
       setSpeakingMsgIdx(idx)
       speak(text, {
-        lang: language === 'en' ? 'en-IN' : 'hi-IN',
+        lang: getSpeechLangFromCode(language),
         onEnd: () => setSpeakingMsgIdx(null),
         onError: () => setSpeakingMsgIdx(null)
       })

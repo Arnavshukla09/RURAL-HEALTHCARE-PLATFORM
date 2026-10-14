@@ -4,6 +4,36 @@ All notable changes to the Rural Healthcare Platform will be documented in this 
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres roughly to chronological feature milestones.
 
+## [v1.18.0] - 2026-10-15 — Native Multilingual Engine, Regional Dialect Awareness & Zero-Cost Browser Localization
+
+### 1. Client-Side Multilingual Engine & Regional Dialect Mapping (`lib/i18n/detect-language.ts`)
+- **Zero API Cost ($0 Free Tier)**: Bypassed external Bhashini API keys and institutional enrollment friction by implementing native browser-driven localization and direct LLM vernacular instruction.
+- **13 Official Indian Languages Supported**: Hindi (`hi`), Marathi (`mr`), Bengali (`bn`), Telugu (`te`), Tamil (`ta`), Gujarati (`gu`), Kannada (`kn`), Punjabi (`pa`), Odia (`or`), Malayalam (`ml`), Assamese (`as`), Urdu (`ur`), and English (`en`) with authentic native scripts and endonyms.
+- **Dialect Awareness**: Structured dialect recognition for Bhojpuri (भोजपुरी), Maithili (मैथिली), Bundelkhandi (बुंदेलखंडी), Malvi (मालवी), Marwari (मारवाड़ी), Chhattisgarhi (छत्तीसगढ़ी), Varhadi (वऱ्हाडी), and Hinglish transliteration.
+- **National LGD State-to-Language Mapping**: All 36 Indian States and Union Territories mapped to their regional languages.
+- **Reverse-Spatial Coordinate Language Resolution**: Sub-millisecond distance calculation matching GPS coordinates against national state centroids to suggest regional language automatically.
+
+### 2. Context-Aware Language Suggestion Banner (`components/LanguageSuggestionBanner.tsx`)
+- **Non-Intrusive 1-Tap Prompt**: Subtle top-level banner detecting device language or GPS region, prompting users with a 1-tap switch (e.g. *"मराठी (Marathi) — Based on your region, would you prefer viewing the platform in मराठी?"*).
+- **Persistent State**: Stores preference in `localStorage` (`rhcp_language`, `rhcp_language_dismissed`) and syncs `document.documentElement.lang` for browser translation engine compatibility.
+
+### 3. Multi-Language Header Switcher (`components/Header.tsx`, `components/providers/AppProvider.tsx`)
+- **Responsive Desktop Picker**: Replaced the previous 2-way toggle with an accessible dropdown menu showing native scripts and English labels with active checkmarks.
+- **Mobile Language Chips**: Added 1-tap quick pills for top languages in the mobile navigation drawer.
+- **AppProvider State Sync**: Updated `AppProvider` to initialize from and write directly to `localStorage` and dispatch custom `rhcp-language-change` window events.
+
+### 4. Multilingual & Vernacular Gemini AI Chatbot (`app/api/ai-chat/route.ts`, `lib/chat/router.ts`)
+- **Direct Regional Generation**: Configured Gemini prompt builder to generate structured medical guidance directly in the user's active regional language without translation hops.
+- **Regional Tier 0 Emergency Gate**: Integrated localized emergency warnings for physical 108 Ambulance and Tele-MANAS 14416 mental health crisis into Marathi, Bengali, Telugu, Tamil, Gujarati, Kannada, Punjabi, and Odia.
+- **Speech Synthesis & Recognition (`lib/ai/speech.ts`, `components/FloatingChat.tsx`)**: Extended Web Speech API to support BCP-47 speech locales across all regional languages (`mr-IN`, `bn-IN`, `te-IN`, `ta-IN`, `gu-IN`, `kn-IN`, `pa-IN`, `or-IN`, `ml-IN`, `ur-IN`).
+
+### 5. Verification & Test Suite (`tests/unit/multilingual-engine.test.ts`)
+- Added 5 new unit tests covering language detection, coordinate spatial mapping, regional emergency triggers, and speech mapping.
+- All 78 Vitest unit tests pass in <800ms across 14 test suites.
+- 0 TypeScript errors (`npx tsc --noEmit`) and 0 ESLint warnings (`npm run lint`).
+
+---
+
 ## [v1.17.0] - 2026-10-14 — Comprehensive Codebase Audit Resolutions, Emergency Gate Hardening & National LGD Expansion
 
 ### 1. Emergency Gate & Clinical Referral Hardening (`lib/chat/emergency.ts`, `lib/ai/medical-brain.ts`)

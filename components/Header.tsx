@@ -1,9 +1,10 @@
 "use client"
 import { Button } from "./ui/button"
-import { Menu, X, Heart, AlertTriangle, Activity, ChevronDown, LogOut, User, BookOpen, Users, Bell, Calendar, ClipboardList, MapPin, Megaphone } from "lucide-react"
+import { Menu, X, Heart, AlertTriangle, Activity, ChevronDown, LogOut, User, BookOpen, Users, Bell, Calendar, ClipboardList, MapPin, Megaphone, Globe, Check } from "lucide-react"
 import { useState, useRef, useEffect } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { NotificationBell } from "./NotificationBell"
+import { SUPPORTED_LANGUAGES, getLanguageMetadata } from "@/lib/i18n/detect-language"
 
 import { usePathname, useRouter } from "next/navigation"
 import Link from "next/link"
@@ -18,14 +19,18 @@ export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [careDropOpen, setCareDropOpen] = useState(false)
   const [userDropOpen, setUserDropOpen] = useState(false)
+  const [langDropOpen, setLangDropOpen] = useState(false)
   const careRef = useRef<HTMLDivElement>(null)
   const userRef = useRef<HTMLDivElement>(null)
+  const langRef = useRef<HTMLDivElement>(null)
   const en = language === "en"
+  const currentLangMeta = getLanguageMetadata(language)
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (careRef.current && !careRef.current.contains(e.target as Node)) setCareDropOpen(false)
       if (userRef.current && !userRef.current.contains(e.target as Node)) setUserDropOpen(false)
+      if (langRef.current && !langRef.current.contains(e.target as Node)) setLangDropOpen(false)
     }
     document.addEventListener("mousedown", handler)
     return () => document.removeEventListener("mousedown", handler)
@@ -198,13 +203,47 @@ export function Header() {
             {/* Offline sync queue badge (Audit C4 / Phase 4) */}
             <OfflineSyncBadge language={language} role={role} />
 
-            {/* Language toggle */}
-            <button onClick={() => setLanguage(en ? "hi" : "en")}
-              className={`hidden sm:flex items-center px-2.5 py-1.5 text-xs font-medium border rounded-md transition-colors ${
-                role !== "patient" ? "border-white/30 text-white hover:bg-white/10" : "border-gray-200 hover:bg-gray-50"
-              }`}>
-              {en ? "हिं" : "EN"}
-            </button>
+            {/* Multi-Language Dropdown */}
+            <div ref={langRef} className="relative hidden sm:block">
+              <button
+                onClick={() => setLangDropOpen(!langDropOpen)}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium border rounded-md transition-colors ${
+                  role !== "patient"
+                    ? "border-white/30 text-white hover:bg-white/10"
+                    : "border-gray-200 text-gray-700 hover:bg-gray-50"
+                }`}
+                aria-label="Select language"
+              >
+                <Globe className="h-3.5 w-3.5 text-teal-600" />
+                <span className="font-semibold">{currentLangMeta.shortLabel}</span>
+                <ChevronDown className={`h-3 w-3 transition-transform ${langDropOpen ? "rotate-180" : ""}`} />
+              </button>
+              {langDropOpen && (
+                <div className="absolute top-full right-0 mt-1 w-56 max-h-80 overflow-y-auto bg-white rounded-xl border border-gray-100 shadow-xl py-1.5 z-50">
+                  <div className="px-3 py-1.5 border-b border-gray-100 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+                    {en ? "Choose Language / भाषा चुनें" : "भाषा चुनें / Choose Language"}
+                  </div>
+                  {SUPPORTED_LANGUAGES.map((l) => (
+                    <button
+                      key={l.code}
+                      onClick={() => {
+                        setLanguage(l.code)
+                        setLangDropOpen(false)
+                      }}
+                      className={`w-full flex items-center justify-between px-3.5 py-2 text-xs transition-colors hover:bg-teal-50 hover:text-teal-700 ${
+                        language === l.code ? "bg-teal-50 text-teal-700 font-semibold" : "text-gray-700"
+                      }`}
+                    >
+                      <div className="flex flex-col text-left">
+                        <span className="font-medium text-gray-900">{l.nativeName}</span>
+                        <span className="text-[10px] text-gray-400">{l.name}</span>
+                      </div>
+                      {language === l.code && <Check className="h-3.5 w-3.5 text-teal-600" />}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
 
             {/* Notification Bell — for all logged-in users */}
             {user && <NotificationBell user={user} language={language} />}
@@ -329,11 +368,28 @@ export function Header() {
                 </button>
               </>
             )}
-            <div className="pt-2 border-t border-gray-100 space-y-1 px-2">
-              <button onClick={() => { setLanguage(en ? "hi" : "en"); setMobileMenuOpen(false) }}
-                className={`w-full text-left px-4 py-2.5 text-sm rounded-lg ${role !== "patient" ? "text-white hover:bg-white/10" : "text-gray-700 hover:bg-gray-50"}`}>
-                {en ? "Switch to Hindi (हिंदी)" : "Switch to English"}
-              </button>
+            <div className="pt-2 border-t border-gray-100 space-y-2 px-2">
+              <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider px-2">
+                {en ? "Language / भाषा" : "भाषा / Language"}
+              </div>
+              <div className="flex flex-wrap gap-1 px-1">
+                {SUPPORTED_LANGUAGES.map((l) => (
+                  <button
+                    key={l.code}
+                    onClick={() => {
+                      setLanguage(l.code)
+                      setMobileMenuOpen(false)
+                    }}
+                    className={`px-2.5 py-1 text-xs rounded-md border font-medium transition ${
+                      language === l.code
+                        ? "bg-teal-600 text-white border-teal-600 shadow-sm"
+                        : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
+                    }`}
+                  >
+                    {l.nativeName}
+                  </button>
+                ))}
+              </div>
               {user ? (
                 <button onClick={handleLogout} className="w-full text-left px-4 py-2.5 text-sm text-red-400 rounded-lg flex items-center gap-2 hover:bg-red-900/20">
                   <LogOut className="h-4 w-4" />{en ? "Logout" : "लॉगआउट"}

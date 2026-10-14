@@ -21,13 +21,15 @@ import { findCachedAnswer, learnFromAnswer } from "@/lib/ai/query-learner"
 import { normalizeQuery, cleanMarkdown } from "./normalize"
 
 export async function routeChatMessage(input: RouteChatInput): Promise<ChatResult> {
-  const { message, language, history = [], symptomContext = [] } = input
-  const lang = language === "hi" ? "hi" : "en"
+  const { message, language = "en", history = [], symptomContext = [] } = input
+  const lang = language ? language.trim().toLowerCase() : "en"
+  const isEnOrHi = lang === "en" || lang === "hi"
   const text = message.trim()
 
   if (!text) {
+    const emptyReply = lang === "hi" ? "कृपया अपना स्वास्थ्य संबंधी प्रश्न लिखें।" : "Please enter your health question."
     return {
-      reply: lang === "hi" ? "कृपया अपना स्वास्थ्य संबंधी प्रश्न लिखें।" : "Please enter your health question.",
+      reply: emptyReply,
       replyHi: "कृपया अपना स्वास्थ्य संबंधी प्रश्न लिखें।",
       replyEn: "Please enter your health question.",
       tier: 2,
@@ -59,7 +61,8 @@ export async function routeChatMessage(input: RouteChatInput): Promise<ChatResul
 
   // ── 2. Tier 2: Curated Clinical Knowledge (Medical Brain) ──────────────
   const normalized = normalizeQuery(text)
-  if (!isTranslationRequest) {
+  const isOffline = typeof navigator !== "undefined" && navigator.onLine === false
+  if (!isTranslationRequest && (isEnOrHi || isOffline)) {
     const brainEntry = getMedicalBrainEntry(normalized, symptomContext)
     if (brainEntry) {
       if (process.env.NODE_ENV === "development") {
@@ -80,7 +83,7 @@ export async function routeChatMessage(input: RouteChatInput): Promise<ChatResul
   }
 
   // ── 3. Tier 2: Static Medical FAQ ──────────────────────────────────────
-  if (!isTranslationRequest) {
+  if (!isTranslationRequest && (isEnOrHi || isOffline)) {
     const faqHit = lookupOffline(text) || lookupOffline(normalized)
     if (faqHit) {
       if (process.env.NODE_ENV === "development") {

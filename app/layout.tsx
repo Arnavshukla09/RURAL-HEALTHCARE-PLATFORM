@@ -10,6 +10,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { Analytics } from "@vercel/analytics/react"
 import { PwaUpdaterAndInstaller } from "@/components/PwaUpdaterAndInstaller"
 import { FloatingChatClient } from "@/components/FloatingChatClient"
+import { LanguageSuggestionBanner } from "@/components/LanguageSuggestionBanner"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
 
@@ -50,6 +51,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className={`${inter.className} min-h-screen bg-gray-50 flex flex-col`}>
         <AppProvider>
+          <LanguageSuggestionBanner />
           <AccessibilityBar />
           <Header />
           <main className="flex-1 pb-16 md:pb-0">

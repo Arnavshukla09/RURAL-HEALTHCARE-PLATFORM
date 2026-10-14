@@ -11,7 +11,19 @@
  *  - Transliteration hints for Hindi spoken in Roman script (e.g. "bukhar" → "बुखार")
  */
 
-export type SupportedLang = 'en-IN' | 'hi-IN' | 'mr-IN' | 'bn-IN' | 'ta-IN'
+export type SupportedLang =
+  | 'en-IN'
+  | 'hi-IN'
+  | 'mr-IN'
+  | 'bn-IN'
+  | 'ta-IN'
+  | 'te-IN'
+  | 'gu-IN'
+  | 'kn-IN'
+  | 'pa-IN'
+  | 'or-IN'
+  | 'ml-IN'
+  | 'ur-IN'
 
 export const LANGUAGE_LABELS: Record<SupportedLang, string> = {
   'en-IN': 'English',
@@ -19,6 +31,31 @@ export const LANGUAGE_LABELS: Record<SupportedLang, string> = {
   'mr-IN': 'मराठी',
   'bn-IN': 'বাংলা',
   'ta-IN': 'தமிழ்',
+  'te-IN': 'తెలుగు',
+  'gu-IN': 'ગુજરાતી',
+  'kn-IN': 'ಕನ್ನಡ',
+  'pa-IN': 'ਪੰਜਾਬੀ',
+  'or-IN': 'ଓଡ଼ିଆ',
+  'ml-IN': 'മലയാളം',
+  'ur-IN': 'اردو',
+}
+
+export function getSpeechLangFromCode(code: string): SupportedLang {
+  const map: Record<string, SupportedLang> = {
+    en: 'en-IN',
+    hi: 'hi-IN',
+    mr: 'mr-IN',
+    bn: 'bn-IN',
+    ta: 'ta-IN',
+    te: 'te-IN',
+    gu: 'gu-IN',
+    kn: 'kn-IN',
+    pa: 'pa-IN',
+    or: 'or-IN',
+    ml: 'ml-IN',
+    ur: 'ur-IN',
+  }
+  return map[code] || (code === 'hi' ? 'hi-IN' : 'en-IN')
 }
 
 // Common Hindi health terms spoken in Roman (Hinglish) → Hindi script

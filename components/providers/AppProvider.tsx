@@ -19,12 +19,34 @@ const AppContext = createContext<AppContextProps | undefined>(undefined)
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null)
-  const [language, setLanguage] = useState("en")
+  const [language, setLanguageState] = useState("en")
   const [symptomCheckResult, setSymptomCheckResult] = useState<SymptomResult | null>(null)
   // Audit H6: Do not block first paint on auth — render shell immediately
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("rhcp_language")
+      if (saved) {
+        setLanguageState(saved)
+        document.documentElement.lang = saved
+      }
+    } catch {}
+  }, [])
+
+  const setLanguage: React.Dispatch<React.SetStateAction<string>> = (action) => {
+    setLanguageState((prev) => {
+      const next = typeof action === "function" ? (action as (p: string) => string)(prev) : action
+      try {
+        localStorage.setItem("rhcp_language", next)
+        document.documentElement.lang = next
+        window.dispatchEvent(new CustomEvent("rhcp-language-change", { detail: { language: next } }))
+      } catch {}
+      return next
+    })
+  }
 
   useEffect(() => {
     const supabase = createClient()
