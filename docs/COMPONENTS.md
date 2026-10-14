@@ -103,7 +103,7 @@ This document catalogs the domain-specific React components used throughout the 
 - **Files Where Used:** `app/page.tsx`
 
 ### 2.5 `EmergencyModule.tsx`
-- **Purpose:** Primary emergency response hub partitioned into 3 streamlined severity modes (Critical Life Threat, Urgent Distress Dispatch, Urgent Care Navigation). Includes direct Paramedic ICE Medical Pass display, 1-tap bilingual voice vocalizers, camera LED strobe, ambulance siren audio synthesis, screen wake lock, and offline IndexedDB incident audio blackbox.
+- **Purpose:** Primary emergency response hub partitioned into 3 streamlined severity modes (Critical Life Threat, Urgent Distress Dispatch, Urgent Care Navigation). Includes direct Paramedic ICE Medical Pass display, 1-tap bilingual voice vocalizers, camera LED strobe, ambulance siren audio synthesis, screen wake lock, integrated national/state helpline directory, and offline IndexedDB incident audio blackbox.
 - **Props:**
   ```typescript
   {
@@ -111,10 +111,23 @@ This document catalogs the domain-specific React components used throughout the 
     onNavigate?: (page: string) => void;
   }
   ```
-- **State:** `alarmActive`, `torchActive`, `sirenActive`, `strobeActive`, `isRecording`, `audioRecordings`, `showDistressDialog`, `showParamedicModal`, `userCoords`.
-- **Dependencies:** `lib/emergency/hardware.ts`, `lib/emergency/audio-blackbox.ts`, `lucide-react`, `shadcn/ui`.
+- **State:** `alarmActive`, `torchActive`, `sirenActive`, `strobeActive`, `isRecording`, `audioRecordings`, `showDistressDialog`, `showParamedicModal`, `lastCoords`.
+- **Dependencies:** `lib/emergency/hardware.ts`, `lib/emergency/audio-blackbox.ts`, `components/HelplineDirectory.tsx`, `lucide-react`, `shadcn/ui`.
 - **Styling:** High-contrast mobile-optimized severity cards with emergency animations and fullscreen modal overlays.
 - **Files Where Used:** `app/emergency/page.tsx`
+
+### 2.6 `HelplineDirectory.tsx`
+- **Purpose:** Interactive, location-aware national & state-wise emergency helpline directory. Provides toggleable State View (combining regional state helplines with common national numbers) and Whole All-India Directory view. Features GPS spatial auto-detection, category filtering, live keyword search, 1-tap `tel:` calling, and clipboard copy.
+- **Props:**
+  ```typescript
+  {
+    language: string;
+    initialCoords?: { lat: number; lng: number };
+  }
+  ```
+- **State:** `viewMode` ("state" | "all"), `selectedStateCode` (LGD state code), `selectedCategory` (HelplineCategory), `searchQuery` (string), `copiedId` (string | null), `isDetectingLocation` (boolean).
+- **Dependencies:** `lib/emergency/helplines.ts`, `lib/geo/lgd-iphs.ts`, `lib/i18n/detect-language.ts`, `lucide-react`, `shadcn/ui`.
+- **Files Where Used:** `components/EmergencyModule.tsx`
 
 ---
 

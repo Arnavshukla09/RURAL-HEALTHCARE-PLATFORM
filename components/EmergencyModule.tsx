@@ -55,6 +55,7 @@ import {
   startEmergencyVoiceLoop,
   stopEmergencyVoiceLoop,
 } from "@/lib/emergency/audio-blackbox"
+import { HelplineDirectory } from "./HelplineDirectory"
 
 interface EmergencyModuleProps {
   language: string
@@ -611,17 +612,6 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
 
   const t = content[language as keyof typeof content] || content.en
 
-  const emergencyNumbers = [
-    { service: t.cmHelpline, number: "181", icon: Phone, color: "gray" },
-    { service: t.childHelpline, number: "1098", icon: Phone, color: "gray" },
-    { service: t.police, number: "100", icon: AlertTriangle, color: "blue" },
-    { service: t.fire, number: "101", icon: AlertTriangle, color: "orange" },
-    { service: t.ambulance, number: "108", icon: Truck, color: "red" },
-    { service: t.womenHelpline, number: "1090", icon: Phone, color: "gray" },
-    { service: t.ayushman, number: "18002332085", icon: Phone, color: "teal" },
-    { service: t.nationalHealth, number: "18001801104", icon: Phone, color: "teal" },
-  ]
-
   return (
     <div className="min-h-screen bg-red-50 text-gray-900 p-3 sm:p-6">
       <div className="max-w-3xl mx-auto space-y-4 sm:space-y-5 overflow-hidden">
@@ -1068,52 +1058,23 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
         </Dialog>
 
         {/* ============================================================== */}
-        {/* HELPLINES & INSTRUCTIONS (Clean 2-Column Responsive Layout)    */}
+        {/* NATIONAL & STATE-WISE EMERGENCY HELPLINES DIRECTORY           */}
         {/* ============================================================== */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          
-          {/* Government Helplines */}
-          <Card className="border-gray-200 bg-white shadow-sm">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base sm:text-lg flex items-center text-teal-800">
-                <Phone className="h-4 w-4 mr-2 text-teal-600" />
-                {t.helplineTitle}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {emergencyNumbers.map((item, idx) => {
-                const Icon = item.icon
-                return (
-                  <div
-                    key={idx}
-                    onClick={() => { window.location.href = `tel:${item.number}` }}
-                    className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 border border-gray-100 cursor-pointer transition-colors"
-                  >
-                    <div className="flex items-center gap-2 min-w-0">
-                      <Icon className="h-4 w-4 text-gray-500 flex-shrink-0" />
-                      <span className="text-xs sm:text-sm font-medium text-gray-800 truncate">{item.service}</span>
-                    </div>
-                    <span className="font-mono text-xs sm:text-sm font-bold bg-teal-50 text-teal-800 px-2.5 py-0.5 rounded-full flex-shrink-0">
-                      {item.number}
-                    </span>
-                  </div>
-                )
-              })}
-            </CardContent>
-          </Card>
+        <HelplineDirectory language={language} initialCoords={lastCoords} />
 
-          {/* Emergency Instructions */}
-          <Card className="border-gray-200 bg-white shadow-sm">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base sm:text-lg flex items-center text-red-800">
-                <AlertTriangle className="h-4 w-4 mr-2 text-red-600" />
-                {t.instructionsTitle}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
+        {/* Emergency First-Response Instructions */}
+        <Card className="border-gray-200 bg-white shadow-sm">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base sm:text-lg flex items-center text-red-800">
+              <AlertTriangle className="h-4 w-4 mr-2 text-red-600 flex-shrink-0" />
+              {t.instructionsTitle}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {[t.inst1, t.inst2, t.inst3, t.inst4, t.inst5].map((text, idx) => (
-                <div key={idx} className="flex items-start gap-2.5">
-                  <span className="h-5 w-5 rounded-full bg-teal-600 text-white text-[11px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
+                <div key={idx} className="flex items-start gap-2.5 p-2 rounded-lg bg-red-50/50 border border-red-100">
+                  <span className="h-5 w-5 rounded-full bg-red-600 text-white text-[11px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
                     {idx + 1}
                   </span>
                   <p className="text-xs sm:text-sm text-gray-700 leading-snug">
@@ -1121,9 +1082,9 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
                   </p>
                 </div>
               ))}
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* ============================================================== */}
         {/* FULLSCREEN FLASHING STROBE BEACON WITH SIREN & VOICE CONTROLS */}

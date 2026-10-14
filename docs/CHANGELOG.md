@@ -4,6 +4,64 @@ All notable changes to the Rural Healthcare Platform will be documented in this 
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres roughly to chronological feature milestones.
 
+## [v1.19.0] - 2026-10-15 — National & State-Wise Emergency Helpline Directory with Spatial Auto-Detection
+
+### 1. Comprehensive Helpline Directory Catalog (`lib/emergency/helplines.ts`)
+- **National Helplines (Unified & Specialized)**:
+  - `112`: National Emergency Unified Helpline (ERSS for Police, Fire, Ambulance, Disaster).
+  - `108`: National Emergency Ambulance Service.
+  - `102`: Janani Shishu Suraksha Maternity & Infant Transport Ambulance.
+  - `104`: National Health Consultation, Tele-triage & Blood Bank helpline.
+  - `14416`: Tele-MANAS National 24/7 Mental Health Crisis & Suicide Prevention Helpline.
+  - `1098`: CHILDLINE National Child Protection & Abuse Relief.
+  - `181` / `1091`: National Women in Distress & Domestic Violence Helpline.
+  - `14567`: Elder Line National Senior Citizens Helpline.
+  - `1070`: NDMA National Disaster Management Control Room.
+  - `1930`: National Cyber Crime & Financial Fraud Reporting Line.
+  - `14555`: Ayushman Bharat PM-JAY & National Health Authority Call Centre.
+  - `1800-116-555`: National Poison Information Centre (AIIMS New Delhi) for acute toxic exposure.
+  - `100` / `101`: Police & Fire Control Rooms.
+  - `1912`: National Electricity Emergency & Rural Grid Helpline.
+- **State-Specific Helpline Catalog**:
+  - Implemented detailed regional helplines across Indian States & UTs (aligned with official LGD codes):
+    * **Madhya Pradesh (23)**: CM Helpline 181, 104 Health Advice, 1090 Shakti Women Line, 0755-2441414 SDMA Disaster Room, 108 Sanjeevani Express, 1079 Citizen Crime.
+    * **Uttar Pradesh (09)**: 1076 CM Helpline, 1090 Women Power Line, 1070 Rahat Disaster Room, 104 Health Advice, 112 PRV.
+    * **Maharashtra (27)**: 1800-120-8040 / 1905 Aaple Sarkar, 104 Arogya Sahayavani, 108 MEMS, 1077 State Disaster Centre.
+    * **Rajasthan (08)**: 181 Sampark CM Helpline, 104 Health Advisory, 1090 Garima Women Safety, 1070 Disaster Room.
+    * **Bihar (10)**: 1800-345-6268 CM Janta Darbar, 104 Health Society, 1070 BSDMA Flood & Disaster Control.
+    * **West Bengal (19)**: 104 Swasthya Infoline, 1070 Nabanna Disaster Emergency Centre, 1800-345-0117 CMO Grievance.
+    * **Gujarat (24)**: 104 Health Advice, 181 Abhayam Women Helpline, 1070 GSDMA Disaster Authority.
+    * **Tamil Nadu (33)**: 1100 CM Helpline, 104 Health Department Helpline, 1070 State Emergency Operations.
+    * **Karnataka (29)**: 1902 CM Janaspandana, 104 Arogyavani Medical Advice, 1070 Disaster Monitoring.
+    * **Andhra Pradesh (28)**: 1902 Spandana CM Helpline, 104 Health Line, 1070 Disaster Management.
+    * **Telangana (36)**: 104 Health Advice, 181 Bharosa Women Safety, 1070 Disaster Control.
+    * **Punjab (03)**: 1100 Sarkar Tuhade Dwar, 104 Health Line, 1070 Disaster Control.
+    * **Odisha (21)**: 1905 Mo Sarkar, 104 Health Line, 1070 OSDMA Cyclone Early Warning.
+    * **Kerala (32)**: 1056 DISHA Health Advisory, 1070 KSDMA Disaster Control.
+    * **Assam (18)**: 104 Sarbajanin Swasthya Sanjeevani, 1070 ASDMA Flood Room.
+    * **Delhi (07)**: 1031 Health Infoline, 181 DCW Women Helpline, 1077 DDMA Disaster Room.
+    * Other States & UTs (Chhattisgarh, Jharkhand, Uttarakhand, Himachal Pradesh, J&K, Goa, etc.).
+
+### 2. Interactive Helpline Directory Component (`components/HelplineDirectory.tsx`)
+- **Dual View Modes**:
+  - **State View (राज्य अनुसार)**: Combines the selected state's specific helplines with the common national helplines, featuring state helplines prominently at the top.
+  - **All-India Directory (संपूर्ण देश)**: Searchable across all states and national services.
+- **Location Auto-Detection**: Automatically resolves user's GPS coordinates (`navigator.geolocation`) to their nearest state using spatial centroid calculations, pre-selecting their state's helplines.
+- **Service Categories**: Instant filtering by *All, Medical & Health, Women & Child, Mental Health, Disaster & Relief, CM & Governance, Police & Fire*.
+- **Live Search**: Instant multi-attribute search filtering by service title, phone number, category, description, or state in English and Hindi.
+- **Direct Dial & Clipboard Copy**: 1-tap `tel:...` dialing with copy-to-clipboard for rural accessibility.
+
+### 3. Integrated Emergency Hub (`components/EmergencyModule.tsx`)
+- Mounted the directory directly into the Emergency Module, passing pre-cached GPS coordinates (`lastCoords`) for instant localization.
+- Redesigned emergency first-response instructions into an organized 2-column card layout.
+
+### 4. Test Suite (`tests/unit/helplines.test.ts`)
+- Added 5 new unit tests verifying national numbers, state catalogs, combined state-first ranking, and whole directory consistency.
+- All 83 unit tests passing in <900ms across 15 test files.
+- 0 TypeScript compiler errors and 0 ESLint warnings.
+
+---
+
 ## [v1.18.0] - 2026-10-15 — Native Multilingual Engine, Regional Dialect Awareness & Zero-Cost Browser Localization
 
 ### 1. Client-Side Multilingual Engine & Regional Dialect Mapping (`lib/i18n/detect-language.ts`)
