@@ -75,6 +75,38 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   };
                 }
               } catch(e) {}
+              // Continuous early suppression of Google Translate banner to ensure navbar is never covered
+              try {
+                var cleanBanner = function() {
+                  var frames = document.querySelectorAll('iframe.skiptranslate, .goog-te-banner-frame, iframe[id*=":1.container"], iframe[id*=":2.container"], [class*="VIpgJd-ZVi9od"]');
+                  for (var i = 0; i < frames.length; i++) {
+                    frames[i].style.setProperty('display', 'none', 'important');
+                    frames[i].style.setProperty('visibility', 'hidden', 'important');
+                    frames[i].style.setProperty('height', '0px', 'important');
+                    frames[i].style.setProperty('top', '-9999px', 'important');
+                  }
+                  if (document.body) {
+                    if (document.body.style.top && document.body.style.top !== '0px') {
+                      document.body.style.setProperty('top', '0px', 'important');
+                    }
+                    if (document.body.style.position && document.body.style.position !== 'static') {
+                      document.body.style.setProperty('position', 'static', 'important');
+                    }
+                    if (document.body.style.marginTop && document.body.style.marginTop !== '0px') {
+                      document.body.style.setProperty('margin-top', '0px', 'important');
+                    }
+                  }
+                };
+                if (typeof MutationObserver !== 'undefined') {
+                  var obs = new MutationObserver(cleanBanner);
+                  obs.observe(document.documentElement, {
+                    childList: true,
+                    subtree: true,
+                    attributes: true,
+                    attributeFilter: ['style', 'class']
+                  });
+                }
+              } catch(e) {}
               window.googleTranslateElementInit = function() {
                 try {
                   if (window.google && window.google.translate) {

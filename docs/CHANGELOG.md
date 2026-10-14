@@ -4,6 +4,44 @@ All notable changes to the Rural Healthcare Platform will be documented in this 
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres roughly to chronological feature milestones.
 
+## [v1.19.2] - 2026-10-15 — Permanent Google Translate Banner Suppression & Navigation Bar Protection
+
+### 1. Zero Navbar Interference
+- **Issue**: When switching languages, Google Translate's injected top banner iframe (`iframe.skiptranslate`, `VIpgJd` containers) appeared fixed at `top: 0px`, physically covering the platform navigation bar and AccessibilityBar.
+- **Permanent Iframe Suppression (`app/globals.css`)**:
+  - Expanded CSS rules to aggressively target all Google Translate banner iframes and container wrappers:
+    ```css
+    iframe.skiptranslate,
+    .goog-te-banner-frame,
+    .goog-te-banner-frame.skiptranslate,
+    iframe.goog-te-banner-frame,
+    iframe[id*=":1.container"],
+    iframe[id*=":2.container"],
+    iframe[src*="translate.google"],
+    [class*="VIpgJd-ZVi9od-aZ2wEe"],
+    [class*="VIpgJd-ZVi9od-ORHb"],
+    [class*="VIpgJd-ZVi9od-l4eHX"] {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+      height: 0px !important;
+      position: absolute !important;
+      top: -9999px !important;
+      left: -9999px !important;
+      z-index: -9999 !important;
+    }
+    ```
+- **Viewport & Body Position Locking**:
+  - Enforced `html, body { top: 0px !important; position: static !important; margin-top: 0px !important; }` to eliminate unwanted layout shifts or empty top margins.
+
+### 2. Runtime MutationObservers (`app/layout.tsx` & `lib/i18n/google-translate.ts`)
+- Added dual-layer MutationObservers (pre-paint `<head>` script and client module listener) that actively detect any translation toolbar elements injected by Google Translate and suppress them in microseconds.
+- Resets `document.body.style.top = "0px"` and `document.body.style.position = "static"` automatically.
+
+### 3. Test Suite Verification (`tests/unit/multilingual-engine.test.ts`)
+- Added unit tests verifying `hideGoogleTranslateBanner` hides banner elements and locks body positioning at `0px`.
+- All 85 unit tests passing in <800ms across 15 test files. 0 TypeScript errors, 0 ESLint errors.
+
 ## [v1.19.1] - 2026-10-15 — Zero-Cost Full Site Regional Translation Engine & React DOM Crash Guard
 
 ### 1. Client-Side Live Regional Translation Engine (`lib/i18n/google-translate.ts`)

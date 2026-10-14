@@ -27,16 +27,36 @@
 
 @layer base {
   * { @apply border-border; }
-  body { @apply bg-background text-foreground antialiased; top: 0px !important; position: static !important; }
+  html, body {
+    top: 0px !important;
+    position: static !important;
+    margin-top: 0px !important;
+  }
+  body { @apply bg-background text-foreground antialiased; }
 }
 
 /* Google Translate Widget & Frame Styling Cleanup ($0 Free Tier) */
+iframe.skiptranslate,
 .goog-te-banner-frame,
+.goog-te-banner-frame.skiptranslate,
 iframe.goog-te-banner-frame,
-.goog-te-banner-frame.skiptranslate {
+iframe[id*=":1.container"],
+iframe[id*=":2.container"],
+iframe[src*="translate.google"],
+[class*="VIpgJd-ZVi9od-aZ2wEe"],
+[class*="VIpgJd-ZVi9od-ORHb"],
+[class*="VIpgJd-ZVi9od-l4eHX"] {
   display: none !important;
   visibility: hidden !important;
-  height: 0 !important;
+  opacity: 0 !important;
+  height: 0px !important;
+  width: 0px !important;
+  max-height: 0px !important;
+  pointer-events: none !important;
+  position: absolute !important;
+  top: -9999px !important;
+  left: -9999px !important;
+  z-index: -9999 !important;
 }
 
 #goog-gt-tt,

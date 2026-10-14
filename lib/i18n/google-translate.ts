@@ -46,9 +46,75 @@ export function installTranslateCrashGuard() {
   }
 }
 
-// Ensure crash guard is installed at client module evaluation
+/**
+ * Clean up Google Translate DOM artifacts:
+ * - Hides all top banner iframes (.skiptranslate, .goog-te-banner-frame, VIpgJd, etc.)
+ * - Resets document.body position and margin offsets so the navigation bar is never obscured.
+ */
+export function hideGoogleTranslateBanner() {
+  if (typeof document === "undefined") return
+
+  try {
+    const banners = document.querySelectorAll<HTMLElement>(
+      'iframe.skiptranslate, .goog-te-banner-frame, iframe[id*=":1.container"], iframe[id*=":2.container"], iframe[src*="translate.google"], [class*="VIpgJd-ZVi9od-ORHb-Oxf5td"], [class*="VIpgJd-ZVi9od-aZ2wEe-wOHMyf"], [class*="VIpgJd-ZVi9od-ORHb-OEVmcd"], [class*="VIpgJd-ZVi9od-l4eHX"]'
+    )
+    banners.forEach((el) => {
+      el.style.setProperty("display", "none", "important")
+      el.style.setProperty("visibility", "hidden", "important")
+      el.style.setProperty("height", "0", "important")
+      el.style.setProperty("width", "0", "important")
+      el.style.setProperty("opacity", "0", "important")
+      el.style.setProperty("pointer-events", "none", "important")
+      el.style.setProperty("position", "absolute", "important")
+      el.style.setProperty("top", "-9999px", "important")
+      el.style.setProperty("left", "-9999px", "important")
+      el.setAttribute("aria-hidden", "true")
+    })
+
+    if (document.body) {
+      if (document.body.style.top && document.body.style.top !== "0px") {
+        document.body.style.setProperty("top", "0px", "important")
+      }
+      if (document.body.style.position && document.body.style.position !== "static") {
+        document.body.style.setProperty("position", "static", "important")
+      }
+      if (document.body.style.marginTop && document.body.style.marginTop !== "0px") {
+        document.body.style.setProperty("margin-top", "0px", "important")
+      }
+    }
+  } catch (err) {
+    // Non-blocking cleanup
+  }
+}
+
+/**
+ * Start an observer to continuously suppress any banner iframes injected by Google Translate.
+ */
+export function startGoogleTranslateBannerSuppression() {
+  if (typeof window === "undefined" || typeof document === "undefined") return
+
+  hideGoogleTranslateBanner()
+
+  if (typeof MutationObserver !== "undefined") {
+    const observer = new MutationObserver(() => {
+      hideGoogleTranslateBanner()
+    })
+
+    try {
+      observer.observe(document.documentElement, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ["style", "class"],
+      })
+    } catch {}
+  }
+}
+
+// Ensure crash guard and banner suppression are initialized at client module load
 if (typeof window !== "undefined") {
   installTranslateCrashGuard()
+  startGoogleTranslateBannerSuppression()
 }
 
 /**
@@ -84,7 +150,10 @@ export function triggerGoogleTranslate(langCode: string, allowReload = false) {
   // 1. Update googtrans cookies
   setTranslateCookie(langCode)
 
-  // 2. Locate Google Translate select dropdown element (.goog-te-combo)
+  // 2. Suppress any banner frame that might appear
+  hideGoogleTranslateBanner()
+
+  // 3. Locate Google Translate select dropdown element (.goog-te-combo)
   const select = document.querySelector<HTMLSelectElement>(".goog-te-combo")
   if (select) {
     const targetValue = langCode === "en" ? "" : langCode
@@ -92,14 +161,17 @@ export function triggerGoogleTranslate(langCode: string, allowReload = false) {
       select.value = targetValue
       select.dispatchEvent(new Event("change"))
     }
+    setTimeout(hideGoogleTranslateBanner, 50)
+    setTimeout(hideGoogleTranslateBanner, 300)
     return
   }
 
-  // 3. Retry finding .goog-te-combo if script is still initializing
+  // 4. Retry finding .goog-te-combo if script is still initializing
   let attempts = 0
   const maxAttempts = 6
   const interval = setInterval(() => {
     attempts++
+    hideGoogleTranslateBanner()
     const retrySelect = document.querySelector<HTMLSelectElement>(".goog-te-combo")
     if (retrySelect) {
       clearInterval(interval)
@@ -108,6 +180,8 @@ export function triggerGoogleTranslate(langCode: string, allowReload = false) {
         retrySelect.value = targetValue
         retrySelect.dispatchEvent(new Event("change"))
       }
+      setTimeout(hideGoogleTranslateBanner, 50)
+      setTimeout(hideGoogleTranslateBanner, 300)
     } else if (attempts >= maxAttempts) {
       clearInterval(interval)
       if (allowReload && langCode !== "en") {

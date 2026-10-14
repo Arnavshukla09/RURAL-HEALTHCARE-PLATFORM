@@ -168,10 +168,31 @@ describe("Multilingual Engine & Dialect Mapping", () => {
       location: { hostname: "ruralhealth.in", reload: () => {} },
     }
 
+    const mockBanner = {
+      style: {
+        properties: {} as Record<string, string>,
+        setProperty(k: string, v: string) {
+          this.properties[k] = v
+        },
+      },
+      setAttribute: () => {},
+    }
+
+    mockDocument.querySelectorAll = () => [mockBanner]
+    mockDocument.body = {
+      style: {
+        top: "40px",
+        position: "relative",
+        marginTop: "40px",
+        setProperty(k: string, v: string) {
+          (this as any)[k] = v
+        },
+      },
+    }
+
     try {
-      const { setTranslateCookie, installTranslateCrashGuard, triggerGoogleTranslate } = await import(
-        "@/lib/i18n/google-translate"
-      )
+      const { setTranslateCookie, installTranslateCrashGuard, triggerGoogleTranslate, hideGoogleTranslateBanner } =
+        await import("@/lib/i18n/google-translate")
 
       // 1. Crash guard test
       installTranslateCrashGuard()
@@ -204,6 +225,14 @@ describe("Multilingual Engine & Dialect Mapping", () => {
       triggerGoogleTranslate("mr", false)
       expect(mockSelect.value).toBe("mr")
       expect(eventFired).toBe(true)
+
+      // 4. Banner frame suppression test
+      hideGoogleTranslateBanner()
+      expect(mockBanner.style.properties["display"]).toBe("none")
+      expect(mockBanner.style.properties["visibility"]).toBe("hidden")
+      expect(mockBanner.style.properties["top"]).toBe("-9999px")
+      expect(mockDocument.body.style.top).toBe("0px")
+      expect(mockDocument.body.style.position).toBe("static")
     } finally {
       ;(globalThis as any).document = originalDocument
       ;(globalThis as any).window = originalWindow
