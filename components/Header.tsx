@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client"
 import { NotificationBell } from "./NotificationBell"
 
 import { usePathname, useRouter } from "next/navigation"
+import Link from "next/link"
 import { useApp } from "@/components/providers/AppProvider"
 import { wipeClientCachesOnSignOut } from "@/lib/offline/cache-cleaner"
 import { OfflineSyncBadge } from "./OfflineSyncBadge"
@@ -254,9 +255,11 @@ export function Header() {
                 )}
               </div>
             ) : (
-              <Button size="sm" onClick={() => go("/login")} className="hidden sm:flex gradient-primary text-white text-xs">
-                {en ? "Login" : "लॉगिन"}
-              </Button>
+              <Link href="/login" className="hidden sm:inline-flex">
+                <Button size="sm" className="gradient-primary text-white text-xs">
+                  {en ? "Login" : "लॉगिन"}
+                </Button>
+              </Link>
             )}
 
             {/* Mobile Direct 1-Tap SOS Button */}
@@ -336,9 +339,11 @@ export function Header() {
                   <LogOut className="h-4 w-4" />{en ? "Logout" : "लॉगआउट"}
                 </button>
               ) : (
-                <Button size="sm" className="w-full gradient-primary text-white" onClick={() => go("/login")}>
-                  {en ? "Login / Register" : "लॉगिन / पंजीकरण"}
-                </Button>
+                <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="block w-full">
+                  <Button size="sm" className="w-full gradient-primary text-white">
+                    {en ? "Login / Register" : "लॉगिन / पंजीकरण"}
+                  </Button>
+                </Link>
               )}
             </div>
           </div>
