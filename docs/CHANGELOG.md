@@ -4,6 +4,23 @@ All notable changes to the Rural Healthcare Platform will be documented in this 
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres roughly to chronological feature milestones.
 
+## [v1.15.0] - 2026-10-14 — PAN-India Geospatial Coverage: 136k+ Facilities Ingestion & National 35-State / 722-District LGD Directory
+
+### PAN-India Geospatial Health Infrastructure (`lib/geo/`, `components/MapView.tsx`, `scripts/`)
+- **136,228 PostGIS-Indexed Facilities Across India**:
+  - Ingested 139,646 raw geospatial features from the comprehensive HotOSM health facilities dataset (`health_facilities.geojson`) using a high-throughput streaming batch loader (`scripts/ingest_pan_india_geojson.mjs`).
+  - Grew platform facilities registry from 6,616 local facilities to **136,228 unique deduplicated facilities** spanning all Indian states and Union Territories (Maharashtra, Karnataka, Tamil Nadu, Uttar Pradesh, Bihar, Gujarat, Rajasthan, Madhya Pradesh, Kerala, West Bengal, Odisha, Andhra Pradesh, Telangana, Assam, Punjab, Haryana, etc.).
+  - PostGIS spatial triggers (`trg_set_facility_geom`) automatically computed WGS84 geography points (`geom`) and GIST spatial indices for ultra-fast spatial search without exceeding free-tier limits.
+- **National LGD Hierarchy Dataset (`lib/geo/pan-india-lgd.json`, `lib/geo/lgd-iphs.ts`)**:
+  - Engineered complete national Local Government Directory (LGD) structure covering **all 35 States / Union Territories and 722 Districts**.
+  - Computed exact geographic centroids (`lat`, `lng`) for each district from official boundary datasets.
+  - Sourced bilingual state naming (`nameEn`, `nameHi`) and official LGD state codes (e.g., MP `23`, Rajasthan `08`, Maharashtra `27`, Gujarat `24`, UP `09`, Bihar `10`, Karnataka `29`, Kerala `32`, Delhi `07`).
+  - Integrated seamlessly into `components/MapView.tsx` dropdown filters with dynamic fallback to `/api/facilities/nearby` PostGIS queries when static district packs are absent.
+- **Preserved Low-Bandwidth Performance & $0 Free Tier**:
+  - Kept lightweight footprint (~197 KB uncompressed JSON, ~25 KB over brotli/gzip) with sub-15ms client Haversine sorting and zero third-party paid API requirements.
+
+---
+
 ## [v1.14.0] - 2026-10-12 — Mobile Emergency Overhaul: Streamlined Dual-Distress Engine, Custom Voice Alert Loop & Clean Layout
 
 ### Emergency Services & Hardware Integration (`lib/emergency/`, `components/EmergencyModule.tsx`)

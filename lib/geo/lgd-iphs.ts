@@ -103,39 +103,7 @@ export const IPHS_TIER_CONFIG: Record<IphsFacilityTier, { en: string; hi: string
   },
 }
 
-// Curated LGD States & Pilot Districts
-export const LGD_STATES: LgdState[] = [
-  {
-    code: "23",
-    nameEn: "Madhya Pradesh",
-    nameHi: "मध्य प्रदेश",
-    center: { lat: 23.2599, lng: 77.4126 },
-    districts: [
-      { code: "2301", stateCode: "23", nameEn: "Bhopal", nameHi: "भोपाल", center: { lat: 23.2599, lng: 77.4126 }, blocks: ["Berasia", "Phanda Urban", "Phanda Rural"] },
-      { code: "2302", stateCode: "23", nameEn: "Sehore", nameHi: "सीहोर", center: { lat: 23.2031, lng: 77.0844 }, blocks: ["Sehore", "Ashta", "Ichhawar", "Nasrullaganj", "Budni"] },
-      { code: "2303", stateCode: "23", nameEn: "Indore", nameHi: "इंदौर", center: { lat: 22.7196, lng: 75.8577 }, blocks: ["Indore Urban", "Depalpur", "Mhow", "Sanwer"] },
-      { code: "2304", stateCode: "23", nameEn: "Raisen", nameHi: "रायसेन", center: { lat: 23.3315, lng: 77.7816 }, blocks: ["Raisen", "Gairatganj", "Begamganj", "Silwani", "Obedullaganj"] },
-      { code: "2305", stateCode: "23", nameEn: "Vidisha", nameHi: "विदिशा", center: { lat: 23.5251, lng: 77.8081 }, blocks: ["Vidisha", "Gyaraspur", "Basoda", "Kurwai", "Sironj"] },
-    ],
-  },
-  {
-    code: "08",
-    nameEn: "Rajasthan",
-    nameHi: "राजस्थान",
-    center: { lat: 26.9124, lng: 75.7873 },
-    districts: [
-      { code: "0801", stateCode: "08", nameEn: "Jaipur", nameHi: "जयपुर", center: { lat: 26.9124, lng: 75.7873 }, blocks: ["Amer", "Chaksu", "Jhotwara", "Phulera", "Sanganer"] },
-      { code: "0802", stateCode: "08", nameEn: "Dahod Border / Banswara", nameHi: "बांसवाड़ा", center: { lat: 23.5461, lng: 74.4349 }, blocks: ["Banswara", "Garhi", "Ghatol", "Kushalgarh"] },
-    ],
-  },
-  {
-    code: "27",
-    nameEn: "Maharashtra",
-    nameHi: "महाराष्ट्र",
-    center: { lat: 19.7515, lng: 75.7139 },
-    districts: [
-      { code: "2701", stateCode: "27", nameEn: "Nagpur", nameHi: "नागपुर", center: { lat: 21.1458, lng: 79.0882 }, blocks: ["Nagpur Rural", "Kamptee", "Hingna", "Katol", "Saoner"] },
-      { code: "2702", stateCode: "27", nameEn: "Amravati", nameHi: "अमरावती", center: { lat: 20.9374, lng: 77.7796 }, blocks: ["Amravati", "Achalpur", "Chandur Bazar", "Dharni", "Chikhaldara"] },
-    ],
-  },
-]
+import panIndiaLgd from "./pan-india-lgd.json"
+
+// Complete National LGD States & 722 Districts
+export const LGD_STATES: LgdState[] = panIndiaLgd as LgdState[]
