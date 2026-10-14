@@ -121,18 +121,20 @@ This document catalogs the domain-specific React components used throughout the 
 ## 3. Telemedicine & Maps
 
 ### 3.1 `MapView.tsx`
-- **Purpose:** Renders the interactive Leaflet map to show nearby healthcare facilities. Features a draggable user pointer for custom location queries.
+- **Purpose:** National healthcare facility and doctor discovery portal indexed by Local Government Directory (LGD) and Indian Public Health Standards (IPHS). Features interactive Leaflet maps, driving routes via OSRM, Haversine proximity calculations, and searchable state/district selectors.
 - **Props:**
   ```typescript
   {
     language: string;
-    setCurrentPage: (page: string) => void;
+    userLocation?: any;
+    camps?: any[];
   }
   ```
-- **State:** `facilities` (Array), `userLocation` (Tuple), `loading` (boolean), `error` (string).
-- **Dependencies:** `react-leaflet`, `leaflet` (CSS strictly required in `globals.css`). Calls `/api/facilities/nearby`.
-- **Styling:** Leaflet canvas takes full height (`h-[600px]`).
-- **Files Where Used:** `app/page.tsx`
+- **State:** `selectedState` (LGD code), `selectedDistrict` (LGD code), `facilities` (Array), `loading` (boolean), `locating` (boolean), `filter` (Facility type), `radiusKm` (number), `searchQuery` (string), `routeData` (OSRM GeoJSON route).
+- **Sub-Components:**
+  - `SearchableDropdown`: Accessible popover with a top-pinned real-time search input for both English and Hindi queries, constrained to a strict 5-item visible viewport limit (`max-h-[175px] overflow-y-auto`) to avoid covering map controls. Includes click-outside and `Escape` key listeners.
+- **Dependencies:** `react-leaflet`, `leaflet`, `lucide-react`, `lib/geo/pan-india-lgd.json`, `lib/geo/lgd-iphs.ts`. Calls `/api/facilities/district/[districtCode]` and `/api/facilities/nearby`.
+- **Files Where Used:** `app/page.tsx`, `app/locations/page.tsx`
 
 ### 3.2 `JitsiMeeting.tsx`
 - **Purpose:** Wraps the external Jitsi Meet API to embed video consultations.

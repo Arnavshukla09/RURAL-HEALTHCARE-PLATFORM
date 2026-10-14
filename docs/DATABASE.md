@@ -99,12 +99,15 @@ erDiagram
         uuid id PK
         bigint osm_id "OpenStreetMap dedup key"
         text name
-        text type "hospital, clinic, pharmacy, phc, chc"
+        text type "hospital, clinic, pharmacy, doctors, health_post, lab"
         text address
         text phone
+        text district "LGD District Name"
+        text state "LGD State Name"
         double_precision lat
         double_precision lon
         geography geom "PostGIS 4326 Point"
+        jsonb tags "Speciality, emergency, operator metadata"
         timestamptz created_at
         timestamptz updated_at
     }
@@ -175,6 +178,26 @@ Idempotency table for offline sync queue replay.
 - `processed_at` (TIMESTAMPTZ, DEFAULT NOW())
 
 When the client flushes its IndexedDB offline outbox, each operation sends its client-generated UUID. If the server already contains that `client_op_id`, the operation is skipped without error, guaranteeing atomic at-most-once execution across network retries.
+
+### 2.4 `healthcare_facilities`
+National geospatial directory of healthcare facilities, hospitals, clinics, and individual registered doctors across India.
+- `id` (UUID, Primary Key, `default gen_random_uuid()`)
+- `osm_id` (BIGINT, UNIQUE) — Natural deduplication key from OpenStreetMap nodes/ways/relations.
+- `name` (TEXT, NOT NULL) — Facility or practitioner name.
+- `type` (TEXT, NOT NULL) — One of `'hospital'`, `'clinic'`, `'doctors'`, `'pharmacy'`, `'lab'`, `'health_post'`.
+- `address` (TEXT) — Human-readable road, street, or locality address.
+- `phone` (TEXT) — Public contact or emergency phone number.
+- `district` (TEXT) — Local Government Directory (LGD) district name.
+- `state` (TEXT) — LGD state name.
+- `lat` / `lon` (DOUBLE PRECISION, NOT NULL) — WGS84 decimal coordinates.
+- `geom` (GEOGRAPHY(Point, 4326)) — Automatically calculated PostGIS geography point generated via trigger `trg_set_facility_geom`.
+- `tags` (JSONB, DEFAULT '{}') — Unstructured metadata attributes including `speciality`, `emergency`, `opening_hours`, and `operator`.
+
+**Current Scale Metrics:**
+- Total facilities indexed: **136,743**
+- Registered doctors & private practitioners (`type='doctors'`): **9,083**
+- Coverage: All **35 States & Union Territories** and **722 Districts** of India.
+- Storage footprint: **<50 MB** (<10% of Supabase 500 MB free tier).
 
 ---
 

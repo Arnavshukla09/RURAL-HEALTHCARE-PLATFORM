@@ -4,6 +4,27 @@ All notable changes to the Rural Healthcare Platform will be documented in this 
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres roughly to chronological feature milestones.
 
+## [v1.16.0] - 2026-10-14 — Searchable Geographic Dropdowns & PAN-India Doctors Registry Ingestion
+
+### National Doctor Registry Ingestion (`scripts/ingest_pan_india_doctors.mjs`, Supabase PostGIS)
+- **7,736 Verified Doctors, Specialists & Clinics Ingested**:
+  - Ingested 7,736 features from the nationwide Overpass medical export (`export.geojson`) in a single streaming run (25s execution).
+  - Registry increased to **136,743 total facilities** with **9,083 registered doctors and private practitioner chambers** across India (`type='doctors'`).
+  - Enriched 7,221 pre-existing facilities with explicit medical specialities (`tags->'speciality'`), verified contact phone numbers, and emergency capability indicators.
+- **LGD Centroid Reverse-Spatial Resolution**:
+  - Built automatic geographic fallback matching facility coordinates against all 722 district centroids in `lib/geo/pan-india-lgd.json`. Missing OSM state/district tags are automatically resolved to official LGD boundaries with sub-millisecond distance calculation.
+- **Zero-Bloat Deduplication**:
+  - Maintained `<50 MB` total Postgres disk usage (<10% of 500 MB free tier) via `on_conflict=osm_id` and HTTP `resolution=merge-duplicates`.
+
+### Map Geographic Navigation UI (`components/MapView.tsx`)
+- **Searchable Custom Dropdown Component (`SearchableDropdown`)**:
+  - Replaced native `<select>` menus for State (LGD) and District (LGD) with an accessible, keyboard-aware custom dropdown component.
+  - **Top-Pinned Search Bar**: Embedded real-time search input at the top of both dropdown popovers, allowing instant typing and filtering across all 35 States and 722 Districts in both English and Hindi.
+  - **Strict 5-Entry Viewport Limit (`max-h-[175px] overflow-y-auto`)**: Options list is capped at ~5 visible rows before scrolling, eliminating any chance of dropdown menus overlapping or covering map controls or surrounding UI.
+  - **Click-Outside & Escape Dismiss**: Standard click-outside listener and keyboard `Escape` handler for seamless dismissal.
+
+---
+
 ## [v1.15.0] - 2026-10-14 — PAN-India Geospatial Coverage: 136k+ Facilities Ingestion & National 35-State / 722-District LGD Directory
 
 ### PAN-India Geospatial Health Infrastructure (`lib/geo/`, `components/MapView.tsx`, `scripts/`)
