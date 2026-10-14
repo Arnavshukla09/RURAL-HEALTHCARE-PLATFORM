@@ -134,72 +134,52 @@ export function Authentication({ setUser, setCurrentPage, language }: Authentica
     setIsLoading(true)
     setErrors([])
     try {
-      const supabase = createClient()
-
-      // 10-second timeout failsafe to guarantee button never hangs indefinitely
-      const authPromise = supabase.auth.signInWithPassword({
-        email: formData.email.trim(),
-        password: formData.password,
+      // 1. Call server-side login endpoint (bypasses browser Web Locks and CORS/adblocker blocks)
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: formData.email.trim(),
+          password: formData.password,
+        }),
       })
-      const timeoutPromise = new Promise<{ data: any; error: any }>((_, reject) =>
-        setTimeout(
-          () =>
-            reject(
-              new Error(
-                en
-                  ? "Sign-in timed out. Please check your connection and try again."
-                  : "साइन-इन समय समाप्त। कृपया कनेक्शन जांचें।"
-              )
-            ),
-          10000
-        )
-      )
 
-      const { data, error } = (await Promise.race([authPromise, timeoutPromise])) as any
+      const result = await res.json()
 
-      if (error) {
-        setErrors([error.message])
-        toast({ title: "Authentication Failed", description: error.message, variant: "destructive" })
+      if (!res.ok) {
+        const errorMsg =
+          result.error ||
+          (en ? "Authentication failed. Check your password." : "प्रमाणीकरण विफल। पासवर्ड जांचें।")
+        setErrors([errorMsg])
+        toast({ title: "Authentication Failed", description: errorMsg, variant: "destructive" })
         setIsLoading(false)
         return
       }
 
-      if (!data?.user) {
+      if (!result.user) {
         throw new Error(en ? "Sign-in failed. Please try again." : "साइन-इन विफल। पुनः प्रयास करें।")
       }
 
-      // Read role directly from DB using authenticated client, fallback gracefully to metadata
-      let userRole: "patient" | "doctor" | "admin" = "patient"
-      let userName = data.user.user_metadata?.full_name || data.user.email?.split("@")[0] || "User"
-      let userPhone = data.user.user_metadata?.phone || ""
+      // Update React context user
+      setUser(result.user)
 
+      // Sync browser client state in background if available
       try {
-        const { data: patient } = await supabase
-          .from("patients")
-          .select("role, first_name, last_name, phone")
-          .eq("user_id", data.user.id)
-          .single()
+        const supabase = createClient()
+        await supabase.auth.refreshSession()
+      } catch {}
 
-        if (patient) {
-          if (patient.role) userRole = patient.role as any
-          if (patient.first_name) userName = patient.first_name + (patient.last_name ? ` ${patient.last_name}` : "")
-          if (patient.phone) userPhone = patient.phone
-        }
-      } catch (err) {
-        console.warn("[Authentication] Patient profile lookup fallback:", err)
-      }
-
-      setUser({
-        id: data.user.id,
-        name: userName,
-        email: data.user.email || "",
-        role: userRole,
-        phone: userPhone,
+      toast({
+        title: en ? "Welcome Back!" : "स्वागत है!",
+        description: en
+          ? `Logged in as ${result.user.name}`
+          : `${result.user.name} के रूप में लॉगिन किया गया`,
       })
 
-      if (userRole === "admin") {
+      // Route immediately based on role
+      if (result.user.role === "admin") {
         setCurrentPage("admin/dashboard")
-      } else if (userRole === "doctor") {
+      } else if (result.user.role === "doctor") {
         setCurrentPage("doctor/dashboard")
       } else {
         setCurrentPage("dashboard")
