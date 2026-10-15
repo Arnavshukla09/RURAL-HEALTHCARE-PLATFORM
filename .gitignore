@@ -38,4 +38,9 @@ public/sw.js
 public/sw.js.map
 public/swe-worker-*.js
 public/workbox-*.js
+
+# Raw downloaded datasets
+*.csv
+*.zip
+scratch/
 public/serwist-*.js
