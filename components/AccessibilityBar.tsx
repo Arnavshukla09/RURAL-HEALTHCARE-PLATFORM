@@ -10,7 +10,7 @@ import { useApp } from "@/components/providers/AppProvider"
 
 export function AccessibilityBar() {
   const pathname = usePathname()
-  const { language, setLanguage } = useApp()
+  const { language } = useApp()
   const [isOpen, setIsOpen] = useState(false)
   const [fontSize, setFontSize] = useState(16)
   const [highContrast, setHighContrast] = useState(false)
@@ -122,15 +122,6 @@ export function AccessibilityBar() {
               <Button size="sm" variant={highContrast ? "default" : "outline"} onClick={toggleContrast}>
                 {highContrast ? t.on : t.off}
               </Button>
-            </div>
-
-            {/* Language */}
-            <div>
-              <p className="text-sm font-medium mb-2">{t.language}</p>
-              <div className="flex gap-2">
-                <Button size="sm" variant={language === "en" ? "default" : "outline"} className="flex-1" onClick={() => setLanguage("en")}>English</Button>
-                <Button size="sm" variant={language === "hi" ? "default" : "outline"} className="flex-1" onClick={() => setLanguage("hi")}>हिंदी</Button>
-              </div>
             </div>
 
             {/* Read Aloud */}
