@@ -4,6 +4,22 @@ All notable changes to the Rural Healthcare Platform will be documented in this 
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres roughly to chronological feature milestones.
 
+## [v1.20.6] - 2026-10-15 — Automated Pre-Commit Component Quality Guard & CI Checker
+
+### 1. Automated Component Checker (`scripts/check_components.mjs`)
+- **Automated Verification Pipeline**: Created a 5-step automated quality verification engine that runs before every commit without requiring developer supervision.
+- **Step 1: Local Import Integrity**: Scans all 129 UI components and page routes to guarantee every import path resolves cleanly on disk, eliminating runtime broken imports.
+- **Step 2: Component Export Validation**: Verifies that every UI component delivers a valid React export signature (`export function`, `export const`, `export { ... }`), preventing "Element type is invalid" crashes.
+- **Step 3: Strict TypeScript Type Safety**: Executes `tsc --noEmit` and captures type violations, broken props, or mismatched interfaces.
+- **Step 4: ESLint & Hook Compliance**: Verifies React hook dependency rules and code conventions via `next lint`.
+- **Step 5: Automated Unit Test Suite**: Executes all 88 Vitest unit tests to guarantee zero regressions across the codebase.
+- **Immediate Fallback & Pinpoint Error Reporting**: If any step encounters an error, the script prints the exact file, line number, and error details, and exits with code 1, automatically aborting the commit.
+
+### 2. Native Git Hook & CI/CD Enforcement
+- **Pre-Commit Git Hook (`.git/hooks/pre-commit`)**: Automatically triggers `node scripts/check_components.mjs` on every `git commit`. If any component has an issue, Git aborts the commit and leaves the working tree untouched.
+- **GitHub Actions Integration (`.github/workflows/ci.yml`)**: Added the component checker step into continuous integration so every pull request and push to `main` is validated in cloud runners.
+- **NPM Script (`package.json`)**: Added `npm run check:components` for on-demand local verification.
+
 ## [v1.20.5] - 2026-10-15 — Online Patient Review & Rating Seeding (Practo / Google Review Integration)
 
 ### 1. Online Review & Recommendation Metric Integration (`lib/data/real-doctors.ts`)

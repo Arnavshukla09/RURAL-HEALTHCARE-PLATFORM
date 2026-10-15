@@ -27,6 +27,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Automated Component Quality & Integrity Check
+        run: npm run check:components
+
       - name: Run Unit Tests (Vitest)
         run: npm run test:unit
 

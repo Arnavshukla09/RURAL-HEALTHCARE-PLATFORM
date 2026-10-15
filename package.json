@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "test:unit": "vitest run",
+    "check:components": "node scripts/check_components.mjs",
     "ingest:facilities": "node scripts/ingest_pan_india_geojson.mjs",
     "ingest:doctors": "node scripts/ingest_pan_india_doctors.mjs"
   },
