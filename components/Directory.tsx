@@ -36,8 +36,11 @@ export function Directory({ language }: DirectoryProps) {
   const trans = getTranslation(language)
   const t = trans.directory
 
-  // Search & Specialty Filters
-  const [searchTerm, setSearchTerm] = useState('')
+  // Two Distinct, Unambiguous Search Bars:
+  // Search Bar 1: Doctor / Specialty / Hospital (What)
+  // Search Bar 2: City / District / Area (Where)
+  const [doctorQuery, setDoctorQuery] = useState('')
+  const [locationQuery, setLocationQuery] = useState('')
   const [selectedSpecialty, setSelectedSpecialty] = useState('all')
 
   // Geo Proximity State — Strict radius filtering (default 50 km, NO "all" option)
@@ -59,6 +62,21 @@ export function Directory({ language }: DirectoryProps) {
   const referenceCoords = useMemo(() => {
     if (userCoords) return userCoords
 
+    // If locationQuery matches a known district or state, use its centroid
+    if (locationQuery.trim()) {
+      const lq = locationQuery.toLowerCase().trim()
+      for (const st of LGD_STATES) {
+        if (st.nameEn.toLowerCase() === lq || (st.nameHi && st.nameHi.toLowerCase() === lq)) {
+          if (st.center) return { lat: st.center.lat, lng: st.center.lng }
+        }
+        for (const dist of st.districts) {
+          if (dist.nameEn.toLowerCase() === lq || dist.nameEn.toLowerCase().includes(lq) || (dist.nameHi && dist.nameHi.toLowerCase().includes(lq))) {
+            if (dist.center) return { lat: dist.center.lat, lng: dist.center.lng }
+          }
+        }
+      }
+    }
+
     if (selectedDistrictName !== 'all' && selectedStateCode !== 'all') {
       const foundState = LGD_STATES.find(s => s.code === selectedStateCode)
       const foundDistrict = foundState?.districts.find(d => d.nameEn.toLowerCase() === selectedDistrictName.toLowerCase())
@@ -71,10 +89,10 @@ export function Directory({ language }: DirectoryProps) {
     }
 
     return null
-  }, [userCoords, selectedStateCode, selectedDistrictName])
+  }, [userCoords, selectedStateCode, selectedDistrictName, locationQuery])
 
-  // Flag determining whether user has activated a location
-  const hasActiveLocation = Boolean(referenceCoords)
+  // Flag determining whether user has activated location or search query
+  const hasActiveLocation = Boolean(referenceCoords || locationQuery.trim() || doctorQuery.trim())
 
   // GPS Auto-Detection Handler
   const handleDetectLocation = () => {
@@ -115,18 +133,23 @@ export function Directory({ language }: DirectoryProps) {
 
   // Filter & Proximity Calculation: Strictly location-based and capped to Top 10 per specialist
   const processedDoctors = useMemo(() => {
-    if (!referenceCoords) {
+    if (!hasActiveLocation) {
       return []
     }
 
-    // 1. Calculate proximity distance for all doctors
+    // 1. Calculate proximity distance for all doctors if reference coords are available
     let list: RealDoctor[] = REAL_DOCTORS.map(doc => {
-      const distance = calculateDistanceKm(referenceCoords.lat, referenceCoords.lng, doc.lat, doc.lon)
-      return { ...doc, distance }
+      if (referenceCoords) {
+        const distance = calculateDistanceKm(referenceCoords.lat, referenceCoords.lng, doc.lat, doc.lon)
+        return { ...doc, distance }
+      }
+      return doc
     })
 
-    // 2. Strict distance radius filter (no "all" allowed)
-    list = list.filter(doc => doc.distance !== undefined && doc.distance <= selectedRadius)
+    // 2. Strict distance radius filter if referenceCoords is active
+    if (referenceCoords) {
+      list = list.filter(doc => doc.distance !== undefined && doc.distance <= selectedRadius)
+    }
 
     // 3. Specialty filter if specified
     if (selectedSpecialty !== 'all') {
@@ -143,22 +166,32 @@ export function Directory({ language }: DirectoryProps) {
       list = list.filter(doc => doc.districtName.toLowerCase().includes(selectedDistrictName.toLowerCase()))
     }
 
-    // 6. Search Query filter
-    if (searchTerm.trim()) {
-      const q = searchTerm.toLowerCase().trim()
+    // 6. Search Bar 1: Doctor / Specialty / Hospital query filter
+    if (doctorQuery.trim()) {
+      const dq = doctorQuery.toLowerCase().trim()
       list = list.filter(doc =>
-        doc.name.toLowerCase().includes(q) ||
-        doc.specialtyName.toLowerCase().includes(q) ||
-        doc.hospitalAffiliation.toLowerCase().includes(q) ||
-        doc.districtName.toLowerCase().includes(q) ||
-        doc.stateName.toLowerCase().includes(q) ||
-        doc.location.toLowerCase().includes(q) ||
-        doc.regNo.toLowerCase().includes(q) ||
-        doc.qualifications.toLowerCase().includes(q)
+        doc.name.toLowerCase().includes(dq) ||
+        doc.specialtyName.toLowerCase().includes(dq) ||
+        doc.specialty.toLowerCase().includes(dq) ||
+        doc.hospitalAffiliation.toLowerCase().includes(dq) ||
+        doc.districtName.toLowerCase().includes(dq) ||
+        doc.qualifications.toLowerCase().includes(dq) ||
+        doc.bio.toLowerCase().includes(dq) ||
+        doc.regNo.toLowerCase().includes(dq)
       )
     }
 
-    // 7. Sort by nearest proximity first
+    // 7. Search Bar 2: Location query filter (City, district, state, landmark)
+    if (locationQuery.trim()) {
+      const lq = locationQuery.toLowerCase().trim()
+      list = list.filter(doc =>
+        doc.districtName.toLowerCase().includes(lq) ||
+        doc.stateName.toLowerCase().includes(lq) ||
+        doc.location.toLowerCase().includes(lq)
+      )
+    }
+
+    // 8. Sort by nearest proximity first if distance exists; otherwise by rating
     list.sort((a, b) => {
       if (a.distance !== undefined && b.distance !== undefined) {
         return a.distance - b.distance
@@ -166,7 +199,7 @@ export function Directory({ language }: DirectoryProps) {
       return b.rating - a.rating
     })
 
-    // 8. Strict Capping to Top 10 for each specialist
+    // 9. Strict Capping to Top 10 for each specialist
     if (selectedSpecialty !== 'all') {
       return list.slice(0, 10)
     }
@@ -182,7 +215,7 @@ export function Directory({ language }: DirectoryProps) {
       }
     }
     return capped
-  }, [referenceCoords, selectedSpecialty, selectedStateCode, selectedDistrictName, selectedRadius, searchTerm])
+  }, [hasActiveLocation, referenceCoords, selectedSpecialty, selectedStateCode, selectedDistrictName, selectedRadius, doctorQuery, locationQuery])
 
   const getInitials = (name: string) => {
     return name
@@ -196,7 +229,8 @@ export function Directory({ language }: DirectoryProps) {
   }
 
   const resetAllFilters = () => {
-    setSearchTerm('')
+    setDoctorQuery('')
+    setLocationQuery('')
     setSelectedSpecialty('all')
     setSelectedStateCode('all')
     setSelectedDistrictName('all')
@@ -208,6 +242,7 @@ export function Directory({ language }: DirectoryProps) {
   // Active location label for badge
   const locationLabel = useMemo(() => {
     if (userCoords) return "My Current GPS Location"
+    if (locationQuery.trim()) return locationQuery.trim()
     if (selectedDistrictName !== 'all') {
       const st = LGD_STATES.find(s => s.code === selectedStateCode)
       return `${selectedDistrictName}, ${st?.nameEn || ''}`
@@ -217,7 +252,7 @@ export function Directory({ language }: DirectoryProps) {
       return st?.nameEn || "Selected State"
     }
     return null
-  }, [userCoords, selectedDistrictName, selectedStateCode])
+  }, [userCoords, locationQuery, selectedDistrictName, selectedStateCode])
 
   return (
     <div className="min-h-screen bg-gray-50/70 p-3 sm:p-6">
@@ -265,31 +300,95 @@ export function Directory({ language }: DirectoryProps) {
         {/* Location & Proximity Search Controls */}
         <Card className="border-gray-200 shadow-xs">
           <CardContent className="p-4 sm:p-5 space-y-4">
-            {/* Top Row: Search Input + GPS Button */}
-            <div className="flex flex-col sm:flex-row gap-3">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3.5 top-3 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder={t.searchPlaceholder}
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 text-sm bg-white border-gray-200 rounded-xl h-10"
-                />
+            {/* Two Intuitive Search Bars: What (Doctor/Specialty) + Where (City/District) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+              {/* Search Bar 1: Who / Specialty */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-gray-700 flex items-center gap-1.5">
+                  <Stethoscope className="h-4 w-4 text-blue-600" />
+                  <span>{language === "hi" ? "1. डॉक्टर, विशेषता या अस्पताल खोजें" : "1. Search Doctor, Specialty or Hospital"}</span>
+                </label>
+                <div className="relative">
+                  <Search className="absolute left-3.5 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder={language === "hi" ? "जैसे डॉ. शर्मा, हृदय रोग, एम्स..." : "e.g. Dr. Goenka, Cardiology, AIIMS..."}
+                    value={doctorQuery}
+                    onChange={(e) => setDoctorQuery(e.target.value)}
+                    className="pl-10 pr-8 text-xs sm:text-sm bg-white border-gray-200 rounded-xl h-10 shadow-2xs focus:border-blue-400"
+                  />
+                  {doctorQuery && (
+                    <button
+                      onClick={() => setDoctorQuery("")}
+                      className="absolute right-3 top-2.5 text-xs text-gray-400 hover:text-gray-600"
+                      title="Clear"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+                <p className="text-[11px] text-gray-500 pl-1">
+                  {language === "hi" ? "विशेषज्ञ का नाम, विभाग या योग्यता दर्ज करें" : "Filter by clinician name, medical department or credentials"}
+                </p>
               </div>
 
-              <Button
-                variant={userCoords ? "default" : "outline"}
-                onClick={handleDetectLocation}
-                disabled={isLocating}
-                className={`h-10 px-4 text-xs font-semibold rounded-xl flex items-center gap-2 shrink-0 ${
-                  userCoords
-                    ? "bg-emerald-600 hover:bg-emerald-700 text-white"
-                    : "border-blue-300 text-blue-700 hover:bg-blue-50"
-                }`}
-              >
-                <Navigation className={`h-3.5 w-3.5 ${isLocating ? "animate-spin" : ""}`} />
-                <span>{isLocating ? t.detectingLocation : userCoords ? "GPS Active" : t.detectLocation}</span>
-              </Button>
+              {/* Search Bar 2: Where / Location */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-gray-700 flex items-center gap-1.5">
+                    <MapPin className="h-4 w-4 text-emerald-600" />
+                    <span>{language === "hi" ? "2. शहर, ज़िला या क्षेत्र खोजें" : "2. Search City, District or Area"}</span>
+                  </label>
+                  {userCoords && (
+                    <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                      GPS Active
+                    </span>
+                  )}
+                </div>
+                <div className="relative flex gap-2">
+                  <div className="relative flex-1">
+                    <MapPin className="absolute left-3.5 top-3 h-4 w-4 text-gray-400" />
+                    <Input
+                      placeholder={language === "hi" ? "जैसे भोपाल, इंदौर, सीहोर, साकेत नगर..." : "e.g. Bhopal, Indore, Sehore, Saket Nagar..."}
+                      value={locationQuery}
+                      onChange={(e) => setLocationQuery(e.target.value)}
+                      className="pl-10 pr-8 text-xs sm:text-sm bg-white border-gray-200 rounded-xl h-10 shadow-2xs focus:border-emerald-400"
+                    />
+                    {locationQuery && (
+                      <button
+                        onClick={() => setLocationQuery("")}
+                        className="absolute right-3 top-2.5 text-xs text-gray-400 hover:text-gray-600"
+                        title="Clear"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+
+                  <Button
+                    variant={userCoords ? "default" : "outline"}
+                    onClick={handleDetectLocation}
+                    disabled={isLocating}
+                    className={`h-10 px-3 text-xs font-semibold rounded-xl flex items-center gap-1.5 shrink-0 transition-colors ${
+                      userCoords
+                        ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                        : "border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+                    }`}
+                  >
+                    <Navigation className={`h-3.5 w-3.5 ${isLocating ? "animate-spin" : ""}`} />
+                    <span className="hidden sm:inline">
+                      {isLocating
+                        ? (language === "hi" ? "खोज रहे हैं..." : "Locating...")
+                        : userCoords
+                          ? (language === "hi" ? "GPS चालू" : "GPS Active")
+                          : (language === "hi" ? "मेरा GPS" : "Use GPS")}
+                    </span>
+                  </Button>
+                </div>
+                <p className="text-[11px] text-gray-500 pl-1">
+                  {language === "hi" ? "स्थान का नाम लिखें या 'मेरा GPS' बटन दबाएं" : "Type location name or click Use GPS for auto proximity"}
+                </p>
+              </div>
             </div>
 
             {/* Bottom Row: State Selector + District Selector + Radius Picker (Strictly 10k, 25k, 50k, 100k) */}

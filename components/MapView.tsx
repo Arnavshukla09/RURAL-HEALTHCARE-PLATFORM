@@ -8,7 +8,7 @@ import { Card, CardContent } from "./ui/card"
 import { Button } from "./ui/button"
 import { Badge } from "./ui/badge"
 import { useToast } from "@/components/ui/use-toast"
-import { Navigation, Phone, Loader2, LocateFixed, Star, Search, ShieldCheck, Activity, ChevronDown, Check } from "lucide-react"
+import { Navigation, Phone, Loader2, LocateFixed, Star, Search, ShieldCheck, Activity, ChevronDown, Check, Maximize2, Minimize2, MapPin } from "lucide-react"
 import { Input } from "./ui/input"
 import { LGD_STATES, IPHS_TIER_CONFIG, IphsCapabilities, IphsFacilityTier } from "@/lib/geo/lgd-iphs"
 
@@ -230,7 +230,7 @@ function SearchableDropdown({
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 mt-1 w-full min-w-[210px] z-50 bg-white rounded-lg shadow-xl border border-blue-200 p-1.5">
+        <div className="absolute top-full left-0 mt-1 w-full min-w-[210px] z-[1050] bg-white rounded-lg shadow-xl border border-blue-200 p-1.5">
           {/* Small search bar at top of dropdown */}
           <div className="relative mb-1">
             <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-gray-400" />
@@ -302,6 +302,7 @@ export function MapView({ language }: MapViewProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [routeData, setRouteData] = useState<{ coords: [number, number][], distance: number, duration: number } | null>(null)
   const [routingLoading, setRoutingLoading] = useState(false)
+  const [isMapExpanded, setIsMapExpanded] = useState(false)
 
   // Leaflet CSS is now imported globally in layout.tsx
   useEffect(() => {
@@ -519,7 +520,7 @@ export function MapView({ language }: MapViewProps) {
       </div>
 
       {/* LGD Geographic Navigation & Search Row */}
-      <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center bg-blue-50/60 p-3 rounded-xl border border-blue-100">
+      <div className="relative z-30 flex flex-col md:flex-row gap-3 items-stretch md:items-center bg-blue-50/60 p-3 rounded-xl border border-blue-100">
         <div className="flex-1 flex gap-2">
           {/* LGD State Selector with Search Bar & Max 5 items visible */}
           <div className="w-1/2 md:w-52">
@@ -600,8 +601,30 @@ export function MapView({ language }: MapViewProps) {
         </div>
       </div>
 
-      {/* Map */}
-      <div className="rounded-xl overflow-hidden border shadow-sm relative" style={{ height: 440 }}>
+      {/* Map Header with Compact / Expand Toggle */}
+      <div className="flex items-center justify-between text-xs text-gray-500 pt-1">
+        <span className="font-semibold text-gray-700 flex items-center gap-1.5">
+          <MapPin className="h-3.5 w-3.5 text-blue-600" />
+          <span>{en ? "Facility Map" : "सुविधा मानचित्र"}</span>
+          <span className="text-gray-400 font-normal">({sorted.length} {en ? "facilities plotted" : "सुविधाएं दर्शाई गई"})</span>
+        </span>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          onClick={() => setIsMapExpanded(prev => !prev)}
+          className="h-7 text-xs gap-1.5 bg-white hover:bg-gray-50 border-gray-200 text-gray-700 shadow-xs"
+        >
+          {isMapExpanded ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
+          <span>{isMapExpanded ? (en ? "Compact Map (260px)" : "छोटा नक्शा (260px)") : (en ? "Expand Map (460px)" : "बड़ा नक्शा (460px)")}</span>
+        </Button>
+      </div>
+
+      {/* Map with isolated stacking context (prevents leaflet z-index leaks onto UI) */}
+      <div 
+        className="rounded-xl overflow-hidden border shadow-xs relative z-0 isolate transition-all duration-300" 
+        style={{ height: isMapExpanded ? 460 : 260 }}
+      >
         {routeData && (
           <div className="absolute top-4 right-4 bg-white p-3 rounded-lg shadow-lg z-[1000] border text-sm">
             <p className="font-bold text-blue-700">{en ? "Route Info" : "मार्ग की जानकारी"}</p>
@@ -737,91 +760,114 @@ export function MapView({ language }: MapViewProps) {
       )}
       {error && <p className="text-red-500 text-sm text-center">{error}</p>}
 
-      {/* Top 10 highlighted list */}
+      {/* Facilities List (Ultra-compact, high-density 3-column grid) */}
       {sorted.length > 0 && (
-        <>
+        <div className="space-y-4 pt-1">
           <div>
-            <h3 className="font-semibold text-base mb-2 flex items-center gap-2">
-              <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-              {en ? "Top 10 Nearest Facilities" : "10 निकटतम सुविधाएं"}
-            </h3>
-            <div className="grid md:grid-cols-2 gap-2">
+            <div className="flex items-center justify-between mb-2.5">
+              <h3 className="font-bold text-sm sm:text-base flex items-center gap-2 text-gray-900">
+                <Star className="h-4 w-4 fill-amber-400 text-amber-500" />
+                <span>{en ? "Top 10 Nearest Facilities" : "10 निकटतम सुविधाएं"}</span>
+                <span className="text-xs font-normal text-gray-500">
+                  ({sorted.length} {en ? "found within" : "मिले"} {radiusKm} km)
+                </span>
+              </h3>
+              <span className="text-[11px] text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full font-semibold border border-blue-200">
+                {en ? "Nearest first" : "दूरी अनुसार"}
+              </span>
+            </div>
+
+            {/* Compact Grid: 3 columns on desktop, 2 on tablet, 1 on mobile */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
               {sorted.slice(0, 10).map((f, idx) => {
                 const cfg = TYPE_CONFIG[f.type] ?? TYPE_CONFIG.clinic
                 return (
-                  <Card key={f.id}
-                    className="border-2 hover:shadow-md transition-shadow"
-                    style={{ borderColor: cfg.color + "40" }}>
-                    <CardContent className="p-3 flex items-start gap-3">
-                      <div className="flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
-                        style={{ background: cfg.color }}>
-                        {idx + 1}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <p className="font-semibold text-sm truncate">{f.name}</p>
+                  <Card 
+                    key={f.id}
+                    className="border hover:shadow-md transition-all hover:border-blue-300 bg-white"
+                  >
+                    <CardContent className="p-3 flex flex-col justify-between h-full gap-2">
+                      <div>
+                        {/* Header: Number Badge + Name + Distance */}
+                        <div className="flex items-start justify-between gap-1.5">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <span 
+                              className="h-5 w-5 rounded-full text-white text-[11px] font-bold flex items-center justify-center shrink-0"
+                              style={{ background: cfg.color }}
+                            >
+                              {idx + 1}
+                            </span>
+                            <h4 className="font-semibold text-xs sm:text-sm text-gray-900 truncate" title={f.name}>
+                              {f.name}
+                            </h4>
+                          </div>
+                          <span className="text-[11px] font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded shrink-0">
+                            {f.distance_km < 1 ? `${Math.round(f.distance_km * 1000)}m` : `${f.distance_km.toFixed(1)} km`}
+                          </span>
+                        </div>
+
+                        {/* Type & Capabilities */}
+                        <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                          <span className="text-[11px] font-medium flex items-center gap-1" style={{ color: cfg.color }}>
+                            <span>{cfg.icon}</span>
+                            <span>{en ? cfg.en : cfg.hi}</span>
+                          </span>
                           {f.tier && (
-                            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${IPHS_TIER_CONFIG[f.tier]?.badgeColor || "bg-gray-100 text-gray-800"}`}>
+                            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${IPHS_TIER_CONFIG[f.tier]?.badgeColor || "bg-gray-100 text-gray-800"}`}>
                               {en ? IPHS_TIER_CONFIG[f.tier]?.en : IPHS_TIER_CONFIG[f.tier]?.hi}
                             </span>
                           )}
-                        </div>
-
-                        <div className="flex items-center gap-2 mt-1 flex-wrap">
-                          <p className="text-xs" style={{ color: cfg.color }}>
-                            {cfg.icon} {en ? cfg.en : cfg.hi}
-                          </p>
-                          {f.capabilities?.isFRU && (
-                            <span className="text-[10px] font-bold bg-pink-100 text-pink-700 px-1.5 py-0.5 rounded">
-                              👶 FRU (Maternal)
+                          {f.capabilities?.isPmJayEmpaneled && (
+                            <span className="text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-1 py-0.5 rounded">
+                              PM-JAY
                             </span>
                           )}
-                          {f.capabilities?.isPmJayEmpaneled && (
-                            <span className="text-[10px] font-bold bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded">
-                              ✓ PM-JAY
+                          {f.capabilities?.isFRU && (
+                            <span className="text-[9px] font-bold bg-pink-50 text-pink-700 border border-pink-200 px-1 py-0.5 rounded">
+                              FRU
                             </span>
                           )}
                           {f.capabilities?.hasBloodBankOrStorage && (
-                            <span className="text-[10px] font-bold bg-red-100 text-red-700 px-1.5 py-0.5 rounded">
-                              🩸 Blood
+                            <span className="text-[9px] font-bold bg-red-50 text-red-700 border border-red-200 px-1 py-0.5 rounded">
+                              Blood
                             </span>
                           )}
                         </div>
 
-                        {/* Contact Phone & Direct Call Action (Only when official phone exists) */}
-                        {f.phone ? (
-                          <div className="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-gray-100">
-                            <a
-                              href={`tel:${f.phone}`}
-                              className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700 hover:text-emerald-800 truncate"
-                            >
-                              <Phone className="h-3.5 w-3.5 shrink-0" />
-                              <span className="truncate">{f.phone}</span>
-                            </a>
-                            <Button
-                              size="sm"
-                              className="h-7 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-2.5 rounded-lg flex items-center gap-1 shrink-0"
-                              onClick={() => window.open(`tel:${f.phone}`)}
-                            >
-                              <Phone className="h-3 w-3" />
-                              <span>{en ? "Call" : "कॉल"}</span>
-                            </Button>
-                          </div>
-                        ) : (
-                          <div className="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-gray-100 text-[11px] text-gray-400">
-                            <span className="flex items-center gap-1 italic">
-                              <Phone className="h-3 w-3 text-gray-300 shrink-0" />
-                              <span>{en ? "Phone unlisted" : "फोन उपलब्ध नहीं"}</span>
-                            </span>
-                            <span className="text-[10px] bg-gray-50 border border-gray-200 px-1.5 py-0.5 rounded text-gray-500">
-                              {en ? "Walk-in OPD" : "प्रत्यक्ष OPD"}
-                            </span>
-                          </div>
+                        {/* Address */}
+                        {f.address && (
+                          <p className="text-[11px] text-gray-500 truncate mt-1 flex items-center gap-1" title={f.address}>
+                            <MapPin className="h-3 w-3 text-gray-400 shrink-0" />
+                            <span className="truncate">{f.address}</span>
+                          </p>
                         )}
-                        {f.address && <p className="text-xs text-gray-400 truncate mt-1.5 mb-2">{f.address}</p>}
-                        <Button size="sm" variant="outline" className="w-full h-7 text-xs mt-1" onClick={() => showRoute(f.lat, f.lon)} disabled={routingLoading}>
-                          {routingLoading ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Navigation className="h-3 w-3 mr-1" />}
-                          {en ? "Show Route" : "मार्ग दिखाएं"}
+                      </div>
+
+                      {/* Action Footer (Call + Route) in single compact row */}
+                      <div className="flex items-center justify-between gap-1.5 pt-2 border-t border-gray-100 mt-auto">
+                        {f.phone ? (
+                          <a
+                            href={`tel:${f.phone}`}
+                            className="h-7 px-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors truncate"
+                          >
+                            <Phone className="h-3 w-3 shrink-0" />
+                            <span className="truncate">{en ? "Call" : "कॉल"}</span>
+                          </a>
+                        ) : (
+                          <span className="text-[10px] text-gray-500 bg-gray-100 border border-gray-200 px-2 py-1 rounded-md font-medium">
+                            {en ? "Walk-in OPD" : "प्रत्यक्ष OPD"}
+                          </span>
+                        )}
+
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="h-7 text-xs px-2 text-blue-700 hover:bg-blue-50 border-blue-200 flex items-center gap-1" 
+                          onClick={() => showRoute(f.lat, f.lon)} 
+                          disabled={routingLoading}
+                        >
+                          {routingLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Navigation className="h-3 w-3" />}
+                          <span>{en ? "Route" : "मार्ग"}</span>
                         </Button>
                       </div>
                     </CardContent>
@@ -831,52 +877,64 @@ export function MapView({ language }: MapViewProps) {
             </div>
           </div>
 
-          {/* Rest of results */}
+          {/* Rest of facilities in compact 3-column grid */}
           {sorted.length > 10 && (
-            <div>
-              <h3 className="font-semibold text-base mb-2 text-gray-600">
-                {en ? `Other ${sorted.length - 10} Facilities` : `अन्य ${sorted.length - 10} सुविधाएं`}
+            <div className="pt-2">
+              <h3 className="font-semibold text-xs sm:text-sm text-gray-600 mb-2">
+                {en ? `Other Facilities in Area (${sorted.length - 10})` : `क्षेत्र की अन्य सुविधाएं (${sorted.length - 10})`}
               </h3>
-              <div className="grid md:grid-cols-2 gap-2">
-                {sorted.slice(10).map(f => {
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                {sorted.slice(10).map((f) => {
                   const cfg = TYPE_CONFIG[f.type] ?? TYPE_CONFIG.clinic
                   return (
-                    <Card key={f.id} className="hover:shadow-sm transition-shadow border">
-                      <CardContent className="p-3 flex items-center gap-3">
-                        <span className="text-xl">{cfg.icon}</span>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm truncate">{f.name}</p>
-                          <div className="flex items-center justify-between gap-2 text-xs text-gray-500 mt-1">
-                            <span style={{ color: cfg.color }}>{en ? cfg.en : cfg.hi}</span>
-                            {f.phone ? (
-                              <a href={`tel:${f.phone}`} className="text-emerald-700 font-semibold flex items-center gap-1">
-                                <Phone className="h-3 w-3" />
-                                <span>{f.phone}</span>
-                              </a>
-                            ) : (
-                              <span className="text-gray-400 italic text-[11px]">{en ? "Phone unlisted" : "फोन उपलब्ध नहीं"}</span>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2 mt-1.5">
-                            {f.phone && (
-                              <Button size="sm" variant="outline" className="h-6 text-xs text-emerald-700 hover:bg-emerald-50 px-2 flex items-center gap-1 font-semibold" onClick={() => window.open(`tel:${f.phone}`)}>
-                                <Phone className="h-3 w-3" />
-                                <span>{en ? "Call" : "कॉल"}</span>
-                              </Button>
-                            )}
-                            <Button size="sm" variant="ghost" className="h-6 text-xs text-blue-600" onClick={() => showRoute(f.lat, f.lon)} disabled={routingLoading}>
-                              {en ? "Show Route" : "मार्ग दिखाएं"}
-                            </Button>
-                          </div>
+                    <div 
+                      key={f.id} 
+                      className="p-2.5 rounded-lg border bg-white hover:bg-gray-50/80 transition-colors flex items-center justify-between gap-2"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-sm shrink-0">{cfg.icon}</span>
+                          <p className="font-medium text-xs text-gray-900 truncate" title={f.name}>
+                            {f.name}
+                          </p>
                         </div>
-                      </CardContent>
-                    </Card>
+                        <div className="flex items-center gap-2 mt-0.5 text-[11px] text-gray-500">
+                          <span style={{ color: cfg.color }} className="font-medium">
+                            {en ? cfg.en : cfg.hi}
+                          </span>
+                          <span>•</span>
+                          <span>{f.distance_km < 1 ? `${Math.round(f.distance_km * 1000)}m` : `${f.distance_km.toFixed(1)} km`}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1 shrink-0">
+                        {f.phone ? (
+                          <a
+                            href={`tel:${f.phone}`}
+                            className="h-6 w-6 rounded bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 flex items-center justify-center text-xs"
+                            title={f.phone}
+                          >
+                            <Phone className="h-3 w-3" />
+                          </a>
+                        ) : null}
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 px-1.5 text-xs text-blue-600 hover:bg-blue-50"
+                          onClick={() => showRoute(f.lat, f.lon)}
+                          disabled={routingLoading}
+                          title={en ? "Show Route" : "मार्ग दिखाएं"}
+                        >
+                          <Navigation className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </div>
                   )
                 })}
               </div>
             </div>
           )}
-        </>
+        </div>
       )}
 
       {!loading && facilities.length === 0 && !error && (
