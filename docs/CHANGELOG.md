@@ -4,6 +4,35 @@ All notable changes to the Rural Healthcare Platform will be documented in this 
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres roughly to chronological feature milestones.
 
+## [v1.20.12] - 2026-10-15 — 913-Doctor Appointment & Location System Upgrade with Furnished Multi-User Notification Engine
+
+### 1. 913 Authentic Doctors Integrated into Appointment & Teleconsultation System (`components/ConsultationPortal.tsx`)
+- **Pan-India Verified Doctors**: Fully migrated from the legacy 15 hardcoded fallback practitioners to the complete **913 NMC-verified clinical specialist roster** across India (`REAL_DOCTORS` from `lib/data/real-doctors.ts`).
+- **Live Search & Specialty Filtering**: Multi-field instant query search covering doctor name, qualifications, specialty, hospital affiliation, and district/city, combined with 9 clinical specialty pill filters and LGD state selection.
+- **Client-Side Pagination**: Clean 10-per-page pagination with `< Previous` and `Next >` navigation controls, eliminating browser DOM lag and memory bottlenecks.
+- **7-Day Dynamic Slot Generator**: Deterministic daily OPD slot calculation (morning, afternoon, evening slots) based on doctor schedule seeding with Sunday closure handling.
+- **Direct Notification Dispatch**: Automatic event emission upon consultation confirmation across both patient and doctor roles.
+
+### 2. Location Discovery System Doctor Integration & Smart Pagination (`components/MapView.tsx`)
+- **Integrated Doctor Mapping**: Plotted 913 authentic doctors onto the interactive Leaflet map matching active LGD state/district selections or GPS proximity radius.
+- **Dedicated Doctor Marker Pin & Popup**: Markers styled with purple branding (`#7c3aed`, 👨‍⚕️) with rich popups showing doctor name, specialty, hospital affiliation, NMC registration badge, 1-tap `tel:` calling, OSRM route calculations, and direct "Book Appointment" links to `/consultation`.
+- **Smart Distance Guard**: Strictly renders physical distance badges (`2.4 km away`) when physical GPS (`userCoords`) is active; when browsing by state/district without GPS, displays authentic district/city badges without fabricating centroid distance metrics.
+- **10-per-Page Facility Grid Pagination**: Replaced the previous single-page card dump with responsive 10-per-page grid pagination (`Page X of Y`), ensuring fast rendering without lag when hundreds of facilities or doctors match the filter.
+
+### 3. Furnished Multi-User Notification & Audio Alert Engine (`lib/notifications/notification-engine.ts` & `components/NotificationBell.tsx`)
+- **Multi-Role Recipient Routing**: Comprehensive notification engine supporting `Patient`, `Doctor`, and `Admin` recipient roles.
+- **Synthesized Audio Chime**: Native browser Web Audio API two-tone chime (587Hz $\rightarrow$ 880Hz) with smooth exponential volume envelopes, completely free of external `.mp3` network dependencies or 404 errors.
+- **Offline / Guest Resilience**: Local storage caching (`rural_health_local_notifications`) and cross-tab/window event dispatching (`ruralhealth:notification`), enabling instant 0ms latency alerts even for unregistered visitors or guest bookings.
+- **Category Filter Tabs**: Notification center now features categorized views: **All**, **Appointments** (consultations and teleconsult rooms), and **Alerts** (emergency SOS and distress signals).
+- **Interactive Action Routing**: Clicking any notification automatically marks it as read and navigates directly to relevant views (e.g. `/appointments`, `/emergency`, `/doctor/requests`).
+- **End-to-End Triggers Hooked**:
+  - `triggerAppointmentBooked`: Dispatches confirmation to patient and new appointment alert to doctor.
+  - `triggerAppointmentStatusUpdated`: Dispatches completion and cancellation notices when doctor or patient updates status.
+  - `triggerTeleconsultRoomReady`: Alerts patient when doctor joins virtual clinic.
+  - `triggerEmergencyAlert`: Dispatches high-priority emergency alerts on SOS trigger.
+
+---
+
 ## [v1.20.11] - 2026-10-15 — Pan-India National & State Government Healthcare Schemes Directory
 
 ### 1. National & State Healthcare Schemes Engine (`lib/schemes/health-schemes.ts`)

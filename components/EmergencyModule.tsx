@@ -56,6 +56,7 @@ import {
   stopEmergencyVoiceLoop,
 } from "@/lib/emergency/audio-blackbox"
 import { HelplineDirectory } from "./HelplineDirectory"
+import { triggerEmergencyAlert } from "@/lib/notifications/notification-engine"
 
 interface EmergencyModuleProps {
   language: string
@@ -239,6 +240,10 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
     const sendSmsTo112 = (coords?: { lat: number; lng: number }) => {
       const body = buildCompleteSosMessage(coords)
       const encoded = encodeURIComponent(body)
+      triggerEmergencyAlert({
+        coords,
+        locationText: profile.fullName ? `${profile.fullName} (112 Distress Call)` : "112 Emergency Distress",
+      })
       window.location.href = `sms:112?body=${encoded}`
     }
 
@@ -282,6 +287,10 @@ export function EmergencyModule({ language }: EmergencyModuleProps) {
     const sendSmsBroadcast = (coords?: { lat: number; lng: number }) => {
       const body = buildCompleteSosMessage(coords)
       const encoded = encodeURIComponent(body)
+      triggerEmergencyAlert({
+        coords,
+        locationText: profile.fullName ? `${profile.fullName} (SOS Beacon Broadcast)` : "Emergency SOS Beacon Broadcast",
+      })
       
       const numbers = [
         profile.primaryEmergencyContact,

@@ -8,9 +8,10 @@ import { Card, CardContent } from "./ui/card"
 import { Button } from "./ui/button"
 import { Badge } from "./ui/badge"
 import { useToast } from "@/components/ui/use-toast"
-import { Navigation, Phone, Loader2, LocateFixed, Star, Search, ShieldCheck, Activity, ChevronDown, Check, Maximize2, Minimize2, MapPin } from "lucide-react"
+import { Navigation, Phone, Loader2, LocateFixed, Star, Search, ShieldCheck, Activity, ChevronDown, Check, Maximize2, Minimize2, MapPin, ChevronLeft, ChevronRight, Building2, Calendar, Stethoscope } from "lucide-react"
 import { Input } from "./ui/input"
 import { LGD_STATES, IPHS_TIER_CONFIG, IphsCapabilities, IphsFacilityTier } from "@/lib/geo/lgd-iphs"
+import { REAL_DOCTORS, RealDoctor } from "@/lib/data/real-doctors"
 
 // All react-leaflet components loaded client-side only
 const MapContainer = dynamic(() => import("react-leaflet").then(m => m.MapContainer), { ssr: false })
@@ -32,6 +33,12 @@ interface Facility {
   lon: number
   tier?: IphsFacilityTier
   capabilities?: IphsCapabilities
+  specialtyName?: string
+  doctorQualifications?: string
+  hospitalAffiliation?: string
+  regNo?: string
+  consultationFee?: number
+  opdTimings?: string
 }
 
 interface MapViewProps {
@@ -443,24 +450,118 @@ export function MapView({ language }: MapViewProps) {
 
   const handleFilterChange = (f: typeof filter) => {
     setFilter(f)
-    fetchFacilities(center.lat, center.lng, f !== "all" ? f : undefined, radiusKm)
+    if (f !== "doctors") {
+      fetchFacilities(center.lat, center.lng, f !== "all" ? f : undefined, radiusKm)
+    }
   }
 
   const handleRadiusChange = (km: number) => {
     setRadiusKm(km)
-    fetchFacilities(center.lat, center.lng, filter !== "all" ? filter : undefined, km)
+    fetchFacilities(center.lat, center.lng, filter !== "all" && filter !== "doctors" ? filter : undefined, km)
   }
 
-  // Sort by distance, top 10 are "nearest"
-  const sorted = useMemo(() => {
-    let filtered = [...facilities]
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase()
-      filtered = filtered.filter(f => f.name.toLowerCase().includes(q))
+  // Haversine distance calculator
+  const computeDistanceKm = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    const dLat = ((lat2 - lat1) * Math.PI) / 180
+    const dLon = ((lon2 - lon1) * Math.PI) / 180
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((lat1 * Math.PI) / 180) *
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2)
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+    return Math.round(6371 * c * 10) / 10
+  }
+
+  // Doctors mapped from 913 REAL_DOCTORS dataset
+  const doctorFacilities = useMemo<Facility[]>(() => {
+    const origin = userCoords || center
+    let docs: RealDoctor[] = []
+
+    if (userCoords) {
+      docs = REAL_DOCTORS.filter(d => {
+        const dKm = computeDistanceKm(userCoords.lat, userCoords.lng, d.lat, d.lon)
+        return dKm <= radiusKm
+      })
+    } else {
+      const distObj = LGD_STATES.find(s => s.code === selectedState)?.districts.find(d => d.code === selectedDistrict)
+      const distName = (distObj?.nameEn || "").toLowerCase()
+
+      const inDist = REAL_DOCTORS.filter(d =>
+        d.stateCode === selectedState && (distName ? d.districtName.toLowerCase().includes(distName) : true)
+      )
+      const inState = REAL_DOCTORS.filter(d =>
+        d.stateCode === selectedState && (!distName || !d.districtName.toLowerCase().includes(distName))
+      )
+      docs = [...inDist, ...inState]
     }
-    return filtered.sort((a, b) => a.distance_km - b.distance_km)
-  }, [facilities, searchQuery])
+
+    return docs.map(d => ({
+      id: d.id,
+      name: d.name,
+      type: "doctors" as const,
+      address: `${d.location} (${d.hospitalAffiliation})`,
+      phone: d.phone,
+      district: d.districtName,
+      distance_km: computeDistanceKm(origin.lat, origin.lng, d.lat, d.lon),
+      lat: d.lat,
+      lon: d.lon,
+      specialtyName: d.specialtyName,
+      doctorQualifications: d.qualifications,
+      hospitalAffiliation: d.hospitalAffiliation,
+      regNo: d.regNo,
+      consultationFee: d.consultationFee,
+      opdTimings: d.opdTimings,
+    }))
+  }, [userCoords, center, radiusKm, selectedState, selectedDistrict])
+
+  // Combine facilities with doctors based on active filter
+  const combinedFacilities = useMemo<Facility[]>(() => {
+    if (filter === "doctors") {
+      return doctorFacilities
+    }
+    if (filter === "all") {
+      return [...facilities, ...doctorFacilities]
+    }
+    return facilities.filter(f => f.type === filter)
+  }, [facilities, doctorFacilities, filter])
+
+  const [currentPage, setCurrentPage] = useState(1)
+  const PAGE_SIZE = 10
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [filter, searchQuery, selectedDistrict, selectedState, userCoords])
+
+  // Sort by distance (if GPS active) or by district name (if state/district mode)
+  const sorted = useMemo(() => {
+    let list = [...combinedFacilities]
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim()
+      list = list.filter(f =>
+        f.name.toLowerCase().includes(q) ||
+        (f.address && f.address.toLowerCase().includes(q)) ||
+        (f.specialtyName && f.specialtyName.toLowerCase().includes(q)) ||
+        (f.hospitalAffiliation && f.hospitalAffiliation.toLowerCase().includes(q)) ||
+        (f.district && f.district.toLowerCase().includes(q))
+      )
+    }
+    if (userCoords) {
+      return list.sort((a, b) => a.distance_km - b.distance_km)
+    }
+    return list.sort((a, b) => {
+      if (a.district === b.district) return a.name.localeCompare(b.name)
+      return (a.district || "").localeCompare(b.district || "")
+    })
+  }, [combinedFacilities, searchQuery, userCoords])
+
   const top10Ids = useMemo(() => new Set(sorted.slice(0, 10).map(f => f.id)), [sorted])
+  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE))
+  const paginatedFacilities = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE
+    return sorted.slice(start, start + PAGE_SIZE)
+  }, [sorted, currentPage])
 
   const showRoute = async (destLat: number, destLon: number) => {
     const start = userCoords || center
@@ -484,10 +585,13 @@ export function MapView({ language }: MapViewProps) {
   }
 
   const counts = useMemo(() => {
-    const c: Record<string, number> = { all: facilities.length }
+    const c: Record<string, number> = {
+      all: facilities.length + doctorFacilities.length,
+      doctors: doctorFacilities.length,
+    }
     facilities.forEach(f => { c[f.type] = (c[f.type] || 0) + 1 })
     return c
-  }, [facilities])
+  }, [facilities, doctorFacilities])
 
   const stateOptions = useMemo(() => {
     return LGD_STATES.map((s) => ({
@@ -683,10 +787,11 @@ export function MapView({ language }: MapViewProps) {
               <Polyline positions={routeData.coords} color="#3b82f6" weight={5} opacity={0.7} />
             )}
 
-            {/* All facility markers — top 10 are larger and outlined */}
-            {sorted.map(f => {
+            {/* All facility and doctor markers (showing up to 50 on map to avoid DOM overload) */}
+            {sorted.slice(0, 50).map(f => {
               const cfg = TYPE_CONFIG[f.type] ?? TYPE_CONFIG.clinic
               const isTop = top10Ids.has(f.id)
+              const isDoc = f.type === "doctors"
               return (
                 <Marker
                   key={f.id}
@@ -694,27 +799,65 @@ export function MapView({ language }: MapViewProps) {
                   icon={makeIcon(cfg.markerColor, isTop) as any}
                   zIndexOffset={isTop ? 1000 : 0}
                 >
-                  <Popup minWidth={200}>
-                    <div className="text-sm space-y-1">
+                  <Popup minWidth={220}>
+                    <div className="text-sm space-y-1.5">
                       <div className="flex items-start gap-1.5">
-                        <span className="text-lg">{cfg.icon}</span>
-                        <div>
-                          <p className="font-semibold leading-tight">{f.name}</p>
-                          <p className="text-xs" style={{ color: cfg.color }}>
-                            {en ? cfg.en : cfg.hi}
+                        <span className="text-xl shrink-0">{cfg.icon}</span>
+                        <div className="min-w-0">
+                          <p className="font-semibold text-gray-900 leading-tight">{f.name}</p>
+                          <p className="text-xs font-medium" style={{ color: cfg.color }}>
+                            {isDoc ? (f.specialtyName || (en ? "Specialist Doctor" : "विशेषज्ञ डॉक्टर")) : (en ? cfg.en : cfg.hi)}
                           </p>
+                          {isDoc && f.doctorQualifications && (
+                            <p className="text-[10px] text-gray-500 truncate">{f.doctorQualifications}</p>
+                          )}
                         </div>
                       </div>
+
+                      {isDoc && f.hospitalAffiliation && (
+                        <p className="text-xs text-gray-700 flex items-center gap-1">
+                          <Building2 className="h-3 w-3 text-purple-600 shrink-0" />
+                          <span className="truncate">{f.hospitalAffiliation}</span>
+                        </p>
+                      )}
+
+                      {isDoc && f.regNo && (
+                        <div className="flex items-center gap-1">
+                          <ShieldCheck className="h-3 w-3 text-emerald-600 shrink-0" />
+                          <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                            {f.regNo}
+                          </span>
+                        </div>
+                      )}
+
                       {isTop && (
                         <p className="text-xs font-semibold text-amber-600 flex items-center gap-1">
                           <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-                          {en ? "Top 10 Nearest" : "10 निकटतम में से"}
+                          {userCoords ? (en ? "Top 10 Nearest" : "10 निकटतम में से") : (en ? "Top Recommendation" : "शीर्ष अनुशंसित")}
                         </p>
                       )}
-                      {f.address && <p className="text-xs text-gray-500">{f.address}</p>}
-                      {/* Contact Phone & Direct Dial (Shown only when official phone exists) */}
+
+                      {f.address && (
+                        <p className="text-[11px] text-gray-500 flex items-start gap-1">
+                          <MapPin className="h-3 w-3 text-gray-400 shrink-0 mt-0.5" />
+                          <span className="line-clamp-2">{f.address}</span>
+                        </p>
+                      )}
+
+                      {/* Distance info only if user has active GPS */}
+                      {userCoords ? (
+                        <p className="text-[11px] font-semibold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded inline-block">
+                          📍 {f.distance_km < 1 ? `${Math.round(f.distance_km * 1000)}m` : `${f.distance_km.toFixed(1)} km`} {en ? "away" : "दूर"}
+                        </p>
+                      ) : (
+                        <p className="text-[11px] text-gray-600 bg-gray-50 px-1.5 py-0.5 rounded inline-block">
+                          📍 {f.district || (en ? "District Center" : "जिला केंद्र")}
+                        </p>
+                      )}
+
+                      {/* Contact Phone & Direct Dial */}
                       {f.phone ? (
-                        <div className="pt-1">
+                        <div className="pt-0.5">
                           <a
                             href={`tel:${f.phone}`}
                             className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-1 rounded border border-emerald-200 hover:bg-emerald-100 flex items-center justify-between gap-1.5"
@@ -728,21 +871,24 @@ export function MapView({ language }: MapViewProps) {
                             </span>
                           </a>
                         </div>
-                      ) : (
-                        <p className="text-[11px] text-gray-400 italic pt-1">
-                          {en ? "Official contact number not listed" : "आधिकारिक फोन नंबर उपलब्ध नहीं"}
-                        </p>
-                      )}
+                      ) : null}
 
-                      <Button size="sm" variant="outline" className="w-full mt-2 h-7 text-xs" onClick={() => showRoute(f.lat, f.lon)} disabled={routingLoading}>
-                        {routingLoading ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Navigation className="h-3 w-3 mr-1" />}
-                        {en ? "Show Route" : "मार्ग दिखाएं"}
-                      </Button>
-                      <a href={`https://www.openstreetmap.org/?mlat=${f.lat}&mlon=${f.lon}&zoom=17`}
-                        target="_blank" rel="noreferrer"
-                        className="text-gray-500 underline text-xs block mt-1 text-center">
-                        {en ? "Open in OSM ↗" : "OSM में देखें ↗"}
-                      </a>
+                      {/* Action buttons */}
+                      <div className="pt-1 flex flex-col gap-1">
+                        {isDoc && (
+                          <a
+                            href="/consultation"
+                            className="w-full text-center py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded text-xs font-semibold flex items-center justify-center gap-1"
+                          >
+                            <Stethoscope className="h-3.5 w-3.5" />
+                            <span>{en ? "Book Consultation" : "परामर्श बुक करें"}</span>
+                          </a>
+                        )}
+                        <Button size="sm" variant="outline" className="w-full h-7 text-xs" onClick={() => showRoute(f.lat, f.lon)} disabled={routingLoading}>
+                          {routingLoading ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Navigation className="h-3 w-3 mr-1" />}
+                          {en ? "Show Route" : "मार्ग दिखाएं"}
+                        </Button>
+                      </div>
                     </div>
                   </Popup>
                 </Marker>
@@ -755,58 +901,102 @@ export function MapView({ language }: MapViewProps) {
       {loading && (
         <div className="flex items-center justify-center gap-2 text-gray-400 text-sm py-1">
           <Loader2 className="h-4 w-4 animate-spin" />
-          {en ? "Fetching facilities..." : "सुविधाएं खोजी जा रही हैं..."}
+          {en ? "Fetching healthcare facilities & doctors..." : "स्वास्थ्य सुविधाएं एवं डॉक्टर खोजे जा रहे हैं..."}
         </div>
       )}
       {error && <p className="text-red-500 text-sm text-center">{error}</p>}
 
-      {/* Facilities List (Ultra-compact, high-density 3-column grid) */}
+      {/* Facilities & Doctors List (10 per page pagination to prevent lagging) */}
       {sorted.length > 0 && (
-        <div className="space-y-4 pt-1">
-          <div>
-            <div className="flex items-center justify-between mb-2.5">
-              <h3 className="font-bold text-sm sm:text-base flex items-center gap-2 text-gray-900">
-                <Star className="h-4 w-4 fill-amber-400 text-amber-500" />
-                <span>{en ? "Top 10 Nearest Facilities" : "10 निकटतम सुविधाएं"}</span>
-                <span className="text-xs font-normal text-gray-500">
-                  ({sorted.length} {en ? "found within" : "मिले"} {radiusKm} km)
-                </span>
-              </h3>
+        <div className="space-y-3 pt-1">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <h3 className="font-bold text-sm sm:text-base flex items-center gap-2 text-gray-900">
+              <Star className="h-4 w-4 fill-amber-400 text-amber-500" />
+              <span>
+                {filter === "doctors" 
+                  ? (en ? "Verified Doctors Directory" : "सत्यापित डॉक्टर निर्देशिका")
+                  : (en ? "Healthcare Facilities & Doctors" : "स्वास्थ्य केंद्र एवं डॉक्टर")}
+              </span>
+              <span className="text-xs font-normal text-gray-500">
+                ({sorted.length} {en ? "found" : "मिले"})
+              </span>
+            </h3>
+            <div className="flex items-center gap-2">
               <span className="text-[11px] text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full font-semibold border border-blue-200">
-                {en ? "Nearest first" : "दूरी अनुसार"}
+                {userCoords 
+                  ? (en ? "📍 Sorted by Distance" : "📍 दूरी अनुसार क्रमबद्ध")
+                  : (en ? "🏛️ LGD District View" : "🏛️ LGD जिला दृश्य")}
+              </span>
+              <span className="text-xs text-gray-500">
+                {en ? `Page ${currentPage} of ${totalPages}` : `पृष्ठ ${currentPage} / ${totalPages}`}
               </span>
             </div>
+          </div>
 
-            {/* Compact Grid: 3 columns on desktop, 2 on tablet, 1 on mobile */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
-              {sorted.slice(0, 10).map((f, idx) => {
-                const cfg = TYPE_CONFIG[f.type] ?? TYPE_CONFIG.clinic
-                return (
-                  <Card 
-                    key={f.id}
-                    className="border hover:shadow-md transition-all hover:border-blue-300 bg-white"
-                  >
-                    <CardContent className="p-3 flex flex-col justify-between h-full gap-2">
-                      <div>
-                        {/* Header: Number Badge + Name + Distance */}
-                        <div className="flex items-start justify-between gap-1.5">
-                          <div className="flex items-center gap-1.5 min-w-0">
-                            <span 
-                              className="h-5 w-5 rounded-full text-white text-[11px] font-bold flex items-center justify-center shrink-0"
-                              style={{ background: cfg.color }}
-                            >
-                              {idx + 1}
-                            </span>
-                            <h4 className="font-semibold text-xs sm:text-sm text-gray-900 truncate" title={f.name}>
-                              {f.name}
-                            </h4>
-                          </div>
+          {/* Paginated Grid: 10 items per page */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+            {paginatedFacilities.map((f, idx) => {
+              const cfg = TYPE_CONFIG[f.type] ?? TYPE_CONFIG.clinic
+              const itemIndex = (currentPage - 1) * PAGE_SIZE + idx + 1
+              const isDoc = f.type === "doctors"
+
+              return (
+                <Card 
+                  key={f.id}
+                  className={`border hover:shadow-md transition-all hover:border-blue-300 bg-white ${isDoc ? "border-purple-200" : ""}`}
+                >
+                  <CardContent className="p-3 flex flex-col justify-between h-full gap-2">
+                    <div>
+                      {/* Header: Item Index + Name + Distance/District */}
+                      <div className="flex items-start justify-between gap-1.5">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <span 
+                            className="h-5 w-5 rounded-full text-white text-[11px] font-bold flex items-center justify-center shrink-0"
+                            style={{ background: cfg.color }}
+                          >
+                            {itemIndex}
+                          </span>
+                          <h4 className="font-semibold text-xs sm:text-sm text-gray-900 truncate" title={f.name}>
+                            {f.name}
+                          </h4>
+                        </div>
+                        {/* Only show calculated km if GPS is active */}
+                        {userCoords ? (
                           <span className="text-[11px] font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded shrink-0">
                             {f.distance_km < 1 ? `${Math.round(f.distance_km * 1000)}m` : `${f.distance_km.toFixed(1)} km`}
                           </span>
-                        </div>
+                        ) : (
+                          <span className="text-[10px] font-medium text-gray-600 bg-gray-100 px-1.5 py-0.5 rounded shrink-0 truncate max-w-[100px]" title={f.district || ""}>
+                            {f.district || (en ? "District" : "जिला")}
+                          </span>
+                        )}
+                      </div>
 
-                        {/* Type & Capabilities */}
+                      {/* Doctor details or Facility Capabilities */}
+                      {isDoc ? (
+                        <div className="mt-1 space-y-1">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="text-[11px] font-semibold text-purple-700 flex items-center gap-1">
+                              <span>👨‍⚕️</span>
+                              <span>{f.specialtyName}</span>
+                            </span>
+                            {f.regNo && (
+                              <span className="text-[9px] font-bold bg-purple-50 text-purple-700 border border-purple-200 px-1 py-0.5 rounded">
+                                NMC Verified
+                              </span>
+                            )}
+                            <span className="text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-1 py-0.5 rounded">
+                              {f.consultationFee === 0 ? (en ? "Free OPD" : "निःशुल्क OPD") : `₹${f.consultationFee}`}
+                            </span>
+                          </div>
+                          {f.hospitalAffiliation && (
+                            <p className="text-[11px] text-gray-700 truncate flex items-center gap-1" title={f.hospitalAffiliation}>
+                              <Building2 className="h-3 w-3 text-purple-600 shrink-0" />
+                              <span className="truncate">{f.hospitalAffiliation}</span>
+                            </p>
+                          )}
+                        </div>
+                      ) : (
                         <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                           <span className="text-[11px] font-medium flex items-center gap-1" style={{ color: cfg.color }}>
                             <span>{cfg.icon}</span>
@@ -833,105 +1023,93 @@ export function MapView({ language }: MapViewProps) {
                             </span>
                           )}
                         </div>
+                      )}
 
-                        {/* Address */}
-                        {f.address && (
-                          <p className="text-[11px] text-gray-500 truncate mt-1 flex items-center gap-1" title={f.address}>
-                            <MapPin className="h-3 w-3 text-gray-400 shrink-0" />
-                            <span className="truncate">{f.address}</span>
-                          </p>
-                        )}
-                      </div>
+                      {/* Address */}
+                      {f.address && (
+                        <p className="text-[11px] text-gray-500 truncate mt-1 flex items-center gap-1" title={f.address}>
+                          <MapPin className="h-3 w-3 text-gray-400 shrink-0" />
+                          <span className="truncate">{f.address}</span>
+                        </p>
+                      )}
+                    </div>
 
-                      {/* Action Footer (Call + Route) in single compact row */}
-                      <div className="flex items-center justify-between gap-1.5 pt-2 border-t border-gray-100 mt-auto">
+                    {/* Action Footer (Call + Route + Book) */}
+                    <div className="flex items-center justify-between gap-1.5 pt-2 border-t border-gray-100 mt-auto">
+                      <div className="flex items-center gap-1">
                         {f.phone ? (
                           <a
                             href={`tel:${f.phone}`}
-                            className="h-7 px-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors truncate"
-                          >
-                            <Phone className="h-3 w-3 shrink-0" />
-                            <span className="truncate">{en ? "Call" : "कॉल"}</span>
-                          </a>
-                        ) : (
-                          <span className="text-[10px] text-gray-500 bg-gray-100 border border-gray-200 px-2 py-1 rounded-md font-medium">
-                            {en ? "Walk-in OPD" : "प्रत्यक्ष OPD"}
-                          </span>
-                        )}
-
-                        <Button 
-                          size="sm" 
-                          variant="outline" 
-                          className="h-7 text-xs px-2 text-blue-700 hover:bg-blue-50 border-blue-200 flex items-center gap-1" 
-                          onClick={() => showRoute(f.lat, f.lon)} 
-                          disabled={routingLoading}
-                        >
-                          {routingLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Navigation className="h-3 w-3" />}
-                          <span>{en ? "Route" : "मार्ग"}</span>
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )
-              })}
-            </div>
-          </div>
-
-          {/* Rest of facilities in compact 3-column grid */}
-          {sorted.length > 10 && (
-            <div className="pt-2">
-              <h3 className="font-semibold text-xs sm:text-sm text-gray-600 mb-2">
-                {en ? `Other Facilities in Area (${sorted.length - 10})` : `क्षेत्र की अन्य सुविधाएं (${sorted.length - 10})`}
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                {sorted.slice(10).map((f) => {
-                  const cfg = TYPE_CONFIG[f.type] ?? TYPE_CONFIG.clinic
-                  return (
-                    <div 
-                      key={f.id} 
-                      className="p-2.5 rounded-lg border bg-white hover:bg-gray-50/80 transition-colors flex items-center justify-between gap-2"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-sm shrink-0">{cfg.icon}</span>
-                          <p className="font-medium text-xs text-gray-900 truncate" title={f.name}>
-                            {f.name}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2 mt-0.5 text-[11px] text-gray-500">
-                          <span style={{ color: cfg.color }} className="font-medium">
-                            {en ? cfg.en : cfg.hi}
-                          </span>
-                          <span>•</span>
-                          <span>{f.distance_km < 1 ? `${Math.round(f.distance_km * 1000)}m` : `${f.distance_km.toFixed(1)} km`}</span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-1 shrink-0">
-                        {f.phone ? (
-                          <a
-                            href={`tel:${f.phone}`}
-                            className="h-6 w-6 rounded bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 flex items-center justify-center text-xs"
+                            className="h-7 px-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors"
                             title={f.phone}
                           >
-                            <Phone className="h-3 w-3" />
+                            <Phone className="h-3 w-3 shrink-0" />
+                            <span className="text-[11px]">{en ? "Call" : "कॉल"}</span>
                           </a>
-                        ) : null}
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-6 px-1.5 text-xs text-blue-600 hover:bg-blue-50"
-                          onClick={() => showRoute(f.lat, f.lon)}
-                          disabled={routingLoading}
-                          title={en ? "Show Route" : "मार्ग दिखाएं"}
-                        >
-                          <Navigation className="h-3 w-3" />
-                        </Button>
+                        ) : (
+                          <span className="text-[10px] text-gray-500 bg-gray-100 border border-gray-200 px-1.5 py-1 rounded font-medium">
+                            {en ? "OPD" : "OPD"}
+                          </span>
+                        )}
+
+                        {isDoc && (
+                          <a
+                            href="/consultation"
+                            className="h-7 px-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors"
+                          >
+                            <Stethoscope className="h-3 w-3 shrink-0" />
+                            <span className="text-[11px]">{en ? "Book" : "बुक"}</span>
+                          </a>
+                        )}
                       </div>
+
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="h-7 text-xs px-2 text-blue-700 hover:bg-blue-50 border-blue-200 flex items-center gap-1 shrink-0" 
+                        onClick={() => showRoute(f.lat, f.lon)} 
+                        disabled={routingLoading}
+                      >
+                        {routingLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Navigation className="h-3 w-3" />}
+                        <span>{en ? "Route" : "मार्ग"}</span>
+                      </Button>
                     </div>
-                  )
-                })}
+                  </CardContent>
+                </Card>
+              )
+            })}
+          </div>
+
+          {/* Clean Pagination Controls (10 items per page) */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
+                disabled={currentPage === 1}
+                className="gap-1 h-8 text-xs font-medium"
+              >
+                <ChevronLeft className="h-3.5 w-3.5" />
+                <span>{en ? "Previous" : "पिछला"}</span>
+              </Button>
+
+              <div className="text-xs text-gray-500">
+                {en 
+                  ? `Showing ${(currentPage - 1) * PAGE_SIZE + 1} - ${Math.min(currentPage * PAGE_SIZE, sorted.length)} of ${sorted.length}`
+                  : `${sorted.length} में से ${(currentPage - 1) * PAGE_SIZE + 1} - ${Math.min(currentPage * PAGE_SIZE, sorted.length)} दर्शा रहे`}
               </div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="gap-1 h-8 text-xs font-medium"
+              >
+                <span>{en ? "Next" : "अगला"}</span>
+                <ChevronRight className="h-3.5 w-3.5" />
+              </Button>
             </div>
           )}
         </div>

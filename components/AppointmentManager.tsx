@@ -8,6 +8,7 @@ import { Input } from "./ui/input"
 import { Label } from "./ui/label"
 import { Calendar, Clock, Video, CheckCircle, XCircle, User, Stethoscope, Plus, Loader2 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
+import { triggerAppointmentBooked, triggerAppointmentStatusUpdated } from "@/lib/notifications/notification-engine"
 
 interface AppointmentManagerProps { user: any; language: string; setJitsiRoom?: (r: string | null) => void }
 
@@ -120,7 +121,17 @@ export function AppointmentManager({ user, language, setJitsiRoom }: Appointment
         body: JSON.stringify({ id, status: "cancelled" })
       })
       if (res.ok) {
+        const target = appointments.find(a => a.id === id)
         setAppointments(appointments.map(a => a.id === id ? { ...a, status: "cancelled" } : a))
+        if (target) {
+          triggerAppointmentStatusUpdated({
+            appointmentId: id,
+            newStatus: "cancelled",
+            doctorName: "Medical Consultant",
+            date: target.appointment_date,
+            patientUserId: user?.id,
+          })
+        }
       }
     } catch (e) {
       console.error(e)
@@ -200,6 +211,19 @@ export function AppointmentManager({ user, language, setJitsiRoom }: Appointment
       if (!res.ok || data.error) {
         throw new Error(data.error || 'Failed to book appointment');
       } else {
+        const prov = providers.find(p => p.id === provId)
+        triggerAppointmentBooked({
+          appointmentId: data?.id || roomId,
+          doctorName: prov?.name || "Consultant Doctor",
+          doctorSpecialty: prov?.specialization || "General Medicine",
+          hospitalName: prov?.location || "Rural Clinic",
+          date: bookingForm.date,
+          time: bookingForm.time,
+          consultType: "video",
+          patientName: user?.name || "Patient",
+          patientUserId: authUser.id,
+          roomId: roomId,
+        })
         setBookingSuccess(en ? "Appointment booked successfully!" : "अपॉइंटमेंट सफलतापूर्वक बुक हुई!")
         setBookingForm({ provider_id: "", date: "", time: "", notes: "" })
         setShowBooking(false)

@@ -166,7 +166,7 @@ This document catalogs the domain-specific React components used throughout the 
 - **Files Where Used:** `app/directory/page.tsx`, `app/page.tsx`.
 
 ### 3.2 `MapView.tsx`
-- **Purpose:** National healthcare facility and doctor discovery portal indexed by Local Government Directory (LGD) and Indian Public Health Standards (IPHS). Features interactive Leaflet maps, driving routes via OSRM, Haversine proximity calculations, and searchable state/district selectors.
+- **Purpose:** National healthcare facility and doctor discovery portal indexed by Local Government Directory (LGD) and Indian Public Health Standards (IPHS). Features interactive Leaflet maps, driving routes via OSRM, Haversine proximity calculations, 913 NMC-verified clinical practitioners, 10-per-page pagination, smart GPS vs District distance display, and searchable state/district selectors.
 - **Props:**
   ```typescript
   {
@@ -175,41 +175,61 @@ This document catalogs the domain-specific React components used throughout the 
     camps?: any[];
   }
   ```
-- **State:** `selectedState` (LGD code), `selectedDistrict` (LGD code), `facilities` (Array), `loading` (boolean), `locating` (boolean), `filter` (Facility type), `radiusKm` (number), `searchQuery` (string), `routeData` (OSRM GeoJSON route).
+- **State:** `selectedState` (LGD code), `selectedDistrict` (LGD code), `facilities` (Array), `doctorFacilities` (Array), `loading` (boolean), `locating` (boolean), `filter` (Facility type | "all" | "doctors"), `radiusKm` (number), `searchQuery` (string), `routeData` (OSRM GeoJSON route), `currentPage` (number).
 - **Sub-Components:**
   - `SearchableDropdown`: Accessible popover with a top-pinned real-time search input for both English and Hindi queries, constrained to a strict 5-item visible viewport limit (`max-h-[175px] overflow-y-auto`) to avoid covering map controls. Includes click-outside and `Escape` key listeners.
-- **Dependencies:** `react-leaflet`, `leaflet`, `lucide-react`, `lib/geo/pan-india-lgd.json`, `lib/geo/lgd-iphs.ts`. Calls `/api/facilities/district/[districtCode]` and `/api/facilities/nearby`.
+- **Key Mechanics:**
+  - **913 Verified Doctors Integration:** Seamlessly incorporates doctors from `lib/data/real-doctors.ts` matching active state, district, or GPS proximity radius.
+  - **Smart Distance Guard:** Physical distances (e.g. `2.4 km away`) strictly render when physical GPS (`userCoords`) is active; in state/district browsing mode, cards cleanly render the district/city name without fabricating distances.
+  - **10-per-Page Pagination:** Prevents DOM overload by paginating results cleanly in blocks of 10 with Previous and Next controls.
+  - **Direct Actions:** Leaflet popup and cards offer 1-tap `tel:` calling, OSRM driving routes, and direct "Book Appointment" links to `/consultation`.
+- **Dependencies:** `react-leaflet`, `leaflet`, `lucide-react`, `lib/geo/pan-india-lgd.json`, `lib/geo/lgd-iphs.ts`, `lib/data/real-doctors.ts`. Calls `/api/facilities/district/[districtCode]` and `/api/facilities/nearby`.
 - **Files Where Used:** `app/page.tsx`, `app/locations/page.tsx`
 
-### 3.2 `JitsiMeeting.tsx`
-- **Purpose:** Wraps the external Jitsi Meet API to embed video consultations.
+### 3.3 `ConsultationPortal.tsx`
+- **Purpose:** Comprehensive appointment booking and teleconsultation portal powered by 913 authentic NMC/State Medical Council-registered doctors across India. Features real-time multi-field search, specialty chips, state filtering, 10-per-page pagination, 7-day dynamic slot generator, direct patient booking, teleconsultation room provisioning, and automatic notification dispatch.
 - **Props:**
   ```typescript
   {
-    roomName: string;
-    displayName: string;
-    onReadyToClose: () => void;
+    language: string;
+    user?: UserProfile | null;
+    symptomResult?: SymptomResult | null;
   }
   ```
-- **State:** `loading` (boolean).
-- **Dependencies:** Dynamic script injection of `https://8x8.vc/external_api.js`.
-- **Styling:** Full viewport height container for the iframe.
-- **Files Where Used:** `app/page.tsx`
+- **State:** `consultType` ("video" | "audio" | "chat"), `selectedDoctor` (RealDoctor | null), `selectedDate` (string), `selectedSlot` (string), `patientName` (string), `patientPhone` (string), `notes` (string), `doctorSearch` (string), `specialtyFilter` (string), `stateFilter` (string), `currentPage` (number), `successData` (Object | null).
+- **Key Mechanics:**
+  - **913 Doctors Catalog:** Full pan-India practitioner roster from AIIMS, PGI, GMCs, and District Hospitals.
+  - **Dynamic Slot Generator:** Computes morning, afternoon, and evening slots for the next 7 days using deterministic doctor schedule seeding (Sundays closed).
+  - **Notification Dispatch:** Automatically dispatches notifications to both patient and doctor roles via `lib/notifications/notification-engine.ts` with audio chime upon booking confirmation.
+- **Dependencies:** `lib/data/real-doctors.ts`, `lib/geo/lgd-iphs.ts`, `lib/notifications/notification-engine.ts`, `lucide-react`, `shadcn/ui`.
+- **Files Where Used:** `app/consultation/page.tsx`, `app/page.tsx`.
 
-### 3.3 `AppointmentManager.tsx`
-- **Purpose:** Tabbed UI for users to book and view upcoming/past appointments, and launch the Jitsi room.
+### 3.4 `NotificationBell.tsx`
+- **Purpose:** Central notification center for Patients, Doctors, Admins, and Guests. Connects to backend `/api/notifications`, syncs with local storage for guest/offline sessions, subscribes to cross-tab window events (`ruralhealth:notification`), filters by categories (All, Appointments, Alerts), and routes directly to action URLs on click.
 - **Props:**
   ```typescript
   {
     user: any;
     language: string;
-    setCurrentPage: (page: string) => void;
-    setJitsiRoom?: (room: string) => void;
   }
   ```
-- **State:** `activeTab` (upcoming/past), `appointments` (Array), `showBooking` (boolean), `bookingForm` (Object).
-- **Dependencies:** `lucide-react`, `shadcn/ui` (Tabs, Input, Select). Calls `/api/appointments`.
-- **Files Where Used:** `app/page.tsx`
+- **State:** `open` (boolean), `notifications` (AppNotification[]), `activeTab` ("all" | "appointments" | "alerts"), `unreadCount` (number), `nextCursor` (string | null).
+- **Dependencies:** `lib/notifications/notification-engine.ts`, `lucide-react`.
+- **Files Where Used:** `components/Header.tsx`.
+
+### 3.5 `AppointmentManager.tsx`
+- **Purpose:** Tabbed UI for users to manage upcoming and past appointments, cancel bookings with automatic notifications, and launch embedded Jitsi teleconsultation rooms.
+- **Props:**
+  ```typescript
+  {
+    user: any;
+    language: string;
+    setJitsiRoom?: (room: string | null) => void;
+  }
+  ```
+- **State:** `activeTab` ("upcoming" | "past"), `appointments` (Array), `showBooking` (boolean), `bookingForm` (Object).
+- **Dependencies:** `lib/notifications/notification-engine.ts`, `lucide-react`, `shadcn/ui`. Calls `/api/appointments`.
+- **Files Where Used:** `app/page.tsx`, `app/appointments/page.tsx`.
 
 ---
 

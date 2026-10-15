@@ -7,6 +7,7 @@ import { Button } from "./ui/button"
 import { Badge } from "./ui/badge"
 import { Users, FileText, CheckCircle, XCircle, Clock, Loader2, Search, ChevronDown, ChevronUp, Video, Phone, MessageSquare } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
+import { triggerAppointmentStatusUpdated } from "@/lib/notifications/notification-engine"
 
 interface DoctorAppointmentRequestsProps {
   language: string
@@ -67,7 +68,19 @@ export function DoctorAppointmentRequests({ language, setJitsiRoom }: DoctorAppo
         body: JSON.stringify({ id, status }),
       })
       if (res.ok) {
+        const appt = appointments.find(a => a.id === id)
+        const patient = appt ? getPatient(appt) : null
         setAppointments(prev => prev.map(a => a.id === id ? { ...a, status } : a))
+        if (appt) {
+          triggerAppointmentStatusUpdated({
+            appointmentId: id,
+            newStatus: status,
+            doctorName: "Dr. Consultant",
+            patientName: patient ? `${patient.first_name || ""} ${patient.last_name || ""}`.trim() : "Patient",
+            date: appt.appointment_date,
+            patientUserId: patient?.user_id,
+          })
+        }
       }
     } catch (e) { console.error(e) }
     finally { setUpdating(null) }

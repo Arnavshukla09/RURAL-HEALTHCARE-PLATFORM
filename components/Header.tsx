@@ -281,8 +281,8 @@ export function Header() {
               )}
             </div>
 
-            {/* Notification Bell — for all logged-in users */}
-            {user && <NotificationBell user={user} language={language} />}
+            {/* Notification Bell — for all users and guests */}
+            <NotificationBell user={user} language={language} />
 
             {user ? (
               <div ref={userRef} className="relative hidden sm:block">
