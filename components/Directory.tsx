@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { Button } from "./ui/button"
 import { Card, CardContent } from "./ui/card"
 import { Input } from "./ui/input"
@@ -21,7 +21,9 @@ import {
   RotateCcw,
   ExternalLink,
   ArrowRight,
-  ShieldCheck
+  ShieldCheck,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react"
 import { REAL_DOCTORS, RealDoctor, calculateDistanceKm } from "@/lib/data/real-doctors"
 import { getTranslation } from "@/lib/i18n/translations"
@@ -131,23 +133,50 @@ export function Directory({ language }: DirectoryProps) {
     { key: 'oncology', label: t.oncology },
   ]
 
-  // Filter & Proximity Calculation: Strictly location-based and capped to Top 10 per specialist
+  // Pagination State — 10 doctors per page for fast rendering & smooth browsing
+  const [currentPage, setCurrentPage] = useState(1)
+  const PAGE_SIZE = 10
+
+  // Relevance Scoring function: guarantees exact specialty/hospital/name matches rank top
+  const getSearchRelevance = (doc: RealDoctor, q: string): number => {
+    const cleanQ = q.toLowerCase().trim()
+    if (!cleanQ) return 0
+    let score = 0
+    const name = doc.name.toLowerCase()
+    const specName = doc.specialtyName.toLowerCase()
+    const spec = doc.specialty.toLowerCase()
+    const hosp = doc.hospitalAffiliation.toLowerCase()
+    const qual = doc.qualifications.toLowerCase()
+    const bio = doc.bio.toLowerCase()
+    const dist = doc.districtName.toLowerCase()
+
+    if (name.includes(cleanQ)) score += 100
+    if (specName.includes(cleanQ) || spec.includes(cleanQ)) score += 80
+    if (hosp.includes(cleanQ)) score += 60
+    if (dist.includes(cleanQ)) score += 40
+    if (qual.includes(cleanQ)) score += 30
+    if (bio.includes(cleanQ)) score += 20
+    return score
+  }
+
+  // Filter & Proximity Calculation:
+  // Distance is ONLY calculated if user explicitly opts for GPS
   const processedDoctors = useMemo(() => {
     if (!hasActiveLocation) {
       return []
     }
 
-    // 1. Calculate proximity distance for all doctors if reference coords are available
+    // 1. Calculate proximity distance ONLY if userCoords (GPS) is active
     let list: RealDoctor[] = REAL_DOCTORS.map(doc => {
-      if (referenceCoords) {
-        const distance = calculateDistanceKm(referenceCoords.lat, referenceCoords.lng, doc.lat, doc.lon)
+      if (userCoords) {
+        const distance = calculateDistanceKm(userCoords.lat, userCoords.lng, doc.lat, doc.lon)
         return { ...doc, distance }
       }
-      return doc
+      return { ...doc, distance: undefined }
     })
 
-    // 2. Strict distance radius filter if referenceCoords is active
-    if (referenceCoords) {
+    // 2. Strict distance radius filter ONLY if userCoords (GPS) is active
+    if (userCoords) {
       list = list.filter(doc => doc.distance !== undefined && doc.distance <= selectedRadius)
     }
 
@@ -166,19 +195,9 @@ export function Directory({ language }: DirectoryProps) {
       list = list.filter(doc => doc.districtName.toLowerCase().includes(selectedDistrictName.toLowerCase()))
     }
 
-    // 6. Search Bar 1: Doctor / Specialty / Hospital query filter
+    // 6. Search Bar 1: Doctor / Specialty / Hospital query filter with relevance check
     if (doctorQuery.trim()) {
-      const dq = doctorQuery.toLowerCase().trim()
-      list = list.filter(doc =>
-        doc.name.toLowerCase().includes(dq) ||
-        doc.specialtyName.toLowerCase().includes(dq) ||
-        doc.specialty.toLowerCase().includes(dq) ||
-        doc.hospitalAffiliation.toLowerCase().includes(dq) ||
-        doc.districtName.toLowerCase().includes(dq) ||
-        doc.qualifications.toLowerCase().includes(dq) ||
-        doc.bio.toLowerCase().includes(dq) ||
-        doc.regNo.toLowerCase().includes(dq)
-      )
+      list = list.filter(doc => getSearchRelevance(doc, doctorQuery) > 0)
     }
 
     // 7. Search Bar 2: Location query filter (City, district, state, landmark)
@@ -191,31 +210,38 @@ export function Directory({ language }: DirectoryProps) {
       )
     }
 
-    // 8. Sort by nearest proximity first if distance exists; otherwise by rating
+    // 8. Sorting:
+    // - If doctorQuery is active: rank by highest relevance score first!
+    // - Then if GPS is active: sort by nearest distance
+    // - Otherwise sort by rating & experience
     list.sort((a, b) => {
-      if (a.distance !== undefined && b.distance !== undefined) {
+      if (doctorQuery.trim()) {
+        const relA = getSearchRelevance(a, doctorQuery)
+        const relB = getSearchRelevance(b, doctorQuery)
+        if (relA !== relB) {
+          return relB - relA
+        }
+      }
+      if (userCoords && a.distance !== undefined && b.distance !== undefined) {
         return a.distance - b.distance
       }
       return b.rating - a.rating
     })
 
-    // 9. Strict Capping to Top 10 for each specialist
-    if (selectedSpecialty !== 'all') {
-      return list.slice(0, 10)
-    }
+    return list
+  }, [hasActiveLocation, userCoords, selectedSpecialty, selectedStateCode, selectedDistrictName, selectedRadius, doctorQuery, locationQuery])
 
-    // Group and cap at most 10 doctors per specialty
-    const specialtyCounts: Record<string, number> = {}
-    const capped: RealDoctor[] = []
-    for (const doc of list) {
-      const count = specialtyCounts[doc.specialty] || 0
-      if (count < 10) {
-        specialtyCounts[doc.specialty] = count + 1
-        capped.push(doc)
-      }
-    }
-    return capped
-  }, [hasActiveLocation, referenceCoords, selectedSpecialty, selectedStateCode, selectedDistrictName, selectedRadius, doctorQuery, locationQuery])
+  // Pagination Math & Slicing
+  const totalPages = Math.max(1, Math.ceil(processedDoctors.length / PAGE_SIZE))
+  const paginatedDoctors = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE
+    return processedDoctors.slice(start, start + PAGE_SIZE)
+  }, [processedDoctors, currentPage])
+
+  // Reset pagination to page 1 whenever search terms or filters change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [doctorQuery, locationQuery, selectedSpecialty, selectedStateCode, selectedDistrictName, selectedRadius, userCoords])
 
   const getInitials = (name: string) => {
     return name
@@ -555,7 +581,7 @@ export function Directory({ language }: DirectoryProps) {
             </CardContent>
           </Card>
         ) : (
-          /* Active Directory Results (Capped to Top 10 per specialist) */
+          /* Active Directory Results (Paginated to 10 doctors per page) */
           <div className="space-y-4">
             {/* Results Filter & Count Header Bar */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 bg-white p-3.5 rounded-xl border border-gray-200">
@@ -564,26 +590,34 @@ export function Directory({ language }: DirectoryProps) {
                   <Stethoscope className="h-4 w-4 text-blue-600" />
                   <span>Verified Doctors ({processedDoctors.length})</span>
                 </div>
-                <Badge variant="outline" className="text-emerald-700 bg-emerald-50 border-emerald-200 text-[10px] font-semibold">
-                  Top 10 Capped per Specialist
-                </Badge>
-                <Badge variant="outline" className="text-blue-700 bg-blue-50 border-blue-200 text-[10px] font-bold">
-                  📍 Within {selectedRadius} km
-                </Badge>
+                {userCoords ? (
+                  <Badge variant="outline" className="text-emerald-700 bg-emerald-50 border-emerald-200 text-[10px] font-bold">
+                    📍 Within {selectedRadius} km (GPS Active)
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="text-blue-700 bg-blue-50 border-blue-200 text-[10px] font-semibold">
+                    📚 Full Directory ({processedDoctors.length} available)
+                  </Badge>
+                )}
+                {totalPages > 1 && (
+                  <Badge variant="outline" className="text-purple-700 bg-purple-50 border-purple-200 text-[10px] font-semibold">
+                    Page {currentPage} of {totalPages}
+                  </Badge>
+                )}
               </div>
 
               {locationLabel && (
                 <div className="text-xs text-gray-600 flex items-center gap-1.5">
-                  <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className={`h-2 w-2 rounded-full ${userCoords ? "bg-emerald-500 animate-pulse" : "bg-blue-500"}`} />
                   <span className="font-medium text-gray-700">Near: {locationLabel}</span>
                 </div>
               )}
             </div>
 
-            {/* Doctor Cards */}
-            {processedDoctors.length > 0 ? (
+            {/* Doctor Cards (10 per page) */}
+            {paginatedDoctors.length > 0 ? (
               <div className="space-y-4">
-                {processedDoctors.map((doctor) => (
+                {paginatedDoctors.map((doctor) => (
                   <Card key={doctor.id} className="hover:shadow-md transition-shadow border-gray-200">
                     <CardContent className="p-4 sm:p-6">
                       <div className="flex flex-col lg:flex-row gap-5 items-start justify-between">
@@ -606,10 +640,17 @@ export function Directory({ language }: DirectoryProps) {
                                 <span>{t.verified} • {doctor.regNo}</span>
                               </Badge>
 
-                              {/* Distance Badge */}
-                              {doctor.distance !== undefined && (
+                              {/* Distance Badge — ONLY shown when user explicitly uses GPS */}
+                              {userCoords && doctor.distance !== undefined && (
                                 <Badge variant="outline" className="text-blue-700 bg-blue-50 border-blue-200 text-[10px] font-bold">
                                   📍 {doctor.distance} {t.kmAway}
+                                </Badge>
+                              )}
+
+                              {/* Location tag when GPS is NOT active */}
+                              {!userCoords && (
+                                <Badge variant="outline" className="text-gray-700 bg-gray-50 border-gray-200 text-[10px] font-medium">
+                                  📍 {doctor.districtName}, {doctor.stateName}
                                 </Badge>
                               )}
 
@@ -709,29 +750,93 @@ export function Directory({ language }: DirectoryProps) {
                     </CardContent>
                   </Card>
                 ))}
+
+                {/* Pagination Controls Bar */}
+                {totalPages > 1 && (
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white p-3.5 rounded-xl border border-gray-200 shadow-2xs mt-4">
+                    <p className="text-xs text-gray-600 font-medium">
+                      {language === "hi"
+                        ? `कुल ${processedDoctors.length} में से ${(currentPage - 1) * 10 + 1}–${Math.min(currentPage * 10, processedDoctors.length)} डॉक्टर (पृष्ठ ${currentPage} / ${totalPages})`
+                        : `Showing ${(currentPage - 1) * 10 + 1}–${Math.min(currentPage * 10, processedDoctors.length)} of ${processedDoctors.length} doctors (Page ${currentPage} of ${totalPages})`}
+                    </p>
+
+                    <div className="flex items-center gap-1.5">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setCurrentPage(p => Math.max(1, p - 1))
+                          window.scrollTo({ top: 300, behavior: 'smooth' })
+                        }}
+                        disabled={currentPage === 1}
+                        className="h-8 text-xs gap-1 px-2.5"
+                      >
+                        <ChevronLeft className="h-3.5 w-3.5" />
+                        <span>{language === "hi" ? "पिछला" : "Previous"}</span>
+                      </Button>
+
+                      {/* Page number buttons */}
+                      <div className="flex items-center gap-1">
+                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                          let p = i + 1
+                          if (totalPages > 5 && currentPage > 3) {
+                            p = Math.min(currentPage - 2 + i, totalPages - 4 + i)
+                          }
+                          return (
+                            <button
+                              key={p}
+                              onClick={() => {
+                                setCurrentPage(p)
+                                window.scrollTo({ top: 300, behavior: 'smooth' })
+                              }}
+                              className={`h-8 w-8 text-xs font-semibold rounded-lg transition-colors ${
+                                currentPage === p
+                                  ? "bg-blue-600 text-white shadow-2xs"
+                                  : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200"
+                              }`}
+                            >
+                              {p}
+                            </button>
+                          )
+                        })}
+                      </div>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setCurrentPage(p => Math.min(totalPages, p + 1))
+                          window.scrollTo({ top: 300, behavior: 'smooth' })
+                        }}
+                        disabled={currentPage === totalPages}
+                        className="h-8 text-xs gap-1 px-2.5"
+                      >
+                        <span>{language === "hi" ? "अगला" : "Next"}</span>
+                        <ChevronRight className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="text-center py-12 bg-white rounded-xl border border-dashed border-gray-200 p-6 space-y-3">
                 <Stethoscope className="h-12 w-12 text-gray-300 mx-auto" />
-                <p className="text-sm font-semibold text-gray-700">
-                  No verified practitioners found within {selectedRadius} km of your location.
-                </p>
-                <p className="text-xs text-gray-400">
-                  Try expanding your search radius to 50 km or 100 km, or select an adjacent district.
+                <h4 className="text-sm font-bold text-gray-800">
+                  {language === "hi" ? "कोई डॉक्टर नहीं मिला" : "No Verified Doctors Found"}
+                </h4>
+                <p className="text-xs text-gray-500 max-w-md mx-auto">
+                  {doctorQuery
+                    ? (language === "hi"
+                        ? `'${doctorQuery}' के लिए कोई डॉक्टर नहीं मिला। कृपया वर्तनी जांचें या 'सभी विशेषताएं' चुनें।`
+                        : `No doctors found matching '${doctorQuery}'. Try checking spelling or choosing 'All Specialties'.`)
+                    : userCoords
+                      ? `No verified practitioners found within ${selectedRadius} km of your GPS location. Try expanding the radius to 50 km or 100 km.`
+                      : "No verified practitioners match the selected state/district filters. Try expanding your search."}
                 </p>
                 <div className="flex justify-center gap-2 pt-2">
-                  {selectedRadius < 50 && (
-                    <Button onClick={() => setSelectedRadius(50)} variant="outline" size="sm" className="text-xs font-semibold">
-                      Expand to 50 km
-                    </Button>
-                  )}
-                  {selectedRadius < 100 && (
-                    <Button onClick={() => setSelectedRadius(100)} variant="outline" size="sm" className="text-xs font-semibold">
-                      Expand to 100 km
-                    </Button>
-                  )}
-                  <Button onClick={resetAllFilters} variant="ghost" size="sm" className="text-xs font-semibold">
-                    {t.resetFilters}
+                  <Button onClick={resetAllFilters} variant="outline" size="sm" className="text-xs font-semibold gap-1.5">
+                    <RotateCcw className="h-3 w-3" />
+                    <span>{t.resetFilters}</span>
                   </Button>
                 </div>
               </div>
