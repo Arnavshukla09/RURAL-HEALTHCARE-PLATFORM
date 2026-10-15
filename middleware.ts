@@ -68,14 +68,14 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL(target, request.url))
   }
 
-  // 2. Unauthenticated check for all protected routes
+  // 2. Unauthenticated check for all protected routes (exempting public /doctor/claim)
   const isAuthRequired =
     pathname.startsWith("/dashboard") ||
     pathname.startsWith("/consultation") ||
     pathname.startsWith("/records") ||
     pathname.startsWith("/appointments") ||
     pathname.startsWith("/admin") ||
-    pathname.startsWith("/doctor")
+    (pathname.startsWith("/doctor") && !pathname.startsWith("/doctor/claim"))
 
   if (isAuthRequired && !user) {
     const loginUrl = new URL("/login", request.url)
@@ -84,7 +84,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // 3. Server-side role gates (H5)
-  if (user && (pathname.startsWith("/admin") || pathname.startsWith("/doctor"))) {
+  if (user && (pathname.startsWith("/admin") || (pathname.startsWith("/doctor") && !pathname.startsWith("/doctor/claim")))) {
     const { data: patient } = await supabase
       .from("patients")
       .select("role")
