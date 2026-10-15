@@ -4,7 +4,31 @@ All notable changes to the Rural Healthcare Platform will be documented in this 
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres roughly to chronological feature milestones.
 
+## [v1.20.2] - 2026-10-15 — Doctor Navbar Directory Link, Instant Logout Fix & Zero-Flicker Session Persistence
+
+### 1. Doctor & Admin Navbar Directory Link (`components/Header.tsx`)
+- **Peer & Clinical Directory Lookup**: Added `Doctors` (`/directory`) with `Stethoscope` icon to `doctorItems` and `adminItems` in the navigation bar.
+- Doctors can now directly search for fellow verified physicians, peer specialists, hospital OPDs, and cross-district referral practitioners without leaving the doctor portal.
+- Also added the `Find Doctors` link directly inside the Doctor and Admin user profile dropdown menus.
+
+### 2. Instant & Non-Blocking Logout Response (`components/Header.tsx`)
+- **Root Cause**: `handleLogout` previously used `await wipeClientCachesOnSignOut()` and `await supabase.auth.signOut()`, which could block on service worker cache locks or network timeouts, preventing `setUser(null)` and `router.push("/")` from ever executing.
+- **Fix**: Restructured `handleLogout` to immediately clear user state, close UI menus, and wipe `localStorage.removeItem("rhcp_user_profile")` in 0ms. Cache wiping is executed in the background without blocking, and a guaranteed clean redirect via `window.location.href = "/"` ensures instant responsiveness.
+
+### 3. Session Persistence Across Page Reloads (`components/providers/AppProvider.tsx`)
+- **Root Cause**: `loading` was previously initialized to `false` in `AppProvider`. On page reload (e.g. at `/admin/dashboard` or `/doctor/dashboard`), Next.js evaluated the route guard on frame 0 where `loading === false` and `user === null`, immediately treating the user as logged out and redirecting them away.
+- **Fix**:
+  - Implemented synchronous user profile restoration from `localStorage` (`rhcp_user_profile`) on frame 0.
+  - Initialized `loading` to `true` while the background Supabase session validation runs.
+  - Added loader fallbacks to `app/admin/dashboard/page.tsx` and `app/doctor/dashboard/page.tsx`.
+  - Refined `onAuthStateChange` to only clear user state on explicit `SIGNED_OUT` events, preventing premature logout on reload.
+
+### 4. Verification & Testing
+- 88/88 unit tests passing across 15 test suites in <850ms (`npm run test:unit`).
+- 0 TypeScript errors (`npx tsc --noEmit`), 0 ESLint errors (`npm run lint`), and Next.js production build passing with all 46 static pages generated (`npm run build`).
+
 ## [v1.20.1] - 2026-10-15 — Public Discovery Promotion & Authenticated Care Restructuring
+
 
 ### 1. Public Free Discovery Promotion (`components/Header.tsx`)
 - **Direct Top-Level Access**: Promoted `Find Doctors` (`/directory`) and `Find Hospitals` (`/locations`) out of the nested dropdown directly onto the primary navigation bar alongside `Symptoms` (`/symptom-checker`), `Health Info` (`/health-info`), and `Emergency` (`/emergency`).

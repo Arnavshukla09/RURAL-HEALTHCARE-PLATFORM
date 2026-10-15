@@ -36,14 +36,34 @@ export function Header() {
     return () => document.removeEventListener("mousedown", handler)
   }, [])
 
-  const handleLogout = async () => {
-    await wipeClientCachesOnSignOut()
-    const supabase = createClient()
-    await supabase.auth.signOut()
+  const handleLogout = async (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
+    // 1. Immediately reset state and close all UI menus
     setUser(null)
-    router.push("/")
-    setMobileMenuOpen(false)
     setUserDropOpen(false)
+    setMobileMenuOpen(false)
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.removeItem("rhcp_user_profile")
+      } catch {}
+    }
+
+    // 2. Clear offline caches asynchronously without blocking
+    wipeClientCachesOnSignOut().catch((err) => console.warn("[Header] Cache clear warning:", err))
+
+    // 3. Supabase signOut
+    try {
+      const supabase = createClient()
+      await supabase.auth.signOut()
+    } catch (err) {
+      console.warn("[Header] SignOut warning:", err)
+    }
+
+    // 4. Clean navigation to home
+    window.location.href = "/"
   }
 
   const go = (page: string) => {
@@ -64,6 +84,7 @@ export function Header() {
     { key: "/doctor/patients", label: en ? "Patients" : "मरीज़", icon: Users },
     { key: "/doctor/requests", label: en ? "Requests" : "अनुरोध", icon: Calendar },
     { key: "/appointments", label: en ? "Appointments" : "अपॉइंटमेंट", icon: ClipboardList },
+    { key: "/directory", label: en ? "Doctors" : "डॉक्टर", icon: Stethoscope },
     { key: "/locations", label: en ? "Hospitals" : "अस्पताल", icon: MapPin },
   ]
 
@@ -72,6 +93,8 @@ export function Header() {
     { key: "/admin/campaigns", label: en ? "Campaigns" : "अभियान", icon: Megaphone },
     { key: "/admin/appointments", label: en ? "Appointments" : "अपॉइंटमेंट", icon: Calendar },
     { key: "/admin/records", label: en ? "Records" : "रिकॉर्ड", icon: ClipboardList },
+    { key: "/directory", label: en ? "Doctors" : "डॉक्टर", icon: Stethoscope },
+    { key: "/locations", label: en ? "Hospitals" : "अस्पताल", icon: MapPin },
     { key: "/admin/notifications", label: en ? "Notify" : "सूचनाएं", icon: Bell },
   ]
 
@@ -286,6 +309,7 @@ export function Header() {
                         <button onClick={() => go("/doctor/patients")} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">{en ? "Patient Records" : "मरीज़ रिकॉर्ड"}</button>
                         <button onClick={() => go("/doctor/requests")} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">{en ? "Appointment Requests" : "नई अनुरोध"}</button>
                         <button onClick={() => go("/appointments")} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">{en ? "Appointments" : "अपॉइंटमेंट"}</button>
+                        <button onClick={() => go("/directory")} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">{en ? "Find Doctors" : "डॉक्टर खोजें"}</button>
                         <button onClick={() => go("/locations")} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">{en ? "Hospitals" : "अस्पताल"}</button>
                       </>
                     )}
@@ -295,6 +319,8 @@ export function Header() {
                         <button onClick={() => go("/admin/campaigns")} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">{en ? "Campaigns" : "अभियान"}</button>
                         <button onClick={() => go("/admin/appointments")} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">{en ? "Appointments" : "अपॉइंटमेंट"}</button>
                         <button onClick={() => go("/admin/records")} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">{en ? "Records" : "रिकॉर्ड"}</button>
+                        <button onClick={() => go("/directory")} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">{en ? "Find Doctors" : "डॉक्टर खोजें"}</button>
+                        <button onClick={() => go("/locations")} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">{en ? "Hospitals" : "अस्पताल"}</button>
                         <button onClick={() => go("/admin/notifications")} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">{en ? "Send Notifications" : "सूचनाएं भेजें"}</button>
                       </>
                     )}

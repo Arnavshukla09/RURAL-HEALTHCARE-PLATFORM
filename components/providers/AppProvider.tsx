@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { UserProfile, SymptomResult } from "@/types"
-import { useRouter, usePathname } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { triggerGoogleTranslate } from "@/lib/i18n/google-translate"
 
 interface AppContextProps {
@@ -19,13 +19,39 @@ interface AppContextProps {
 const AppContext = createContext<AppContextProps | undefined>(undefined)
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<UserProfile | null>(null)
+  // Restore user session synchronously from localStorage cache to prevent logout flicker on page reload
+  const [user, setUserState] = useState<UserProfile | null>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("rhcp_user_profile")
+        if (saved) return JSON.parse(saved)
+      } catch {}
+    }
+    return null
+  })
+
   const [language, setLanguageState] = useState("en")
   const [symptomCheckResult, setSymptomCheckResult] = useState<SymptomResult | null>(null)
-  // Audit H6: Do not block first paint on auth — render shell immediately
-  const [loading, setLoading] = useState(false)
+  // Loading starts true until initial session validation finishes
+  const [loading, setLoading] = useState(true)
   const router = useRouter()
-  const pathname = usePathname()
+
+  // Sync user state with localStorage
+  const setUser: React.Dispatch<React.SetStateAction<UserProfile | null>> = (action) => {
+    setUserState((prev) => {
+      const next = typeof action === "function" ? (action as (p: UserProfile | null) => UserProfile | null)(prev) : action
+      if (typeof window !== "undefined") {
+        try {
+          if (next) {
+            localStorage.setItem("rhcp_user_profile", JSON.stringify(next))
+          } else {
+            localStorage.removeItem("rhcp_user_profile")
+          }
+        } catch {}
+      }
+      return next
+    })
+  }
 
   useEffect(() => {
     try {
@@ -56,7 +82,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const supabase = createClient()
 
-    // Audit H6: Query patient row first; invoke ensure-patient ONLY if no row exists
+    // Query patient row first; invoke ensure-patient ONLY if no row exists
     const fetchUserWithRole = async (sessionUser: any): Promise<UserProfile> => {
       try {
         const { data: patient } = await supabase
@@ -109,14 +135,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    const timeoutId = setTimeout(() => setLoading(false), 5000)
+    const timeoutId = setTimeout(() => setLoading(false), 4000)
 
+    // Initial session verification
     supabase.auth.getSession()
       .then(async ({ data: { session } }) => {
         clearTimeout(timeoutId)
         if (session?.user) {
           const userData = await fetchUserWithRole(session.user)
           setUser(userData)
+        } else {
+          // No active Supabase session -> clear user
+          setUser(null)
         }
         setLoading(false)
       })
@@ -126,16 +156,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setLoading(false)
       })
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    // Listen to real auth state changes (login / explicit logout)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
         const userData = await fetchUserWithRole(session.user)
         setUser(userData)
-        if (_event === "SIGNED_IN") {
+        if (event === "SIGNED_IN") {
           if (userData.role === "admin") router.push("/admin/dashboard")
           else if (userData.role === "doctor") router.push("/doctor/dashboard")
           else router.push("/dashboard")
         }
-      } else {
+      } else if (event === "SIGNED_OUT") {
         setUser(null)
       }
     })
