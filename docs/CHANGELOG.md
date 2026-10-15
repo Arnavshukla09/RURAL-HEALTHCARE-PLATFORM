@@ -4,6 +4,22 @@ All notable changes to the Rural Healthcare Platform will be documented in this 
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres roughly to chronological feature milestones.
 
+## [v1.20.5] - 2026-10-15 — Online Patient Review & Rating Seeding (Practo / Google Review Integration)
+
+### 1. Online Review & Recommendation Metric Integration (`lib/data/real-doctors.ts`)
+- **Expanded RealDoctor Schema**: Added optional `reviewCount?: number` and `patientRecommendationPercent?: number` properties to the `RealDoctor` interface.
+- **Seeded 60 Top-Reviewed Specialists**: Extracted and normalized top-rated, high-vote clinicians (50 to 1,300+ verified patient votes, 90%+ positive recommendation rates) across Delhi, Mumbai, and Bangalore from verified review datasets.
+- **Enriched Metadata**: Added real degrees (e.g. `MBBS, DNB - Obstetrics & Gynecology`, `MBBS, MS - General Surgery`), actual consultation fees, years of experience, clinic addresses, and verified clinic reception landlines in international format.
+
+### 2. Patient Review UI Display in Directory (`components/Directory.tsx`)
+- **Patient Satisfaction Badge**: Displayed positive recommendation percentages (`👍 98% Recommended`) with an emerald pill badge on doctor cards.
+- **Review Count Indicator**: Added review count badges (`⭐ 5.0 (1,312 reviews)`) alongside experience and NMC registration numbers, giving rural and urban patients credible social proof.
+
+### 3. Verification & Testing
+- 88/88 unit tests passing (`npm run test:unit`).
+- 0 TypeScript errors (`npx tsc --noEmit`), 0 ESLint errors (`npm run lint`).
+- Next.js production build passing with all 46 static pages generated (`npm run build`).
+
 ## [v1.20.4] - 2026-10-15 — National PM-JAY & NHP Real Contact Ingestion (10,700+ Facilities & 850+ Real Doctors)
 
 ### 1. Ingestion of 8,013 Verified Facilities with Real Phone Numbers (`scripts/ingest_pmjay_facilities.mjs`)

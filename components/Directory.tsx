@@ -546,12 +546,23 @@ export function Directory({ language }: DirectoryProps) {
                               <span>{t.opdTimings}: {doctor.opdTimings}</span>
                             </div>
 
-                            {/* Rating & Experience */}
-                            <div className="flex items-center gap-4 text-xs text-gray-600 pt-1">
+                            {/* Rating, Reviews & Experience */}
+                            <div className="flex items-center gap-2.5 text-xs text-gray-600 pt-1 flex-wrap">
                               <div className="flex items-center gap-1">
                                 <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500" />
                                 <span className="font-bold text-gray-800">{doctor.rating}</span>
+                                {doctor.reviewCount && (
+                                  <span className="text-[11px] text-gray-400">({doctor.reviewCount} reviews)</span>
+                                )}
                               </div>
+                              {doctor.patientRecommendationPercent && (
+                                <>
+                                  <span>•</span>
+                                  <span className="text-emerald-700 font-semibold bg-emerald-50 px-1.5 py-0.5 rounded text-[10px] border border-emerald-200/60">
+                                    👍 {doctor.patientRecommendationPercent}% Recommended
+                                  </span>
+                                </>
+                              )}
                               <span>•</span>
                               <span>{doctor.experience} {t.yearsExp}</span>
                               <span>•</span>
