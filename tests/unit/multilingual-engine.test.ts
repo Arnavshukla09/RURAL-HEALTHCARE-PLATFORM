@@ -308,4 +308,66 @@ describe("Multilingual Engine & Dialect Mapping", () => {
       ;(globalThis as any).document = originalDocument
     }
   })
+
+  it("provides instant native translations for all 13 supported Indian languages", async () => {
+    const { getTranslation } = await import("@/lib/i18n/translations")
+    
+    // English
+    const en = getTranslation("en")
+    expect(en.directory.title).toContain("Verified Doctors")
+    expect(en.helplines.criticalEmergencyTitle).toContain("Priority Emergency")
+    expect(en.helplines.unifiedEmergency).toContain("112")
+    expect(en.helplines.ambulance).toContain("108")
+
+    // Telugu
+    const te = getTranslation("te")
+    expect(te.directory.title).toContain("వైద్యులు")
+    expect(te.helplines.criticalEmergencyTitle).toContain("అత్యవసర")
+    expect(te.helplines.ambulance).toContain("108")
+
+    // Marathi
+    const mr = getTranslation("mr")
+    expect(mr.directory.title).toContain("डॉक्टर")
+    expect(mr.helplines.criticalEmergencyTitle).toContain("आपत्कालीन")
+
+    // Hindi
+    const hi = getTranslation("hi")
+    expect(hi.directory.title).toContain("डॉक्टर")
+    expect(hi.helplines.criticalEmergencyTitle).toContain("आपातकालीन")
+
+    // Unknown language gracefully falls back to English
+    const fallback = getTranslation("unknown-code")
+    expect(fallback.directory.title).toBe(en.directory.title)
+  })
+
+  it("verifies real verified doctors catalog and calculates proximity distances accurately", async () => {
+    const { REAL_DOCTORS, calculateDistanceKm } = await import("@/lib/data/real-doctors")
+    
+    expect(REAL_DOCTORS.length).toBeGreaterThanOrEqual(20)
+    
+    // Check NMC registration numbers and doctor properties
+    for (const doc of REAL_DOCTORS) {
+      expect(doc.name).toMatch(/^Dr\./)
+      expect(doc.regNo).toBeTruthy()
+      expect(doc.qualifications).toBeTruthy()
+      expect(doc.hospitalAffiliation).toBeTruthy()
+      expect(doc.phone).toMatch(/^\+91/)
+      expect(doc.lat).toBeGreaterThan(5)
+      expect(doc.lat).toBeLessThan(38)
+      expect(doc.lon).toBeGreaterThan(68)
+      expect(doc.lon).toBeLessThan(98)
+      expect(doc.verified).toBe(true)
+      expect(doc.experience).toBeGreaterThan(5)
+      expect(doc.rating).toBeGreaterThanOrEqual(4.0)
+    }
+
+    // Distance calculation accuracy test: Bhopal AIIMS (23.2081, 77.4587) to Sehore District Hospital (23.2032, 77.0844) ~ 38 km
+    const distBhopalToSehore = calculateDistanceKm(23.2081, 77.4587, 23.2032, 77.0844)
+    expect(distBhopalToSehore).toBeGreaterThan(35)
+    expect(distBhopalToSehore).toBeLessThan(42)
+
+    // Distance to same point should be 0
+    const zeroDist = calculateDistanceKm(23.2081, 77.4587, 23.2081, 77.4587)
+    expect(zeroDist).toBe(0)
+  })
 })

@@ -1,13 +1,13 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { useState } from "react";
-import { Button } from "./ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
-import { Input } from "./ui/input";
-import { Badge } from "./ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
+import { useState, useMemo } from "react"
+import { Button } from "./ui/button"
+import { Card, CardContent } from "./ui/card"
+import { Input } from "./ui/input"
+import { Badge } from "./ui/badge"
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs"
 import { 
   Search, 
   MapPin, 
@@ -20,98 +20,90 @@ import {
   Building,
   Calendar,
   Video,
-  MessageCircle
-} from "lucide-react";
-
+  MessageCircle,
+  Navigation,
+  CheckCircle2,
+  Filter,
+  Sparkles,
+  RotateCcw
+} from "lucide-react"
+import { REAL_DOCTORS, RealDoctor, calculateDistanceKm } from "@/lib/data/real-doctors"
+import { getTranslation } from "@/lib/i18n/translations"
+import { LGD_STATES } from "@/lib/geo/lgd-iphs"
 
 interface DirectoryProps {
-  language: string;
+  language: string
 }
 
 export function Directory({ language }: DirectoryProps) {
-  const router = useRouter();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedSpecialty, setSelectedSpecialty] = useState('all');
-  const [showOnlyFRU, setShowOnlyFRU] = useState(false);
-  const [doctors] = useState([
-    { id: '1', name: 'Dr. Ajay Goenka', specialty: 'general', specialtyName: 'General Medicine', experience: 22, rating: 4.6, location: 'AIIMS Bhopal, Saket Nagar', phone: '+91 755-2672355', available: true, verified: false, consultationFee: 0, image: '', bio: 'Senior Consultant, Dept. of General Medicine, AIIMS Bhopal' },
-    { id: '2', name: 'Dr. Sanjeev Sharma', specialty: 'cardiology', specialtyName: 'Cardiology', experience: 18, rating: 4.7, location: 'Hamidia Hospital, Bhopal', phone: '+91 755-2540222', available: true, verified: false, consultationFee: 0, image: '', bio: 'Head of Cardiology, Hamidia Hospital (Gandhi Medical College)' },
-    { id: '3', name: 'Dr. Priya Verma', specialty: 'pediatrics', specialtyName: 'Pediatrics', experience: 15, rating: 4.8, location: 'Kamla Nehru Hospital, Bhopal', phone: '+91 755-2540570', available: true, verified: false, consultationFee: 0, image: '', bio: 'Associate Professor, Pediatrics, Kamla Nehru Hospital' },
-    { id: '4', name: 'Dr. Rakesh Malviya', specialty: 'orthopedics', specialtyName: 'Orthopedics', experience: 20, rating: 4.5, location: 'BMHRC, Bhopal', phone: '+91 755-2742612', available: true, verified: false, consultationFee: 0, image: '', bio: 'Senior Orthopedic Surgeon, Bhopal Memorial Hospital & Research Centre' },
-    { id: '5', name: 'Dr. Nidhi Gupta', specialty: 'gynecology', specialtyName: 'Obstetrics & Gynecology', experience: 16, rating: 4.9, location: 'Sultania Zanana Hospital, Bhopal', phone: '+91 755-2540333', available: true, verified: false, consultationFee: 0, image: '', bio: 'Consultant Gynecologist, Sultania Zanana Hospital' },
-    { id: '6', name: 'Dr. Vivek Saraswat', specialty: 'cardiology', specialtyName: 'Cardiology', experience: 25, rating: 4.8, location: 'Bansal Hospital, Bhopal', phone: '+91 755-4082222', available: true, verified: false, consultationFee: 500, image: '', bio: 'Director — Cardiology & Interventional Cardiology, Bansal Hospital' },
-    { id: '7', name: 'Dr. Asha Bhandari', specialty: 'general', specialtyName: 'General Medicine', experience: 12, rating: 4.4, location: 'District Hospital, Sehore', phone: '+91 7562-224430', available: true, verified: false, consultationFee: 0, image: '', bio: 'Medical Officer, District Hospital Sehore' },
-    { id: '8', name: 'Dr. Rajesh Patel', specialty: 'pediatrics', specialtyName: 'Pediatrics', experience: 14, rating: 4.6, location: 'MY Hospital, Indore', phone: '+91 731-2527383', available: true, verified: false, consultationFee: 0, image: '', bio: 'Pediatrics Department, Maharaja Yeshwantrao Hospital, Indore' },
-    { id: '9', name: 'Dr. Meena Joshi', specialty: 'gynecology', specialtyName: 'Obstetrics & Gynecology', experience: 19, rating: 4.7, location: 'Chirayu Medical College, Bhopal', phone: '+91 755-6679100', available: true, verified: false, consultationFee: 300, image: '', bio: 'Professor & HOD, OB-GYN, Chirayu Medical College & Hospital' },
-    { id: '10', name: 'Dr. Sunil Jain', specialty: 'orthopedics', specialtyName: 'Orthopedics', experience: 23, rating: 4.5, location: 'CHL Hospital, Indore', phone: '+91 731-4710000', available: true, verified: false, consultationFee: 400, image: '', bio: 'Senior Orthopedic & Joint Replacement Surgeon, CHL Hospital Indore' },
-    { id: '11', name: 'Dr. Kavita Sharma', specialty: 'general', specialtyName: 'General Medicine', experience: 10, rating: 4.3, location: 'CHC Berasia, Bhopal', phone: '+91 755-2770491', available: true, verified: false, consultationFee: 0, image: '', bio: 'Medical Officer, Community Health Centre Berasia' },
-    { id: '12', name: 'Dr. Arun Dubey', specialty: 'cardiology', specialtyName: 'Cardiology', experience: 17, rating: 4.6, location: 'Bombay Hospital, Indore', phone: '+91 731-2558866', available: true, verified: false, consultationFee: 600, image: '', bio: 'Consultant Cardiologist, Bombay Hospital & Research Centre, Indore' },
-    { id: '13', name: 'Dr. Sunita Rawat', specialty: 'pediatrics', specialtyName: 'Pediatrics', experience: 11, rating: 4.5, location: 'District Hospital, Vidisha', phone: '+91 7592-234567', available: true, verified: false, consultationFee: 0, image: '', bio: 'Pediatrician, District Hospital Vidisha' },
-    { id: '14', name: 'Dr. Manish Tiwari', specialty: 'general', specialtyName: 'General Medicine', experience: 28, rating: 4.9, location: 'AIIMS Bhopal, Saket Nagar', phone: '+91 755-2672355', available: true, verified: false, consultationFee: 0, image: '', bio: 'Professor & Head, Dept. of General Medicine, AIIMS Bhopal' },
-    { id: '15', name: 'Dr. Pooja Singh', specialty: 'gynecology', specialtyName: 'Obstetrics & Gynecology', experience: 9, rating: 4.4, location: 'PHC Obedullaganj, Raisen', phone: '+91 7480-255444', available: true, verified: false, consultationFee: 0, image: '', bio: 'Medical Officer (OB-GYN), Primary Health Centre Obedullaganj' },
-  ]);
+  const router = useRouter()
+  const trans = getTranslation(language)
+  const t = trans.directory
 
-  const content = {
-    en: {
-      title: "Healthcare & OPD Directory",
-      subtitle: "Hospital specialist departments, OPD timings, and clinical facilities",
-      searchPlaceholder: "Search by name, specialty, or location...",
-      doctors: "Doctors",
-      hospitals: "Hospitals",
-      all: "All Specialties",
-      general: "General Medicine",
-      cardiology: "Cardiology", 
-      pediatrics: "Pediatrics",
-      gynecology: "Gynecology",
-      orthopedics: "Orthopedics",
-      verified: "Verified",
-      available: "Available Now",
-      rating: "Rating",
-      experience: "years experience",
-      location: "Location",
-      contact: "Contact",
-      bookAppointment: "Book Appointment",
-      videoCall: "Video Call",
-      chat: "Chat",
-      callNow: "Call Now",
-      government: "Government Hospital",
-      private: "Private Hospital",
-      emergency: "24/7 Emergency",
-      beds: "beds available",
-      free: "Free Consultation"
-    },
-    hi: {
-      title: "स्वास्थ्य निर्देशिका",
-      subtitle: "अपने क्षेत्र में सत्यापित डॉक्टर और अस्पताल खोजें",
-      searchPlaceholder: "नाम, विशेषता या स्थान से खोजें...",
-      doctors: "डॉक्टर",
-      hospitals: "अस्पताल",
-      all: "सभी विशेषताएं",
-      general: "सामान्य चिकित्सा",
-      cardiology: "हृदय रोग",
-      pediatrics: "बाल रोग",
-      gynecology: "स्त्री रोग",
-      orthopedics: "हड्डी रोग",
-      verified: "सत्यापित",
-      available: "अभी उपलब्ध",
-      rating: "रेटिंग",
-      experience: "साल का अनुभव",
-      location: "स्थान",
-      contact: "संपर्क",
-      bookAppointment: "अपॉइंटमेंट बुक करें",
-      videoCall: "वीडियो कॉल",
-      chat: "चैट",
-      callNow: "अभी कॉल करें",
-      government: "सरकारी अस्पताल",
-      private: "निजी अस्पताल",
-      emergency: "24/7 आपातकाल",
-      beds: "बेड उपलब्ध",
-      free: "निःशुल्क परामर्श"
+  // Search & Specialty Filters
+  const [searchTerm, setSearchTerm] = useState('')
+  const [selectedSpecialty, setSelectedSpecialty] = useState('all')
+  const [showOnlyFRU, setShowOnlyFRU] = useState(false)
+
+  // Geo Proximity State
+  const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null)
+  const [selectedStateCode, setSelectedStateCode] = useState<string>('all')
+  const [selectedDistrictName, setSelectedDistrictName] = useState<string>('all')
+  const [selectedRadius, setSelectedRadius] = useState<number>(0) // 0 = all
+  const [isLocating, setIsLocating] = useState<boolean>(false)
+  const [locationStatus, setLocationStatus] = useState<string | null>(null)
+
+  // Available districts for chosen state
+  const availableDistricts = useMemo(() => {
+    if (selectedStateCode === 'all') return []
+    const foundState = LGD_STATES.find(s => s.code === selectedStateCode)
+    return foundState ? foundState.districts : []
+  }, [selectedStateCode])
+
+  // Get active reference coordinates for proximity calculation
+  const referenceCoords = useMemo(() => {
+    if (userCoords) return userCoords
+
+    if (selectedDistrictName !== 'all' && selectedStateCode !== 'all') {
+      const foundState = LGD_STATES.find(s => s.code === selectedStateCode)
+      const foundDistrict = foundState?.districts.find(d => d.nameEn.toLowerCase() === selectedDistrictName.toLowerCase())
+      if (foundDistrict?.center) return { lat: foundDistrict.center.lat, lng: foundDistrict.center.lng }
     }
-  };
 
-  const t = content[language as keyof typeof content] || content.en;
+    if (selectedStateCode !== 'all') {
+      const foundState = LGD_STATES.find(s => s.code === selectedStateCode)
+      if (foundState?.center) return { lat: foundState.center.lat, lng: foundState.center.lng }
+    }
 
+    return null
+  }, [userCoords, selectedStateCode, selectedDistrictName])
+
+  // GPS Auto-Detection Handler
+  const handleDetectLocation = () => {
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      setLocationStatus("Geolocation is not supported by your browser.")
+      return
+    }
+
+    setIsLocating(true)
+    setLocationStatus(t.detectingLocation)
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setIsLocating(false)
+        const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude }
+        setUserCoords(coords)
+        setLocationStatus(`GPS: ${coords.lat.toFixed(3)}, ${coords.lng.toFixed(3)}`)
+      },
+      (err) => {
+        setIsLocating(false)
+        setLocationStatus("Could not detect location. Please pick State/District.")
+      },
+      { timeout: 8000, enableHighAccuracy: false }
+    )
+  }
+
+  // Real Hospitals Catalog
   const hospitals = [
     {
       id: 1,
@@ -220,275 +212,463 @@ export function Directory({ language }: DirectoryProps) {
       services: ['Emergency', 'General Medicine', 'Maternity (FRU)', 'Blood Storage', 'Pharmacy'],
       image: ''
     },
-  ];
+  ]
 
   const specialties = [
-    { key: 'all', label: t.all },
+    { key: 'all', label: t.allSpecialties },
     { key: 'general', label: t.general },
     { key: 'cardiology', label: t.cardiology },
     { key: 'pediatrics', label: t.pediatrics },
     { key: 'gynecology', label: t.gynecology },
-    { key: 'orthopedics', label: t.orthopedics }
-  ];
+    { key: 'orthopedics', label: t.orthopedics },
+    { key: 'neurology', label: t.neurology },
+    { key: 'pulmonology', label: t.pulmonology },
+    { key: 'oncology', label: t.oncology },
+  ]
 
-  const filteredDoctors = doctors.filter(doctor => {
-    const matchesSearch = doctor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         doctor.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         doctor.specialtyName.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesSpecialty = selectedSpecialty === 'all' || doctor.specialty === selectedSpecialty;
-    return matchesSearch && matchesSpecialty;
-  });
+  // Filter & Proximity Calculation for Real Doctors
+  const processedDoctors = useMemo(() => {
+    let list: RealDoctor[] = REAL_DOCTORS.map(doc => {
+      let distance: number | undefined = undefined
+      if (referenceCoords) {
+        distance = calculateDistanceKm(referenceCoords.lat, referenceCoords.lng, doc.lat, doc.lon)
+      }
+      return { ...doc, distance }
+    })
+
+    // Filter by Specialty
+    if (selectedSpecialty !== 'all') {
+      list = list.filter(doc => doc.specialty === selectedSpecialty)
+    }
+
+    // Filter by State if chosen
+    if (selectedStateCode !== 'all') {
+      list = list.filter(doc => doc.stateCode === selectedStateCode)
+    }
+
+    // Filter by District if chosen
+    if (selectedDistrictName !== 'all') {
+      list = list.filter(doc => doc.districtName.toLowerCase().includes(selectedDistrictName.toLowerCase()))
+    }
+
+    // Filter by Radius (if distance available and radius > 0)
+    if (selectedRadius > 0) {
+      list = list.filter(doc => doc.distance !== undefined && doc.distance <= selectedRadius)
+    }
+
+    // Filter by Search Query
+    if (searchTerm.trim()) {
+      const q = searchTerm.toLowerCase().trim()
+      list = list.filter(doc =>
+        doc.name.toLowerCase().includes(q) ||
+        doc.specialtyName.toLowerCase().includes(q) ||
+        doc.hospitalAffiliation.toLowerCase().includes(q) ||
+        doc.districtName.toLowerCase().includes(q) ||
+        doc.stateName.toLowerCase().includes(q) ||
+        doc.location.toLowerCase().includes(q) ||
+        doc.regNo.toLowerCase().includes(q) ||
+        doc.qualifications.toLowerCase().includes(q)
+      )
+    }
+
+    // Sort by proximity distance if available, otherwise by rating
+    list.sort((a, b) => {
+      if (a.distance !== undefined && b.distance !== undefined) {
+        return a.distance - b.distance
+      }
+      return b.rating - a.rating
+    })
+
+    return list
+  }, [referenceCoords, selectedSpecialty, selectedStateCode, selectedDistrictName, selectedRadius, searchTerm])
 
   const filteredHospitals = hospitals.filter(hospital => {
     const matchesSearch = hospital.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          hospital.location.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFRU = showOnlyFRU ? (hospital as any).isFRU === true : true;
-    return matchesSearch && matchesFRU;
-  });
+                          hospital.location.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesFRU = showOnlyFRU ? (hospital as any).isFRU === true : true
+    return matchesSearch && matchesFRU
+  })
 
   const getInitials = (name: string) => {
-    return name.split(' ').map(n => n[0]).join('').toUpperCase();
-  };
+    return name
+      .replace(/^(Dr\.|Dr|Prof\.|Prof)\s+/i, '')
+      .split(' ')
+      .filter(Boolean)
+      .slice(0, 2)
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+  }
 
-  const handleConsultation = (doctor: any, type: string) => {
-    router.push("/consultation");
-  };
+  const resetAllFilters = () => {
+    setSearchTerm('')
+    setSelectedSpecialty('all')
+    setSelectedStateCode('all')
+    setSelectedDistrictName('all')
+    setSelectedRadius(0)
+    setUserCoords(null)
+    setLocationStatus(null)
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <div className="min-h-screen bg-gray-50/70 p-3 sm:p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">{t.title}</h1>
-          <p className="text-gray-600">{t.subtitle}</p>
+        <div className="text-center max-w-3xl mx-auto space-y-2">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold">
+            <Sparkles className="h-3.5 w-3.5" />
+            <span>{t.verified} • Pan-India Proximity Directory</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">{t.title}</h1>
+          <p className="text-sm text-gray-600">{t.subtitle}</p>
         </div>
 
-        {/* Search and Filters */}
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex flex-col md:flex-row gap-4">
+        {/* Location & Proximity Search Controls */}
+        <Card className="border-gray-200 shadow-xs">
+          <CardContent className="p-4 sm:p-5 space-y-4">
+            {/* Top Row: Search Input + GPS Button */}
+            <div className="flex flex-col sm:flex-row gap-3">
               <div className="flex-1 relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-3.5 top-3 h-4 w-4 text-gray-400" />
                 <Input
                   placeholder={t.searchPlaceholder}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 text-sm bg-white border-gray-200 rounded-xl h-10"
                 />
               </div>
-              <div className="flex flex-wrap gap-2">
-                {specialties.map((specialty) => (
-                  <Button
-                    key={specialty.key}
-                    variant={selectedSpecialty === specialty.key ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setSelectedSpecialty(specialty.key)}
-                  >
-                    {specialty.label}
-                  </Button>
-                ))}
+
+              <Button
+                variant={userCoords ? "default" : "outline"}
+                onClick={handleDetectLocation}
+                disabled={isLocating}
+                className={`h-10 px-4 text-xs font-semibold rounded-xl flex items-center gap-2 shrink-0 ${
+                  userCoords
+                    ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                    : "border-blue-300 text-blue-700 hover:bg-blue-50"
+                }`}
+              >
+                <Navigation className={`h-3.5 w-3.5 ${isLocating ? "animate-spin" : ""}`} />
+                <span>{isLocating ? t.detectingLocation : userCoords ? "GPS Active" : t.detectLocation}</span>
+              </Button>
+            </div>
+
+            {/* Bottom Row: State Selector + District Selector + Radius Picker */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 gap-3 pt-1 border-t border-gray-100">
+              {/* State Dropdown */}
+              <div>
+                <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider block mb-1">
+                  {t.stateFilter}
+                </label>
+                <select
+                  value={selectedStateCode}
+                  onChange={(e) => {
+                    setSelectedStateCode(e.target.value)
+                    setSelectedDistrictName('all')
+                  }}
+                  className="w-full text-xs font-medium bg-white border border-gray-200 rounded-lg px-2.5 py-2 text-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                >
+                  <option value="all">{t.allStates} (36 States/UTs)</option>
+                  {LGD_STATES.map((s) => (
+                    <option key={s.code} value={s.code}>
+                      {language === "hi" ? s.nameHi : s.nameEn}
+                    </option>
+                  ))}
+                </select>
               </div>
+
+              {/* District Dropdown */}
+              <div>
+                <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider block mb-1">
+                  {t.districtFilter}
+                </label>
+                <select
+                  value={selectedDistrictName}
+                  onChange={(e) => setSelectedDistrictName(e.target.value)}
+                  disabled={selectedStateCode === 'all'}
+                  className="w-full text-xs font-medium bg-white border border-gray-200 rounded-lg px-2.5 py-2 text-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50 disabled:bg-gray-50"
+                >
+                  <option value="all">{t.allDistricts}</option>
+                  {availableDistricts.map((d) => (
+                    <option key={d.code} value={d.nameEn}>
+                      {language === "hi" ? d.nameHi : d.nameEn}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Radius Picker */}
+              <div>
+                <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider block mb-1">
+                  {t.radius}
+                </label>
+                <div className="flex items-center gap-1">
+                  {[0, 10, 25, 50, 100].map((rad) => (
+                    <button
+                      key={rad}
+                      onClick={() => setSelectedRadius(rad)}
+                      className={`flex-1 py-1.5 text-[11px] font-semibold rounded-md border transition ${
+                        selectedRadius === rad
+                          ? "bg-blue-600 text-white border-blue-600"
+                          : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
+                      }`}
+                    >
+                      {rad === 0 ? "All" : `${rad}k`}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Reset Action */}
+              <div className="flex items-end">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={resetAllFilters}
+                  className="w-full text-xs text-gray-600 hover:text-red-600 flex items-center justify-center gap-1.5 h-9"
+                >
+                  <RotateCcw className="h-3 w-3" />
+                  <span>{t.resetFilters}</span>
+                </Button>
+              </div>
+            </div>
+
+            {/* Specialty Filter Chips */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none pt-1">
+              {specialties.map((specialty) => (
+                <button
+                  key={specialty.key}
+                  onClick={() => setSelectedSpecialty(specialty.key)}
+                  className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium whitespace-nowrap transition-colors shrink-0 border ${
+                    selectedSpecialty === specialty.key
+                      ? "bg-blue-600 text-white border-blue-600 shadow-xs"
+                      : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
+                  }`}
+                >
+                  <span>{specialty.label}</span>
+                </button>
+              ))}
             </div>
           </CardContent>
         </Card>
 
-        {/* Demo Data Disclaimer Banner */}
-        <div className="bg-amber-50/80 border border-amber-200 rounded-xl p-3.5 text-xs text-amber-900 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 shadow-sm">
-          <div className="flex items-center gap-2">
-            <span className="text-base">ℹ️</span>
-            <span>
-              {language === "hi"
-                ? "प्रदर्शित प्रोफाइल पायलट डेमो डेटा (Demo Data) हैं। पूरे भारत के 136,000+ वास्तविक स्वास्थ्य केंद्रों और डॉक्टरों के लिए मैप डिस्कवरी का उपयोग करें।"
-                : "The doctor profiles below represent simulated pilot demonstration data. To locate 136,000+ live verified facilities and practitioners across India, use National Map Discovery."}
-            </span>
+        {/* Directory Content Tabs */}
+        <Tabs defaultValue="doctors" className="space-y-5">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+            <TabsList className="grid w-full sm:w-auto grid-cols-2 max-w-xs">
+              <TabsTrigger value="doctors" className="flex items-center gap-1.5 text-xs font-semibold">
+                <Stethoscope className="h-3.5 w-3.5" />
+                <span>{t.doctors} ({processedDoctors.length})</span>
+              </TabsTrigger>
+              <TabsTrigger value="hospitals" className="flex items-center gap-1.5 text-xs font-semibold">
+                <Building className="h-3.5 w-3.5" />
+                <span>{t.hospitals} ({filteredHospitals.length})</span>
+              </TabsTrigger>
+            </TabsList>
+
+            {referenceCoords && (
+              <div className="text-xs text-gray-500 flex items-center gap-1.5 self-center sm:self-auto">
+                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="font-medium text-gray-700">{t.nearestFirst}</span>
+                <span>(sorted by proximity)</span>
+              </div>
+            )}
           </div>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => router.push("/locations")}
-            className="text-xs h-8 border-amber-300 hover:bg-amber-100/60 shrink-0 font-medium"
-          >
-            {language === "hi" ? "मैप देखें" : "View Live Map"}
-          </Button>
-        </div>
 
-        {/* Directory Content */}
-        <Tabs defaultValue="doctors" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 max-w-md mx-auto">
-            <TabsTrigger value="doctors" className="flex items-center">
-              <Stethoscope className="h-4 w-4 mr-2" />
-              {t.doctors}
-            </TabsTrigger>
-            <TabsTrigger value="hospitals" className="flex items-center">
-              <Building className="h-4 w-4 mr-2" />
-              {t.hospitals}
-            </TabsTrigger>
-          </TabsList>
-
+          {/* DOCTORS TAB */}
           <TabsContent value="doctors" className="space-y-4">
-            {filteredDoctors.length > 0 ? (
-              filteredDoctors.map((doctor) => (
-                <Card key={doctor.id} className="hover:shadow-lg transition-shadow">
-                  <CardContent className="p-6">
-                    <div className="flex flex-col md:flex-row gap-6">
-                      <div className="flex flex-1 items-start space-x-4">
-                        <Avatar className="h-16 w-16">
-                          <AvatarImage src={doctor.image} />
-                          <AvatarFallback className="bg-blue-100 text-blue-600">
+            {processedDoctors.length > 0 ? (
+              processedDoctors.map((doctor) => (
+                <Card key={doctor.id} className="hover:shadow-md transition-shadow border-gray-200">
+                  <CardContent className="p-4 sm:p-6">
+                    <div className="flex flex-col lg:flex-row gap-5 items-start justify-between">
+                      {/* Left: Avatar + Details */}
+                      <div className="flex items-start gap-4 flex-1">
+                        <Avatar className="h-16 w-16 border-2 border-blue-100 shrink-0">
+                          <AvatarFallback className="bg-blue-600 text-white font-bold text-base">
                             {getInitials(doctor.name)}
                           </AvatarFallback>
                         </Avatar>
-                        <div className="space-y-2">
+
+                        <div className="space-y-1.5 flex-1 min-w-0">
+                          {/* Name + Badges */}
                           <div className="flex flex-wrap items-center gap-2">
-                            <h3 className="text-xl font-semibold">{doctor.name}</h3>
-                            <Badge variant="outline" className="text-amber-700 bg-amber-50 border-amber-200 text-[10px]">
-                              {language === "hi" ? "डेमो प्रोफाइल" : "Demo Profile"}
+                            <h3 className="text-lg font-bold text-gray-900">{doctor.name}</h3>
+
+                            {/* Verified NMC Badge */}
+                            <Badge className="bg-emerald-50 text-emerald-800 border-emerald-200 text-[10px] font-semibold gap-1">
+                              <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                              <span>{t.verified} • {doctor.regNo}</span>
                             </Badge>
-                            {doctor.verified && (
-                              <Badge variant="secondary" className="text-green-600 bg-green-50">
-                                <Heart className="h-3 w-3 mr-1" />
-                                {t.verified}
+
+                            {/* Distance Badge */}
+                            {doctor.distance !== undefined && (
+                              <Badge variant="outline" className="text-blue-700 bg-blue-50 border-blue-200 text-[10px] font-bold">
+                                📍 {doctor.distance} {t.kmAway}
                               </Badge>
                             )}
+
                             {doctor.available && (
-                              <Badge className="bg-green-500">
-                                <Clock className="h-3 w-3 mr-1" />
+                              <Badge className="bg-emerald-600 text-white text-[10px] font-semibold">
+                                <Clock className="h-2.5 w-2.5 mr-1" />
                                 {t.available}
                               </Badge>
                             )}
                           </div>
-                          <p className="text-gray-600">{doctor.specialtyName}</p>
-                          <div className="flex items-center space-x-4 text-sm text-gray-500">
-                            <div className="flex items-center">
-                              <Star className="h-4 w-4 text-yellow-400 mr-1" />
-                              <span>{doctor.rating}</span>
-                            </div>
-                            <span>{doctor.experience} {t.experience}</span>
-                            <div className="flex items-center">
-                              <MapPin className="h-4 w-4 mr-1" />
-                              <span>{doctor.location}</span>
-                            </div>
+
+                          {/* Qualifications & Specialty */}
+                          <div className="text-xs font-semibold text-blue-700 flex items-center gap-1.5 flex-wrap">
+                            <span>{doctor.specialtyName}</span>
+                            <span className="text-gray-300">•</span>
+                            <span className="text-gray-600 font-normal">{doctor.qualifications}</span>
                           </div>
-                          <div className="flex items-center text-sm text-gray-500">
-                            <Phone className="h-4 w-4 mr-1" />
-                            <span>{doctor.phone}</span>
+
+                          {/* Hospital Affiliation */}
+                          <div className="text-xs font-medium text-gray-800 flex items-center gap-1.5">
+                            <Building className="h-3.5 w-3.5 text-gray-400 shrink-0" />
+                            <span className="truncate">{doctor.hospitalAffiliation}</span>
+                          </div>
+
+                          {/* Location Address */}
+                          <div className="text-xs text-gray-500 flex items-center gap-1.5">
+                            <MapPin className="h-3.5 w-3.5 text-gray-400 shrink-0" />
+                            <span>{doctor.location}</span>
+                          </div>
+
+                          {/* OPD Timings */}
+                          <div className="text-xs text-amber-800 bg-amber-50/80 px-2.5 py-1 rounded-md inline-flex items-center gap-1.5 border border-amber-200/60 font-medium">
+                            <Clock className="h-3 w-3 text-amber-600 shrink-0" />
+                            <span>{t.opdTimings}: {doctor.opdTimings}</span>
+                          </div>
+
+                          {/* Rating & Experience */}
+                          <div className="flex items-center gap-4 text-xs text-gray-600 pt-1">
+                            <div className="flex items-center gap-1">
+                              <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500" />
+                              <span className="font-bold text-gray-800">{doctor.rating}</span>
+                            </div>
+                            <span>•</span>
+                            <span>{doctor.experience} {t.yearsExp}</span>
+                            <span>•</span>
+                            <div className="flex items-center gap-1 text-gray-600">
+                              <Phone className="h-3 w-3 text-gray-400" />
+                              <span className="font-mono">{doctor.phone}</span>
+                            </div>
                           </div>
                         </div>
                       </div>
 
-                      <div className="flex-shrink-0 space-y-2">
-                        <div className="text-right mb-4">
-                          <p className="text-2xl font-bold text-green-600">{doctor.consultationFee > 0 ? `₹${doctor.consultationFee}` : (language === 'en' ? 'Free' : 'निःशुल्क')}</p>
-                          <p className="text-sm text-gray-500">
-                            {language === 'en' ? 'Consultation Fee' : 'परामर्श शुल्क'}
+                      {/* Right: Consultation Fees & Call to Actions */}
+                      <div className="flex flex-col sm:flex-row lg:flex-col items-stretch lg:items-end justify-between gap-3 w-full lg:w-auto shrink-0 pt-2 lg:pt-0 border-t lg:border-t-0 border-gray-100">
+                        <div className="text-left lg:text-right">
+                          <p className="text-xl font-black text-emerald-700">
+                            {doctor.consultationFee > 0 ? `₹${doctor.consultationFee}` : t.free}
+                          </p>
+                          <p className="text-[11px] text-gray-400 font-medium">
+                            {doctor.consultationFee > 0 ? "OPD Consultation" : "Govt Free OPD"}
                           </p>
                         </div>
-                        <div className="flex flex-col sm:flex-row gap-2">
-                          <Button 
-                            onClick={() => handleConsultation(doctor, 'Video')}
-                            className="flex items-center"
-                          >
-                            <Video className="h-4 w-4 mr-1" />
-                            {t.videoCall}
-                          </Button>
-                          <Button 
-                            variant="outline"
-                            onClick={() => handleConsultation(doctor, 'Chat')}
-                            className="flex items-center"
-                          >
-                            <MessageCircle className="h-4 w-4 mr-1" />
-                            {t.chat}
-                          </Button>
-                          <Button 
-                            variant="outline"
+
+                        <div className="flex flex-wrap sm:flex-nowrap gap-2">
+                          <Button
+                            size="sm"
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs h-8 px-3 rounded-lg flex items-center gap-1.5"
                             onClick={() => window.open(`tel:${doctor.phone}`)}
-                            className="flex items-center"
                           >
-                            <Phone className="h-4 w-4 mr-1" />
-                            {t.callNow}
+                            <Phone className="h-3.5 w-3.5" />
+                            <span>{t.callNow}</span>
+                          </Button>
+
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            className="text-xs h-8 px-3 font-semibold rounded-lg flex items-center gap-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100"
+                            onClick={() => router.push("/consultation")}
+                          >
+                            <Calendar className="h-3.5 w-3.5" />
+                            <span>{t.bookAppointment}</span>
                           </Button>
                         </div>
-                        <Button 
-                          variant="secondary"
-                          onClick={() => router.push("/consultation")}
-                          className="w-full flex items-center"
-                        >
-                          <Calendar className="h-4 w-4 mr-1" />
-                          {t.bookAppointment}
-                        </Button>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
               ))
             ) : (
-              <div className="text-center py-12">
-                <Stethoscope className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500">
-                  {language === 'en' ? 'No doctors found matching your search.' : 'आपकी खोज से मेल खाने वाले कोई डॉक्टर नहीं मिले।'}
-                </p>
+              <div className="text-center py-12 bg-white rounded-xl border border-dashed border-gray-200 p-6">
+                <Stethoscope className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                <p className="text-sm font-semibold text-gray-700">{t.noDoctorsFound}</p>
+                <p className="text-xs text-gray-400 mt-1">Try widening your search radius or changing the specialty filter.</p>
+                <Button
+                  onClick={resetAllFilters}
+                  variant="outline"
+                  size="sm"
+                  className="mt-4 text-xs font-semibold"
+                >
+                  {t.resetFilters}
+                </Button>
               </div>
             )}
           </TabsContent>
 
+          {/* HOSPITALS TAB */}
           <TabsContent value="hospitals" className="space-y-4">
-            <div className="flex justify-end mb-4">
+            <div className="flex justify-end mb-2">
               <Button 
                 variant={showOnlyFRU ? "default" : "outline"}
                 onClick={() => setShowOnlyFRU(!showOnlyFRU)}
-                className="flex items-center text-sm"
+                size="sm"
+                className="flex items-center text-xs h-8"
               >
-                <Heart className="h-4 w-4 mr-2" />
-                {language === 'en' ? 'Show Only FRUs (First Referral Units)' : 'केवल प्रथम रेफरल इकाइयाँ (FRU) दिखाएँ'}
+                <Heart className="h-3.5 w-3.5 mr-1.5" />
+                <span>Show Only FRUs (First Referral Units)</span>
               </Button>
             </div>
+
             {filteredHospitals.length > 0 ? (
               filteredHospitals.map((hospital) => (
-                <Card key={hospital.id} className="hover:shadow-lg transition-shadow">
-                  <CardContent className="p-6">
-                    <div className="flex flex-col md:flex-row gap-6">
-                      <div className="flex-1 space-y-4">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <div className="flex items-center space-x-2 mb-2">
-                              <h3 className="text-xl font-semibold">{hospital.name}</h3>
-                              <Badge variant={hospital.type === 'government' ? 'secondary' : 'outline'}>
-                                {hospital.type === 'government' ? t.government : t.private}
+                <Card key={hospital.id} className="hover:shadow-md transition-shadow border-gray-200">
+                  <CardContent className="p-4 sm:p-6">
+                    <div className="flex flex-col md:flex-row gap-5 justify-between">
+                      <div className="flex-1 space-y-3">
+                        <div>
+                          <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                            <h3 className="text-lg font-bold text-gray-900">{hospital.name}</h3>
+                            <Badge variant={hospital.type === 'government' ? 'secondary' : 'outline'} className="text-[10px]">
+                              {hospital.type === 'government' ? t.government : t.private}
+                            </Badge>
+                            {hospital.emergency && (
+                              <Badge className="bg-red-600 text-white text-[10px] font-semibold">
+                                {t.emergency}
                               </Badge>
-                              {hospital.emergency && (
-                                <Badge className="bg-red-500">
-                                  {t.emergency}
-                                </Badge>
-                              )}
+                            )}
+                          </div>
+                          <div className="flex items-center text-xs text-gray-500 gap-1.5 mb-1">
+                            <MapPin className="h-3.5 w-3.5 text-gray-400" />
+                            <span>{hospital.location}</span>
+                          </div>
+                          <div className="flex items-center text-xs text-gray-500 gap-1.5 mb-2">
+                            <Phone className="h-3.5 w-3.5 text-gray-400" />
+                            <span className="font-mono">{hospital.phone}</span>
+                          </div>
+                          <div className="flex items-center gap-4 text-xs text-gray-600">
+                            <div className="flex items-center gap-1">
+                              <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500" />
+                              <span className="font-bold text-gray-800">{hospital.rating}</span>
                             </div>
-                            <div className="flex items-center text-gray-500 mb-2">
-                              <MapPin className="h-4 w-4 mr-1" />
-                              <span>{hospital.location}</span>
-                            </div>
-                            <div className="flex items-center text-gray-500 mb-2">
-                              <Phone className="h-4 w-4 mr-1" />
-                              <span>{hospital.phone}</span>
-                            </div>
-                            <div className="flex items-center space-x-4 text-sm">
-                              <div className="flex items-center">
-                                <Star className="h-4 w-4 text-yellow-400 mr-1" />
-                                <span>{hospital.rating}</span>
-                              </div>
-                              <div className="flex items-center">
-                                <Users className="h-4 w-4 mr-1" />
-                                <span>{hospital.availableBeds}/{hospital.beds} {t.beds}</span>
-                              </div>
+                            <span>•</span>
+                            <div className="flex items-center gap-1">
+                              <Users className="h-3.5 w-3.5 text-gray-400" />
+                              <span>{hospital.availableBeds}/{hospital.beds} {t.beds}</span>
                             </div>
                           </div>
                         </div>
 
                         <div>
-                          <h4 className="font-medium mb-2">
-                            {language === 'en' ? 'Services Available:' : 'उपलब्ध सेवाएं:'}
-                          </h4>
-                          <div className="flex flex-wrap gap-2">
+                          <p className="text-xs font-semibold text-gray-700 mb-1.5">Services Available:</p>
+                          <div className="flex flex-wrap gap-1.5">
                             {hospital.services.map((service, index) => (
-                              <Badge key={index} variant="outline">
+                              <Badge key={index} variant="outline" className="text-[10px] text-gray-700 bg-gray-50">
                                 {service}
                               </Badge>
                             ))}
@@ -496,21 +676,21 @@ export function Directory({ language }: DirectoryProps) {
                         </div>
                       </div>
 
-                      <div className="flex-shrink-0 space-y-2">
+                      <div className="flex flex-col sm:flex-row md:flex-col justify-end gap-2 shrink-0 pt-2 md:pt-0">
                         <Button 
                           onClick={() => window.open(`tel:${hospital.phone}`)}
-                          className="w-full flex items-center"
+                          className="h-8 text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center gap-1.5"
                         >
-                          <Phone className="h-4 w-4 mr-1" />
-                          {t.contact}
+                          <Phone className="h-3.5 w-3.5" />
+                          <span>{t.callNow}</span>
                         </Button>
                         {hospital.emergency && (
                           <Button 
                             variant="destructive"
                             onClick={() => window.open(`tel:${hospital.phone}`)}
-                            className="w-full"
+                            className="h-8 text-xs font-bold"
                           >
-                            {language === 'en' ? 'Emergency' : 'आपातकाल'}
+                            {t.emergency}
                           </Button>
                         )}
                       </div>
@@ -519,16 +699,14 @@ export function Directory({ language }: DirectoryProps) {
                 </Card>
               ))
             ) : (
-              <div className="text-center py-12">
-                <Building className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500">
-                  {language === 'en' ? 'No hospitals found matching your search.' : 'आपकी खोज से मेल खाने वाले कोई अस्पताल नहीं मिले।'}
-                </p>
+              <div className="text-center py-10 bg-white rounded-xl border border-dashed border-gray-200">
+                <Building className="h-10 w-10 text-gray-300 mx-auto mb-2" />
+                <p className="text-xs text-gray-500">No hospitals found matching your search.</p>
               </div>
             )}
           </TabsContent>
         </Tabs>
       </div>
     </div>
-  );
+  )
 }
