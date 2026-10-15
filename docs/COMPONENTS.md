@@ -187,7 +187,7 @@ This document catalogs the domain-specific React components used throughout the 
 - **Files Where Used:** `app/page.tsx`, `app/locations/page.tsx`
 
 ### 3.3 `ConsultationPortal.tsx`
-- **Purpose:** Comprehensive appointment booking and teleconsultation portal powered by 913 authentic NMC/State Medical Council-registered doctors across India. Features real-time multi-field search, specialty chips, state filtering, 10-per-page pagination, 7-day dynamic slot generator, direct patient booking, teleconsultation room provisioning, and automatic notification dispatch.
+- **Purpose:** Comprehensive appointment booking and teleconsultation portal powered by 913 authentic NMC/State Medical Council-registered doctors across India. Features real-time multi-field search, specialty chips, state filtering, 10-per-page pagination, 7-day dynamic slot generator, direct patient booking, teleconsultation room provisioning, 4-way doctor invitation dispatch (WhatsApp, SMS, phone OPD call, copy link), and automatic notification dispatch.
 - **Props:**
   ```typescript
   {
@@ -196,15 +196,24 @@ This document catalogs the domain-specific React components used throughout the 
     symptomResult?: SymptomResult | null;
   }
   ```
-- **State:** `consultType` ("video" | "audio" | "chat"), `selectedDoctor` (RealDoctor | null), `selectedDate` (string), `selectedSlot` (string), `patientName` (string), `patientPhone` (string), `notes` (string), `doctorSearch` (string), `specialtyFilter` (string), `stateFilter` (string), `currentPage` (number), `successData` (Object | null).
+- **State:** `consultType` ("video" | "audio" | "chat"), `selectedDoctor` (RealDoctor | null), `selectedDate` (string), `selectedSlot` (string), `patientName` (string), `patientPhone` (string), `notes` (string), `doctorSearch` (string), `specialtyFilter` (string), `stateFilter` (string), `currentPage` (number), `successData` (Object | null), `copied` (boolean).
 - **Key Mechanics:**
   - **913 Doctors Catalog:** Full pan-India practitioner roster from AIIMS, PGI, GMCs, and District Hospitals.
   - **Dynamic Slot Generator:** Computes morning, afternoon, and evening slots for the next 7 days using deterministic doctor schedule seeding (Sundays closed).
+  - **4-Way Doctor Invitation Suite:** WhatsApp 1-tap dispatch with pre-filled consultation details, cellular SMS dispatch for zero-data/feature phones, hospital OPD desk phone dialer (`tel:`), and 1-click link copy.
+  - **Direct Room Launch:** Patients transition directly into the `/teleconsult/room` upon booking confirmation.
   - **Notification Dispatch:** Automatically dispatches notifications to both patient and doctor roles via `lib/notifications/notification-engine.ts` with audio chime upon booking confirmation.
 - **Dependencies:** `lib/data/real-doctors.ts`, `lib/geo/lgd-iphs.ts`, `lib/notifications/notification-engine.ts`, `lucide-react`, `shadcn/ui`.
 - **Files Where Used:** `app/consultation/page.tsx`, `app/page.tsx`.
 
-### 3.4 `NotificationBell.tsx`
+### 3.4 `teleconsult/room/page.tsx` (Passwordless Guest Teleconsultation Room)
+- **Purpose:** Standalone, frictionless WebRTC consultation room powered by `JitsiMeeting`. Does NOT require a Supabase account or password, allowing external NMC-registered clinicians (or guest patients) to join the video consultation via 1-tap WhatsApp or SMS invitation links.
+- **Query Parameters:** `id` (room ID), `name` (participant display name), `role` ("doctor" | "patient"), `lang` ("en" | "hi").
+- **Features:** Participant role badges, consultation timer, encrypted WebRTC badge, direct WhatsApp invitation button, 1-click link copy, and safe exit confirmation modal routing to `/appointments`.
+- **Dependencies:** `components/JitsiMeeting.tsx`, `lucide-react`, `shadcn/ui`.
+- **Route:** `/teleconsult/room`.
+
+### 3.5 `NotificationBell.tsx`
 - **Purpose:** Central notification center for Patients, Doctors, Admins, and Guests. Connects to backend `/api/notifications`, syncs with local storage for guest/offline sessions, subscribes to cross-tab window events (`ruralhealth:notification`), filters by categories (All, Appointments, Alerts), and routes directly to action URLs on click.
 - **Props:**
   ```typescript
@@ -217,7 +226,7 @@ This document catalogs the domain-specific React components used throughout the 
 - **Dependencies:** `lib/notifications/notification-engine.ts`, `lucide-react`.
 - **Files Where Used:** `components/Header.tsx`.
 
-### 3.5 `AppointmentManager.tsx`
+### 3.6 `AppointmentManager.tsx`
 - **Purpose:** Tabbed UI for users to manage upcoming and past appointments, cancel bookings with automatic notifications, and launch embedded Jitsi teleconsultation rooms.
 - **Props:**
   ```typescript

@@ -4,6 +4,28 @@ All notable changes to the Rural Healthcare Platform will be documented in this 
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres roughly to chronological feature milestones.
 
+## [v1.20.13] - 2026-10-15 — Passwordless Guest Teleconsultation Room & 4-Way Doctor Invitation Dispatch Suite
+
+### 1. Passwordless Guest Teleconsultation Room (`app/teleconsult/room/page.tsx`)
+- **Frictionless Entry for Non-User Doctors**: Solved the critical barrier where verified external doctors (e.g. from AIIMS Bhopal, GMCs, District Hospitals) who do not possess a user profile in Supabase were previously blocked by 401/403 authentication walls.
+- **Client-Side WebRTC Room**: Direct routing to `/teleconsult/room?id={roomId}&name={doctorName}&role=doctor` allows external clinicians to enter instantly in any standard browser without registration, credentials, or app installation.
+- **Dual-Role Room Shell**: Renders customized interfaces for both `doctor` and `patient` roles, including real-time consultation timers, in-room WhatsApp invitation sharing, link clipboard copying, and safe exit consultation handlers.
+- **Jitsi Free-Tier WebRTC Compatibility (`components/JitsiMeeting.tsx`)**: Removed blocking requirement for 8x8 JaaS paid JWT when running on standard public WebRTC endpoints, ensuring zero-cost video consultation for rural patients.
+
+### 2. 4-Way Multi-Channel Doctor Dispatch Suite (`components/ConsultationPortal.tsx`)
+- **Direct WhatsApp Dispatch**: 1-tap WhatsApp button pre-compiles bilingual (English/Hindi) messages containing the patient's name, booked appointment time, recorded symptoms/triage details, and direct doctor join URL (`https://wa.me/?text=...`).
+- **Zero-Data SMS Dispatch**: Native cellular `sms:` protocol link formatting enables instantaneous SMS dispatch to the doctor or hospital OPD desk on low-connectivity or feature devices.
+- **Hospital OPD Phone Link**: 1-tap `tel:` dialer linking directly to the verified hospital department or doctor's office phone.
+- **1-Click Copy Clinician Link**: Direct clipboard action with visual copy-feedback banner for manual forwarding via email, hospital chat, or nurse station.
+- **Seamless Patient Entry**: Immediate 1-tap transition for the patient to enter the consultation room directly upon booking confirmation.
+
+### 3. Integrated Teleconsult Navigation Across Portals
+- **Patient Appointments Portal (`components/AppointmentManager.tsx`)**: Upgraded "Join Video Call" action from a stub to direct navigation to `/teleconsult/room`.
+- **Doctor Dashboard (`components/DoctorDashboard.tsx`)**: Upgraded "Join Consultation" action to route straight to `/teleconsult/room`.
+- **Doctor Appointment Requests (`components/DoctorAppointmentRequests.tsx`)**: Upgraded request-handling "Join Call" button to launch the teleconsult room with the clinician's authenticated identity.
+
+---
+
 ## [v1.20.12] - 2026-10-15 — 913-Doctor Appointment & Location System Upgrade with Furnished Multi-User Notification Engine
 
 ### 1. 913 Authentic Doctors Integrated into Appointment & Teleconsultation System (`components/ConsultationPortal.tsx`)

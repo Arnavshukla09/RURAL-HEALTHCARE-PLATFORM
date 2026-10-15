@@ -54,9 +54,9 @@ export function JitsiMeeting({
         setLoading(true)
         setError(null)
 
-        // Production Security Gate: Refuse room initialization without valid token
-        const isProd = process.env.NODE_ENV === "production"
-        if (isProd && !jwt) {
+        // Security Gate: Enforce JWT only if using paid 8x8 JaaS tenant or explicit token configuration
+        const requiresToken = process.env.NEXT_PUBLIC_REQUIRE_JITSI_JWT === "true" || effectiveDomain.includes("8x8.vc")
+        if (requiresToken && !jwt) {
           setError(t.tokenRequired)
           setLoading(false)
           return

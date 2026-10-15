@@ -94,10 +94,10 @@ export function AppointmentManager({ user, language, setJitsiRoom }: Appointment
   }
 
   const joinCall = (roomId: string) => {
-    if (setJitsiRoom && roomId) {
-      setJitsiRoom(roomId)
-      router.push("/appointments")
-    }
+    if (setJitsiRoom) setJitsiRoom(roomId)
+    const roleParam = isDoctor ? "doctor" : "patient"
+    const nameParam = encodeURIComponent(user?.name || (isDoctor ? "Doctor" : "Patient"))
+    router.push(`/teleconsult/room?id=${roomId}&name=${nameParam}&role=${roleParam}&lang=${language}`)
   }
 
   const formatDate = (dateStr: string) => {

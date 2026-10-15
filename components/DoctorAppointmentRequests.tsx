@@ -222,7 +222,10 @@ export function DoctorAppointmentRequests({ language, setJitsiRoom }: DoctorAppo
                             <p className="text-xs text-purple-500 font-mono">{appt.teleconsult_room_id}</p>
                           </div>
                           <Button size="sm" className="bg-purple-600 hover:bg-purple-700 text-white h-8 text-xs"
-                            onClick={() => { setJitsiRoom?.(appt.teleconsult_room_id); router.push("/appointments") }}>
+                            onClick={() => {
+                              setJitsiRoom?.(appt.teleconsult_room_id)
+                              router.push(`/teleconsult/room?id=${appt.teleconsult_room_id}&name=Doctor&role=doctor&lang=${language}`)
+                            }}>
                             <Icon className="h-3 w-3 mr-1" />
                             {ct.type === "Video" ? (en ? "Join Video" : "वीडियो जॉइन") : ct.type === "Audio" ? (en ? "Join Call" : "कॉल जॉइन") : (en ? "Chat" : "चैट")}
                           </Button>

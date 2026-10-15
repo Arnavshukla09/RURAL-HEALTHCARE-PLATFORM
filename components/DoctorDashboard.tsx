@@ -64,7 +64,9 @@ export function DoctorDashboard({ user, language, setJitsiRoom }: DoctorDashboar
   }
 
   const joinCall = (roomId: string) => {
-    if (setJitsiRoom && roomId) { setJitsiRoom(roomId); router.push("/appointments") }
+    if (setJitsiRoom) setJitsiRoom(roomId)
+    const nameParam = encodeURIComponent(user?.name || "Doctor")
+    router.push(`/teleconsult/room?id=${roomId}&name=${nameParam}&role=doctor&lang=${language}`)
   }
 
   const markDone = async (id: string) => {
