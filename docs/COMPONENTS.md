@@ -133,7 +133,25 @@ This document catalogs the domain-specific React components used throughout the 
 
 ## 3. Telemedicine & Maps
 
-### 3.1 `MapView.tsx`
+### 3.1 `Directory.tsx`
+- **Purpose:** NMC-verified doctor and specialist directory featuring a prominent pop-out Universal Search bar, collapsible location/proximity filter drawer, mutually-exclusive GPS Proximity vs State/District hierarchy modes, and client-side 10-per-page pagination.
+- **Props:**
+  ```typescript
+  {
+    language: string;
+  }
+  ```
+- **State:** `searchQuery` (string), `selectedSpecialty` (string), `userCoords` ({ lat, lng } | null), `selectedRadius` (number), `selectedStateCode` (string), `selectedDistrictName` (string), `isFilterMenuOpen` (boolean), `currentPage` (number).
+- **Sub-Components:**
+  - `SearchableDropdown`: Accessible popover with a top-pinned search box for instant filtering of States and Districts in both English and Hindi, with active checkmarks and bounded scroll viewport (`max-h-[190px]`).
+- **Key Mechanics:**
+  - **Pop-Out Universal Search:** Ranks results via a multi-field weighted scoring algorithm (name +100, specialty +80, hospital +60, district +50, state/location +40, qualifications +30, bio +20).
+  - **Mutual Exclusivity:** GPS mode and State/District mode cannot be active concurrently; selecting one disables and fades out the other with a clear switch action.
+  - **Distance Guard:** Physical distance badges (`📍 X km away`) strictly render when physical GPS (`userCoords`) is active.
+- **Dependencies:** `lucide-react`, `lib/data/real-doctors.ts`, `lib/geo/lgd-iphs.ts`, `lib/i18n/translations.ts`.
+- **Files Where Used:** `app/directory/page.tsx`, `app/page.tsx`.
+
+### 3.2 `MapView.tsx`
 - **Purpose:** National healthcare facility and doctor discovery portal indexed by Local Government Directory (LGD) and Indian Public Health Standards (IPHS). Features interactive Leaflet maps, driving routes via OSRM, Haversine proximity calculations, and searchable state/district selectors.
 - **Props:**
   ```typescript

@@ -4,6 +4,26 @@ All notable changes to the Rural Healthcare Platform will be documented in this 
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres roughly to chronological feature milestones.
 
+## [v1.20.10] - 2026-10-15 — Pop-Out Universal Search, Mutually-Exclusive GPS/State Drawer & Searchable Dropdowns
+
+### 1. Pop-Out Hero Universal Search Bar (`components/Directory.tsx`)
+- **Single Universal Search Bar**: Removed the secondary ambiguous city/district search input next to the GPS button.
+- **Elevated Hero Presentation**: Styled the primary search bar with elevated card borders, generous padding, glowing active states, and a 1-click clear button (`✕`).
+- **Comprehensive Multi-Field Ranking**: The search bar indexes clinician names, medical specialties, hospital affiliations, districts, states, full addresses, credentials, and bios. High-relevance matches (exact name/department/hospital) are ranked immediately at the top.
+
+### 2. Collapsible Filter Drawer & Strict Mutual Exclusivity
+- **Collapsible Drawer UI**: Added a toggleable filter menu accessible via an icon button with active filter indicators (`GPS: 50km` or State name).
+- **Mutual Exclusivity Enforced**: Users can choose either **Option A (Device GPS & Proximity Radius)** or **Option B (State & District Hierarchy)**.
+  - When GPS is activated, the State & District selector is faded out (`opacity-40 pointer-events-none`) with an informative lock badge and a 1-click "Clear GPS" action.
+  - When a State or District is chosen, the GPS button and proximity radius pills are faded out (`opacity-40 pointer-events-none`) with a 1-click "Clear State" action.
+  - Eliminates conflicting queries and arbitrary centroid distance calculations.
+
+### 3. Integrated Searchable Dropdowns for State & District
+- **Embedded Search Box**: Built an accessible, popover-based `SearchableDropdown` component with a top-pinned search input for both English and Hindi queries.
+- **Bounded Viewport**: Constrained options to `max-h-[190px]` with smooth internal scrolling, active checkmarks, and auto-focus for fast, keyboard-friendly navigation.
+
+---
+
 ## [v1.20.7] - 2026-10-15 — Comprehensive Dataset Provenance & Reporting Tooling
 
 ### 1. Dataset Provenance & Management Documentation (`docs/DATASETS.md`)
