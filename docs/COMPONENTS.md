@@ -291,3 +291,87 @@ This document catalogs the domain-specific React components used throughout the 
 - **Dependencies:** `lucide-react`.
 - **Styling:** Dark theme (`bg-gray-900 text-white`). Includes an emergency red strip (`bg-red-600`).
 - **Files Where Used:** `app/page.tsx`
+
+---
+
+## 5. Telemedicine, Schemes & Administrative Subsystems
+
+### 5.1 `ConsultationPortal.tsx`
+- **Purpose:** Multi-step clinical appointment booking engine connecting patients with 913 NMC-verified specialists. Implements tri-modal payments (NPCI dynamic UPI QR, Pay at OPD Counter, Ayushman Bharat PM-JAY / BPL exemption), deterministic slot conflict locking (`rural_health_booked_slots`), and 4-way doctor dispatch suites (WhatsApp, SMS, Phone, Clipboard).
+- **Props:**
+  ```typescript
+  {
+    language: string;
+    user?: UserProfile | null;
+    symptomResult?: SymptomResult | null;
+  }
+  ```
+- **State:** `selectedDoctor`, `selectedDate`, `selectedSlot`, `consultType`, `paymentMode`, `bookedSlots`, `successData`.
+- **Dependencies:** `lib/data/real-doctors.ts`, `lib/doctor-claims.ts`, `lib/notifications/notification-engine.ts`, `shadcn/ui`.
+- **Files Where Used:** `app/consultation/page.tsx`.
+
+### 5.2 `GovernmentSchemes.tsx`
+- **Purpose:** Central National & State healthcare schemes repository featuring multi-dimensional demographic filtering (Kids, Maternal, Disability/Paralysis, Cancer/Dialysis, Elderly, BPL Upliftment) and 5-per-page pagination with smooth scrolling and dynamic range counters.
+- **Props:**
+  ```typescript
+  {
+    language: string;
+  }
+  ```
+- **State:** `scopeMode` ("all" | "national" | "state"), `selectedStateCode`, `selectedCategory`, `searchQuery`, `currentPage`.
+- **Dependencies:** `lib/data/government-schemes.ts`, `lucide-react`, `shadcn/ui`.
+- **Files Where Used:** `app/health-info/schemes/page.tsx`.
+
+### 5.3 `AdminUserManagement.tsx`
+- **Purpose:** Administration console enabling role-based access control management, user removal, clinician verification claims review (`pending_admin_approval` queue with 1-tap Approve/Reject), and direct tokenized invitation generation for all 913 NMC practitioners.
+- **Props:**
+  ```typescript
+  {
+    language: string;
+  }
+  ```
+- **State:** `activeTab` ("users" | "claims"), `users`, `claims`, `inviteSearch`, `selectedInviteDoctor`.
+- **Dependencies:** `lib/doctor-claims.ts`, `lib/data/real-doctors.ts`, `lib/supabase/client.ts`.
+- **Files Where Used:** `app/admin/users/page.tsx`.
+
+### 5.4 `OfflineSyncBadge.tsx`
+- **Purpose:** Header status indicator displaying local IndexedDB outbox synchronization state, queue count, and network connectivity indicators.
+- **Props:**
+  ```typescript
+  {
+    language: string;
+    role: string;
+  }
+  ```
+- **State:** `pendingCount`, `isOnline`, `isSyncing`.
+- **Dependencies:** `lib/offline/offline-sync.ts`.
+- **Files Where Used:** `components/Header.tsx`.
+
+### 5.5 `NotificationBell.tsx`
+- **Purpose:** Visibility-aware notification center polling engine. Replaced websocket connection pool leaks with tab-visibility-aware polling (every 60s while visible, halted when hidden).
+- **Props:**
+  ```typescript
+  {
+    language: string;
+    userId?: string;
+  }
+  ```
+- **State:** `unreadCount`, `notifications`, `isOpen`.
+- **Dependencies:** `lib/notifications/notification-engine.ts`.
+- **Files Where Used:** `components/Header.tsx`.
+
+### 5.6 `JitsiMeeting.tsx`
+- **Purpose:** Zero-auth serverless WebRTC teleconsultation frame with 2G low-bandwidth Opus audio fallback toggle, consulting timer, and clinical summary auto-export triggers.
+- **Props:**
+  ```typescript
+  {
+    roomName: string;
+    displayName: string;
+    role: "doctor" | "patient";
+    audioOnly?: boolean;
+    onMeetingEnd?: () => void;
+  }
+  ```
+- **State:** `jitsiApi`, `audioOnlyActive`.
+- **Dependencies:** `lib/jitsi/config.ts`.
+- **Files Where Used:** `app/teleconsult/room/page.tsx`.
