@@ -4,6 +4,18 @@ All notable changes to the Rural Healthcare Platform will be documented in this 
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres roughly to chronological feature milestones.
 
+## [v1.20.7] - 2026-10-15 — Comprehensive Dataset Provenance & Reporting Tooling
+
+### 1. Dataset Provenance & Management Documentation (`docs/DATASETS.md`)
+- **Full Data Lineage Reference**: Created a comprehensive document recording every primary data source, schema mapping, spatial indexing, and extraction pipeline powering the platform.
+- **Facility Data Lineage**: Documented 10,742 verified healthcare facilities in Supabase PostGIS (`healthcare_facilities`), cross-referencing PM-JAY/NHM, NHP Hospital Directory, and OpenStreetMap.
+- **Practitioner Registry**: Documented 913 verified medical specialists in `lib/data/real-doctors.ts` spanning 26 States/UTs, 10 specialties, and 60 online review-enriched practitioners with patient votes and recommendation percentages.
+- **Geographic & Emergency Taxonomy**: Documented 36 States/UTs and 725 Districts from the Local Government Directory (LGD), along with primary national lifelines and first-aid protocols.
+
+### 2. Dataset Audit & Reporting Utility (`scripts/report_dataset.mjs` & `npm run report:dataset`)
+- **Real-Time Data Audit Tool**: Built a CLI reporting utility that automatically parses, validates, and outputs an executive summary of facilities, practitioner counts, specialty distributions, and data hygiene compliance.
+- **NPM Script Integration**: Added `npm run report:dataset` to `package.json` for on-demand validation and external reporting.
+
 ## [v1.20.6] - 2026-10-15 — Automated Pre-Commit Component Quality Guard & CI Checker
 
 ### 1. Automated Component Checker (`scripts/check_components.mjs`)
