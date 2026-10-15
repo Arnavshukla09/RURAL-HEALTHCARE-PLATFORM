@@ -27,15 +27,41 @@ export interface DoctorClaim {
 }
 
 const STORAGE_KEY = "rural_health_doctor_claims"
-const SECRET_SALT = "[REDACTED-SEE-ENV]"
+
+/**
+ * SECURITY: The salt MUST be set via the DOCTOR_CLAIM_SECRET environment variable.
+ * It must NOT be committed to source control. Set it in .env.local (local dev)
+ * and in the Vercel / CI environment secrets dashboard (production).
+ *
+ * The fallback value is intentionally generic and only active in local dev
+ * environments where the env var is absent. It will never match a production
+ * token, so it provides no security bypass on the live system.
+ */
+function getSecretSalt(): string {
+  const envSalt = process.env.DOCTOR_CLAIM_SECRET
+  if (!envSalt) {
+    if (process.env.NODE_ENV !== "test") {
+      console.warn(
+        "[doctor-claims] DOCTOR_CLAIM_SECRET is not set. " +
+        "Tokens generated in this environment are not valid for production. " +
+        "Set DOCTOR_CLAIM_SECRET in your .env.local file."
+      )
+    }
+    // Local-dev / test fallback — never matches production tokens
+    return "rhp_local_dev_only_not_for_prod"
+  }
+  return envSalt
+}
 
 /**
  * Generate a private token for a doctor invite.
  * Incorporates doctorId, a timestamp bucket, and a verification signature.
+ * The salt is read from the DOCTOR_CLAIM_SECRET environment variable.
  */
 export function generateDoctorClaimToken(doctorId: string): string {
+  const salt = getSecretSalt()
   const ts = Math.floor(Date.now() / (1000 * 60 * 60 * 24 * 7)) // 7-day bucket
-  const raw = `${doctorId}:${SECRET_SALT}:${ts}`
+  const raw = `${doctorId}:${salt}:${ts}`
   // Simple deterministic hash for browser/node cross-compatibility
   let hash = 0
   for (let i = 0; i < raw.length; i++) {
