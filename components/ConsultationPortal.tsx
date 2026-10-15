@@ -37,6 +37,7 @@ import { createClient } from "@/lib/supabase/client"
 import { REAL_DOCTORS, RealDoctor } from "@/lib/data/real-doctors"
 import { LGD_STATES } from "@/lib/geo/lgd-iphs"
 import { triggerAppointmentBooked } from "@/lib/notifications/notification-engine"
+import { generateDoctorClaimToken } from "@/lib/doctor-claims"
 import { UserProfile, SymptomResult } from "@/types"
 
 interface ConsultationPortalProps {
@@ -372,6 +373,8 @@ export function ConsultationPortal({ language, user, symptomResult }: Consultati
               const patientJoinUrl = `/teleconsult/room?id=${successData.roomId}&name=${encodeURIComponent(patientName || (en ? "Patient" : "मरीज"))}&role=patient&lang=${language}`
               const doctorAcceptUrl = `${origin}/teleconsult/confirm?id=${successData.roomId}&action=accept&doc=${encodeURIComponent(successData.doctor.name)}&patient=${encodeURIComponent(patientName || "Patient")}&date=${successData.date}&time=${successData.slot}&fee=${successData.doctor.consultationFee}&mode=${successData.consultType}&lang=${language}`
               const doctorRescheduleUrl = `${origin}/teleconsult/confirm?id=${successData.roomId}&action=reschedule&doc=${encodeURIComponent(successData.doctor.name)}&patient=${encodeURIComponent(patientName || "Patient")}&date=${successData.date}&time=${successData.slot}&fee=${successData.doctor.consultationFee}&lang=${language}`
+              const claimToken = generateDoctorClaimToken(successData.doctor.id)
+              const doctorClaimUrl = `${origin}/doctor/claim?id=${successData.doctor.id}&token=${claimToken}`
               const cleanPhone = (successData.doctor.phone || "").replace(/[^\d+]/g, "")
 
               const paymentStatusStr = successData.doctor.consultationFee === 0
@@ -381,8 +384,8 @@ export function ConsultationPortal({ language, user, symptomResult }: Consultati
                   : `₹${successData.doctor.consultationFee} (To Collect at OPD Desk)`
 
               const invitationText = en
-                ? `🏥 *RURAL HEALTHCARE TELEMEDICINE — NEW APPOINTMENT*\n\nRespected ${successData.doctor.name},\n\nA patient has requested a teleconsultation:\n👤 *Patient:* ${patientName || "Patient"}\n📅 *Slot:* ${formattedDate} at ${successData.slot}\n🩺 *Mode:* ${successData.consultType.toUpperCase()} Call\n💳 *Fee:* ${paymentStatusStr}\n${notes ? `📝 *Symptoms:* ${notes}\n` : ""}✅ *1-Tap Accept Appointment:*\n${doctorAcceptUrl}\n\n👉 *Join Video Clinic Room:*\n${doctorJoinUrl}\n\n🔄 *Propose New Time:*\n${doctorRescheduleUrl}\n\nRural Healthcare Platform`
-                : `🏥 *ग्रामीण स्वास्थ्य सेवा — नया परामर्श अनुरोध*\n\nआदरणीय ${successData.doctor.name},\n\nएक मरीज ने आपके साथ परामर्श शेड्यूल किया है:\n👤 *मरीज:* ${patientName || "मरीज"}\n📅 *समय:* ${formattedDate} समय ${successData.slot}\n🩺 *माध्यम:* ${successData.consultType.toUpperCase()} वीडियो\n💳 *शुल्क:* ${paymentStatusStr}\n${notes ? `📝 *लक्षण:* ${notes}\n` : ""}✅ *अपॉइंटमेंट स्वीकार करें (1-क्लिक):*\n${doctorAcceptUrl}\n\n👉 *वीडियो रूम लिंक:*\n${doctorJoinUrl}\n\n🔄 *समय बदलना चाहते हैं? लिंक:*\n${doctorRescheduleUrl}\n\nग्रामीण स्वास्थ्य सेवा मंच`
+                ? `🏥 *RURAL HEALTHCARE TELEMEDICINE — NEW APPOINTMENT*\n\nRespected ${successData.doctor.name},\n\nA patient has requested a teleconsultation:\n👤 *Patient:* ${patientName || "Patient"}\n📅 *Slot:* ${formattedDate} at ${successData.slot}\n🩺 *Mode:* ${successData.consultType.toUpperCase()} Call\n💳 *Fee:* ${paymentStatusStr}\n${notes ? `📝 *Symptoms:* ${notes}\n` : ""}✅ *1-Tap Accept Appointment:*\n${doctorAcceptUrl}\n\n👉 *Join Video Clinic Room:*\n${doctorJoinUrl}\n\n🔄 *Propose New Time:*\n${doctorRescheduleUrl}\n\n🔐 *Private Doctor Profile Claim Link:*\n${doctorClaimUrl}\n\nRural Healthcare Platform`
+                : `🏥 *ग्रामीण स्वास्थ्य सेवा — नया परामर्श अनुरोध*\n\nआदरणीय ${successData.doctor.name},\n\nएक मरीज ने आपके साथ परामर्श शेड्यूल किया है:\n👤 *मरीज:* ${patientName || "मरीज"}\n📅 *समय:* ${formattedDate} समय ${successData.slot}\n🩺 *माध्यम:* ${successData.consultType.toUpperCase()} वीडियो\n💳 *शुल्क:* ${paymentStatusStr}\n${notes ? `📝 *लक्षण:* ${notes}\n` : ""}✅ *अपॉइंटमेंट स्वीकार करें (1-क्लिक):*\n${doctorAcceptUrl}\n\n👉 *वीडियो रूम लिंक:*\n${doctorJoinUrl}\n\n🔄 *समय बदलना चाहते हैं? लिंक:*\n${doctorRescheduleUrl}\n\n🔐 *निजी डॉक्टर प्रोफ़ाइल क्लेम लिंक:*\n${doctorClaimUrl}\n\nग्रामीण स्वास्थ्य सेवा मंच`
 
               return (
                 <div className="space-y-3 p-4 rounded-2xl bg-gradient-to-br from-purple-50 to-indigo-50 border-2 border-purple-200">

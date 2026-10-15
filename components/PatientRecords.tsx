@@ -13,6 +13,7 @@ import { createClient } from '@/lib/supabase/client'
 
 interface PatientRecordsProps {
   language: string
+  user?: any
 }
 
 const RECORD_TYPES = [
@@ -23,8 +24,18 @@ const RECORD_TYPES = [
   { value: 'other', label: 'Other', labelHi: 'अन्य', icon: '📋' },
 ]
 
-export function PatientRecords({ language }: PatientRecordsProps) {
-  const [records, setRecords] = useState<any[]>([])
+export function PatientRecords({ language, user }: PatientRecordsProps) {
+  const [records, setRecords] = useState<any[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const local = JSON.parse(localStorage.getItem("rural_health_local_prescriptions") || "[]")
+        return Array.isArray(local) ? local : []
+      } catch {
+        return []
+      }
+    }
+    return []
+  })
   const [nextCursor, setNextCursor] = useState<string | null>(null)
   const [loadingMore, setLoadingMore] = useState(false)
   const [healthData, setHealthData] = useState<any[]>([])
@@ -81,49 +92,85 @@ export function PatientRecords({ language }: PatientRecordsProps) {
     other: 'bg-gray-100 text-gray-700',
   }
 
-  // Fetch records via server API (handles patient auto-create)
+  // Fetch records with resilient safety timeout and local storage merge
   useEffect(() => {
+    let isMounted = true
+
+    // Safety timeout: Never stay stuck on spinner for more than 2.5 seconds
+    const safetyTimer = setTimeout(() => {
+      if (isMounted) setLoading(false)
+    }, 2500)
+
     const fetchData = async () => {
       try {
-        // Use the API route which securely resolves patient_id
+        // 1. Load local prescriptions from teleconsultations
+        let localList: any[] = []
+        if (typeof window !== "undefined") {
+          try {
+            const raw = localStorage.getItem("rural_health_local_prescriptions")
+            if (raw) localList = JSON.parse(raw)
+          } catch {}
+        }
+
+        // 2. Fetch from secure server endpoint
         const res = await fetch('/api/medical-records')
         if (res.ok) {
           const data = await res.json()
-          const list = Array.isArray(data) ? data : (data.records ?? data.data ?? [])
-          setRecords(list)
-          setNextCursor(data.nextCursor || null)
+          const apiList = Array.isArray(data) ? data : (data.records ?? data.data ?? [])
+          const existingIds = new Set(apiList.map((r: any) => r.id))
+          const merged = [...apiList, ...localList.filter((r: any) => !existingIds.has(r.id))]
+          if (isMounted) {
+            setRecords(merged.length > 0 ? merged : localList)
+            setNextCursor(data.nextCursor || null)
+          }
         } else if (res.status === 401) {
-          setError(t.loginRequired)
+          if (isMounted && localList.length > 0) {
+            setRecords(localList)
+          }
+        } else {
+          if (isMounted && localList.length > 0) {
+            setRecords(localList)
+          }
         }
 
-        // Fetch health data (vitals) — still use client for this
-        const supabase = createClient()
-        const { data: { user } } = await supabase.auth.getUser()
-        if (user) {
-          const { data: patient } = await supabase
-            .from('patients')
-            .select('id')
-            .eq('user_id', user.id)
-            .single()
+        // 3. Fetch vitals if user is resolved
+        const activeUserId = user?.id
+        if (activeUserId) {
+          try {
+            const supabase = createClient()
+            const { data: patient } = await supabase
+              .from('patients')
+              .select('id')
+              .eq('user_id', activeUserId)
+              .maybeSingle()
 
-          if (patient?.id) {
-            const { data: vitals } = await supabase
-              .from('health_data')
-              .select('*')
-              .eq('patient_id', patient.id)
-              .order('recorded_at', { ascending: false })
-            setHealthData(vitals || [])
+            if (patient?.id && isMounted) {
+              const { data: vitals } = await supabase
+                .from('health_data')
+                .select('*')
+                .eq('patient_id', patient.id)
+                .order('recorded_at', { ascending: false })
+              setHealthData(vitals || [])
+            }
+          } catch (e) {
+            console.warn("Vitals non-fatal lookup notice:", e)
           }
         }
       } catch (err) {
-        setError(t.loadError)
-        console.error('Failed to fetch records:', err)
+        console.warn('Records fetch error, fell back to local cache:', err)
       } finally {
-        setLoading(false)
+        clearTimeout(safetyTimer)
+        if (isMounted) setLoading(false)
       }
     }
+
     fetchData()
-  }, [saveSuccess])
+
+    return () => {
+      isMounted = false
+      clearTimeout(safetyTimer)
+    }
+  }, [saveSuccess, user?.id])
 
   const handleLoadMoreRecords = async () => {
     if (!nextCursor || loadingMore) return

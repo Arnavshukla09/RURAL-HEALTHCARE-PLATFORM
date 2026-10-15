@@ -102,7 +102,6 @@ export function Header() {
     { key: "/symptom-checker", label: en ? "Symptoms" : "लक्षण", icon: Activity },
     { key: "/directory", label: en ? "Find Doctors" : "डॉक्टर खोजें", icon: Stethoscope },
     { key: "/locations", label: en ? "Find Hospitals" : "अस्पताल खोजें", icon: MapPin },
-    { key: "/doctor/claim", label: en ? "Doctor Claim" : "डॉक्टर पोर्टल", icon: ShieldCheck },
   ]
 
   const userCareItems = [

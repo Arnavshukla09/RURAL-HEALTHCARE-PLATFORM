@@ -44,5 +44,5 @@ export default function Page() {
     )
   }
 
-  return <PatientRecords language={language} />
+  return <PatientRecords language={language} user={user} />
 }
