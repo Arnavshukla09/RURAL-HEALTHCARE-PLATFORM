@@ -4,6 +4,31 @@ All notable changes to the Rural Healthcare Platform will be documented in this 
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres roughly to chronological feature milestones.
 
+## [v1.20.11] - 2026-10-15 — Pan-India National & State Government Healthcare Schemes Directory
+
+### 1. National & State Healthcare Schemes Engine (`lib/schemes/health-schemes.ts`)
+- **Exhaustive 38-Scheme Dataset**: Built a verified repository covering Central Flagship programs and 22+ prominent State government healthcare schemes across 18 States and UTs.
+- **12 Demographic & Clinical Differentiators**: Integrated filters covering:
+  - **Kids & Infants**: RBSK 4Ds screening, Intensified Mission Indradhanush, Mukhyamantri Bal Hridaya Upchar, JSSK sick infant care.
+  - **Maternal & Women**: Janani Suraksha Yojana (JSY), Janani Shishu Suraksha Karyakaram (JSSK), Pradhan Mantri Matru Vandana Yojana (PMMVY ₹5k/₹6k DBT), SUMAN.
+  - **Senior Citizens (70+ Age)**: Ayushman Vaya Vandana Card (₹5 Lakh universal cover for all citizens 70+ irrespective of income).
+  - **Paralysis & Disability**: Niramaya Health Insurance Scheme (National Trust, ₹1 Lakh for Cerebral Palsy, spastic paralysis, autism, multiple disabilities, covering corrective surgeries and ongoing physiotherapy/speech therapy), ADIP Scheme (free motorized tricycles, wheelchairs, prosthetics).
+  - **Cancer & Oncology**: Health Minister's Cancer Patient Fund (HMCPF / RAN ₹15 Lakh grant at Regional Cancer Centres), AMRIT discounted pharmacy.
+  - **Rare Diseases**: National Policy for Rare Diseases (NPRD up to ₹50 Lakh financial assistance at 12 designated Centres of Excellence).
+  - **Kidney & Dialysis**: Pradhan Mantri National Dialysis Programme (PMNDP 100% free peritoneal & hemodialysis for BPL).
+  - **Tuberculosis (TB)**: Ni-kshay Poshan Yojana (₹500/month nutritional DBT throughout treatment + free CBNAAT/molecular testing).
+  - **Mental Health**: Tele-MANAS (24/7 National Mental Health Helpline 14416 across 20+ regional languages).
+  - **Universal & Poverty Upliftment**: Ayushman Bharat PM-JAY (₹5 Lakh), PMBJP Janaushadhi (50-90% cheaper generic medicines), state flagship insurance (MJPJAY, Aarogyasri, Swasthya Sathi, BSKY, CMCHIS, MAAY).
+  - **Emergency & Trauma**: Farishte Dilli Ke (100% free emergency golden-hour surgery/ICU at any private hospital, Good Samaritan legal protection), Innuyir Kaappom 48 (Tamil Nadu).
+
+### 2. Upgraded Directory Interface (`components/GovernmentSchemes.tsx`)
+- **Dual Scope Navigation**: Three-way tab toggle between **All Schemes (38)**, **Central / National (16)**, and **State Schemes (22)**.
+- **Searchable State Selector Popover**: Top-pinned search box enabling real-time state filtering (e.g. typing "Maharashtra", "Tamil", "Delhi", "Madhya").
+- **Pop-Out Hero Universal Search**: Real-time keyword filter across scheme titles, descriptions, clinical benefits, departments, and geographic names.
+- **Direct Citizen Access**: Each scheme features 1-tap phone dialer (`tel:14555`, `tel:104`, `tel:14416`) and authenticated links to official government portals (`pmjay.gov.in`, `nhm.gov.in`, `thenationaltrust.gov.in`, etc.).
+
+---
+
 ## [v1.20.10] - 2026-10-15 — Pop-Out Universal Search, Mutually-Exclusive GPS/State Drawer & Searchable Dropdowns
 
 ### 1. Pop-Out Hero Universal Search Bar (`components/Directory.tsx`)

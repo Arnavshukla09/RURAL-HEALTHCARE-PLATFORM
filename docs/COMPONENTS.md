@@ -102,7 +102,21 @@ This document catalogs the domain-specific React components used throughout the 
 - **Styling:** Clean tabbed interface with collapsible accordions.
 - **Files Where Used:** `app/page.tsx`
 
-### 2.5 `EmergencyModule.tsx`
+### 2.5 `GovernmentSchemes.tsx`
+- **Purpose:** Comprehensive national and state government healthcare schemes directory across India. Features dual National vs. State scope switching, a searchable State selector popover, 12 demographic and disease differentiator filters (kids, maternal, 70+ elderly, paralysis/disability, cancer, rare diseases, dialysis, TB, mental health, universal BPL, emergency trauma), live multi-field keyword search, and 1-tap `tel:` calling and official web portal linking.
+- **Props:**
+  ```typescript
+  {
+    language: string;
+  }
+  ```
+- **State:** `scopeMode` ("all" | "national" | "state"), `selectedStateCode` (string), `selectedCategory` (SchemeCategory), `searchQuery` (string).
+- **Sub-Components:**
+  - `SearchableStateSelect`: Accessible popover with a top-pinned search input for filtering states and Union Territories in English and Hindi.
+- **Dependencies:** `lib/schemes/health-schemes.ts`, `lucide-react`, `shadcn/ui`.
+- **Files Where Used:** `app/health-info/schemes/page.tsx`, `components/public-pages/SchemesClient.tsx`.
+
+### 2.6 `EmergencyModule.tsx`
 - **Purpose:** Primary emergency response hub partitioned into 3 streamlined severity modes (Critical Life Threat, Urgent Distress Dispatch, Urgent Care Navigation). Includes direct Paramedic ICE Medical Pass display, 1-tap bilingual voice vocalizers, camera LED strobe, ambulance siren audio synthesis, screen wake lock, integrated national/state helpline directory, and offline IndexedDB incident audio blackbox.
 - **Props:**
   ```typescript

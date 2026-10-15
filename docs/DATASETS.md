@@ -209,6 +209,31 @@ export interface RealDoctor {
   * 🟡 **Yellow Theme (Child Protection):** 1098.
   * 🟢 **Teal Theme (Disaster & Relief):** 1078, 1070.
 
+### 2.4 National & State Government Healthcare Schemes Dataset (`lib/schemes/health-schemes.ts`)
+* **Primary Sources:**
+  * **Central Ministries:** MoHFW (National Health Mission, Central TB Division), National Health Authority (NHA), Ministry of Women & Child Development (PMMVY), Ministry of Social Justice & Empowerment (The National Trust, ALIMCO).
+  * **State Health Assurance Societies:** State agencies across 18+ States (Maharashtra MJPJAY, Tamil Nadu CMCHIS, Andhra Pradesh Dr. YSR Aarogyasri, Telangana Aarogyasri, West Bengal Swasthya Sathi, Rajasthan MAAY/Chiranjeevi, Gujarat MA/Vatsalya, Odisha BSKY, Kerala KASP, Delhi Health Dept, MP Health Dept, UP SACHIS, Assam SHA, Punjab SHA, Haryana SHA, Bihar Health Dept, Goa DHS).
+* **Taxonomy & Demographics Covered (12 Differentiators):**
+  1. **Kids & Infants:** Rashtriya Bal Swasthya Karyakram (RBSK 4Ds), Intensified Mission Indradhanush, Mukhyamantri Bal Hridaya Upchar, Mukhyamantri Bal Shravan Upchar (cochlear implants), JSSK sick infant care.
+  2. **Maternal & Women:** Janani Suraksha Yojana (JSY), Janani Shishu Suraksha Karyakaram (JSSK), Pradhan Mantri Matru Vandana Yojana (PMMVY ₹5,000/₹6,000 DBT), SUMAN.
+  3. **Senior Citizens (70+ Age):** Ayushman Vaya Vandana Card (₹5 Lakh universal cover for all citizens 70+ irrespective of income).
+  4. **Paralysis & Disability:** Niramaya Health Insurance Scheme (National Trust, ₹1 Lakh for Cerebral Palsy, spastic paralysis, autism, multiple disabilities, covering corrective surgeries and ongoing physiotherapy/speech therapy), ADIP Scheme (free motorized tricycles, wheelchairs, prosthetics).
+  5. **Cancer & Oncology:** Health Minister's Cancer Patient Fund (HMCPF / RAN ₹15 Lakh grant at Regional Cancer Centres), AMRIT discounted pharmacy.
+  6. **Rare Diseases:** National Policy for Rare Diseases (NPRD up to ₹50 Lakh financial assistance at 12 designated Centres of Excellence).
+  7. **Kidney & Dialysis:** Pradhan Mantri National Dialysis Programme (PMNDP 100% free peritoneal & hemodialysis for BPL).
+  8. **Tuberculosis (TB):** Ni-kshay Poshan Yojana (₹500/month nutritional DBT throughout treatment + free CBNAAT/molecular testing).
+  9. **Mental Health:** Tele-MANAS (24/7 National Mental Health Helpline 14416 across 20+ regional languages).
+  10. **Universal & Poverty Upliftment:** Ayushman Bharat PM-JAY (₹5 Lakh), PMBJP Janaushadhi (50-90% cheaper generic medicines), state flagship insurance (MJPJAY, Aarogyasri, Swasthya Sathi, BSKY, CMCHIS, MAAY).
+  11. **Emergency & Trauma:** Farishte Dilli Ke (100% free emergency golden-hour surgery/ICU at any private hospital, Good Samaritan legal protection), Innuyir Kaappom 48 (Tamil Nadu).
+* **Record Structure:**
+  * Title & Department (Bilingual: English & Hindi).
+  * Scope (National vs. State).
+  * State LGD code & name mapping.
+  * Verified coverage amounts (e.g. ₹5,00,000/year, ₹25,00,000/year, ₹50,00,000 grant, 100% Free).
+  * Key Benefits checklist.
+  * Eligibility criteria and Application channels.
+  * Direct 1-tap phone dialer (`tel:`) and official government URL.
+
 ---
 
 ## 3. Data Ingestion & Reporting Tools
@@ -248,6 +273,7 @@ To prevent data corruption, regressions, or misleading information, the platform
 
 * **Total Verified Healthcare Facilities in PostGIS:** `10,742`
 * **Total Registered Medical Practitioners in Catalog:** `913`
+* **Total Verified National & State Healthcare Schemes:** `38` (16 Central Flagship, 22 State Schemes across 18 States)
 * **Practitioners with Verified Online Reviews:** `60`
 * **Total States & Union Territories Covered:** `36` (All India)
 * **Total Administrative Districts Mapped:** `725`
