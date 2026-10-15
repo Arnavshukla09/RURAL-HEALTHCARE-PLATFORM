@@ -1,6 +1,6 @@
 "use client"
 import { Button } from "./ui/button"
-import { Menu, X, Heart, AlertTriangle, Activity, ChevronDown, LogOut, User, BookOpen, Users, Bell, Calendar, ClipboardList, MapPin, Megaphone, Globe, Check, Stethoscope } from "lucide-react"
+import { Menu, X, Heart, AlertTriangle, Activity, ChevronDown, LogOut, User, BookOpen, Users, Bell, Calendar, ClipboardList, MapPin, Megaphone, Globe, Check, Stethoscope, ShieldCheck } from "lucide-react"
 import { useState, useRef, useEffect } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { NotificationBell } from "./NotificationBell"
@@ -102,7 +102,7 @@ export function Header() {
     { key: "/symptom-checker", label: en ? "Symptoms" : "लक्षण", icon: Activity },
     { key: "/directory", label: en ? "Find Doctors" : "डॉक्टर खोजें", icon: Stethoscope },
     { key: "/locations", label: en ? "Find Hospitals" : "अस्पताल खोजें", icon: MapPin },
-    { key: "/health-info", label: en ? "Health Info" : "स्वास्थ्य जानकारी", icon: BookOpen },
+    { key: "/doctor/claim", label: en ? "Doctor Claim" : "डॉक्टर पोर्टल", icon: ShieldCheck },
   ]
 
   const userCareItems = [

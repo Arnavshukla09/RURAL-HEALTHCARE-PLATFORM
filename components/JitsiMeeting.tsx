@@ -13,6 +13,7 @@ interface JitsiMeetingProps {
   domain?: string
   onLeave?: () => void
   language?: string
+  audioOnly?: boolean
 }
 
 export function JitsiMeeting({
@@ -22,6 +23,7 @@ export function JitsiMeeting({
   domain,
   onLeave,
   language = "en",
+  audioOnly = false,
 }: JitsiMeetingProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [loading, setLoading] = useState(true)
@@ -87,7 +89,8 @@ export function JitsiMeeting({
           height: "100%",
           parentNode: containerRef.current,
           configOverwrite: {
-            startAudioOnly: false,
+            startAudioOnly: audioOnly,
+            startWithVideoMuted: audioOnly,
             disableAudioLevels: false,
             enableWelcomePage: false,
             enableClosePage: false,

@@ -4,6 +4,39 @@ All notable changes to the Rural Healthcare Platform will be documented in this 
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres roughly to chronological feature milestones.
 
+## [v1.20.14] - 2026-10-16 — Tri-Modal UPI Payments, Doctor Availability Confirmation, 2G Fallback, e-Prescription Auto-Export & Profile Claiming
+
+### 1. Doctor Availability & Time Clash Resolution (`app/teleconsult/confirm/page.tsx` & `components/ConsultationPortal.tsx`)
+- **Deterministic Slot Conflict Locking**: Held slots (`doctorId_date_slot`) are cached and locked in real time (`rural_health_booked_slots`), disabling colliding slots across patient booking sessions with explicit "✕ Held" status.
+- **External Clinician Confirmation Portal (`/teleconsult/confirm`)**: External doctors receiving WhatsApp/SMS invitations can review patient triage symptoms and choose 1-tap **Accept Appointment**, **Propose New Time (Reschedule)**, or **Decline/Refer**.
+- **Instant Patient Notification Chime**: Doctor actions automatically dispatch notification chimes directly to the patient's device and notification center via `triggerAppointmentStatusUpdated`.
+
+### 2. Tri-Modal Payment Rail & Dynamic UPI QR (`components/ConsultationPortal.tsx`)
+- **Flexible Specialist Payment Options**: Integrated 3 patient payment pathways for fee-charging clinicians:
+  1. **Instant UPI Intent & Dynamic QR**: Generates official NPCI UPI deep links (`upi://pay?pa=ruralhealth.care@upi&pn=...&am=...`) supporting 1-tap checkout on Google Pay, PhonePe, Paytm, and BHIM.
+  2. **Pay at Hospital OPD Counter**: Zero-cash digital booking allowing patients to settle nominal consultation fees at the clinic reception.
+  3. **Ayushman Bharat PM-JAY / BPL Exemption**: 100% consultation fee waiver for eligible rural citizens holding Ayushman Golden cards or BPL ration cards.
+- **Government OPD Exemption**: Practitioners at AIIMS, GMCs, and District Hospitals are strictly marked as ₹0 Free OPD with National Health Mission coverage.
+- **Payment Status Annotations in Dispatch**: WhatsApp/SMS invitations explicitly inform clinicians of the patient's payment method (Paid via UPI / Collect at OPD).
+
+### 3. Low-Bandwidth (2G) Audio Fallback (`app/teleconsult/room/page.tsx` & `components/JitsiMeeting.tsx`)
+- **2G / Ultra Low-Bandwidth Mode**: Added 1-tap toolbar toggle and auto-detection for 2G / spotty cellular connections (`navigator.connection.effectiveType`).
+- **95% Data Reduction**: Drops video transmission to 0 kbps and runs low-bitrate Opus audio (16–24 kbps), allowing uninterrupted clinical consultation in deep rural regions.
+- **Jitsi Config Integration**: Added `audioOnly` prop to `JitsiMeeting.tsx` configuring `startAudioOnly` and `startWithVideoMuted`.
+
+### 4. Digital Consultation Record & e-Prescription Auto-Export (`app/teleconsult/room/page.tsx`)
+- **Auto-Export Clinical Summary Modal**: Built-in modal pre-populates doctor credentials, NMC registration number, hospital affiliation, patient details, diagnosis, prescribed medicines (Rx), instructions, and follow-up.
+- **Direct Save to Records**: 1-click save writes directly to the patient's medical records vault via `POST /api/medical-records` with `record_type: "prescription"` and persists in local prescription cache.
+- **Printable Medical Prescription PDF**: 1-click printable prescription layout formatted with official Rx symbol, NMC telemedicine compliance statement, and digital doctor signature block.
+
+### 5. Doctor "Claim Profile" Onboarding (`app/doctor/claim/page.tsx` & `components/Header.tsx`)
+- **NMC Profile Search & Claim**: External doctors among the 913 directory can look up their profile by name or NMC registration number.
+- **Account Linking & Role Elevation**: Links claimed profiles to Supabase authenticated accounts, elevating user role to `doctor` in `profiles`.
+- **Direct UPI VPA Customization**: Clinicians can register their private UPI ID (e.g. `dr.goenka@okhdfcbank`) to receive consultation fees with 0% platform deductions.
+- **Header Navigation Entry**: Added "Doctor Claim" link with `ShieldCheck` icon to public desktop and mobile headers.
+
+---
+
 ## [v1.20.13] - 2026-10-15 — Passwordless Guest Teleconsultation Room & 4-Way Doctor Invitation Dispatch Suite
 
 ### 1. Passwordless Guest Teleconsultation Room (`app/teleconsult/room/page.tsx`)

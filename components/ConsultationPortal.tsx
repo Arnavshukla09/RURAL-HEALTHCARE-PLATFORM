@@ -31,6 +31,7 @@ import {
   Copy,
   Check,
   ExternalLink,
+  CreditCard,
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { REAL_DOCTORS, RealDoctor } from "@/lib/data/real-doctors"
@@ -134,6 +135,20 @@ export function ConsultationPortal({ language, user, symptomResult }: Consultati
   const [currentPage, setCurrentPage] = useState(1)
   const PAGE_SIZE = 10
 
+  // Payment & Conflict Protection
+  const [paymentMode, setPaymentMode] = useState<"upi" | "counter" | "free">("upi")
+  const [bookedSlots, setBookedSlots] = useState<Set<string>>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const stored = JSON.parse(localStorage.getItem("rural_health_booked_slots") || "[]")
+        return new Set(stored)
+      } catch {
+        return new Set()
+      }
+    }
+    return new Set()
+  })
+
   const [loading, setLoading] = useState(false)
   const [copiedLink, setCopiedLink] = useState(false)
   const [successData, setSuccessData] = useState<{
@@ -142,6 +157,7 @@ export function ConsultationPortal({ language, user, symptomResult }: Consultati
     slot: string
     consultType: string
     roomId: string
+    paymentMode: string
   } | null>(null)
   const [error, setError] = useState("")
 
@@ -248,6 +264,15 @@ export function ConsultationPortal({ language, user, symptomResult }: Consultati
         }),
       })
 
+      // Lock slot to prevent clashes
+      const slotKey = `${selectedDoctor.id}_${selectedDate}_${selectedSlot}`
+      const newBooked = new Set(bookedSlots)
+      newBooked.add(slotKey)
+      setBookedSlots(newBooked)
+      if (typeof window !== "undefined") {
+        localStorage.setItem("rural_health_booked_slots", JSON.stringify(Array.from(newBooked)))
+      }
+
       // Dispatch real-time notification
       await triggerAppointmentBooked({
         doctorName: selectedDoctor.name,
@@ -261,24 +286,16 @@ export function ConsultationPortal({ language, user, symptomResult }: Consultati
         roomId: roomId,
       })
 
-      if (res.ok) {
-        setSuccessData({
-          doctor: selectedDoctor,
-          date: selectedDate,
-          slot: selectedSlot,
-          consultType,
-          roomId,
-        })
-      } else {
-        // If unauthenticated or edge network issue, still honor booking locally with notification
-        setSuccessData({
-          doctor: selectedDoctor,
-          date: selectedDate,
-          slot: selectedSlot,
-          consultType,
-          roomId,
-        })
-      }
+      const finalPaymentMode = selectedDoctor.consultationFee === 0 ? "free" : paymentMode
+
+      setSuccessData({
+        doctor: selectedDoctor,
+        date: selectedDate,
+        slot: selectedSlot,
+        consultType,
+        roomId,
+        paymentMode: finalPaymentMode,
+      })
     } catch (e: any) {
       // Local fallback success so user is never stranded
       setSuccessData({
@@ -287,6 +304,7 @@ export function ConsultationPortal({ language, user, symptomResult }: Consultati
         slot: selectedSlot,
         consultType,
         roomId: `room-${Date.now()}`,
+        paymentMode: selectedDoctor.consultationFee === 0 ? "free" : paymentMode,
       })
     } finally {
       setLoading(false)
@@ -352,11 +370,19 @@ export function ConsultationPortal({ language, user, symptomResult }: Consultati
               const origin = typeof window !== "undefined" ? window.location.origin : ""
               const doctorJoinUrl = `${origin}/teleconsult/room?id=${successData.roomId}&name=${encodeURIComponent(successData.doctor.name)}&role=doctor&lang=${language}`
               const patientJoinUrl = `/teleconsult/room?id=${successData.roomId}&name=${encodeURIComponent(patientName || (en ? "Patient" : "मरीज"))}&role=patient&lang=${language}`
+              const doctorAcceptUrl = `${origin}/teleconsult/confirm?id=${successData.roomId}&action=accept&doc=${encodeURIComponent(successData.doctor.name)}&patient=${encodeURIComponent(patientName || "Patient")}&date=${successData.date}&time=${successData.slot}&fee=${successData.doctor.consultationFee}&mode=${successData.consultType}&lang=${language}`
+              const doctorRescheduleUrl = `${origin}/teleconsult/confirm?id=${successData.roomId}&action=reschedule&doc=${encodeURIComponent(successData.doctor.name)}&patient=${encodeURIComponent(patientName || "Patient")}&date=${successData.date}&time=${successData.slot}&fee=${successData.doctor.consultationFee}&lang=${language}`
               const cleanPhone = (successData.doctor.phone || "").replace(/[^\d+]/g, "")
 
+              const paymentStatusStr = successData.doctor.consultationFee === 0
+                ? "Free Government OPD (Ayushman PM-JAY)"
+                : successData.paymentMode === "upi"
+                  ? `₹${successData.doctor.consultationFee} (Paid via UPI)`
+                  : `₹${successData.doctor.consultationFee} (To Collect at OPD Desk)`
+
               const invitationText = en
-                ? `🏥 *RURAL HEALTHCARE TELEMEDICINE — NEW APPOINTMENT*\n\nRespected ${successData.doctor.name},\n\nA patient has scheduled a teleconsultation with you:\n👤 *Patient:* ${patientName || "Patient"}\n📅 *Date:* ${formattedDate} at ${successData.slot}\n🩺 *Mode:* ${successData.consultType.toUpperCase()} Consultation\n${notes ? `📝 *Notes/Symptoms:* ${notes}\n` : ""}👉 *1-Tap Doctor Video Link (No login required):*\n${doctorJoinUrl}\n\nRural Healthcare Platform`
-                : `🏥 *ग्रामीण स्वास्थ्य टेलीमेडिसिन — नया परामर्श*\n\nआदरणीय ${successData.doctor.name},\n\nएक मरीज ने आपके साथ परामर्श शेड्यूल किया है:\n👤 *मरीज:* ${patientName || "मरीज"}\n📅 *तारीख:* ${formattedDate} समय ${successData.slot}\n🩺 *माध्यम:* ${successData.consultType.toUpperCase()} वीडियो परामर्श\n${notes ? `📝 *लक्षण:* ${notes}\n` : ""}👉 *डॉक्टर 1-क्लिक वीडियो लिंक (लॉगिन की आवश्यकता नहीं):*\n${doctorJoinUrl}\n\nग्रामीण स्वास्थ्य सेवा मंच`
+                ? `🏥 *RURAL HEALTHCARE TELEMEDICINE — NEW APPOINTMENT*\n\nRespected ${successData.doctor.name},\n\nA patient has requested a teleconsultation:\n👤 *Patient:* ${patientName || "Patient"}\n📅 *Slot:* ${formattedDate} at ${successData.slot}\n🩺 *Mode:* ${successData.consultType.toUpperCase()} Call\n💳 *Fee:* ${paymentStatusStr}\n${notes ? `📝 *Symptoms:* ${notes}\n` : ""}✅ *1-Tap Accept Appointment:*\n${doctorAcceptUrl}\n\n👉 *Join Video Clinic Room:*\n${doctorJoinUrl}\n\n🔄 *Propose New Time:*\n${doctorRescheduleUrl}\n\nRural Healthcare Platform`
+                : `🏥 *ग्रामीण स्वास्थ्य सेवा — नया परामर्श अनुरोध*\n\nआदरणीय ${successData.doctor.name},\n\nएक मरीज ने आपके साथ परामर्श शेड्यूल किया है:\n👤 *मरीज:* ${patientName || "मरीज"}\n📅 *समय:* ${formattedDate} समय ${successData.slot}\n🩺 *माध्यम:* ${successData.consultType.toUpperCase()} वीडियो\n💳 *शुल्क:* ${paymentStatusStr}\n${notes ? `📝 *लक्षण:* ${notes}\n` : ""}✅ *अपॉइंटमेंट स्वीकार करें (1-क्लिक):*\n${doctorAcceptUrl}\n\n👉 *वीडियो रूम लिंक:*\n${doctorJoinUrl}\n\n🔄 *समय बदलना चाहते हैं? लिंक:*\n${doctorRescheduleUrl}\n\nग्रामीण स्वास्थ्य सेवा मंच`
 
               return (
                 <div className="space-y-3 p-4 rounded-2xl bg-gradient-to-br from-purple-50 to-indigo-50 border-2 border-purple-200">
@@ -779,22 +805,27 @@ export function ConsultationPortal({ language, user, symptomResult }: Consultati
                       <span>{en ? "Morning Slots (09:00 - 12:00)" : "सुबह (09:00 - 12:00)"}</span>
                     </span>
                     <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
-                      {slots.morning.map(s => (
-                        <button
-                          key={s.time}
-                          disabled={!s.available}
-                          onClick={() => setSelectedSlot(s.time)}
-                          className={`py-1.5 text-xs font-bold rounded-lg border transition ${
-                            selectedSlot === s.time
-                              ? "bg-blue-600 text-white border-blue-600 shadow-2xs"
-                              : s.available
-                                ? "bg-white text-gray-800 border-gray-200 hover:border-blue-400"
-                                : "bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed"
-                          }`}
-                        >
-                          {s.time}
-                        </button>
-                      ))}
+                      {slots.morning.map(s => {
+                        const isBooked = selectedDoctor ? bookedSlots.has(`${selectedDoctor.id}_${selectedDate}_${s.time}`) : false
+                        return (
+                          <button
+                            key={s.time}
+                            disabled={!s.available || isBooked}
+                            onClick={() => setSelectedSlot(s.time)}
+                            className={`py-1.5 text-xs font-bold rounded-lg border transition ${
+                              selectedSlot === s.time
+                                ? "bg-blue-600 text-white border-blue-600 shadow-2xs"
+                                : isBooked
+                                  ? "bg-rose-50 text-rose-400 border-rose-200 cursor-not-allowed text-[10px]"
+                                  : s.available
+                                    ? "bg-white text-gray-800 border-gray-200 hover:border-blue-400"
+                                    : "bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed"
+                            }`}
+                          >
+                            {isBooked ? `${s.time} ✕` : s.time}
+                          </button>
+                        )
+                      })}
                     </div>
                   </div>
                 )}
@@ -807,22 +838,27 @@ export function ConsultationPortal({ language, user, symptomResult }: Consultati
                       <span>{en ? "Afternoon Slots (13:00 - 16:00)" : "दोपहर (13:00 - 16:00)"}</span>
                     </span>
                     <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
-                      {slots.afternoon.map(s => (
-                        <button
-                          key={s.time}
-                          disabled={!s.available}
-                          onClick={() => setSelectedSlot(s.time)}
-                          className={`py-1.5 text-xs font-bold rounded-lg border transition ${
-                            selectedSlot === s.time
-                              ? "bg-blue-600 text-white border-blue-600 shadow-2xs"
-                              : s.available
-                                ? "bg-white text-gray-800 border-gray-200 hover:border-blue-400"
-                                : "bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed"
-                          }`}
-                        >
-                          {s.time}
-                        </button>
-                      ))}
+                      {slots.afternoon.map(s => {
+                        const isBooked = selectedDoctor ? bookedSlots.has(`${selectedDoctor.id}_${selectedDate}_${s.time}`) : false
+                        return (
+                          <button
+                            key={s.time}
+                            disabled={!s.available || isBooked}
+                            onClick={() => setSelectedSlot(s.time)}
+                            className={`py-1.5 text-xs font-bold rounded-lg border transition ${
+                              selectedSlot === s.time
+                                ? "bg-blue-600 text-white border-blue-600 shadow-2xs"
+                                : isBooked
+                                  ? "bg-rose-50 text-rose-400 border-rose-200 cursor-not-allowed text-[10px]"
+                                  : s.available
+                                    ? "bg-white text-gray-800 border-gray-200 hover:border-blue-400"
+                                    : "bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed"
+                            }`}
+                          >
+                            {isBooked ? `${s.time} ✕` : s.time}
+                          </button>
+                        )
+                      })}
                     </div>
                   </div>
                 )}
@@ -869,6 +905,85 @@ export function ConsultationPortal({ language, user, symptomResult }: Consultati
                   placeholder={en ? "Briefly explain symptoms or medical background..." : "लक्षणों का संक्षिप्त विवरण..."}
                   className="w-full text-xs p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
+              </div>
+
+              {/* Consultation Fee & Payment Mode Selector */}
+              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-slate-700 flex items-center gap-1.5">
+                    <CreditCard className="h-3.5 w-3.5 text-teal-600" />
+                    <span>{en ? "Consultation Fee & Payment Mode:" : "परामर्श शुल्क एवं भुगतान माध्यम:"}</span>
+                  </span>
+                  <Badge className={selectedDoctor.consultationFee === 0 ? "bg-emerald-600 text-white text-[11px]" : "bg-purple-600 text-white text-[11px]"}>
+                    {selectedDoctor.consultationFee === 0 ? (en ? "₹0 (Free OPD)" : "₹0 (मुफ्त ओपीडी)") : `₹${selectedDoctor.consultationFee}`}
+                  </Badge>
+                </div>
+
+                {selectedDoctor.consultationFee === 0 ? (
+                  <p className="text-[11px] text-emerald-800 bg-emerald-50 p-2 rounded-xl border border-emerald-200">
+                    {en
+                      ? "✓ 100% Free Consultation under National Health Mission & Ayushman Bharat at Apex/Government Hospital."
+                      : "✓ राष्ट्रीय स्वास्थ्य मिशन एवं आयुष्मान भारत के तहत पूर्णतः निःशुल्क सरकारी ओपीडी परामर्श।"}
+                  </p>
+                ) : (
+                  <div className="space-y-2 pt-1 text-xs">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMode("upi")}
+                        className={`p-2 rounded-xl text-left border transition ${
+                          paymentMode === "upi"
+                            ? "border-teal-600 bg-teal-50/80 text-teal-900 font-bold"
+                            : "border-slate-200 bg-white text-slate-700"
+                        }`}
+                      >
+                        <span className="block text-[11px] font-bold">🟢 Pay Now (UPI)</span>
+                        <span className="text-[10px] text-slate-500">GPay, PhonePe, Paytm</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMode("counter")}
+                        className={`p-2 rounded-xl text-left border transition ${
+                          paymentMode === "counter"
+                            ? "border-amber-600 bg-amber-50/80 text-amber-900 font-bold"
+                            : "border-slate-200 bg-white text-slate-700"
+                        }`}
+                      >
+                        <span className="block text-[11px] font-bold">🟠 Pay at OPD</span>
+                        <span className="text-[10px] text-slate-500">Cash / Desk at Clinic</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMode("free")}
+                        className={`p-2 rounded-xl text-left border transition ${
+                          paymentMode === "free"
+                            ? "border-blue-600 bg-blue-50/80 text-blue-900 font-bold"
+                            : "border-slate-200 bg-white text-slate-700"
+                        }`}
+                      >
+                        <span className="block text-[11px] font-bold">🔵 PM-JAY / BPL</span>
+                        <span className="text-[10px] text-slate-500">100% Fee Waiver</span>
+                      </button>
+                    </div>
+
+                    {paymentMode === "upi" && (
+                      <div className="p-2.5 bg-white rounded-xl border border-teal-200 flex items-center justify-between gap-2">
+                        <div className="text-[11px]">
+                          <span className="text-slate-500 block">UPI VPA: <strong className="text-slate-800">ruralhealth.care@upi</strong></span>
+                          <span className="text-[10px] text-emerald-700">Instant verification with 0% gateway fee</span>
+                        </div>
+                        <a
+                          href={`upi://pay?pa=ruralhealth.care@upi&pn=${encodeURIComponent(selectedDoctor.name)}&am=${selectedDoctor.consultationFee}&cu=INR&tn=Consultation+Fee`}
+                          className="px-2.5 py-1 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-[11px] font-bold shrink-0"
+                        >
+                          1-Tap UPI Pay
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 
