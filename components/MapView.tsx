@@ -689,21 +689,27 @@ export function MapView({ language }: MapViewProps) {
                         </p>
                       )}
                       {f.address && <p className="text-xs text-gray-500">{f.address}</p>}
-                      {/* Contact Phone & Direct Dial */}
-                      <div className="pt-1">
-                        <a
-                          href={`tel:${f.phone || "108"}`}
-                          className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-1 rounded border border-emerald-200 hover:bg-emerald-100 flex items-center justify-between gap-1.5"
-                        >
-                          <span className="flex items-center gap-1">
-                            <Phone className="h-3 w-3" />
-                            <span>{f.phone || (en ? "108 (Emergency Dispatch)" : "108 (आपातकालीन सेवा)")}</span>
-                          </span>
-                          <span className="text-[10px] uppercase font-bold text-emerald-800 bg-emerald-200/60 px-1 py-0.5 rounded">
-                            {en ? "Call" : "कॉल"}
-                          </span>
-                        </a>
-                      </div>
+                      {/* Contact Phone & Direct Dial (Shown only when official phone exists) */}
+                      {f.phone ? (
+                        <div className="pt-1">
+                          <a
+                            href={`tel:${f.phone}`}
+                            className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-1 rounded border border-emerald-200 hover:bg-emerald-100 flex items-center justify-between gap-1.5"
+                          >
+                            <span className="flex items-center gap-1 truncate">
+                              <Phone className="h-3 w-3 shrink-0" />
+                              <span className="truncate">{f.phone}</span>
+                            </span>
+                            <span className="text-[10px] uppercase font-bold text-emerald-800 bg-emerald-200/60 px-1 py-0.5 rounded shrink-0">
+                              {en ? "Call" : "कॉल"}
+                            </span>
+                          </a>
+                        </div>
+                      ) : (
+                        <p className="text-[11px] text-gray-400 italic pt-1">
+                          {en ? "Official contact number not listed" : "आधिकारिक फोन नंबर उपलब्ध नहीं"}
+                        </p>
+                      )}
 
                       <Button size="sm" variant="outline" className="w-full mt-2 h-7 text-xs" onClick={() => showRoute(f.lat, f.lon)} disabled={routingLoading}>
                         {routingLoading ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Navigation className="h-3 w-3 mr-1" />}
@@ -782,24 +788,36 @@ export function MapView({ language }: MapViewProps) {
                           )}
                         </div>
 
-                        {/* Contact Phone & Direct Call Action */}
-                        <div className="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-gray-100">
-                          <a
-                            href={`tel:${f.phone || "108"}`}
-                            className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700 hover:text-emerald-800 truncate"
-                          >
-                            <Phone className="h-3.5 w-3.5 shrink-0" />
-                            <span className="truncate">{f.phone || (en ? "108 (Ambulance Helpline)" : "108 (एम्बुलेंस हेल्पलाइन)")}</span>
-                          </a>
-                          <Button
-                            size="sm"
-                            className="h-7 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-2.5 rounded-lg flex items-center gap-1 shrink-0"
-                            onClick={() => window.open(`tel:${f.phone || "108"}`)}
-                          >
-                            <Phone className="h-3 w-3" />
-                            <span>{en ? "Call Now" : "कॉल करें"}</span>
-                          </Button>
-                        </div>
+                        {/* Contact Phone & Direct Call Action (Only when official phone exists) */}
+                        {f.phone ? (
+                          <div className="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-gray-100">
+                            <a
+                              href={`tel:${f.phone}`}
+                              className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700 hover:text-emerald-800 truncate"
+                            >
+                              <Phone className="h-3.5 w-3.5 shrink-0" />
+                              <span className="truncate">{f.phone}</span>
+                            </a>
+                            <Button
+                              size="sm"
+                              className="h-7 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-2.5 rounded-lg flex items-center gap-1 shrink-0"
+                              onClick={() => window.open(`tel:${f.phone}`)}
+                            >
+                              <Phone className="h-3 w-3" />
+                              <span>{en ? "Call" : "कॉल"}</span>
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-gray-100 text-[11px] text-gray-400">
+                            <span className="flex items-center gap-1 italic">
+                              <Phone className="h-3 w-3 text-gray-300 shrink-0" />
+                              <span>{en ? "Phone unlisted" : "फोन उपलब्ध नहीं"}</span>
+                            </span>
+                            <span className="text-[10px] bg-gray-50 border border-gray-200 px-1.5 py-0.5 rounded text-gray-500">
+                              {en ? "Walk-in OPD" : "प्रत्यक्ष OPD"}
+                            </span>
+                          </div>
+                        )}
                         {f.address && <p className="text-xs text-gray-400 truncate mt-1.5 mb-2">{f.address}</p>}
                         <Button size="sm" variant="outline" className="w-full h-7 text-xs mt-1" onClick={() => showRoute(f.lat, f.lon)} disabled={routingLoading}>
                           {routingLoading ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Navigation className="h-3 w-3 mr-1" />}
@@ -830,16 +848,22 @@ export function MapView({ language }: MapViewProps) {
                           <p className="font-medium text-sm truncate">{f.name}</p>
                           <div className="flex items-center justify-between gap-2 text-xs text-gray-500 mt-1">
                             <span style={{ color: cfg.color }}>{en ? cfg.en : cfg.hi}</span>
-                            <a href={`tel:${f.phone || "108"}`} className="text-emerald-700 font-semibold flex items-center gap-1">
-                              <Phone className="h-3 w-3" />
-                              <span>{f.phone || "108"}</span>
-                            </a>
+                            {f.phone ? (
+                              <a href={`tel:${f.phone}`} className="text-emerald-700 font-semibold flex items-center gap-1">
+                                <Phone className="h-3 w-3" />
+                                <span>{f.phone}</span>
+                              </a>
+                            ) : (
+                              <span className="text-gray-400 italic text-[11px]">{en ? "Phone unlisted" : "फोन उपलब्ध नहीं"}</span>
+                            )}
                           </div>
                           <div className="flex items-center gap-2 mt-1.5">
-                            <Button size="sm" variant="outline" className="h-6 text-xs text-emerald-700 hover:bg-emerald-50 px-2 flex items-center gap-1 font-semibold" onClick={() => window.open(`tel:${f.phone || "108"}`)}>
-                              <Phone className="h-3 w-3" />
-                              <span>{en ? "Call" : "कॉल"}</span>
-                            </Button>
+                            {f.phone && (
+                              <Button size="sm" variant="outline" className="h-6 text-xs text-emerald-700 hover:bg-emerald-50 px-2 flex items-center gap-1 font-semibold" onClick={() => window.open(`tel:${f.phone}`)}>
+                                <Phone className="h-3 w-3" />
+                                <span>{en ? "Call" : "कॉल"}</span>
+                              </Button>
+                            )}
                             <Button size="sm" variant="ghost" className="h-6 text-xs text-blue-600" onClick={() => showRoute(f.lat, f.lon)} disabled={routingLoading}>
                               {en ? "Show Route" : "मार्ग दिखाएं"}
                             </Button>
