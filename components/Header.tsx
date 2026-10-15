@@ -1,6 +1,6 @@
 "use client"
 import { Button } from "./ui/button"
-import { Menu, X, Heart, AlertTriangle, Activity, ChevronDown, LogOut, User, BookOpen, Users, Bell, Calendar, ClipboardList, MapPin, Megaphone, Globe, Check } from "lucide-react"
+import { Menu, X, Heart, AlertTriangle, Activity, ChevronDown, LogOut, User, BookOpen, Users, Bell, Calendar, ClipboardList, MapPin, Megaphone, Globe, Check, Stethoscope } from "lucide-react"
 import { useState, useRef, useEffect } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { NotificationBell } from "./NotificationBell"
@@ -75,12 +75,17 @@ export function Header() {
     { key: "/admin/notifications", label: en ? "Notify" : "सूचनाएं", icon: Bell },
   ]
 
-  const careItems = [
+  const publicNavItems = [
+    { key: "/symptom-checker", label: en ? "Symptoms" : "लक्षण", icon: Activity },
+    { key: "/directory", label: en ? "Find Doctors" : "डॉक्टर खोजें", icon: Stethoscope },
+    { key: "/locations", label: en ? "Find Hospitals" : "अस्पताल खोजें", icon: MapPin },
+    { key: "/health-info", label: en ? "Health Info" : "स्वास्थ्य जानकारी", icon: BookOpen },
+  ]
+
+  const userCareItems = [
     { key: "/consultation", label: en ? "Book Consultation" : "परामर्श बुक करें" },
     { key: "/appointments", label: en ? "My Appointments" : "मेरी अपॉइंटमेंट" },
     { key: "/records", label: en ? "Medical Records" : "चिकित्सा रिकॉर्ड" },
-    { key: "/directory", label: en ? "Find Doctors" : "डॉक्टर खोजें" },
-    { key: "/locations", label: en ? "Find Hospitals" : "अस्पताल खोजें" },
   ]
 
   const roleBadge: Record<string, { color: string; label: string }> = {
@@ -156,42 +161,46 @@ export function Header() {
               </>
             )}
 
-            {/* PATIENT */}
+            {/* PATIENT & PUBLIC VISITORS */}
             {role === "patient" && (
               <>
-                <button onClick={() => go("/symptom-checker")}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActive("/symptom-checker") ? "bg-teal-600 text-white" : "text-gray-600 hover:bg-gray-100"
-                  }`}>
-                  <Activity className="h-4 w-4" />{en ? "Symptoms" : "लक्षण"}
-                </button>
-                <button onClick={() => go("/health-info")}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActive("/health-info") ? "bg-teal-600 text-white" : "text-gray-600 hover:bg-gray-100"
-                  }`}>
-                  <BookOpen className="h-4 w-4" />{en ? "Health Info" : "स्वास्थ्य जानकारी"}
-                </button>
-                <div ref={careRef} className="relative">
-                  <button onClick={() => setCareDropOpen(!careDropOpen)}
-                    className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                      careItems.some(i => isActive(i.key)) ? "bg-teal-600 text-white" : "text-gray-600 hover:bg-gray-100"
-                    }`}>
-                    {en ? "My Care" : "मेरी देखभाल"}
-                    <ChevronDown className={`h-3.5 w-3.5 transition-transform ${careDropOpen ? "rotate-180" : ""}`} />
-                  </button>
-                  {careDropOpen && (
-                    <div className="absolute top-full left-0 mt-1 w-52 bg-white rounded-xl border border-gray-100 shadow-xl py-1 z-50">
-                      {careItems.map(item => (
-                        <button key={item.key} onClick={() => go(item.key)}
-                          className={`w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-teal-50 hover:text-teal-700 ${
-                            isActive(item.key) ? "bg-teal-50 text-teal-700 font-medium" : "text-gray-700"
-                          }`}>
-                          {item.label}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                {publicNavItems.map(item => {
+                  const Icon = item.icon
+                  return (
+                    <button key={item.key} onClick={() => go(item.key)}
+                      className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                        isActive(item.key) ? "bg-teal-600 text-white" : "text-gray-600 hover:bg-gray-100"
+                      }`}>
+                      <Icon className="h-4 w-4" />{item.label}
+                    </button>
+                  )
+                })}
+
+                {/* My Care Dropdown — ONLY displayed to logged-in users */}
+                {user && (
+                  <div ref={careRef} className="relative">
+                    <button onClick={() => setCareDropOpen(!careDropOpen)}
+                      className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                        userCareItems.some(i => isActive(i.key)) ? "bg-teal-600 text-white" : "text-gray-600 hover:bg-gray-100"
+                      }`}>
+                      {en ? "My Care" : "मेरी देखभाल"}
+                      <ChevronDown className={`h-3.5 w-3.5 transition-transform ${careDropOpen ? "rotate-180" : ""}`} />
+                    </button>
+                    {careDropOpen && (
+                      <div className="absolute top-full left-0 mt-1 w-52 bg-white rounded-xl border border-gray-100 shadow-xl py-1 z-50">
+                        {userCareItems.map(item => (
+                          <button key={item.key} onClick={() => go(item.key)}
+                            className={`w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-teal-50 hover:text-teal-700 ${
+                              isActive(item.key) ? "bg-teal-50 text-teal-700 font-medium" : "text-gray-700"
+                            }`}>
+                            {item.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <button onClick={() => go("/emergency")}
                   className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                     isActive("/emergency") ? "bg-red-600 text-white" : "text-red-600 hover:bg-red-50"
@@ -355,18 +364,31 @@ export function Header() {
             })}
             {role === "patient" && (
               <>
-                <button onClick={() => go("/symptom-checker")} className={`w-full flex items-center gap-2 px-4 py-3 text-sm rounded-lg ${isActive("/symptom-checker") ? "bg-teal-50 text-teal-700" : "text-gray-700 hover:bg-gray-50"}`}>
-                  <Activity className="h-4 w-4" />{en ? "Symptom Checker" : "लक्षण जांचकर्ता"}
-                </button>
-                <button onClick={() => go("/health-info")} className={`w-full flex items-center gap-2 px-4 py-3 text-sm rounded-lg ${isActive("/health-info") ? "bg-teal-50 text-teal-700" : "text-gray-700 hover:bg-gray-50"}`}>
-                  <BookOpen className="h-4 w-4" />{en ? "Health Info" : "स्वास्थ्य जानकारी"}
-                </button>
-                {careItems.map(item => (
-                  <button key={item.key} onClick={() => go(item.key)}
-                    className={`w-full text-left px-6 py-2.5 text-sm rounded-lg ${isActive(item.key) ? "bg-teal-50 text-teal-700 font-medium" : "text-gray-700 hover:bg-gray-50"}`}>
-                    {item.label}
-                  </button>
-                ))}
+                {publicNavItems.map(item => {
+                  const Icon = item.icon
+                  return (
+                    <button key={item.key} onClick={() => go(item.key)}
+                      className={`w-full flex items-center gap-2 px-4 py-3 text-sm rounded-lg ${isActive(item.key) ? "bg-teal-50 text-teal-700 font-semibold" : "text-gray-700 hover:bg-gray-50"}`}>
+                      <Icon className="h-4 w-4" />{item.label}
+                    </button>
+                  )
+                })}
+
+                {/* My Care Section — ONLY displayed for logged-in users */}
+                {user && (
+                  <div className="py-1 border-t border-b border-gray-100 my-1">
+                    <div className="px-4 py-1.5 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+                      {en ? "My Care" : "मेरी देखभाल"}
+                    </div>
+                    {userCareItems.map(item => (
+                      <button key={item.key} onClick={() => go(item.key)}
+                        className={`w-full text-left px-6 py-2.5 text-sm rounded-lg ${isActive(item.key) ? "bg-teal-50 text-teal-700 font-medium" : "text-gray-700 hover:bg-gray-50"}`}>
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
                 <button onClick={() => go("/emergency")} className="w-full flex items-center gap-2 px-4 py-3 text-sm text-red-600 hover:bg-red-50 rounded-lg">
                   <AlertTriangle className="h-4 w-4" />{en ? "Emergency" : "आपातकाल"}
                 </button>

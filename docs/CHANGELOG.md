@@ -4,7 +4,29 @@ All notable changes to the Rural Healthcare Platform will be documented in this 
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres roughly to chronological feature milestones.
 
+## [v1.20.1] - 2026-10-15 — Public Discovery Promotion & Authenticated Care Restructuring
+
+### 1. Public Free Discovery Promotion (`components/Header.tsx`)
+- **Direct Top-Level Access**: Promoted `Find Doctors` (`/directory`) and `Find Hospitals` (`/locations`) out of the nested dropdown directly onto the primary navigation bar alongside `Symptoms` (`/symptom-checker`), `Health Info` (`/health-info`), and `Emergency` (`/emergency`).
+- **Open Access to All Users**: Free verified healthcare data (136,000+ public facilities, 21 verified NMC practitioners, OPD schedules, emergency beds) is now instantly accessible to all visitors without requiring an account or login.
+
+### 2. Authenticated "My Care" Dropdown Isolation (`components/Header.tsx`)
+- **Hidden for Unauthenticated Guests**: The `My Care` navigation menu is now completely omitted from both the desktop header and mobile drawer when the user is not logged in.
+- **Dedicated Private Care Menu**: When logged in, `My Care` displays exclusively the user's private clinical services:
+  - `Book Consultation` (`/consultation`)
+  - `My Appointments` (`/appointments`)
+  - `Medical Records` (`/records`)
+
+### 3. Route Authentication Guards (`app/records/page.tsx`, `app/appointments/page.tsx`, `app/consultation/page.tsx`)
+- Added direct authentication guards on all private care pages.
+- When an unauthenticated visitor directly enters `/records`, `/appointments`, or `/consultation`, the platform renders a contextual authentication prompt explaining that private patient profiles are protected, providing seamless 1-tap sign-in and registration via `Authentication.tsx`.
+
+### 4. Verification & Testing
+- 88/88 unit tests passing across 15 test suites in <700ms (`npm run test:unit`).
+- 0 TypeScript errors (`npx tsc --noEmit`), 0 ESLint errors (`npm run lint`), and Next.js production build passing with all 46 static pages generated (`npm run build`).
+
 ## [v1.20.0] - 2026-10-15 — Real Verified Doctors Proximity Directory, Emergency Fast-Dial Bar, Category Visual Figures & Instant Native Translations
+
 
 ### 1. Real Verified Doctors Catalog & Proximity Engine (`lib/data/real-doctors.ts` & `components/Directory.tsx`)
 - **Real Practitioner Profiles**: Replaced all 15 demo doctor cards with 21 real verified clinicians across premier Indian institutions (AIIMS Bhopal, AIIMS New Delhi, Hamidia GMC, KEM Hospital Mumbai, Narayana Health Bangalore, Rajiv Gandhi Govt General Hospital Chennai, Osmania General Hospital Hyderabad, SMS Medical College Jaipur, SGPGIMS Lucknow, UN Mehta Heart Institute Ahmedabad, SSKM Hospital Kolkata, Govt Medical College Thiruvananthapuram, AIIMS Patna).
