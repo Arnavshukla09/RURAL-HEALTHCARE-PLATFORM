@@ -58,13 +58,24 @@ export function verifyDoctorClaimToken(doctorId: string, token: string): boolean
   return token.toLowerCase() === expected.toLowerCase() || token.startsWith("nmc_")
 }
 
+function getStorage(): Storage | null {
+  if (typeof window !== "undefined" && window.localStorage) {
+    return window.localStorage
+  }
+  if (typeof localStorage !== "undefined") {
+    return localStorage
+  }
+  return null
+}
+
 /**
  * Retrieve all pending or reviewed claims from local storage.
  */
 export function getStoredDoctorClaims(): DoctorClaim[] {
-  if (typeof window === "undefined") return []
+  const storage = getStorage()
+  if (!storage) return []
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
+    const raw = storage.getItem(STORAGE_KEY)
     return raw ? JSON.parse(raw) : []
   } catch {
     return []
@@ -84,8 +95,9 @@ export function saveDoctorClaim(claim: Omit<DoctorClaim, "id" | "status" | "subm
   }
 
   const updated = [newClaim, ...all.filter(c => c.doctorId !== claim.doctorId)]
-  if (typeof window !== "undefined") {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated))
+  const storage = getStorage()
+  if (storage) {
+    storage.setItem(STORAGE_KEY, JSON.stringify(updated))
   }
   return newClaim
 }
@@ -107,8 +119,9 @@ export function updateDoctorClaimStatus(
   target.reviewedBy = "Admin Compliance Officer"
   if (adminNotes) target.adminNotes = adminNotes
 
-  if (typeof window !== "undefined") {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(all))
+  const storage = getStorage()
+  if (storage) {
+    storage.setItem(STORAGE_KEY, JSON.stringify(all))
     // If approved, update active claimed doctor profile
     if (status === "approved") {
       const claimedProfile = {
@@ -122,7 +135,7 @@ export function updateDoctorClaimStatus(
         claimedAt: target.reviewedAt,
         verified: true,
       }
-      localStorage.setItem("rural_health_claimed_doctor", JSON.stringify(claimedProfile))
+      storage.setItem("rural_health_claimed_doctor", JSON.stringify(claimedProfile))
     }
   }
 
