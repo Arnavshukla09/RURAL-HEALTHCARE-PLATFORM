@@ -209,11 +209,30 @@ This document catalogs the domain-specific React components used throughout the 
 ### 3.4 `teleconsult/room/page.tsx` (Passwordless Guest Teleconsultation Room)
 - **Purpose:** Standalone, frictionless WebRTC consultation room powered by `JitsiMeeting`. Does NOT require a Supabase account or password, allowing external NMC-registered clinicians (or guest patients) to join the video consultation via 1-tap WhatsApp or SMS invitation links.
 - **Query Parameters:** `id` (room ID), `name` (participant display name), `role` ("doctor" | "patient"), `lang` ("en" | "hi").
-- **Features:** Participant role badges, consultation timer, encrypted WebRTC badge, direct WhatsApp invitation button, 1-click link copy, and safe exit confirmation modal routing to `/appointments`.
+- **Features:**
+  - **2G Ultra Low-Bandwidth Mode:** Auto-detects 2G cellular connections and provides a 1-tap toolbar toggle to drop video feeds to 0 kbps and run low-bitrate Opus audio (16-24 kbps), saving 95% bandwidth for poor rural signals.
+  - **Consultation Record & e-Prescription Auto-Export:** Pre-populates doctor credentials, NMC reg number, diagnosis, Rx medications, advice, and follow-up. 1-click saves directly to `/api/medical-records` and local prescription storage, and 1-click prints an official medical prescription PDF.
+  - **Room Utilities:** Participant role badges, encrypted WebRTC badge, direct WhatsApp invitation button, 1-click link copy, and safe exit confirmation modal routing to `/appointments`.
 - **Dependencies:** `components/JitsiMeeting.tsx`, `lucide-react`, `shadcn/ui`.
 - **Route:** `/teleconsult/room`.
 
-### 3.5 `NotificationBell.tsx`
+### 3.5 `teleconsult/confirm/page.tsx` (Doctor OPD Confirmation & Availability Portal)
+- **Purpose:** Dedicated, public clinician confirmation portal opened by doctors clicking the WhatsApp/SMS appointment link.
+- **Query Parameters:** `id` (room ID), `action` ("accept" | "reschedule" | "view"), `doc` (doctor name), `patient` (patient name), `date` (appointment date), `time` (slot), `fee` (consultation fee), `mode` (consultation mode).
+- **Features:**
+  - **1-Tap Accept:** Confirms booking and instantly triggers notification chime to the patient.
+  - **Propose Another Time (Reschedule):** Lets the doctor pick an alternative slot and send a custom note to the patient.
+  - **Decline / Refer:** Allows declining with emergency referral advice.
+- **Dependencies:** `lib/notifications/notification-engine.ts`, `lucide-react`, `shadcn/ui`.
+- **Route:** `/teleconsult/confirm`.
+
+### 3.6 `doctor/claim/page.tsx` (Doctor Profile Onboarding & Verification)
+- **Purpose:** Onboarding workflow enabling external medical specialists in `lib/data/real-doctors.ts` to claim their profile, link their NMC registration number to an authenticated Supabase account, and configure their direct UPI ID for patient payments.
+- **Features:** Live search across 913 NMC-verified practitioners, profile verification form, custom UPI VPA setup (0% platform deduction), and 1-click role elevation to `doctor` with redirection to `DoctorDashboard`.
+- **Dependencies:** `lib/data/real-doctors.ts`, `lib/supabase/client`, `lucide-react`, `shadcn/ui`.
+- **Route:** `/doctor/claim`.
+
+### 3.7 `NotificationBell.tsx`
 - **Purpose:** Central notification center for Patients, Doctors, Admins, and Guests. Connects to backend `/api/notifications`, syncs with local storage for guest/offline sessions, subscribes to cross-tab window events (`ruralhealth:notification`), filters by categories (All, Appointments, Alerts), and routes directly to action URLs on click.
 - **Props:**
   ```typescript
@@ -226,7 +245,7 @@ This document catalogs the domain-specific React components used throughout the 
 - **Dependencies:** `lib/notifications/notification-engine.ts`, `lucide-react`.
 - **Files Where Used:** `components/Header.tsx`.
 
-### 3.6 `AppointmentManager.tsx`
+### 3.8 `AppointmentManager.tsx`
 - **Purpose:** Tabbed UI for users to manage upcoming and past appointments, cancel bookings with automatic notifications, and launch embedded Jitsi teleconsultation rooms.
 - **Props:**
   ```typescript
