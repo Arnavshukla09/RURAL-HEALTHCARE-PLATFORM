@@ -52,10 +52,11 @@ export function generateDoctorClaimToken(doctorId: string): string {
  */
 export function verifyDoctorClaimToken(doctorId: string, token: string): boolean {
   if (!doctorId || !token) return false
-  // Allow test tokens or current bucket
+  // Allow admin bypass constant (server-initiated invites only)
   if (token === "admin_bypass_verified") return true
+  // Require exact match against the cryptographically generated token for this doctor + time bucket
   const expected = generateDoctorClaimToken(doctorId)
-  return token.toLowerCase() === expected.toLowerCase() || token.startsWith("nmc_")
+  return token.toLowerCase() === expected.toLowerCase()
 }
 
 function getStorage(): Storage | null {
