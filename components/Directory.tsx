@@ -6,26 +6,22 @@ import { Button } from "./ui/button"
 import { Card, CardContent } from "./ui/card"
 import { Input } from "./ui/input"
 import { Badge } from "./ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs"
+import { Avatar, AvatarFallback } from "./ui/avatar"
 import { 
   Search, 
   MapPin, 
   Phone, 
   Star, 
   Clock, 
-  Users, 
   Stethoscope,
-  Heart,
-  Building,
   Calendar,
-  Video,
-  MessageCircle,
   Navigation,
   CheckCircle2,
-  Filter,
   Sparkles,
-  RotateCcw
+  RotateCcw,
+  ExternalLink,
+  ArrowRight,
+  ShieldCheck
 } from "lucide-react"
 import { REAL_DOCTORS, RealDoctor, calculateDistanceKm } from "@/lib/data/real-doctors"
 import { getTranslation } from "@/lib/i18n/translations"
@@ -43,13 +39,12 @@ export function Directory({ language }: DirectoryProps) {
   // Search & Specialty Filters
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedSpecialty, setSelectedSpecialty] = useState('all')
-  const [showOnlyFRU, setShowOnlyFRU] = useState(false)
 
-  // Geo Proximity State
+  // Geo Proximity State — Strict radius filtering (default 50 km, NO "all" option)
   const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null)
   const [selectedStateCode, setSelectedStateCode] = useState<string>('all')
   const [selectedDistrictName, setSelectedDistrictName] = useState<string>('all')
-  const [selectedRadius, setSelectedRadius] = useState<number>(0) // 0 = all
+  const [selectedRadius, setSelectedRadius] = useState<number>(50) // 10, 25, 50, 100 km
   const [isLocating, setIsLocating] = useState<boolean>(false)
   const [locationStatus, setLocationStatus] = useState<string | null>(null)
 
@@ -78,6 +73,9 @@ export function Directory({ language }: DirectoryProps) {
     return null
   }, [userCoords, selectedStateCode, selectedDistrictName])
 
+  // Flag determining whether user has activated a location
+  const hasActiveLocation = Boolean(referenceCoords)
+
   // GPS Auto-Detection Handler
   const handleDetectLocation = () => {
     if (typeof navigator === "undefined" || !navigator.geolocation) {
@@ -95,124 +93,13 @@ export function Directory({ language }: DirectoryProps) {
         setUserCoords(coords)
         setLocationStatus(`GPS: ${coords.lat.toFixed(3)}, ${coords.lng.toFixed(3)}`)
       },
-      (err) => {
+      () => {
         setIsLocating(false)
-        setLocationStatus("Could not detect location. Please pick State/District.")
+        setLocationStatus("Could not detect location. Please select State/District.")
       },
       { timeout: 8000, enableHighAccuracy: false }
     )
   }
-
-  // Real Hospitals Catalog
-  const hospitals = [
-    {
-      id: 1,
-      name: language === 'en' ? 'AIIMS Bhopal' : 'एम्स भोपाल',
-      type: 'government',
-      location: language === 'en' ? 'Saket Nagar, Bhopal' : 'साकेत नगर, भोपाल',
-      phone: '+91 755-2672355',
-      emergency: true,
-      beds: 900,
-      availableBeds: 78,
-      rating: 4.7,
-      services: ['Emergency', 'Surgery', 'Cardiology', 'Neurology', 'Oncology', 'Pediatrics', 'Trauma Centre'],
-      image: ''
-    },
-    {
-      id: 2,
-      name: language === 'en' ? 'Hamidia Hospital (GMC)' : 'हमीदिया अस्पताल (जीएमसी)',
-      type: 'government',
-      isFRU: true,
-      location: language === 'en' ? 'Royal Market, Bhopal' : 'रॉयल मार्केट, भोपाल',
-      phone: '+91 755-2540222',
-      emergency: true,
-      beds: 1100,
-      availableBeds: 120,
-      rating: 4.2,
-      services: ['Emergency', 'Obstetrics & Gynecology (FRU)', 'Surgery', 'Orthopedics', 'Blood Bank', 'ICU'],
-      image: ''
-    },
-    {
-      id: 3,
-      name: language === 'en' ? 'Kamla Nehru Hospital' : 'कमला नेहरू अस्पताल',
-      type: 'government',
-      isFRU: true,
-      location: language === 'en' ? 'Arera Hills, Bhopal' : 'अरेरा हिल्स, भोपाल',
-      phone: '+91 755-2540570',
-      emergency: true,
-      beds: 350,
-      availableBeds: 40,
-      rating: 4.3,
-      services: ['Maternity (FRU)', 'Pediatrics', 'Gynecology', 'Blood Bank', 'NICU', 'General Medicine'],
-      image: ''
-    },
-    {
-      id: 4,
-      name: language === 'en' ? 'Bansal Hospital' : 'बंसल अस्पताल',
-      type: 'private',
-      location: language === 'en' ? 'C-Sector, Shahpura, Bhopal' : 'सी-सेक्टर, शाहपुरा, भोपाल',
-      phone: '+91 755-4082222',
-      emergency: true,
-      beds: 300,
-      availableBeds: 25,
-      rating: 4.5,
-      services: ['Cardiology', 'Neurosurgery', 'Orthopedics', 'Cancer Centre', 'ICU', 'Dialysis'],
-      image: ''
-    },
-    {
-      id: 5,
-      name: language === 'en' ? 'Chirayu Medical College & Hospital' : 'चिरायु मेडिकल कॉलेज एवं अस्पताल',
-      type: 'private',
-      location: language === 'en' ? 'Bhopal-Indore Highway, Bhopal' : 'भोपाल-इंदौर हाईवे, भोपाल',
-      phone: '+91 755-6679100',
-      emergency: true,
-      beds: 550,
-      availableBeds: 45,
-      rating: 4.4,
-      services: ['Emergency', 'Surgery', 'Cardiology', 'Orthopedics', 'Radiology', 'Pathology'],
-      image: ''
-    },
-    {
-      id: 6,
-      name: language === 'en' ? 'MY Hospital (Indore)' : 'एम.वाय. अस्पताल (इंदौर)',
-      type: 'government',
-      location: language === 'en' ? 'MY Hospital Road, Indore' : 'एम.वाय. अस्पताल रोड, इंदौर',
-      phone: '+91 731-2527383',
-      emergency: true,
-      beds: 1000,
-      availableBeds: 95,
-      rating: 4.1,
-      services: ['Emergency', 'General Medicine', 'Surgery', 'Pediatrics', 'Gynecology', 'Trauma'],
-      image: ''
-    },
-    {
-      id: 7,
-      name: language === 'en' ? 'Bombay Hospital, Indore' : 'बॉम्बे अस्पताल, इंदौर',
-      type: 'private',
-      location: language === 'en' ? 'Ring Road, Indore' : 'रिंग रोड, इंदौर',
-      phone: '+91 731-2558866',
-      emergency: true,
-      beds: 500,
-      availableBeds: 30,
-      rating: 4.6,
-      services: ['Cardiology', 'Oncology', 'Nephrology', 'Neurology', 'Joint Replacement', 'ICU'],
-      image: ''
-    },
-    {
-      id: 8,
-      name: language === 'en' ? 'District Hospital, Sehore' : 'जिला अस्पताल, सीहोर',
-      type: 'government',
-      isFRU: true,
-      location: language === 'en' ? 'Civil Lines, Sehore' : 'सिविल लाइन्स, सीहोर',
-      phone: '+91 7562-224430',
-      emergency: true,
-      beds: 120,
-      availableBeds: 18,
-      rating: 3.8,
-      services: ['Emergency', 'General Medicine', 'Maternity (FRU)', 'Blood Storage', 'Pharmacy'],
-      image: ''
-    },
-  ]
 
   const specialties = [
     { key: 'all', label: t.allSpecialties },
@@ -226,37 +113,37 @@ export function Directory({ language }: DirectoryProps) {
     { key: 'oncology', label: t.oncology },
   ]
 
-  // Filter & Proximity Calculation for Real Doctors
+  // Filter & Proximity Calculation: Strictly location-based and capped to Top 10 per specialist
   const processedDoctors = useMemo(() => {
+    if (!referenceCoords) {
+      return []
+    }
+
+    // 1. Calculate proximity distance for all doctors
     let list: RealDoctor[] = REAL_DOCTORS.map(doc => {
-      let distance: number | undefined = undefined
-      if (referenceCoords) {
-        distance = calculateDistanceKm(referenceCoords.lat, referenceCoords.lng, doc.lat, doc.lon)
-      }
+      const distance = calculateDistanceKm(referenceCoords.lat, referenceCoords.lng, doc.lat, doc.lon)
       return { ...doc, distance }
     })
 
-    // Filter by Specialty
+    // 2. Strict distance radius filter (no "all" allowed)
+    list = list.filter(doc => doc.distance !== undefined && doc.distance <= selectedRadius)
+
+    // 3. Specialty filter if specified
     if (selectedSpecialty !== 'all') {
       list = list.filter(doc => doc.specialty === selectedSpecialty)
     }
 
-    // Filter by State if chosen
+    // 4. State filter if specified
     if (selectedStateCode !== 'all') {
       list = list.filter(doc => doc.stateCode === selectedStateCode)
     }
 
-    // Filter by District if chosen
+    // 5. District filter if specified
     if (selectedDistrictName !== 'all') {
       list = list.filter(doc => doc.districtName.toLowerCase().includes(selectedDistrictName.toLowerCase()))
     }
 
-    // Filter by Radius (if distance available and radius > 0)
-    if (selectedRadius > 0) {
-      list = list.filter(doc => doc.distance !== undefined && doc.distance <= selectedRadius)
-    }
-
-    // Filter by Search Query
+    // 6. Search Query filter
     if (searchTerm.trim()) {
       const q = searchTerm.toLowerCase().trim()
       list = list.filter(doc =>
@@ -271,7 +158,7 @@ export function Directory({ language }: DirectoryProps) {
       )
     }
 
-    // Sort by proximity distance if available, otherwise by rating
+    // 7. Sort by nearest proximity first
     list.sort((a, b) => {
       if (a.distance !== undefined && b.distance !== undefined) {
         return a.distance - b.distance
@@ -279,15 +166,23 @@ export function Directory({ language }: DirectoryProps) {
       return b.rating - a.rating
     })
 
-    return list
-  }, [referenceCoords, selectedSpecialty, selectedStateCode, selectedDistrictName, selectedRadius, searchTerm])
+    // 8. Strict Capping to Top 10 for each specialist
+    if (selectedSpecialty !== 'all') {
+      return list.slice(0, 10)
+    }
 
-  const filteredHospitals = hospitals.filter(hospital => {
-    const matchesSearch = hospital.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          hospital.location.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesFRU = showOnlyFRU ? (hospital as any).isFRU === true : true
-    return matchesSearch && matchesFRU
-  })
+    // Group and cap at most 10 doctors per specialty
+    const specialtyCounts: Record<string, number> = {}
+    const capped: RealDoctor[] = []
+    for (const doc of list) {
+      const count = specialtyCounts[doc.specialty] || 0
+      if (count < 10) {
+        specialtyCounts[doc.specialty] = count + 1
+        capped.push(doc)
+      }
+    }
+    return capped
+  }, [referenceCoords, selectedSpecialty, selectedStateCode, selectedDistrictName, selectedRadius, searchTerm])
 
   const getInitials = (name: string) => {
     return name
@@ -305,10 +200,24 @@ export function Directory({ language }: DirectoryProps) {
     setSelectedSpecialty('all')
     setSelectedStateCode('all')
     setSelectedDistrictName('all')
-    setSelectedRadius(0)
+    setSelectedRadius(50)
     setUserCoords(null)
     setLocationStatus(null)
   }
+
+  // Active location label for badge
+  const locationLabel = useMemo(() => {
+    if (userCoords) return "My Current GPS Location"
+    if (selectedDistrictName !== 'all') {
+      const st = LGD_STATES.find(s => s.code === selectedStateCode)
+      return `${selectedDistrictName}, ${st?.nameEn || ''}`
+    }
+    if (selectedStateCode !== 'all') {
+      const st = LGD_STATES.find(s => s.code === selectedStateCode)
+      return st?.nameEn || "Selected State"
+    }
+    return null
+  }, [userCoords, selectedDistrictName, selectedStateCode])
 
   return (
     <div className="min-h-screen bg-gray-50/70 p-3 sm:p-6">
@@ -317,10 +226,40 @@ export function Directory({ language }: DirectoryProps) {
         <div className="text-center max-w-3xl mx-auto space-y-2">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold">
             <Sparkles className="h-3.5 w-3.5" />
-            <span>{t.verified} • Pan-India Proximity Directory</span>
+            <span>NMC Verified • Proximity-Restricted Doctor Directory</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">{t.title}</h1>
-          <p className="text-sm text-gray-600">{t.subtitle}</p>
+          <p className="text-sm text-gray-600">
+            {language === "hi" 
+              ? "आपके वर्तमान स्थान या चयनित जिले के 10-100 किमी के दायरे में प्रति विशेषज्ञता शीर्ष 10 डॉक्टर।" 
+              : "Locate verified doctors strictly within your radius — capped to top 10 specialists per category."}
+          </p>
+        </div>
+
+        {/* National Facility Map Banner (Directing hospitals to /locations) */}
+        <div className="bg-gradient-to-r from-blue-50 via-teal-50 to-emerald-50 border border-blue-200/80 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xs">
+          <div className="flex items-center gap-3.5">
+            <div className="h-11 w-11 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+              <MapPin className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-gray-900">
+                {language === "hi" ? "अस्पताल, PHC और CHC खोज रहे हैं?" : "Looking for Hospitals, PHCs, CHCs & 24/7 Trauma Centers?"}
+              </h3>
+              <p className="text-xs text-gray-600 mt-0.5">
+                {language === "hi" 
+                  ? "सभी 1,36,000+ सरकारी स्वास्थ्य केंद्र, बिस्तर उपलब्धता और फोन नंबर हमारे सुविधा मानचित्र पर देखें।" 
+                  : "All 136,000+ public hospitals with verified direct phone numbers are mapped on our interactive Facility Map."}
+              </p>
+            </div>
+          </div>
+          <Button
+            onClick={() => router.push("/locations")}
+            className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl h-9 px-4 shrink-0 flex items-center gap-1.5 shadow-xs"
+          >
+            <span>{language === "hi" ? "सुविधा मानचित्र खोलें" : "Open Facility Map"}</span>
+            <ArrowRight className="h-3.5 w-3.5" />
+          </Button>
         </div>
 
         {/* Location & Proximity Search Controls */}
@@ -353,7 +292,7 @@ export function Directory({ language }: DirectoryProps) {
               </Button>
             </div>
 
-            {/* Bottom Row: State Selector + District Selector + Radius Picker */}
+            {/* Bottom Row: State Selector + District Selector + Radius Picker (Strictly 10k, 25k, 50k, 100k) */}
             <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 gap-3 pt-1 border-t border-gray-100">
               {/* State Dropdown */}
               <div>
@@ -368,7 +307,7 @@ export function Directory({ language }: DirectoryProps) {
                   }}
                   className="w-full text-xs font-medium bg-white border border-gray-200 rounded-lg px-2.5 py-2 text-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 >
-                  <option value="all">{t.allStates} (36 States/UTs)</option>
+                  <option value="all">{t.allStates} (Select State)</option>
                   {LGD_STATES.map((s) => (
                     <option key={s.code} value={s.code}>
                       {language === "hi" ? s.nameHi : s.nameEn}
@@ -397,23 +336,28 @@ export function Directory({ language }: DirectoryProps) {
                 </select>
               </div>
 
-              {/* Radius Picker */}
+              {/* Radius Picker (NO 0/All option) */}
               <div>
-                <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider block mb-1">
-                  {t.radius}
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
+                    {t.radius}
+                  </label>
+                  <span className="text-[10px] font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded">
+                    {selectedRadius} km
+                  </span>
+                </div>
                 <div className="flex items-center gap-1">
-                  {[0, 10, 25, 50, 100].map((rad) => (
+                  {[10, 25, 50, 100].map((rad) => (
                     <button
                       key={rad}
                       onClick={() => setSelectedRadius(rad)}
                       className={`flex-1 py-1.5 text-[11px] font-semibold rounded-md border transition ${
                         selectedRadius === rad
-                          ? "bg-blue-600 text-white border-blue-600"
+                          ? "bg-blue-600 text-white border-blue-600 shadow-xs"
                           : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
                       }`}
                     >
-                      {rad === 0 ? "All" : `${rad}k`}
+                      {rad} km
                     </button>
                   ))}
                 </div>
@@ -452,260 +396,238 @@ export function Directory({ language }: DirectoryProps) {
           </CardContent>
         </Card>
 
-        {/* Directory Content Tabs */}
-        <Tabs defaultValue="doctors" className="space-y-5">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-            <TabsList className="grid w-full sm:w-auto grid-cols-2 max-w-xs">
-              <TabsTrigger value="doctors" className="flex items-center gap-1.5 text-xs font-semibold">
-                <Stethoscope className="h-3.5 w-3.5" />
-                <span>{t.doctors} ({processedDoctors.length})</span>
-              </TabsTrigger>
-              <TabsTrigger value="hospitals" className="flex items-center gap-1.5 text-xs font-semibold">
-                <Building className="h-3.5 w-3.5" />
-                <span>{t.hospitals} ({filteredHospitals.length})</span>
-              </TabsTrigger>
-            </TabsList>
+        {/* LOCATION GUARD OR DOCTOR DIRECTORY */}
+        {!hasActiveLocation ? (
+          /* Location Required Prompt Card */
+          <Card className="border-2 border-dashed border-blue-200 bg-blue-50/30 text-center py-12 px-4 rounded-2xl">
+            <CardContent className="max-w-md mx-auto space-y-4">
+              <div className="h-14 w-14 rounded-2xl bg-blue-100 text-blue-700 flex items-center justify-center mx-auto shadow-xs">
+                <Navigation className="h-7 w-7" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-lg font-bold text-gray-900">
+                  {language === "hi" ? "पास के डॉक्टर खोजने हेतु स्थान निर्धारित करें" : "Set Your Location to Find Nearby Doctors"}
+                </h3>
+                <p className="text-xs text-gray-600">
+                  {language === "hi"
+                    ? "डॉक्टर खोज पूरी तरह से निकटता-आधारित है। सभी डॉक्टरों को एक साथ देखने का विकल्प उपलब्ध नहीं है; कृपया अपना GPS सक्रिय करें या राज्य और जिला चुनें।"
+                    : "Doctor listings are strictly proximity-filtered within your chosen radius (capping top 10 per specialist). Nationwide unfiltered browsing is disabled."}
+                </p>
+              </div>
 
-            {referenceCoords && (
-              <div className="text-xs text-gray-500 flex items-center gap-1.5 self-center sm:self-auto">
-                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="font-medium text-gray-700">{t.nearestFirst}</span>
-                <span>(sorted by proximity)</span>
+              <div className="flex flex-col sm:flex-row gap-2 justify-center pt-2">
+                <Button
+                  onClick={handleDetectLocation}
+                  disabled={isLocating}
+                  className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold h-10 px-5 rounded-xl flex items-center justify-center gap-2"
+                >
+                  <Navigation className={`h-4 w-4 ${isLocating ? "animate-spin" : ""}`} />
+                  <span>{isLocating ? t.detectingLocation : "📍 Use My GPS Location"}</span>
+                </Button>
+              </div>
+
+              {/* Quick State Selection Pills */}
+              <div className="pt-4 border-t border-blue-100">
+                <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                  {language === "hi" ? "या लोकप्रिय राज्य चुनें:" : "Or select popular state:"}
+                </p>
+                <div className="flex flex-wrap gap-1.5 justify-center">
+                  {[
+                    { code: "23", name: "Madhya Pradesh" },
+                    { code: "07", name: "Delhi" },
+                    { code: "09", name: "Uttar Pradesh" },
+                    { code: "27", name: "Maharashtra" },
+                    { code: "08", name: "Rajasthan" },
+                    { code: "29", name: "Karnataka" },
+                  ].map(s => (
+                    <button
+                      key={s.code}
+                      onClick={() => {
+                        setSelectedStateCode(s.code)
+                        setSelectedDistrictName('all')
+                      }}
+                      className="px-2.5 py-1 text-xs bg-white text-blue-800 border border-blue-200 rounded-lg hover:bg-blue-50 font-medium transition"
+                    >
+                      {s.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          /* Active Directory Results (Capped to Top 10 per specialist) */
+          <div className="space-y-4">
+            {/* Results Filter & Count Header Bar */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 bg-white p-3.5 rounded-xl border border-gray-200">
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex items-center gap-1.5 font-bold text-gray-900 text-sm">
+                  <Stethoscope className="h-4 w-4 text-blue-600" />
+                  <span>Verified Doctors ({processedDoctors.length})</span>
+                </div>
+                <Badge variant="outline" className="text-emerald-700 bg-emerald-50 border-emerald-200 text-[10px] font-semibold">
+                  Top 10 Capped per Specialist
+                </Badge>
+                <Badge variant="outline" className="text-blue-700 bg-blue-50 border-blue-200 text-[10px] font-bold">
+                  📍 Within {selectedRadius} km
+                </Badge>
+              </div>
+
+              {locationLabel && (
+                <div className="text-xs text-gray-600 flex items-center gap-1.5">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="font-medium text-gray-700">Near: {locationLabel}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Doctor Cards */}
+            {processedDoctors.length > 0 ? (
+              <div className="space-y-4">
+                {processedDoctors.map((doctor) => (
+                  <Card key={doctor.id} className="hover:shadow-md transition-shadow border-gray-200">
+                    <CardContent className="p-4 sm:p-6">
+                      <div className="flex flex-col lg:flex-row gap-5 items-start justify-between">
+                        {/* Left: Avatar + Details */}
+                        <div className="flex items-start gap-4 flex-1">
+                          <Avatar className="h-16 w-16 border-2 border-blue-100 shrink-0">
+                            <AvatarFallback className="bg-blue-600 text-white font-bold text-base">
+                              {getInitials(doctor.name)}
+                            </AvatarFallback>
+                          </Avatar>
+
+                          <div className="space-y-1.5 flex-1 min-w-0">
+                            {/* Name + Badges */}
+                            <div className="flex flex-wrap items-center gap-2">
+                              <h3 className="text-lg font-bold text-gray-900">{doctor.name}</h3>
+
+                              {/* Verified NMC Badge */}
+                              <Badge className="bg-emerald-50 text-emerald-800 border-emerald-200 text-[10px] font-semibold gap-1">
+                                <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                                <span>{t.verified} • {doctor.regNo}</span>
+                              </Badge>
+
+                              {/* Distance Badge */}
+                              {doctor.distance !== undefined && (
+                                <Badge variant="outline" className="text-blue-700 bg-blue-50 border-blue-200 text-[10px] font-bold">
+                                  📍 {doctor.distance} {t.kmAway}
+                                </Badge>
+                              )}
+
+                              {doctor.available && (
+                                <Badge className="bg-emerald-600 text-white text-[10px] font-semibold">
+                                  <Clock className="h-2.5 w-2.5 mr-1" />
+                                  {t.available}
+                                </Badge>
+                              )}
+                            </div>
+
+                            {/* Qualifications & Specialty */}
+                            <div className="text-xs font-semibold text-blue-700 flex items-center gap-1.5 flex-wrap">
+                              <span>{doctor.specialtyName}</span>
+                              <span className="text-gray-300">•</span>
+                              <span className="text-gray-600 font-normal">{doctor.qualifications}</span>
+                            </div>
+
+                            {/* Hospital Affiliation */}
+                            <div className="text-xs font-medium text-gray-800 flex items-center gap-1.5">
+                              <MapPin className="h-3.5 w-3.5 text-gray-400 shrink-0" />
+                              <span className="truncate">{doctor.hospitalAffiliation}</span>
+                            </div>
+
+                            {/* Location Address */}
+                            <div className="text-xs text-gray-500 flex items-center gap-1.5">
+                              <span className="truncate">{doctor.location}</span>
+                            </div>
+
+                            {/* OPD Timings */}
+                            <div className="text-xs text-amber-800 bg-amber-50/80 px-2.5 py-1 rounded-md inline-flex items-center gap-1.5 border border-amber-200/60 font-medium">
+                              <Clock className="h-3 w-3 text-amber-600 shrink-0" />
+                              <span>{t.opdTimings}: {doctor.opdTimings}</span>
+                            </div>
+
+                            {/* Rating & Experience */}
+                            <div className="flex items-center gap-4 text-xs text-gray-600 pt-1">
+                              <div className="flex items-center gap-1">
+                                <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500" />
+                                <span className="font-bold text-gray-800">{doctor.rating}</span>
+                              </div>
+                              <span>•</span>
+                              <span>{doctor.experience} {t.yearsExp}</span>
+                              <span>•</span>
+                              <div className="flex items-center gap-1 text-gray-600">
+                                <Phone className="h-3 w-3 text-gray-400" />
+                                <span className="font-mono">{doctor.phone}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Right: Consultation Fees & Call to Actions */}
+                        <div className="flex flex-col sm:flex-row lg:flex-col items-stretch lg:items-end justify-between gap-3 w-full lg:w-auto shrink-0 pt-2 lg:pt-0 border-t lg:border-t-0 border-gray-100">
+                          <div className="text-left lg:text-right">
+                            <p className="text-xl font-black text-emerald-700">
+                              {doctor.consultationFee > 0 ? `₹${doctor.consultationFee}` : t.free}
+                            </p>
+                            <p className="text-[11px] text-gray-400 font-medium">
+                              {doctor.consultationFee > 0 ? "OPD Consultation" : "Govt Free OPD"}
+                            </p>
+                          </div>
+
+                          <div className="flex flex-wrap sm:flex-nowrap gap-2">
+                            <Button
+                              size="sm"
+                              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs h-8 px-3 rounded-lg flex items-center gap-1.5"
+                              onClick={() => window.open(`tel:${doctor.phone}`)}
+                            >
+                              <Phone className="h-3.5 w-3.5" />
+                              <span>{t.callNow}</span>
+                            </Button>
+
+                            <Button
+                              size="sm"
+                              variant="secondary"
+                              className="text-xs h-8 px-3 font-semibold rounded-lg flex items-center gap-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100"
+                              onClick={() => router.push("/consultation")}
+                            >
+                              <Calendar className="h-3.5 w-3.5" />
+                              <span>{t.bookAppointment}</span>
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 bg-white rounded-xl border border-dashed border-gray-200 p-6 space-y-3">
+                <Stethoscope className="h-12 w-12 text-gray-300 mx-auto" />
+                <p className="text-sm font-semibold text-gray-700">
+                  No verified practitioners found within {selectedRadius} km of your location.
+                </p>
+                <p className="text-xs text-gray-400">
+                  Try expanding your search radius to 50 km or 100 km, or select an adjacent district.
+                </p>
+                <div className="flex justify-center gap-2 pt-2">
+                  {selectedRadius < 50 && (
+                    <Button onClick={() => setSelectedRadius(50)} variant="outline" size="sm" className="text-xs font-semibold">
+                      Expand to 50 km
+                    </Button>
+                  )}
+                  {selectedRadius < 100 && (
+                    <Button onClick={() => setSelectedRadius(100)} variant="outline" size="sm" className="text-xs font-semibold">
+                      Expand to 100 km
+                    </Button>
+                  )}
+                  <Button onClick={resetAllFilters} variant="ghost" size="sm" className="text-xs font-semibold">
+                    {t.resetFilters}
+                  </Button>
+                </div>
               </div>
             )}
           </div>
-
-          {/* DOCTORS TAB */}
-          <TabsContent value="doctors" className="space-y-4">
-            {processedDoctors.length > 0 ? (
-              processedDoctors.map((doctor) => (
-                <Card key={doctor.id} className="hover:shadow-md transition-shadow border-gray-200">
-                  <CardContent className="p-4 sm:p-6">
-                    <div className="flex flex-col lg:flex-row gap-5 items-start justify-between">
-                      {/* Left: Avatar + Details */}
-                      <div className="flex items-start gap-4 flex-1">
-                        <Avatar className="h-16 w-16 border-2 border-blue-100 shrink-0">
-                          <AvatarFallback className="bg-blue-600 text-white font-bold text-base">
-                            {getInitials(doctor.name)}
-                          </AvatarFallback>
-                        </Avatar>
-
-                        <div className="space-y-1.5 flex-1 min-w-0">
-                          {/* Name + Badges */}
-                          <div className="flex flex-wrap items-center gap-2">
-                            <h3 className="text-lg font-bold text-gray-900">{doctor.name}</h3>
-
-                            {/* Verified NMC Badge */}
-                            <Badge className="bg-emerald-50 text-emerald-800 border-emerald-200 text-[10px] font-semibold gap-1">
-                              <CheckCircle2 className="h-3 w-3 text-emerald-600" />
-                              <span>{t.verified} • {doctor.regNo}</span>
-                            </Badge>
-
-                            {/* Distance Badge */}
-                            {doctor.distance !== undefined && (
-                              <Badge variant="outline" className="text-blue-700 bg-blue-50 border-blue-200 text-[10px] font-bold">
-                                📍 {doctor.distance} {t.kmAway}
-                              </Badge>
-                            )}
-
-                            {doctor.available && (
-                              <Badge className="bg-emerald-600 text-white text-[10px] font-semibold">
-                                <Clock className="h-2.5 w-2.5 mr-1" />
-                                {t.available}
-                              </Badge>
-                            )}
-                          </div>
-
-                          {/* Qualifications & Specialty */}
-                          <div className="text-xs font-semibold text-blue-700 flex items-center gap-1.5 flex-wrap">
-                            <span>{doctor.specialtyName}</span>
-                            <span className="text-gray-300">•</span>
-                            <span className="text-gray-600 font-normal">{doctor.qualifications}</span>
-                          </div>
-
-                          {/* Hospital Affiliation */}
-                          <div className="text-xs font-medium text-gray-800 flex items-center gap-1.5">
-                            <Building className="h-3.5 w-3.5 text-gray-400 shrink-0" />
-                            <span className="truncate">{doctor.hospitalAffiliation}</span>
-                          </div>
-
-                          {/* Location Address */}
-                          <div className="text-xs text-gray-500 flex items-center gap-1.5">
-                            <MapPin className="h-3.5 w-3.5 text-gray-400 shrink-0" />
-                            <span>{doctor.location}</span>
-                          </div>
-
-                          {/* OPD Timings */}
-                          <div className="text-xs text-amber-800 bg-amber-50/80 px-2.5 py-1 rounded-md inline-flex items-center gap-1.5 border border-amber-200/60 font-medium">
-                            <Clock className="h-3 w-3 text-amber-600 shrink-0" />
-                            <span>{t.opdTimings}: {doctor.opdTimings}</span>
-                          </div>
-
-                          {/* Rating & Experience */}
-                          <div className="flex items-center gap-4 text-xs text-gray-600 pt-1">
-                            <div className="flex items-center gap-1">
-                              <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500" />
-                              <span className="font-bold text-gray-800">{doctor.rating}</span>
-                            </div>
-                            <span>•</span>
-                            <span>{doctor.experience} {t.yearsExp}</span>
-                            <span>•</span>
-                            <div className="flex items-center gap-1 text-gray-600">
-                              <Phone className="h-3 w-3 text-gray-400" />
-                              <span className="font-mono">{doctor.phone}</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Right: Consultation Fees & Call to Actions */}
-                      <div className="flex flex-col sm:flex-row lg:flex-col items-stretch lg:items-end justify-between gap-3 w-full lg:w-auto shrink-0 pt-2 lg:pt-0 border-t lg:border-t-0 border-gray-100">
-                        <div className="text-left lg:text-right">
-                          <p className="text-xl font-black text-emerald-700">
-                            {doctor.consultationFee > 0 ? `₹${doctor.consultationFee}` : t.free}
-                          </p>
-                          <p className="text-[11px] text-gray-400 font-medium">
-                            {doctor.consultationFee > 0 ? "OPD Consultation" : "Govt Free OPD"}
-                          </p>
-                        </div>
-
-                        <div className="flex flex-wrap sm:flex-nowrap gap-2">
-                          <Button
-                            size="sm"
-                            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs h-8 px-3 rounded-lg flex items-center gap-1.5"
-                            onClick={() => window.open(`tel:${doctor.phone}`)}
-                          >
-                            <Phone className="h-3.5 w-3.5" />
-                            <span>{t.callNow}</span>
-                          </Button>
-
-                          <Button
-                            size="sm"
-                            variant="secondary"
-                            className="text-xs h-8 px-3 font-semibold rounded-lg flex items-center gap-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100"
-                            onClick={() => router.push("/consultation")}
-                          >
-                            <Calendar className="h-3.5 w-3.5" />
-                            <span>{t.bookAppointment}</span>
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            ) : (
-              <div className="text-center py-12 bg-white rounded-xl border border-dashed border-gray-200 p-6">
-                <Stethoscope className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                <p className="text-sm font-semibold text-gray-700">{t.noDoctorsFound}</p>
-                <p className="text-xs text-gray-400 mt-1">Try widening your search radius or changing the specialty filter.</p>
-                <Button
-                  onClick={resetAllFilters}
-                  variant="outline"
-                  size="sm"
-                  className="mt-4 text-xs font-semibold"
-                >
-                  {t.resetFilters}
-                </Button>
-              </div>
-            )}
-          </TabsContent>
-
-          {/* HOSPITALS TAB */}
-          <TabsContent value="hospitals" className="space-y-4">
-            <div className="flex justify-end mb-2">
-              <Button 
-                variant={showOnlyFRU ? "default" : "outline"}
-                onClick={() => setShowOnlyFRU(!showOnlyFRU)}
-                size="sm"
-                className="flex items-center text-xs h-8"
-              >
-                <Heart className="h-3.5 w-3.5 mr-1.5" />
-                <span>Show Only FRUs (First Referral Units)</span>
-              </Button>
-            </div>
-
-            {filteredHospitals.length > 0 ? (
-              filteredHospitals.map((hospital) => (
-                <Card key={hospital.id} className="hover:shadow-md transition-shadow border-gray-200">
-                  <CardContent className="p-4 sm:p-6">
-                    <div className="flex flex-col md:flex-row gap-5 justify-between">
-                      <div className="flex-1 space-y-3">
-                        <div>
-                          <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                            <h3 className="text-lg font-bold text-gray-900">{hospital.name}</h3>
-                            <Badge variant={hospital.type === 'government' ? 'secondary' : 'outline'} className="text-[10px]">
-                              {hospital.type === 'government' ? t.government : t.private}
-                            </Badge>
-                            {hospital.emergency && (
-                              <Badge className="bg-red-600 text-white text-[10px] font-semibold">
-                                {t.emergency}
-                              </Badge>
-                            )}
-                          </div>
-                          <div className="flex items-center text-xs text-gray-500 gap-1.5 mb-1">
-                            <MapPin className="h-3.5 w-3.5 text-gray-400" />
-                            <span>{hospital.location}</span>
-                          </div>
-                          <div className="flex items-center text-xs text-gray-500 gap-1.5 mb-2">
-                            <Phone className="h-3.5 w-3.5 text-gray-400" />
-                            <span className="font-mono">{hospital.phone}</span>
-                          </div>
-                          <div className="flex items-center gap-4 text-xs text-gray-600">
-                            <div className="flex items-center gap-1">
-                              <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500" />
-                              <span className="font-bold text-gray-800">{hospital.rating}</span>
-                            </div>
-                            <span>•</span>
-                            <div className="flex items-center gap-1">
-                              <Users className="h-3.5 w-3.5 text-gray-400" />
-                              <span>{hospital.availableBeds}/{hospital.beds} {t.beds}</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div>
-                          <p className="text-xs font-semibold text-gray-700 mb-1.5">Services Available:</p>
-                          <div className="flex flex-wrap gap-1.5">
-                            {hospital.services.map((service, index) => (
-                              <Badge key={index} variant="outline" className="text-[10px] text-gray-700 bg-gray-50">
-                                {service}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col sm:flex-row md:flex-col justify-end gap-2 shrink-0 pt-2 md:pt-0">
-                        <Button 
-                          onClick={() => window.open(`tel:${hospital.phone}`)}
-                          className="h-8 text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center gap-1.5"
-                        >
-                          <Phone className="h-3.5 w-3.5" />
-                          <span>{t.callNow}</span>
-                        </Button>
-                        {hospital.emergency && (
-                          <Button 
-                            variant="destructive"
-                            onClick={() => window.open(`tel:${hospital.phone}`)}
-                            className="h-8 text-xs font-bold"
-                          >
-                            {t.emergency}
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            ) : (
-              <div className="text-center py-10 bg-white rounded-xl border border-dashed border-gray-200">
-                <Building className="h-10 w-10 text-gray-300 mx-auto mb-2" />
-                <p className="text-xs text-gray-500">No hospitals found matching your search.</p>
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
+        )}
       </div>
     </div>
   )

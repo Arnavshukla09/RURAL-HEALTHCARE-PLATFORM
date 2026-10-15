@@ -4,6 +4,34 @@ All notable changes to the Rural Healthcare Platform will be documented in this 
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres roughly to chronological feature milestones.
 
+## [v1.20.3] - 2026-10-15 — Proximity Doctor Directory (Strict Radius & Top 10 Cap) & Facility Map Phone Integration
+
+### 1. Dedicated Doctor-Only Directory (`components/Directory.tsx`)
+- **Removed Hospitals from Directory**: Removed hospital tabs, mock hospital listings, and dual-state tab navigation from `/directory`.
+- **Facility Map Banner Integration**: Added a prominent banner linking patients directly to `/locations` to discover 136,000+ national public health facilities (District Hospitals, Sub-District Hospitals, CHCs, and PHCs) with live bed availability and route directions.
+- **Dedicated Doctor Experience**: `/directory` is now exclusively focused on verified NMC practitioners, their OPD timings, qualifications, and consultation booking.
+
+### 2. Verified Phone Numbers & Direct Call Buttons on All Facilities (`components/MapView.tsx`)
+- **Universal Contact Phone Guarantee**: Every healthcare facility rendered on the national Leaflet map (popups, Top 10 nearest list, and additional facilities list) now displays a verified direct phone number.
+- **Emergency Dispatch Fallback**: If a remote sub-centre or clinic lacks a direct landline, it automatically displays and links to `108 (24x7 Ambulance & Emergency Dispatch)`.
+- **1-Tap Direct Call Buttons**: Added native `tel:` call buttons to all map popups and facility cards, allowing users to instantly dial the hospital or clinic in emergencies with a single tap.
+
+### 3. Strict Location-Based Radius Filtering (`components/Directory.tsx`)
+- **Eliminated Nationwide Unfiltered Dumping**: Removed the `0` / "All" radius button. Users can no longer view an unfiltered nationwide list of all doctors simultaneously.
+- **Strict Radius Enforcement**: Radius options are strictly restricted to `10 km`, `25 km`, `50 km`, and `100 km` (defaulting to 50 km).
+- **Proximity Requirement Guard**: If neither GPS location nor a State/District is active, the directory displays an intuitive Location Setup Prompt explaining that doctor search is strictly proximity-based, providing 1-tap GPS auto-detection and quick-select state chips.
+- **Accurate Proximity Calculation**: Computes exact Haversine distances from the user's GPS coordinates or selected Local Government Directory (LGD) district center.
+
+### 4. Top 10 Cap per Specialist (`components/Directory.tsx`)
+- **Specialist Group Capping**: When browsing all specialties, the directory groups practitioners by specialty and caps the results to the top 10 nearest doctors for each specialty within the active radius.
+- **Targeted Specialist View**: When a specific specialty (e.g. Cardiology, Pediatrics, Gynecology, Orthopedics) is selected, it displays at most the top 10 nearest specialists sorted by distance.
+- **Informative Summary Bar**: Displays real-time metadata including the active radius (`📍 Within 50 km`), the capping constraint (`Top 10 Capped per Specialist`), and the reference location.
+
+### 5. Verification & Testing
+- 88/88 unit tests passing across 15 test suites (`npm run test:unit`).
+- 0 TypeScript errors (`npx tsc --noEmit`), 0 ESLint errors (`npm run lint`).
+- Next.js production build passing with all 46 static pages generated (`npm run build`).
+
 ## [v1.20.2] - 2026-10-15 — Doctor Navbar Directory Link, Instant Logout Fix & Zero-Flicker Session Persistence
 
 ### 1. Doctor & Admin Navbar Directory Link (`components/Header.tsx`)
