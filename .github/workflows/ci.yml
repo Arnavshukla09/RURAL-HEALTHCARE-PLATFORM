@@ -44,7 +44,9 @@ jobs:
       - name: Run Unit Tests (Vitest)
         run: npm run test:unit
 
-      - name: Run Integration Tests & Safety Guards (Vitest)
+      - name: Run Integration Tests & Safety Guards (No-DB Smoke)
+        # Note: In test-and-build without a live database, live RLS tests skip safely.
+        # The authoritative live database test run is executed in the `db-tests` job with REQUIRE_DB=1.
         run: npm run test:integration
 
       - name: Run ESLint
@@ -78,7 +80,7 @@ jobs:
       - name: Setup Supabase CLI
         uses: supabase/setup-cli@v1
         with:
-          version: latest
+          version: 2.121.0
 
       - name: Start Supabase Local Stack
         run: |
@@ -94,7 +96,10 @@ jobs:
           NEXT_PUBLIC_SUPABASE_ANON_KEY="$ANON_KEY" \
           SUPABASE_SERVICE_ROLE_KEY="$SERVICE_KEY" \
           REQUIRE_DB=1 \
-          npm run test:integration
+          npm run test:integration -- --reporter=default --reporter=json --outputFile=vitest-integration-report.json
+
+      - name: Verify Live Database Tests Executed (Fail on 0 or Skipped)
+        run: node scripts/verify_integration_tests.mjs vitest-integration-report.json 12
 
       - name: Stop Supabase Local Stack
         if: always()
@@ -120,7 +125,7 @@ jobs:
       - name: Setup Supabase CLI
         uses: supabase/setup-cli@v1
         with:
-          version: latest
+          version: 2.121.0
 
       - name: Start Supabase Local Stack
         run: |
