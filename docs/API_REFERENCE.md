@@ -183,7 +183,7 @@ Creates a medical record entry.
   ```
 
 ### 3.3 `GET /api/abdm/fhir-export`
-Exports a medical record as an ABDM NRCES-compliant HL7 FHIR R4 Document Bundle.
+Exports a medical record as a FHIR R4 structured document bundle modelled on ABDM NRCES profiles (not yet certified against the official validator).
 - **Auth:** Required (Patient for own records, Doctor or Admin for any clinical record)
 - **Rate Limit:** Tier 2 (120/min)
 - **Headers:** `Content-Type: application/fhir+json; charset=utf-8`, `X-ABDM-Conformance: NRCES-FHIR-R4-M2`

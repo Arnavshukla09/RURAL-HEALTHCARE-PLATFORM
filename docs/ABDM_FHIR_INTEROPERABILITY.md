@@ -15,7 +15,7 @@
 
 The Ayushman Bharat Digital Mission (ABDM), launched by the National Health Authority (NHA) of India, establishes an open, federated, and interoperable digital healthcare ecosystem. The core foundational standard mandated for longitudinal clinical health records exchange across India is **HL7 FHIR R4** (Health Level Seven Fast Healthcare Interoperability Resources, Release 4), profiled by the National Resource Centre for EHR Standards (NRCES).
 
-The Rural Healthcare Platform implements an autonomous, zero-cost, pure TypeScript FHIR R4 bundle generator, validator, and export API. This architecture enables rural clinics, Community Health Centres (CHCs), and Primary Health Centres (PHCs) to produce and verify NRCES-compliant digital health bundles locally in the browser or serverless runtime without relying on heavy third-party JVM dependencies (such as HAPI FHIR) or expensive enterprise SaaS platforms.
+The Rural Healthcare Platform implements an autonomous, zero-cost, pure TypeScript FHIR R4 bundle generator, validator, and export API. This architecture enables rural clinics, Community Health Centres (CHCs), and Primary Health Centres (PHCs) to produce and verify FHIR R4 structured health record bundles modelled on ABDM NRCES profiles locally in the browser or serverless runtime without relying on heavy third-party JVM dependencies (such as HAPI FHIR) or expensive enterprise SaaS platforms. (Note: bundles are modelled after NRCES StructureDefinitions, but have not yet been evaluated through the official Java validator CLI).
 
 ---
 
@@ -247,9 +247,9 @@ Output:
        ✓ validates official ABHA addresses (@abdm, @sbx, @e-swasthya)
        ✓ rejects non-ABDM handles and malformed addresses
      ✓ 2. Prescription FHIR R4 Document Bundle Conformance (1)
-       ✓ generates an NRCES-compliant FHIR R4 Prescription Document Bundle
+       ✓ generates a FHIR R4 structured (NRCES-modelled) FHIR R4 Prescription Document Bundle
      ✓ 3. Diagnostic Report & Observations Bundle Conformance (1)
-       ✓ generates an NRCES-compliant DiagnosticReport with LOINC Observations
+       ✓ generates a FHIR R4 structured (NRCES-modelled) DiagnosticReport with LOINC Observations
      ✓ 4. Encounter & Vital Signs Bundle Conformance (1)
        ✓ generates an Encounter Bundle with Vital Signs Observations
      ✓ 5. FHIR Validation Engine Defenses (3)
