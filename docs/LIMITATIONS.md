@@ -10,9 +10,9 @@ Every subsystem in the repository is tracked against a strict 4-tier verificatio
 
 | Tier | Status Label | Verification Standard |
 |---|---|---|
-| **Tier 1** | `Implemented & Unit Tested` | Complete production implementation verified by automated deterministic Vitest suites (`npm run test:unit`, 161 tests). |
-| **Tier 2** | `Implemented & Simulation Tested` | End-to-end algorithmic behaviors verified through deterministic offline simulation suites (`npm run test:integration`, `scripts/benchmark_system_integration.mjs`). |
-| **Tier 3** | `Tested Real Database` | Live migration and row-level security policy behavior validated against local or staging PostgreSQL/Supabase instances (`supabase migration up`). |
+| **Tier 1** | `Implemented & Unit Tested` | Complete production implementation verified by automated deterministic Vitest suites (`npm run test:unit`, 162 tests). |
+| **Tier 2** | `Implemented & Simulation Tested` | End-to-end algorithmic behaviors verified through deterministic offline simulation suites (`npm run benchmark:integration`). |
+| **Tier 3** | `Real Database Verification in CI` | Full behavioral RLS contract verification with real authenticated JWTs running in GitHub Actions CI local Supabase container (`db-tests`). Local execution requires an active Supabase test container. |
 | **Tier 4** | `Planned / Roadmap` | Architecture and schema specified in documentation and database migrations, pending live integration with external national APIs (e.g. ABDM Sandbox Gateway). |
 
 ---
@@ -76,4 +76,11 @@ Every subsystem in the repository is tracked against a strict 4-tier verificatio
 ## 7. Security Advisory Posture
 
 * **Next.js Version:** `15.5.28` (patched against all critical and high-severity Next.js image optimization, middleware bypass, and SSRF advisories).
-* **Audit Enforcement:** Automated CI workflows strictly fail on any critical security advisory (`npm audit --audit-level=critical`).
+* **Audit Enforcement:** Automated CI workflows strictly fail on any critical security advisory (`npm audit --audit-level=critical`) and enforce zero unallowlisted high advisories via `scripts/audit_allowlist.mjs`.
+
+---
+
+## 8. Content Security Policy (CSP) Posture
+
+* **Status:** Deployed in `Content-Security-Policy-Report-Only` mode.
+* **Limitation:** CSP is **not currently enforced in blocking mode**. It operates in report-only mode to prevent breaking external integrations (Jitsi WebRTC teleconsult rooms, Google Translate, and CartoCDN tile servers) until complete staging evaluation across mobile user agents is finished.
