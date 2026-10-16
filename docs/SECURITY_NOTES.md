@@ -128,6 +128,14 @@ This document records the security audits and remediations applied to the Rural 
   - Edge Cache Prohibition: Hardened `Cache-Control: no-store, no-cache, must-revalidate` prevents stale health telemetry in container orchestrators.
   - Readiness Probe: `/api/ready` provides sub-10ms deterministic health check for uptime monitors and deployment gates.
 
+### 2.12 Care Relationship Scoping & Medical Record Access Decision
+* **Problem Addressed:** Previous database security rules allowed any authenticated clinician with role `'doctor'` to view all patient records across the entire platform. Furthermore, initial attempts to limit access conflated `appointments.provider_id` (a `healthcare_providers.id` foreign key) directly with `auth.uid()`, and failed because `healthcare_providers` lacked a `user_id` column.
+* **Architecture & Clinical Retention Decision:**
+  1. **Provider Mapping:** Added `healthcare_providers.user_id` referencing `auth.users(id)` and revoked client-side write permissions to prevent arbitrary claiming. Linking is strictly performed by administrative claim verification via `getAdminClient()`.
+  2. **Status Scoping (`scheduled` and `completed`):** Treating physicians require access to clinical history prior to an appointment (`scheduled`) and during post-consultation management, prescription authoring, and follow-up care (`completed`).
+  3. **Exclusion of Cancelled Appointments:** Appointments with status `'cancelled'` do NOT constitute an active care relationship and grant zero read or write access to patient medical records.
+  4. **Exclusion of `doctor_requests` Table:** The `doctor_requests` table is an administrative onboarding queue for doctors requesting credential verification from platform administrators. It does not contain patient relationships or patient identifiers, and is excluded from care relationship logic.
+
 ---
 
 ## 3. Verification & Safety Verification
