@@ -150,10 +150,26 @@ This document records the security audits and remediations applied to the Rural 
 | `postcss` | GHSA-6g55-p6wh-862q, GHSA-r28c-9q8g-f849 | High | 2026-12-31 | CSS `sourceMappingURL` parsing vulnerability bundled in Next.js build-time pipeline. Build-time compilation only; no arbitrary CSS or source maps from untrusted users are processed at runtime. |
 | `serialize-javascript` | GHSA-5c6j-r48x-rmvq | High | 2026-12-31 | Transitive dependency in `workbox-build` and `terser` used during webpack service-worker minification. Only runs on static application code during `npm run build`. |
 
-### 2.14 Content Security Policy (CSP) Enforcement Posture
-* **Current Mode:** `Content-Security-Policy-Report-Only` (in `next.config.mjs`).
-* **Operational Rationale:** The application interfaces with external zero-auth teleconsultation WebRTC infrastructure (`meet.jit.si`, `8x8.vc`), Google Translate dynamic assets, and CartoCDN tile endpoints. To prevent accidental disruption of clinical consultations in rural areas, CSP is deployed in Report-Only mode to log client-side violations before moving to blocking mode (`Content-Security-Policy`).
-* **Roadmap to Enforced Mode:** Following preview and staging verification across all supported browsers, the header key will be switched to `Content-Security-Policy` with an inline nonce generator for server-rendered scripts.
+### 2.15 Edge Middleware HTTP Method Guard & CORS Policy
+* **HTTP Method Restriction:**
+  - `middleware.ts` rejects insecure or diagnostic HTTP methods (`TRACE`, `TRACK`, `CONNECT`) with HTTP 405 Method Not Allowed and explicit `Allow: GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD` headers.
+  - Prevents Cross-Site Tracing (XST) attacks that attempt to reflect authorization headers and cookies.
+* **CORS & Origin Gating for API Routes:**
+  - Explicit OPTIONS preflight handling for all `/api/*` routes.
+  - Verifies `Origin` header against allowed domains: exact host match, `NEXT_PUBLIC_APP_URL`, official production/preview domains (`rural-healthcare-platform.vercel.app`, `*.vercel.app`), and local development environments (`localhost`, `127.0.0.1`).
+  - Cross-origin requests from unauthorized origins are rejected with HTTP 403 Forbidden (`Cross-origin request blocked`).
+* **Fast-Path Edge Exemption:**
+  - Public routes (`/`, `/camps`, `/directory`, `/emergency`, `/health-info`, `/locations`, `/symptom-checker`) and public unauthenticated API routes bypass Supabase `getUser()` network calls entirely, eliminating latency penalties while preserving strict server-side role gating on `/admin/*` and `/doctor/*`.
+
+### 2.16 Supabase Storage Bucket & PHI Document Security
+* **Bucket Privacy Posture:**
+  - The `medical-records` bucket is configured strictly with `public = false` (private bucket in migration `20260705000000_security_patch.sql`).
+  - Direct public URL resolution is forbidden by Supabase Storage object access rules.
+* **Storage RLS & Ownership Verification:**
+  - Storage objects are segmented by user UUID folders: `<auth.uid()>/<filename>`.
+  - Storage RLS enforces that `auth.uid()` must match the folder path `(storage.foldername(name))[1] = auth.uid()::text` for both `SELECT` and `INSERT`.
+* **Signed URL Generation:**
+  - Access to patient attachments and lab reports requires short-lived, cryptographically signed URLs generated via `createSignedUrl()`, ensuring that unauthenticated third parties cannot enumerate or access sensitive medical files.
 
 ---
 
@@ -163,7 +179,7 @@ This document records the security audits and remediations applied to the Rural 
 |---|---|---|
 | `npx tsc --noEmit` | Passed | 0 TypeScript errors |
 | `npm run lint` | Passed | 0 ESLint warnings or errors |
-| `npm run test:unit` | Passed | 120/120 unit tests passing across 19 test suites |
+| `npm run test:unit` | Passed | 173 unit tests passing across 21 test suites |
 | `npx playwright test` | Passed | 5/5 browser user persona end-to-end tests passing |
-| `npm run build` | Passed | All 49 routes cleanly compiled (103 kB shared JS) |
+| `npm run build` | Passed | All routes cleanly compiled |
 

@@ -61,6 +61,27 @@ export interface CanonicalFacilityRecord {
 | **National Medical Register (NMR)** | National Medical Commission (NMC) & State Councils (MPMC, DMC, MMC, PMC) | 913 Specialists | Public Medical Council Gazettes | Doctor names verified with `Dr.` prefix; state medical council registration numbers validated. |
 | **Patient Aggregations** | Practo / Public Aggregators | 60 Specialists | Public Patient Reviews | Verified patient feedback, OPD hours, and real clinic phone contacts. |
 
+### 3.1 Authoritative National Registry Integration & Roadmap
+
+To ensure 100% data authenticity and avoid unverified synthetic data, the platform conforms to the following integration roadmap:
+1. **ABDM Health Facility Registry (HFR):**
+   - National Health Authority's canonical registry of public and private healthcare facilities.
+   - Supplies unique Health Facility IDs (HFR-IDs) for digital health interoperability.
+2. **National Medical Commission (NMC) Indian Medical Register (IMR):**
+   - Official national physician registry maintaining active state council registrations and qualification status.
+   - Validates that claimed clinician credentials correspond to licensed practitioners.
+3. **PM-JAY Empanelled Hospital Registry (NHA):**
+   - Dynamic roster of government and private empanelled hospitals providing cashless secondary and tertiary inpatient care.
+4. **NIHFW National Hospital Directory (data.gov.in / OGD):**
+   - Ministry of Health & Family Welfare repository covering Sub-Centres (SC), Primary Health Centres (PHC), Community Health Centres (CHC), Sub-District Hospitals (SDH), and District Hospitals (DH).
+
+### 3.2 Defensive Contact Handling & Non-Artificial Numbers Policy
+- **No Dummy Placeholders:** The platform strictly prohibits synthetic fallback numbers (such as `108`, `0000000000`, `9999999999`) for unlisted clinics.
+- **Defensive UI Display (`Directory.tsx` & `MapView.tsx`):**
+  - Clinicians or facilities lacking verified direct phone lines explicitly render `"Phone unlisted (OPD)"` (or Hindi `"फोन असूचीबद्ध (ओपीडी)"`).
+  - The call button is disabled with an `"Unlisted"` / `"असूचीबद्ध"` badge to prevent triggering dead `tel:` protocol links.
+  - Emergency 108 is reserved exclusively for the dedicated ambulance dispatch card.
+
 ---
 
 ## 4. Geospatial Verification & Coordinate Inversion Detection

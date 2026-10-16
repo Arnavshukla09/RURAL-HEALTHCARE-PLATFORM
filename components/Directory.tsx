@@ -1043,11 +1043,25 @@ export function Directory({ language }: DirectoryProps) {
                                   <span>{doctor.experience} {t.yearsExp}</span>
                                 </>
                               )}
-                              <span>•</span>
-                              <div className="flex items-center gap-1 text-gray-600">
-                                <Phone className="h-3 w-3 text-gray-400" />
-                                <span className="font-mono">{doctor.phone}</span>
-                              </div>
+                              {doctor.phone ? (
+                                <>
+                                  <span>•</span>
+                                  <div className="flex items-center gap-1 text-gray-600">
+                                    <Phone className="h-3 w-3 text-gray-400" />
+                                    <span className="font-mono">{doctor.phone}</span>
+                                  </div>
+                                </>
+                              ) : (
+                                <>
+                                  <span>•</span>
+                                  <div className="flex items-center gap-1 text-gray-500">
+                                    <Phone className="h-3 w-3 text-gray-400" />
+                                    <span className="text-[11px] italic">
+                                      {language === "hi" ? "फोन असूचीबद्ध (ओपीडी)" : "Phone unlisted (OPD)"}
+                                    </span>
+                                  </div>
+                                </>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -1077,14 +1091,26 @@ export function Directory({ language }: DirectoryProps) {
                           </div>
 
                           <div className="flex flex-wrap sm:flex-nowrap gap-2">
-                            <Button
-                              size="sm"
-                              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs h-8 px-3 rounded-lg flex items-center gap-1.5"
-                              onClick={() => window.open(`tel:${doctor.phone}`)}
-                            >
-                              <Phone className="h-3.5 w-3.5" />
-                              <span>{t.callNow}</span>
-                            </Button>
+                            {doctor.phone ? (
+                              <Button
+                                size="sm"
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs h-8 px-3 rounded-lg flex items-center gap-1.5"
+                                onClick={() => window.open(`tel:${doctor.phone}`)}
+                              >
+                                <Phone className="h-3.5 w-3.5" />
+                                <span>{t.callNow}</span>
+                              </Button>
+                            ) : (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                disabled
+                                className="text-gray-400 font-medium text-xs h-8 px-3 rounded-lg flex items-center gap-1.5 cursor-not-allowed bg-gray-50 border-gray-200"
+                              >
+                                <Phone className="h-3.5 w-3.5 text-gray-400" />
+                                <span>{language === "hi" ? "असूचीबद्ध" : "Unlisted"}</span>
+                              </Button>
+                            )}
 
                             {doctor.recordType === 'clinician' && (
                               <Button
