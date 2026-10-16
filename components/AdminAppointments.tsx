@@ -35,7 +35,7 @@ export function AdminAppointments({ language }: AdminAppointmentsProps) {
       try {
         const supabase = createClient()
         const { data: { user } } = await supabase.auth.getUser()
-        if (user?.email?.toLowerCase().includes("demo") || user?.email === "admin@ruralhealth.demo") {
+        if (user?.email?.toLowerCase().trim() === "admin@ruralhealth.demo") {
           setIsDemoAdmin(true)
         }
 

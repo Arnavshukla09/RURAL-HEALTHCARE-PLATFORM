@@ -4,15 +4,15 @@ import { test, expect } from '@playwright/test';
 const ROLES = {
   admin: {
     email: process.env.E2E_ADMIN_EMAIL || 'admin@ruralhealth.demo',
-    password: process.env.E2E_ADMIN_PASSWORD || 'Admin@123'
+    password: process.env.E2E_ADMIN_PASSWORD || ''
   },
   doctor: {
     email: process.env.E2E_DOCTOR_EMAIL || 'doctor@ruralhealth.demo',
-    password: process.env.E2E_DOCTOR_PASSWORD || 'Doctor@123'
+    password: process.env.E2E_DOCTOR_PASSWORD || ''
   },
   patient: {
     email: process.env.E2E_PATIENT_EMAIL || 'patient@ruralhealth.demo',
-    password: process.env.E2E_PATIENT_PASSWORD || 'Patient@123'
+    password: process.env.E2E_PATIENT_PASSWORD || ''
   }
 };
 
@@ -43,6 +43,7 @@ test.describe('End-to-End Tests for Rural Healthcare Platform', () => {
   });
 
   test('Patient Flow: Login, View Dashboard, Check Symptoms', async ({ page }) => {
+    test.skip(!ROLES.patient.password, 'E2E_PATIENT_PASSWORD not set');
     await login(page, ROLES.patient.email, ROLES.patient.password);
     
     // Verify Patient Dashboard Elements
@@ -57,6 +58,7 @@ test.describe('End-to-End Tests for Rural Healthcare Platform', () => {
   });
 
   test('Doctor Flow: Login and View Doctor Dashboard', async ({ page }) => {
+    test.skip(!ROLES.doctor.password, 'E2E_DOCTOR_PASSWORD not set');
     await login(page, ROLES.doctor.email, ROLES.doctor.password);
     
     // Verify Doctor Dashboard Portal
@@ -64,6 +66,7 @@ test.describe('End-to-End Tests for Rural Healthcare Platform', () => {
   });
 
   test('Admin Flow: Login and View Admin Controls', async ({ page }) => {
+    test.skip(!ROLES.admin.password, 'E2E_ADMIN_PASSWORD not set');
     await login(page, ROLES.admin.email, ROLES.admin.password);
     
     // Admin should see Admin role badge and navigation

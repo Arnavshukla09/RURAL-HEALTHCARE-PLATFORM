@@ -4,6 +4,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit"
 import { requireUser, getPatientProfile, authErrorResponse } from "@/lib/auth/guard"
+import { logAuditEvent } from "@/lib/audit"
 
 const MedicalRecordSchema = z.object({
   record_type: z.enum(['diagnosis', 'prescription', 'lab_result', 'vaccination', 'other']),
@@ -96,7 +97,58 @@ export async function GET(request: NextRequest) {
         content: "[Protected Health Information — Confidential Patient Record]",
       }))
 
+      // Audit log: Admin metadata read (redacted view)
+      await logAuditEvent({
+        action: "medical_records_metadata_read_admin",
+        resourceType: "medical_records",
+        patientId: targetPatientId || null,
+        userId: user.id,
+        userRole: "admin",
+        details: { count: redacted.length },
+      })
+
       const paginated = paginateResults(redacted as any, limit)
+      return NextResponse.json({
+        data: paginated.data,
+        records: paginated.data,
+        nextCursor: paginated.nextCursor,
+      })
+    }
+
+    // Doctor Access: Can view records for a specific patient under care (enforced by RLS)
+    if (patient.role === "doctor") {
+      const targetPatientId = searchParams.get("patient_id")
+      let doctorQuery = supabase
+        .from("medical_records")
+        .select("id, patient_id, provider_id, appointment_id, record_type, content, file_url, created_at, updated_at")
+        .order("created_at", { ascending: false })
+        .order("id", { ascending: false })
+        .limit(limit + 1)
+
+      if (targetPatientId) {
+        doctorQuery = doctorQuery.eq("patient_id", targetPatientId)
+      }
+
+      if (cursor) {
+        doctorQuery = doctorQuery.lt("created_at", cursor.createdAt)
+      }
+
+      const { data, error } = await doctorQuery
+      if (error) {
+        return NextResponse.json({ error: "Failed to fetch medical records", code: "DB_ERROR" }, { status: 500 })
+      }
+
+      // Audit log: Doctor reading clinical records
+      await logAuditEvent({
+        action: "medical_records_read_doctor",
+        resourceType: "medical_records",
+        patientId: targetPatientId || null,
+        userId: user.id,
+        userRole: "doctor",
+        details: { count: data?.length || 0 },
+      })
+
+      const paginated = paginateResults((data ?? []) as any, limit)
       return NextResponse.json({
         data: paginated.data,
         records: paginated.data,
@@ -150,21 +202,38 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // SECURITY: Always derive patient_id from authenticated session
     const patient = await getOrCreatePatient(supabase, user)
     if (!patient?.id) {
       return NextResponse.json({ error: "Could not resolve patient profile", code: "NOT_FOUND" }, { status: 404 })
     }
 
+    // SECURITY: If doctor provides patient_id, use that patient_id; otherwise use authenticated session patient
+    let targetPatientId = patient.id
+    if (patient.role === "doctor" && body.patient_id) {
+      targetPatientId = body.patient_id
+    }
+
     // User-scoped client: RLS enforces insertion rules
     const { data, error } = await supabase
       .from("medical_records")
-      .insert([{ patient_id: patient.id, ...parsed.data }])
+      .insert([{ patient_id: targetPatientId, ...parsed.data }])
       .select()
       .single()
 
     if (error) {
       return NextResponse.json({ error: "Failed to create medical record", code: "DB_ERROR" }, { status: 500 })
+    }
+
+    if (patient.role === "doctor") {
+      await logAuditEvent({
+        action: "medical_records_create_doctor",
+        resourceType: "medical_records",
+        resourceId: data?.id,
+        patientId: targetPatientId,
+        userId: user.id,
+        userRole: "doctor",
+        details: { record_type: parsed.data.record_type },
+      })
     }
 
     return NextResponse.json(data, { status: 201 })
@@ -180,8 +249,13 @@ export async function DELETE(request: NextRequest) {
 
     const { user, supabase } = await requireUser()
 
-    // DEMO ADMIN PROTECTION: Demo accounts are in preview mode and cannot delete records
-    if (user.email?.toLowerCase().includes("demo") || user.email === "admin@ruralhealth.demo") {
+    const patient = await getOrCreatePatient(supabase, user)
+    if (!patient?.id) {
+      return NextResponse.json({ error: "Could not resolve patient profile", code: "NOT_FOUND" }, { status: 404 })
+    }
+
+    // DEMO ADMIN PROTECTION: Demo admin preview account cannot delete records
+    if (patient.role === "admin" && user.email?.toLowerCase().trim() === "admin@ruralhealth.demo") {
       return NextResponse.json(
         { error: "Forbidden: Demo accounts are restricted to preview mode. Record deletion is disabled to prevent data loss.", code: "DEMO_MODE_RESTRICTED" },
         { status: 403 }
@@ -195,10 +269,6 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: "Missing record ID", code: "MISSING_ID" }, { status: 400 })
     }
 
-    const patient = await getOrCreatePatient(supabase, user)
-    if (!patient?.id) {
-      return NextResponse.json({ error: "Could not resolve patient profile", code: "NOT_FOUND" }, { status: 404 })
-    }
 
     // Administrative moderation: Non-demo admin can delete files/records for storage/erasure without viewing them
     let query = supabase.from("medical_records").delete().eq("id", id)
@@ -210,6 +280,17 @@ export async function DELETE(request: NextRequest) {
 
     if (error) {
       return NextResponse.json({ error: "Failed to delete record", code: "DB_ERROR" }, { status: 500 })
+    }
+
+    if (patient.role === "admin") {
+      await logAuditEvent({
+        action: "medical_records_delete_admin",
+        resourceType: "medical_records",
+        resourceId: id,
+        userId: user.id,
+        userRole: "admin",
+        details: { moderation: true },
+      })
     }
 
     return NextResponse.json({ success: true })
@@ -225,8 +306,13 @@ export async function PATCH(request: NextRequest) {
 
     const { user, supabase } = await requireUser()
 
-    // DEMO ADMIN PROTECTION: Demo accounts are in preview mode and cannot update records
-    if (user.email?.toLowerCase().includes("demo") || user.email === "admin@ruralhealth.demo") {
+    const patient = await getOrCreatePatient(supabase, user)
+    if (!patient?.id) {
+      return NextResponse.json({ error: "Could not resolve patient profile", code: "NOT_FOUND" }, { status: 404 })
+    }
+
+    // DEMO ADMIN PROTECTION: Demo admin preview account cannot update records
+    if (patient.role === "admin" && user.email?.toLowerCase().trim() === "admin@ruralhealth.demo") {
       return NextResponse.json(
         { error: "Forbidden: Demo accounts are restricted to preview mode. Record modification is disabled.", code: "DEMO_MODE_RESTRICTED" },
         { status: 403 }
@@ -243,11 +329,6 @@ export async function PATCH(request: NextRequest) {
     const parsed = MedicalRecordSchema.safeParse(updateData)
     if (!parsed.success) {
       return NextResponse.json({ error: "Validation failed", details: parsed.error.flatten(), code: "VALIDATION_ERROR" }, { status: 400 })
-    }
-
-    const patient = await getOrCreatePatient(supabase, user)
-    if (!patient?.id) {
-      return NextResponse.json({ error: "Could not resolve patient profile", code: "NOT_FOUND" }, { status: 404 })
     }
 
     // Administrators cannot modify patient clinical notes (only patient or treating physician)

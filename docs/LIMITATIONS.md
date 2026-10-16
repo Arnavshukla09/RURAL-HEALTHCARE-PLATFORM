@@ -30,8 +30,9 @@ Every subsystem in the repository is tracked against a strict 4-tier verificatio
 ## 3. ABDM & FHIR Interoperability Boundaries
 
 ### Profile Alignment vs. National Gateway Certification
-* **Conformance Status:** The platform formats medical records into **HL7 FHIR R4 Document Bundles** modelled on the National Resource Centre for EHR in India (NRCES) ABDM profiles (`PrescriptionBundle`, `DiagnosticReportBundle`, `OPConsultationBundle`).
-* **Boundary:** The implementation has **not** yet underwent formal milestone certification against the official National Health Authority (NHA) ABDM Sandbox validator gateway.
+* **Conformance Status:** Modelled on NRCES FHIR R4 profile; not yet officially certified against the national validator.
+* **Structural Model:** The platform formats medical records into **HL7 FHIR R4 Document Bundles** modelled on the National Resource Centre for EHR in India (NRCES) ABDM profiles (`PrescriptionBundle`, `DiagnosticReportBundle`, `OPConsultationBundle`).
+* **Boundary:** While schemas and field mappings adhere strictly to NRCES StructureDefinitions, bundles have not undergone formal milestone certification through the official National Health Authority (NHA) ABDM Sandbox validator gateway or the official Java HL7 validator CLI.
 * **Strict Rejection Over Fabrication:** If a record lacks required clinical data (e.g., medication timing, diagnosis code, practitioner reference), the API returns **HTTP 422 Unprocessable Entity** detailing missing fields. The platform never injects default placeholders or fabricated observation codes.
 
 ---

@@ -3,10 +3,13 @@
  *
  * ABDM (Ayushman Bharat Digital Mission) HL7 FHIR R4 Adapter.
  *
+ * Conformance Status:
+ * Modelled on NRCES FHIR R4 profile; not yet officially certified against the national validator.
+ *
  * Zero-Cost Architecture:
  * - Pure TypeScript FHIR R4 Bundle generator running locally with $0 dependencies.
  * - Formats clinical data (prescriptions, diagnostic records, patient demographic profiles)
- *   into ABDM M2/M3 compliant FHIR Record bundles.
+ *   into FHIR R4 Record bundles modelled after ABDM NRCES StructureDefinitions.
  * - Provides ABHA Number & ABHA Address (PHR) validation according to NHA specs:
  *   - ABHA Number: 14 digits (XX-XXXX-XXXX-XXXX)
  *   - ABHA Address: username@abdm / username@sbx

@@ -158,7 +158,7 @@ RURAL-HEALTHCARE-PLATFORM/
 |   `-- TranslationRouteObserver.tsx # Language detection on route change
 |
 |-- lib/                           # 51 utility and data modules
-|   |-- abdm/fhir.ts               # HL7 FHIR R4 bundle generator (ABDM)
+|   |-- abdm/fhir.ts               # HL7 FHIR R4 bundle generator (modelled on NRCES profiles; not officially certified)
 |   |-- ai/                        # AI subsystem
 |   |   |-- gateway.ts             # Multi-model AI gateway + circuit breaker
 |   |   |-- gemini.ts              # Gemini Flash direct client
@@ -524,6 +524,11 @@ flowchart LR
 | `read` | 60 requests | 60 seconds |
 | `public` | 60 requests | 60 seconds |
 
+### ABDM & HL7 FHIR R4 Interoperability Posture
+
+- **Profile Alignment:** Medical records and clinical observations are structured into HL7 FHIR R4 Document Bundles (`PrescriptionBundle`, `DiagnosticReportBundle`, `OPConsultationBundle`) modelled on the National Resource Centre for EHR Standards (NRCES) StructureDefinitions.
+- **Conformance Status:** *Modelled on NRCES FHIR R4 profile; not yet officially certified against the national validator.* Bundles are structured for future NHA ABDM HIP/HIU gateway integration, with strict validation returning HTTP 422 rather than injecting placeholders when clinical data is incomplete.
+
 ---
 
 ## 10. Geospatial and Datasets Engine
@@ -674,7 +679,7 @@ All engineering documents are located in the `docs/` directory:
 | `docs/PLACEMENT_INTERVIEW_DEFENSE.md` | 2027 placement interview technical defense guide and systems playbook |
 | `docs/QA_REPORT.md` | 161-test scorecard with detailed per-suite breakdown |
 | `docs/CLINICAL_SAFETY.md` | Clinical decision tables, prompt injection defense, and FNR = 0% evaluation |
-| `docs/ABDM_FHIR_INTEROPERABILITY.md` | ABDM and HL7 FHIR R4 interoperability architecture and 2027 placement defense |
+| `docs/ABDM_FHIR_INTEROPERABILITY.md` | ABDM and HL7 FHIR R4 interoperability architecture (modelled on NRCES profiles) |
 | `docs/COMPONENTS.md` | Component reference catalog with props and data sources |
 | `docs/CHANGELOG.md` | Chronological feature release history |
 | `docs/DATABASE.md` | Schema diagrams, RLS policies, and index strategies |
@@ -683,6 +688,7 @@ All engineering documents are located in the `docs/` directory:
 | `docs/API_REFERENCE.md` | 20 REST endpoints with request/response schemas |
 | `docs/ARCHITECTURE.md` | System architecture deep-dive and decision log |
 | `docs/DEPLOY_CHECKLIST.md` | Step-by-step production deployment checklist |
+| `docs/ROLLOUT_RLS_FIX.md` | Production migration rollout, diagnostic verification, and rollback runbook |
 | `docs/SECURITY_NOTES.md` | Security controls, threat model, and RLS audit |
 | `docs/POSTMORTEM_CONCURRENCY_DOUBLE_BOOKING.md` | Engineering postmortem on concurrent double booking and health check probe table fix |
 | `docs/PERFORMANCE_REPORT.md` | Lighthouse scores, benchmark results, load test outcomes |
