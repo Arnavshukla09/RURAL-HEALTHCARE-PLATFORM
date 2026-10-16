@@ -107,7 +107,7 @@ describe("RLS & Care-Relationship Integration Scenarios", () => {
 
   it("enforces demo admin safety invariant: demo admin mutation operations return DEMO_MODE_RESTRICTED", () => {
     const demoAdminEmail = "admin@ruralhealth.demo";
-    const isDemo = demoAdminEmail.includes("demo") || demoAdminEmail === "admin@ruralhealth.demo";
+    const isDemo = demoAdminEmail.toLowerCase().trim() === "admin@ruralhealth.demo";
     expect(isDemo).toBe(true);
   });
 });

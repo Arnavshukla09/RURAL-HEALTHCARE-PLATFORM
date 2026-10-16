@@ -58,7 +58,7 @@ export function AdminUserManagement({ language }: AdminUserManagementProps) {
     const checkDemo = async () => {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
-      if (user?.email?.toLowerCase().includes("demo") || user?.email === "admin@ruralhealth.demo") {
+      if (user?.email?.toLowerCase().trim() === "admin@ruralhealth.demo") {
         setIsDemoAdmin(true)
       }
     }

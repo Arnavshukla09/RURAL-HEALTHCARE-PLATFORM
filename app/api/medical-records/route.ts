@@ -180,8 +180,13 @@ export async function DELETE(request: NextRequest) {
 
     const { user, supabase } = await requireUser()
 
-    // DEMO ADMIN PROTECTION: Demo accounts are in preview mode and cannot delete records
-    if (user.email?.toLowerCase().includes("demo") || user.email === "admin@ruralhealth.demo") {
+    const patient = await getOrCreatePatient(supabase, user)
+    if (!patient?.id) {
+      return NextResponse.json({ error: "Could not resolve patient profile", code: "NOT_FOUND" }, { status: 404 })
+    }
+
+    // DEMO ADMIN PROTECTION: Demo admin preview account cannot delete records
+    if (patient.role === "admin" && user.email?.toLowerCase().trim() === "admin@ruralhealth.demo") {
       return NextResponse.json(
         { error: "Forbidden: Demo accounts are restricted to preview mode. Record deletion is disabled to prevent data loss.", code: "DEMO_MODE_RESTRICTED" },
         { status: 403 }
@@ -195,10 +200,6 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: "Missing record ID", code: "MISSING_ID" }, { status: 400 })
     }
 
-    const patient = await getOrCreatePatient(supabase, user)
-    if (!patient?.id) {
-      return NextResponse.json({ error: "Could not resolve patient profile", code: "NOT_FOUND" }, { status: 404 })
-    }
 
     // Administrative moderation: Non-demo admin can delete files/records for storage/erasure without viewing them
     let query = supabase.from("medical_records").delete().eq("id", id)
@@ -225,8 +226,13 @@ export async function PATCH(request: NextRequest) {
 
     const { user, supabase } = await requireUser()
 
-    // DEMO ADMIN PROTECTION: Demo accounts are in preview mode and cannot update records
-    if (user.email?.toLowerCase().includes("demo") || user.email === "admin@ruralhealth.demo") {
+    const patient = await getOrCreatePatient(supabase, user)
+    if (!patient?.id) {
+      return NextResponse.json({ error: "Could not resolve patient profile", code: "NOT_FOUND" }, { status: 404 })
+    }
+
+    // DEMO ADMIN PROTECTION: Demo admin preview account cannot update records
+    if (patient.role === "admin" && user.email?.toLowerCase().trim() === "admin@ruralhealth.demo") {
       return NextResponse.json(
         { error: "Forbidden: Demo accounts are restricted to preview mode. Record modification is disabled.", code: "DEMO_MODE_RESTRICTED" },
         { status: 403 }
@@ -243,11 +249,6 @@ export async function PATCH(request: NextRequest) {
     const parsed = MedicalRecordSchema.safeParse(updateData)
     if (!parsed.success) {
       return NextResponse.json({ error: "Validation failed", details: parsed.error.flatten(), code: "VALIDATION_ERROR" }, { status: 400 })
-    }
-
-    const patient = await getOrCreatePatient(supabase, user)
-    if (!patient?.id) {
-      return NextResponse.json({ error: "Could not resolve patient profile", code: "NOT_FOUND" }, { status: 404 })
     }
 
     // Administrators cannot modify patient clinical notes (only patient or treating physician)
