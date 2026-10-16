@@ -2,9 +2,9 @@ name: Continuous Integration (CI)
 
 on:
   push:
-    branches: [main]
+    branches: [main, "release/*"]
   pull_request:
-    branches: [main]
+    branches: [main, "release/*"]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
   test-and-build:
-    name: Unit Tests & Build Verification
+    name: Quality Checks, Tests & Build Verification
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -28,12 +28,12 @@ jobs:
         run: npm ci
 
       - name: Security Vulnerability Audit
-        run: npm audit --audit-level=high || true
+        run: npm audit --audit-level=critical
 
       - name: Dataset Provenance Verification
         run: npm run report:dataset
 
-      - name: System Integration & Correctness Benchmark
+      - name: Subsystem Simulation Benchmark
         run: npm run benchmark:integration
 
       - name: Automated Component Quality & Integrity Check
@@ -41,6 +41,9 @@ jobs:
 
       - name: Run Unit Tests (Vitest)
         run: npm run test:unit
+
+      - name: Run Integration Tests & Safety Guards (Vitest)
+        run: npm run test:integration
 
       - name: Run ESLint
         run: npm run lint
