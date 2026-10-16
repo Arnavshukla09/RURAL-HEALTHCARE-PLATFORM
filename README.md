@@ -245,8 +245,9 @@ RURAL-HEALTHCARE-PLATFORM/
 |   `-- fix_security_warnings.sql  # Security advisory fixes
 |
 |-- tests/                         # Test suite
-|   |-- unit/                      # 20 Vitest unit and integration test files
+|   |-- unit/                      # 21 Vitest unit and integration test files
 |   |   |-- appointments-and-auth.test.ts
+|   |   |-- clinical-safety-eval.test.ts
 |   |   |-- client-offline-resilience.test.ts
 |   |   |-- data-provenance-and-pipeline.test.ts
 |   |   |-- doctor-claim-and-booking-lifecycle.test.ts
@@ -299,10 +300,11 @@ RURAL-HEALTHCARE-PLATFORM/
 |   |-- patches/loadtest-mode.md   # Load test mode documentation
 |   `-- README.md                  # Load testing guide
 |
-|-- docs/                          # Engineering documentation (14 files)
+|-- docs/                          # Engineering documentation (15 files)
 |   |-- API_REFERENCE.md           # All 19 API endpoints with request/response schemas
 |   |-- ARCHITECTURE.md            # System architecture deep-dive
 |   |-- CHANGELOG.md               # Chronological feature release history
+|   |-- CLINICAL_SAFETY.md         # Clinical decision tables, prompt injection defense, and FNR = 0% evaluation
 |   |-- COMPONENTS.md              # Component reference catalog
 |   |-- DATABASE.md                # Schema, RLS policies, indexes
 |   |-- DATASETS.md                # Dataset provenance and statistics
@@ -310,7 +312,7 @@ RURAL-HEALTHCARE-PLATFORM/
 |   |-- DEPLOY_CHECKLIST.md        # Production deployment steps
 |   |-- LOAD_TESTING.md            # Load testing methodology
 |   |-- PERFORMANCE_REPORT.md      # Benchmarks and Lighthouse results
-|   |-- QA_REPORT.md               # 133-test QA scorecard
+|   |-- QA_REPORT.md               # 144-test QA scorecard
 |   |-- SECURITY_NOTES.md          # Security controls documentation
 |   |-- SYSTEM_DESIGN.md           # Master system design blueprint
 |   `-- SYSTEM_EVALUATION_AND_SCALING_PLAN.md
@@ -416,7 +418,7 @@ xychart-beta
     title "Codebase Modules by Layer"
     x-axis ["App Pages", "API Routes", "Lib Modules", "SQL Migrations", "Test Files"]
     y-axis "Count" 0 --> 55
-    bar [47, 19, 51, 9, 20]
+    bar [47, 19, 51, 9, 21]
 ```
 
 ---
@@ -558,7 +560,7 @@ Automated testing enforces regression prevention on every commit:
 
 | Test Dimension | Tool / Engine | Coverage | Result |
 | :--- | :--- | :---: | :---: |
-| Unit & Integration Tests | Vitest 5.0 | 133 tests across 20 suites | 100% Pass (~1.26s) |
+| Unit & Integration Tests | Vitest 5.0 | 144 tests across 21 suites | 100% Pass (~1.04s) |
 | Component Validation | Custom Static Analyzer | 101 UI components, 31 app pages/routes | 0 errors, 100% valid imports |
 | TypeScript Type Safety | `tsc --noEmit` | Entire codebase | 0 compilation errors |
 | ESLint & Hook Rules | ESLint 8.x | Entire codebase | 0 warnings or errors |
@@ -570,23 +572,24 @@ Automated testing enforces regression prevention on every commit:
 
 ```mermaid
 flowchart LR
-    T["133 Tests\n20 Suites"] --> A["appointments-and-auth\n11 tests"]
+    T["144 Tests\n21 Suites"] --> A["appointments-and-auth\n11 tests"]
     T --> B["patient-data-isolation\n9 tests"]
     T --> C["client-offline-resilience\n13 tests"]
-    T --> D["data-provenance-pipeline\n13 tests"]
-    T --> E["doctor-claim-lifecycle\n5 tests"]
-    T --> F["multilingual-engine\n10 tests"]
-    T --> G["rate-limit-gateway\n7 tests"]
-    T --> H["notifications\n5 tests"]
-    T --> I["offline-sync\n5 tests"]
-    T --> J["phase3-ecosystem\n8 tests"]
-    T --> K["probes-and-benchmarks\n4 tests"]
-    T --> L["emergency + vault\n13 tests"]
-    T --> M["medical-brain\n6 tests"]
-    T --> N["helplines\n5 tests"]
-    T --> O["logger + semantic-cache\n9 tests"]
-    T --> P["symptoms + routing\n6 tests"]
-    T --> Q["pwa-strategy\n4 tests"]
+    T --> D["clinical-safety-eval\n11 tests"]
+    T --> E["data-provenance-pipeline\n13 tests"]
+    T --> F["doctor-claim-lifecycle\n5 tests"]
+    T --> G["multilingual-engine\n10 tests"]
+    T --> H["rate-limit-gateway\n7 tests"]
+    T --> I["notifications\n5 tests"]
+    T --> J["offline-sync\n5 tests"]
+    T --> K["phase3-ecosystem\n8 tests"]
+    T --> L["probes-and-benchmarks\n4 tests"]
+    T --> M["emergency + vault\n13 tests"]
+    T --> N["medical-brain\n6 tests"]
+    T --> O["helplines\n5 tests"]
+    T --> P["logger + semantic-cache\n9 tests"]
+    T --> Q["symptoms + routing\n6 tests"]
+    T --> R["pwa-strategy\n4 tests"]
 ```
 
 ---
@@ -640,7 +643,7 @@ UPSTASH_REDIS_REST_TOKEN=your_upstash_token
 ### Quality Assurance Commands
 
 ```bash
-# Run 133 unit and integration tests
+# Run 144 unit and integration tests
 npm run test:unit
 
 # Run full component validation (imports, types, lint, tests)
@@ -670,7 +673,8 @@ All engineering documents are located in the `docs/` directory:
 | Document | Purpose |
 | :--- | :--- |
 | `docs/SYSTEM_DESIGN.md` | Master system design blueprint with 8 subsystem breakdowns |
-| `docs/QA_REPORT.md` | 133-test scorecard with detailed per-suite breakdown |
+| `docs/QA_REPORT.md` | 144-test scorecard with detailed per-suite breakdown |
+| `docs/CLINICAL_SAFETY.md` | Clinical decision tables, prompt injection defense, and FNR = 0% evaluation |
 | `docs/COMPONENTS.md` | Component reference catalog with props and data sources |
 | `docs/CHANGELOG.md` | Chronological feature release history |
 | `docs/DATABASE.md` | Schema diagrams, RLS policies, and index strategies |

@@ -11,20 +11,21 @@
 
 | Test Suite / Audit Dimension | Framework / Tool | Tests Executed | Passed | Failed | Pass Rate | Execution Duration |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: |
-| **Unit & Integration Suite** | Vitest 5.0 (Node.js) | 133 | 133 | 0 | **100%** | ~1.26s |
-| **Component Validation Checker** | Custom Static Analyzer (`scripts/check_components.mjs`) | 132 files | 132 | 0 | **100%** | ~8.13s |
+| **Unit & Integration Suite** | Vitest 5.0 (Node.js) | 144 | 144 | 0 | **100%** | ~1.04s |
+| **Component Validation Checker** | Custom Static Analyzer (`scripts/check_components.mjs`) | 132 files | 132 | 0 | **100%** | ~8.02s |
 | **End-to-End User Flow Suite** | Playwright (Chromium) | 5 | 5 | 0 | **100%** | ~45.3s |
 | **PostGIS Spatial Performance** | Automated Edge Query Benchmark | 1,000 queries | 1,000 | 0 | **100%** | 274ms avg / 558ms P95 |
 | **Security Audit & RLS Verification** | Automated Penetration & Header Checks | 10 audit rules | 10 | 0 | **100%** | Instant |
 
 ---
 
-## 2. Automated Unit & Integration Test Breakdown (133 Tests)
+## 2. Automated Unit & Integration Test Breakdown (144 Tests)
 
-The platform runs 133 unit and integration tests across 20 specialized test files via `npm run test:unit`:
+The platform runs 144 unit and integration tests across 21 specialized test files via `npm run test:unit`:
 
 | Test File | Domain / Subsystem Verified | Tests | Status | Key Assertions & Scenarios |
 | :--- | :--- | :---: | :---: | :--- |
+| [`clinical-safety-eval.test.ts`](file:///c:/Users/aarrn/Desktop/rural%20health/RURAL-HEALTHCARE-PLATFORM-main/tests/unit/clinical-safety-eval.test.ts) | Clinical Safety & Decision Tables | 11 | Pass | 50-case curated benchmark, 100% sensitivity on emergencies, 0.0% False Negative Rate (FNR = 0.0), prompt injection neutralization, scoped negation without false sirens, inherent negative protection, NTEP chronic cough TB referral, animal bite rabies PEP routing, decision table auditability. |
 | [`data-provenance-and-pipeline.test.ts`](file:///c:/Users/aarrn/Desktop/rural%20health/RURAL-HEALTHCARE-PLATFORM-main/tests/unit/data-provenance-and-pipeline.test.ts) | Data Engineering & Spatial Provenance | 13 | Pass | Indian territorial bounding box ($6.5^\circ-37.5^\circ\text{N}, 68.7^\circ-97.5^\circ\text{E}$), GIS coordinate inversion detection, telephone normalization and shared helpline clustering, deterministic canonical ID generation (`osm_id`), idempotent deduplication preserving higher tier verification, comprehensive data quality scorecard calculation. |
 | [`emergency.test.ts`](file:///c:/Users/aarrn/Desktop/rural%20health/RURAL-HEALTHCARE-PLATFORM-main/tests/unit/emergency.test.ts) | Clinical Regex & Emergency Gate | 8 | Pass | Tier-0 detection, pediatric asphyxia, obstetric hemorrhage, scoped negation, inherently negative allowlist. |
 | [`doctor-claim-and-booking-lifecycle.test.ts`](file:///c:/Users/aarrn/Desktop/rural%20health/RURAL-HEALTHCARE-PLATFORM-main/tests/unit/doctor-claim-and-booking-lifecycle.test.ts) | Clinician Onboarding & Admin Gate | 5 | Pass | Token generation, cryptographic validation, queueing `pending_admin_approval`, admin approval/rejection, identity theft blocking. |

@@ -75,7 +75,7 @@ export const CLINICAL_KNOWLEDGE_BASE: MedicalBrainEntry[] = [
     priority: 85,
     patterns: [
       /\b(dog bite|dog bites|kutta ne kata|kutta kaat|kutte ne kaat|animal bite|monkey bite|rabies)\b/i,
-      /(कुत्ते ने काट|कुत्ता काटा|कुत्ते का काटना|जानवर ने काटा|बंदर ने काटा|रेबीज)/i,
+      /(कुत्ते ने.*?(काट|काटा)|कुत्ता काटा|कुत्ते का काटना|जानवर ने काटा|बंदर ने काटा|रेबीज)/i,
     ],
     keywords: ["dog bite", "animal bite", "kutta", "rabies", "pep"],
     en: "⚠️ URGENT CLINICAL REFERRAL — ANIMAL / DOG BITE (RABIES PROTOCOL):\n\n1. IMMEDIATE FIRST AID (Crucial):\n• Wash the wound thoroughly under running tap water with soap for at least 15 minutes immediately. This flushes out the virus.\n• DO NOT apply chili powder, lime, soil, turmeric, or tight bandages.\n• Apply antiseptic (Povidone-iodine or Dettol/Savlon) if available.\n\n2. URGENT MEDICAL CARE (Within 24 Hours):\n• Visit your nearest Primary Health Centre (PHC), CHC, or District Hospital immediately.\n• Anti-Rabies Vaccine (ARV) must be administered (Day 0, 3, 7, 28) for effective Post-Exposure Prophylaxis (PEP).\n• For deep bleeding bites (Category III), Rabies Immunoglobulin (RIG) is also mandatory.",
@@ -89,7 +89,7 @@ export const CLINICAL_KNOWLEDGE_BASE: MedicalBrainEntry[] = [
     patterns: [
       /\b(fever|high temperature|pyrexia)\b/i,
       /\b(bukhar|tez bukhar)\b/i,
-      /\b(बुखार|तेज बुखार|तापमान)\b/i,
+      /(बुखार|तेज बुखार|तापमान)/i,
     ],
     keywords: ["fever", "temperature", "bukhar", "chills"],
     en: "For fever (99°F–102°F):\n\n• Rest, stay well-hydrated, and apply room-temperature damp cloth sponging to the forehead.\n• Paracetamol may be used to lower fever — always follow the age/weight dosage instructions on the package or consult an ASHA worker/pharmacist.\n• If fever exceeds 103°F or lasts more than 3 days, get tested for Malaria/Dengue/Typhoid at your nearest PHC.",
@@ -100,8 +100,8 @@ export const CLINICAL_KNOWLEDGE_BASE: MedicalBrainEntry[] = [
     priority: 60,
     patterns: [
       /\b(headache|migraine|head pain|throbbing head)\b/i,
-      /\b(sir dard|sar dard|sirdard|sardard)\b/i,
-      /\b(सिरदर्द|सिर दर्द|माइग्रेन)\b/i,
+      /\b(sir dard|sar dard|sirdard|sardard|sir me dard|sar me dard)\b/i,
+      /(सिरदर्द|सिर दर्द|माइग्रेन)/i,
     ],
     keywords: ["headache", "migraine", "head", "sir dard"],
     en: "For headaches:\n\n• Rest in a quiet, dark room and drink plenty of water (dehydration is a frequent cause).\n• Gently massage the neck and temples.\n• Warning: A sudden, explosive 'thunderclap' headache, or headache with neck stiffness, vision change, or weakness requires immediate hospital emergency evaluation.",
@@ -130,6 +130,30 @@ export const CLINICAL_KNOWLEDGE_BASE: MedicalBrainEntry[] = [
     keywords: ["constipation", "kabj", "hard stool", "constipated"],
     en: "For constipation and stomach heaviness:\n\n• Drink 8–10 glasses of warm water throughout the day, especially 1 glass of warm water early in the morning.\n• Eat high-fiber foods: ripe papaya, guava, green leafy vegetables, and whole grains (daliya, oats).\n• Avoid refined flour (maida), junk food, and excess tea/coffee which dehydrate the bowel.\n• Physical movement: 20–30 minutes of brisk walking helps stimulate intestinal movement.",
     hi: "कब्ज और पेट भारी होने के लिए:\n\n• दिन भर में 8-10 गिलास गुनगुना पानी पिएं, विशेष रूप से सुबह उठकर 1 गिलास गुनगुना पानी लें।\n• फाइबर युक्त भोजन करें: पका पपीता, अमरूद, हरी सब्जियां और दलिया खाएं।\n• मैदा, बाहर का तला-भुना खाना और ज्यादा चाय/कॉफी से बचें।\n• रोजाना 20-30 मिनट टहलें, इससे पाचन और आंतों की क्रिया सुधरती है।",
+  },
+  {
+    id: "symptom-diarrhea-loose-motion",
+    priority: 60,
+    patterns: [
+      /\b(diarrhea|diarrhoea|loose motion|loose stools|watery stool|watery stools)\b/i,
+      /\b(dast|loose motion|patla dast)\b/i,
+      /(दस्त|पतले दस्त|लूज मोशन)/i,
+    ],
+    keywords: ["diarrhea", "dast", "loose motion", "watery stools", "hydration"],
+    en: "For loose motions and diarrhea:\n\n• The primary treatment is hydration: Drink Oral Rehydration Solution (ORS) or coconut water after every loose stool.\n• Eat bland binding foods: Banana, white rice, curd (dahi), and boiled potatoes.\n• Avoid milk, oily, and spicy foods.\n• Warning: If stools contain blood, or if you cannot retain fluids for 12+ hours, seek immediate care at the nearest PHC/hospital.",
+    hi: "दस्त (Loose Motion) के लिए:\n\n• सबसे जरूरी है ओआरएस (ORS) या नारियल पानी हर दस्त के बाद पीना ताकि शरीर में पानी की कमी न हो।\n• हल्का भोजन लें: केला, दही, उबले चावल और खिचड़ी।\n• दूध, तीखा और तला हुआ खाना बिल्कुल न खाएं।\n• चेतावनी: यदि मल में खून आए या लगातार कमजोरी हो तो तुरंत नजदीकी स्वास्थ्य केंद्र जाएं।",
+  },
+  {
+    id: "symptom-minor-burns",
+    priority: 60,
+    patterns: [
+      /\b(minor burn|superficial burn|first degree burn|finger burn|hand burn|burn on hot pan)\b/i,
+      /\b(halka jal gaya|haath jal gaya|ungli jal gayi)\b/i,
+      /(जल गया|हल्का जला|हाथ जल गया)/i,
+    ],
+    keywords: ["burn", "burns", "jal gaya", "first degree burn"],
+    en: "For minor superficial burns:\n\n• Immediately hold the burned area under cool running tap water for 10–15 minutes (do not use ice).\n• Do not apply toothpaste, butter, or soil.\n• Cover loosely with a clean, sterile cloth.\n• Seek immediate medical attention at a hospital for deep burns, blisters, or burns larger than a palm.",
+    hi: "हल्के जलने (Minor Burn) के लिए:\n\n• जले हुए हिस्से को तुरंत 10-15 मिनट तक ठंडे बहते पानी के नीचे रखें (बर्फ का उपयोग न करें)।\n• टूथपेस्ट, तेल, मिट्टी या मक्खन बिल्कुल न लगाएं।\n• साफ और सूखे कपड़े से ढकें।\n• यदि छाले पड़ जाएं या गहरा जला हो तो तुरंत अस्पताल जाएं।",
   },
 
   // ── PRIORITY 40: CONTEXT-GATED DIETARY & RECOVERY RULES ──

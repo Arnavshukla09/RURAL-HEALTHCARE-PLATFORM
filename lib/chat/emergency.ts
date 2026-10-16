@@ -55,8 +55,8 @@ const EMERGENCY_PATTERNS = [
   /(बच्चा|शिशु)\s+(सांस नहीं ले रहा|नीला पड़ गया|बेहोश)/i,
 
   // 2. Obstetric emergencies & maternal hemorrhage
-  /\b(pregnant|pregnancy|garbhvati)\b.*?\b(bleeding heavily|heavy bleeding|haemorrhage|severe pain|water broke|leaking fluid)\b/i,
-  /\b(bleeding heavily|severe bleeding|heavy vaginal bleeding)\b/i,
+  /\b(pregnant|pregnancy|garbhvati)\b.*?\b(bleeding heavily|heavy bleeding|haemorrhage|severe pain|water broke|leaking fluid|khoon beh|khoon nikal|bleeding)\b/i,
+  /\b(bleeding heavily|heavy bleeding|severe bleeding|heavy vaginal bleeding)\b/i,
   /(गर्भवती|गर्भावस्था).*?(भारी रक्तस्राव|खून बह रहा|अत्यधिक रक्तस्राव)/i,
 
   // 3. Neurological: Seizures, Convulsions & Stroke FAST Signs
