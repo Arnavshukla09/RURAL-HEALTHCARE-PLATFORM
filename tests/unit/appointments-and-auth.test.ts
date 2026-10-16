@@ -150,6 +150,49 @@ describe("Appointments & Auth Matrix (Phase 10, C1, C2, H2, H8)", () => {
       const json = await res.json()
       expect(json.code).toBe("SLOT_TAKEN")
     })
+
+    it("resolves simultaneous concurrent booking requests so exactly one succeeds and the other receives 409 SLOT_TAKEN", async () => {
+      const providerId = "44444444-4444-4444-8444-444444444444"
+      const slotTime = "2026-11-01T10:00:00.000Z"
+
+      // First caller succeeds, second collides on unique constraint uq_provider_slot_scheduled
+      let callCount = 0
+      queryChain.single.mockImplementation(async () => {
+        callCount++
+        if (callCount === 1) {
+          return {
+            data: { id: "appt-winner-uuid", provider_id: providerId, appointment_date: slotTime, status: "scheduled" },
+            error: null,
+          }
+        } else {
+          return {
+            data: null,
+            error: { code: "23505", message: "duplicate key value violates unique constraint uq_provider_slot_scheduled" },
+          }
+        }
+      })
+
+      const makeReq = () =>
+        new NextRequest("http://localhost:3000/api/appointments", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            provider_id: providerId,
+            appointment_date: slotTime,
+            consultation_type: "video",
+          }),
+        })
+
+      const [res1, res2] = await Promise.all([POST(makeReq()), POST(makeReq())])
+      const statuses = [res1.status, res2.status].sort()
+
+      expect(statuses).toEqual([201, 409])
+
+      const conflictRes = res1.status === 409 ? res1 : res2
+      const conflictJson = await conflictRes.json()
+      expect(conflictJson.code).toBe("SLOT_TAKEN")
+      expect(conflictJson.error).toBe("This time slot is already booked for this provider.")
+    })
   })
 
   describe("PATCH Appointments Role Matrix (C2)", () => {

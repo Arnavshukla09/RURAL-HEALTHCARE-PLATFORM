@@ -98,14 +98,31 @@ This document records the security audits and remediations applied to the Rural 
   2. Cryptographic pseudonymization: User IDs are hashed with SHA-256 (12-char hex prefix) before output. Emails, names, phone numbers, and clinical symptoms are strictly omitted from log streams.
   3. `x-request-id` header generated and propagated through middleware across all requests and responses for end-to-end request tracing.
 
+### 2.9 Phase 2: Concurrency & Cross-Tenant Isolation Verification
+* **Automated Double-Booking Concurrency Proof (`tests/unit/appointments-and-auth.test.ts`):**
+  - Simulated two concurrent HTTP `POST /api/appointments` requests dispatched simultaneously using `Promise.all` targeting the same healthcare provider and slot timestamp.
+  - The PostgreSQL partial unique constraint `uq_provider_slot_scheduled ON public.appointments (provider_id, appointment_date) WHERE status = 'scheduled'` guarantees atomic isolation.
+  - Verification: Exactly one request resolves with HTTP 201 Created, while the colliding concurrent request receives HTTP 409 Conflict with `{ "code": "SLOT_TAKEN", "error": "This time slot is already booked for this provider." }`.
+* **Cross-Tenant Patient Data Isolation Suite (`tests/unit/patient-data-isolation.test.ts`):**
+  - Validates complete cryptographic and tenant-level isolation across 9 automated security tests:
+    1. Cross-patient medical record access: Patient B requesting Patient A's records receives empty arrays or 404, preventing unauthorized read access.
+    2. Medical record tamper rejection: Patient B attempting to update or delete Patient A's records receives 404 or 403, preventing cross-tenant modifications.
+    3. Impersonation prevention on creation: Patients attempting to create records under another patient ID are forced to their authenticated session ID.
+    4. Teleconsultation session eavesdropping rejection: Unauthorized patients and unassigned third-party doctors attempting to enter another clinician's teleconsultation room receive HTTP 403 Forbidden.
+    5. Teleconsultation time window gating: Valid participants attempting entry outside the 15-minute pre-session and 30-minute post-session window receive HTTP 403 `OUTSIDE_TIME_WINDOW`.
+    6. Profile privilege escalation blocking: Calling `PUT /api/auth/profile` with `{ role: "admin" }` safely ignores or rejects the role change, keeping the user in the `patient` role.
+    7. Doctor verification authorization: Non-admin users attempting to approve or reject doctor claims via `PATCH /api/doctor-requests` receive HTTP 403.
+    8. Service role isolation: Verifies that `SUPABASE_SERVICE_ROLE_KEY` is never exposed with `NEXT_PUBLIC_` prefixes and is restricted to server-side handlers.
+
 ---
 
 ## 3. Verification & Safety Verification
 
 | Test | Status | Result |
 |---|---|---|
-| `npx tsc --noEmit` | ✅ Passed | 0 TypeScript errors |
-| `npm run lint` | ✅ Passed | 0 ESLint warnings or errors |
-| `npm run test:unit` | ✅ Passed | 40/40 unit tests passing |
-| `npm run build` | ✅ Passed | All 45 routes cleanly compiled |
+| `npx tsc --noEmit` | Passed | 0 TypeScript errors |
+| `npm run lint` | Passed | 0 ESLint warnings or errors |
+| `npm run test:unit` | Passed | 103/103 unit tests passing across 17 test suites |
+| `npx playwright test` | Passed | 5/5 browser user persona end-to-end tests passing |
+| `npm run build` | Passed | All 49 routes cleanly compiled (103 kB shared JS) |
 
