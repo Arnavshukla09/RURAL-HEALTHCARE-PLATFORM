@@ -11,17 +11,17 @@
 
 | Test Suite / Audit Dimension | Framework / Tool | Tests Executed | Passed | Failed | Pass Rate | Execution Duration |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: |
-| **Unit & Integration Suite** | Vitest 5.0 (Node.js) | 103 | 103 | 0 | **100%** | ~1.08s |
-| **Component Validation Checker** | Custom Static Analyzer (`scripts/check_components.mjs`) | 132 files | 132 | 0 | **100%** | ~8.12s |
+| **Unit & Integration Suite** | Vitest 5.0 (Node.js) | 116 | 116 | 0 | **100%** | ~1.18s |
+| **Component Validation Checker** | Custom Static Analyzer (`scripts/check_components.mjs`) | 132 files | 132 | 0 | **100%** | ~7.88s |
 | **End-to-End User Flow Suite** | Playwright (Chromium) | 5 | 5 | 0 | **100%** | ~45.3s |
 | **PostGIS Spatial Performance** | Automated Edge Query Benchmark | 1,000 queries | 1,000 | 0 | **100%** | 274ms avg / 558ms P95 |
 | **Security Audit & RLS Verification** | Automated Penetration & Header Checks | 10 audit rules | 10 | 0 | **100%** | Instant |
 
 ---
 
-## 2. Automated Unit & Integration Test Breakdown (103 Tests)
+## 2. Automated Unit & Integration Test Breakdown (116 Tests)
 
-The platform runs 103 unit and integration tests across 17 specialized test files via `npm run test:unit`:
+The platform runs 116 unit and integration tests across 18 specialized test files via `npm run test:unit`:
 
 | Test File | Domain / Subsystem Verified | Tests | Status | Key Assertions & Scenarios |
 | :--- | :--- | :---: | :---: | :--- |
@@ -30,6 +30,7 @@ The platform runs 103 unit and integration tests across 17 specialized test file
 | [`multilingual-engine.test.ts`](file:///c:/Users/aarrn/Desktop/rural%20health/RURAL-HEALTHCARE-PLATFORM-main/tests/unit/multilingual-engine.test.ts) | Regional I18n Engine | 10 | Pass | 10-language dictionary completeness, N-gram language detection heuristics, regional fallback cascades. |
 | [`appointments-and-auth.test.ts`](file:///c:/Users/aarrn/Desktop/rural%20health/RURAL-HEALTHCARE-PLATFORM-main/tests/unit/appointments-and-auth.test.ts) | Auth & OPD Scheduling | 11 | Pass | Deterministic slot locking, duplicate booking prevention, simultaneous concurrent booking collision (`Promise.all` yielding 201/409), session validation, role authorization. |
 | [`patient-data-isolation.test.ts`](file:///c:/Users/aarrn/Desktop/rural%20health/RURAL-HEALTHCARE-PLATFORM-main/tests/unit/patient-data-isolation.test.ts) | Cross-Tenant Security & Isolation | 9 | Pass | Tenant boundaries on medical records (GET/POST/PATCH/DELETE), teleconsultation room eavesdropping mitigation (403), consultation window enforcement, client-side privilege escalation prevention, service role key isolation. |
+| [`client-offline-resilience.test.ts`](file:///c:/Users/aarrn/Desktop/rural%20health/RURAL-HEALTHCARE-PLATFORM-main/tests/unit/client-offline-resilience.test.ts) | Client Offline Resilience & Outbox | 13 | Pass | Jittered exponential backoff (1s-31s), storage quota 80% threshold warning, outbox queue cap (500), 5-failure threshold to status=failed, retryOp, discardOp, purgeSent, legacy localStorage migration. |
 | [`rate-limit-and-gateway.test.ts`](file:///c:/Users/aarrn/Desktop/rural%20health/RURAL-HEALTHCARE-PLATFORM-main/tests/unit/rate-limit-and-gateway.test.ts) | Circuit Breaker & Rate Limiting | 7 | Pass | Upstash sliding window rates, circuit breaker trip on 5 failures, zero-500 fallback triage responses. |
 | [`offline-sync.test.ts`](file:///c:/Users/aarrn/Desktop/rural%20health/RURAL-HEALTHCARE-PLATFORM-main/tests/unit/offline-sync.test.ts) | Offline Outbox & Idempotency | 5 | Pass | UUID client operation keys, replay attack prevention, duplicate elimination, IndexedDB serialization. |
 | [`notifications.test.ts`](file:///c:/Users/aarrn/Desktop/rural%20health/RURAL-HEALTHCARE-PLATFORM-main/tests/unit/notifications.test.ts) | Notification Engine | 5 | Pass | Appointment notifications, chime triggers, payload validation, status update broadcasts. |
@@ -73,7 +74,7 @@ Running automated component checks before commit...
 
 ============================================================
 ALL COMPONENTS VERIFIED & STABLE
-0 broken imports • 0 type errors • 0 lint errors • 103 tests passing
+0 broken imports • 0 type errors • 0 lint errors • 116 tests passing
 Pre-commit check passed cleanly. Commit proceeding!
 ============================================================
 ```

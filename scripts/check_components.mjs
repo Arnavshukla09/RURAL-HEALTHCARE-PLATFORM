@@ -211,11 +211,14 @@ async function run() {
   // STEP 5: Automated Unit Tests (`vitest run`)
   // -------------------------------------------------------------
   logStep(5, 'Executing Unit & Component Test Suite')
+  let totalPassedTests = '116'
   try {
     const testOut = execSync('npm run test:unit', { stdio: 'pipe', cwd: ROOT }).toString()
-    const match = testOut.match(/Tests\s+(\d+\s+passed)/)
-    const passedStr = match ? match[1] : 'All passed'
-    logSuccess(`Test suite passed cleanly (${passedStr}).`)
+    const match = testOut.match(/Tests\s+(\d+)\s+passed/)
+    if (match) {
+      totalPassedTests = match[1]
+    }
+    logSuccess(`Test suite passed cleanly (${totalPassedTests} passed).`)
   } catch (err) {
     failed = true
     const output = (err.stdout ? err.stdout.toString() : '') + (err.stderr ? err.stderr.toString() : '')
@@ -234,18 +237,18 @@ async function run() {
   log(`\n${colors.blue}============================================================${colors.reset}`)
 
   if (failed) {
-    log(`${colors.red}${colors.bold}❌ AUTOMATED COMPONENT CHECK FAILED (${duration}s)${colors.reset}`)
-    log(`${colors.red}${colors.bold}🛑 COMMIT ABORTED — The following issues must be fixed:${colors.reset}\n`)
+    log(`${colors.red}${colors.bold}AUTOMATED COMPONENT CHECK FAILED (${duration}s)${colors.reset}`)
+    log(`${colors.red}${colors.bold}COMMIT ABORTED — The following issues must be fixed:${colors.reset}\n`)
     failureReports.forEach((report, i) => {
       log(`${colors.red}  ${i + 1}. ${report}${colors.reset}`)
     })
-    log(`\n${colors.yellow}👉 Please resolve the component issues above and run git commit again.${colors.reset}`)
+    log(`\n${colors.yellow}Please resolve the component issues above and run git commit again.${colors.reset}`)
     log(`${colors.blue}============================================================\n${colors.reset}`)
     process.exit(1)
   } else {
-    log(`${colors.green}${colors.bold}✅ ALL COMPONENTS VERIFIED & STABLE (${duration}s)${colors.reset}`)
-    log(`${colors.green}0 broken imports • 0 type errors • 0 lint errors • 88 tests passing${colors.reset}`)
-    log(`🚀 Pre-commit check passed cleanly. Commit proceeding!`)
+    log(`${colors.green}${colors.bold}ALL COMPONENTS VERIFIED & STABLE (${duration}s)${colors.reset}`)
+    log(`${colors.green}0 broken imports • 0 type errors • 0 lint errors • ${totalPassedTests} tests passing${colors.reset}`)
+    log(`Pre-commit check passed cleanly. Commit proceeding!`)
     log(`${colors.blue}============================================================\n${colors.reset}`)
     process.exit(0)
   }

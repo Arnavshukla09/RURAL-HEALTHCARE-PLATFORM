@@ -112,7 +112,14 @@ This document records the security audits and remediations applied to the Rural 
     5. Teleconsultation time window gating: Valid participants attempting entry outside the 15-minute pre-session and 30-minute post-session window receive HTTP 403 `OUTSIDE_TIME_WINDOW`.
     6. Profile privilege escalation blocking: Calling `PUT /api/auth/profile` with `{ role: "admin" }` safely ignores or rejects the role change, keeping the user in the `patient` role.
     7. Doctor verification authorization: Non-admin users attempting to approve or reject doctor claims via `PATCH /api/doctor-requests` receive HTTP 403.
-    8. Service role isolation: Verifies that `SUPABASE_SERVICE_ROLE_KEY` is never exposed with `NEXT_PUBLIC_` prefixes and is restricted to server-side handlers.
+### 2.10 Phase 3: Client Offline Outbox & Network Resilience Verification
+* **Automated Offline Outbox Lifecycle (`tests/unit/client-offline-resilience.test.ts`):**
+  - Jittered Exponential Backoff: Validates backoff algorithm (`calculateBackoff`) scaling from base 1,000 ms to a hard upper bound of 30,000 ms (+ 1,000 ms randomization jitter) to prevent thundering herd when rural cell towers reconnect.
+  - Storage Quota Telemetry: Proves that `checkStorageQuota` calculates storage utilization against `navigator.storage.estimate` and triggers `warning: true` when usage reaches or exceeds 80%.
+  - Outbox Queue Bounding: Proves that the IndexedDB queue enforces a hard cap of 500 operations, protecting low-memory mobile browsers from unbounded storage growth.
+  - Failure Transition & Auto-trip: Operations failing 5 consecutive times transition to `status: "failed"` with captured error messages, preventing infinite network loops on permanently invalid mutations.
+  - User Control: Verifies that users can manually retry or discard stalled outbox operations.
+  - Legacy Data Migration: Verifies atomic migration of legacy `localStorage` outbox items into IndexedDB with key deletion.
 
 ---
 
@@ -122,7 +129,7 @@ This document records the security audits and remediations applied to the Rural 
 |---|---|---|
 | `npx tsc --noEmit` | Passed | 0 TypeScript errors |
 | `npm run lint` | Passed | 0 ESLint warnings or errors |
-| `npm run test:unit` | Passed | 103/103 unit tests passing across 17 test suites |
+| `npm run test:unit` | Passed | 116/116 unit tests passing across 18 test suites |
 | `npx playwright test` | Passed | 5/5 browser user persona end-to-end tests passing |
 | `npm run build` | Passed | All 49 routes cleanly compiled (103 kB shared JS) |
 
