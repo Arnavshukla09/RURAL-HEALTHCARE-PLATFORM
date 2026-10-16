@@ -6,7 +6,7 @@ import { Button } from "./ui/button"
 import { Badge } from "./ui/badge"
 import {
   Calendar, Search, ChevronDown, ChevronUp, Loader2,
-  CheckCircle, XCircle, Video, Phone, MessageSquare, Users
+  CheckCircle, XCircle, Video, Phone, MessageSquare, Users, AlertTriangle
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 
@@ -28,10 +28,17 @@ export function AdminAppointments({ language }: AdminAppointmentsProps) {
   const [statusFilter, setStatusFilter] = useState("all")
   const [expanded, setExpanded] = useState<string | null>(null)
   const [updating, setUpdating] = useState<string | null>(null)
+  const [isDemoAdmin, setIsDemoAdmin] = useState(false)
 
   useEffect(() => {
     const load = async () => {
       try {
+        const supabase = createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user?.email?.toLowerCase().includes("demo") || user?.email === "admin@ruralhealth.demo") {
+          setIsDemoAdmin(true)
+        }
+
         const res = await fetch("/api/appointments?limit=20")
         if (res.ok) {
           const json = await res.json()
@@ -67,6 +74,10 @@ export function AdminAppointments({ language }: AdminAppointmentsProps) {
   }
 
   const updateStatus = async (id: string, status: string) => {
+    if (isDemoAdmin) {
+      alert(en ? "Preview Mode: Demo admin privileges cannot modify live appointments." : "पूर्वावलोकन मोड: डेमो व्यवस्थापक अपॉइंटमेंट नहीं बदल सकता।")
+      return
+    }
     setUpdating(id)
     try {
       const res = await fetch("/api/appointments", {
@@ -127,6 +138,19 @@ export function AdminAppointments({ language }: AdminAppointmentsProps) {
             <span className="px-2 py-1 rounded-full bg-red-100 text-red-700">{counts.cancelled} cancelled</span>
           </div>
         </div>
+
+        {/* Demo Admin Preview Banner */}
+        {isDemoAdmin && (
+          <div className="bg-amber-50 border border-amber-200 text-amber-900 rounded-xl p-3.5 flex items-center gap-2.5 text-xs font-medium">
+            <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0" />
+            <div>
+              <span className="font-bold">{en ? "Preview Mode (Demo Admin):" : "पूर्वावलोकन मोड (डेमो व्यवस्थापक):"}</span>{" "}
+              {en
+                ? "Destructive and mutating operations are disabled to prevent modification of active consultations."
+                : "सक्रिय नियुक्तियों में अनपेक्षित बदलाव रोकने के लिए संपादन क्रियाएं अक्षम हैं।"}
+            </div>
+          </div>
+        )}
 
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">

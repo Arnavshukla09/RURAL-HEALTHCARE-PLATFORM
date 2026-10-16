@@ -1,7 +1,0 @@
--- ============================================================
--- 08_fix_permissions.sql
--- Grant execute permissions on get_user_role() to authenticated users
--- Converted to UTF-8
--- ============================================================
-
-GRANT EXECUTE ON FUNCTION public.get_user_role() TO authenticated;

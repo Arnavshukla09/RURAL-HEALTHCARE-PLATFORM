@@ -189,6 +189,14 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "Profile not found", code: "NOT_FOUND" }, { status: 404 })
     }
 
+    // DEMO ADMIN PROTECTION: Demo accounts are restricted to preview mode
+    if (user.email?.toLowerCase().includes("demo") || user.email === "admin@ruralhealth.demo") {
+      return NextResponse.json(
+        { error: "Forbidden: Demo accounts are in preview mode. Modifying appointments is disabled.", code: "DEMO_MODE_RESTRICTED" },
+        { status: 403 }
+      )
+    }
+
     const body = await req.json()
     const parsed = PatchAppointmentSchema.safeParse(body)
     if (!parsed.success) {

@@ -52,8 +52,17 @@ export function AdminUserManagement({ language }: AdminUserManagementProps) {
   const [inviteSearch, setInviteSearch] = useState("")
   const [selectedInviteDoctor, setSelectedInviteDoctor] = useState<RealDoctor | null>(null)
   const [copiedInvite, setCopiedInvite] = useState(false)
+  const [isDemoAdmin, setIsDemoAdmin] = useState(false)
 
   useEffect(() => { 
+    const checkDemo = async () => {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user?.email?.toLowerCase().includes("demo") || user?.email === "admin@ruralhealth.demo") {
+        setIsDemoAdmin(true)
+      }
+    }
+    checkDemo()
     fetchUsers() 
     refreshClaims()
   }, [])
@@ -75,6 +84,10 @@ export function AdminUserManagement({ language }: AdminUserManagementProps) {
   }
 
   const updateRole = async (userId: string, newRole: string) => {
+    if (isDemoAdmin) {
+      flash(en ? "Preview Mode: Demo admin privileges cannot modify live roles." : "पूर्वावलोकन मोड: डेमो व्यवस्थापक भूमिकाएं नहीं बदल सकता।")
+      return
+    }
     setUpdating(userId)
     const supabase = createClient()
     const { error } = await supabase.from("patients").update({ role: newRole }).eq("id", userId)
@@ -86,6 +99,11 @@ export function AdminUserManagement({ language }: AdminUserManagementProps) {
   }
 
   const removeUser = async (userId: string) => {
+    if (isDemoAdmin) {
+      flash(en ? "Preview Mode: Demo admin privileges cannot delete users." : "पूर्वावलोकन मोड: डेमो व्यवस्थापक उपयोगकर्ता नहीं हटा सकता।")
+      setDeleteConfirm(null)
+      return
+    }
     setUpdating(userId)
     const supabase = createClient()
     const { error } = await supabase.from("patients").delete().eq("id", userId)
@@ -159,7 +177,6 @@ export function AdminUserManagement({ language }: AdminUserManagementProps) {
               {en ? "Manage system users, doctor verification claims, and role credentials" : "उपयोगकर्ता, डॉक्टर क्लेम सत्यापन और क्रेडेंशियल प्रबंधित करें"}
             </p>
           </div>
-          
           {/* Navigation Pill Tabs */}
           <div className="flex items-center gap-1.5 p-1 bg-white rounded-xl border border-purple-200 shadow-2xs">
             <button
@@ -189,6 +206,19 @@ export function AdminUserManagement({ language }: AdminUserManagementProps) {
             </button>
           </div>
         </div>
+
+        {/* Demo Admin Preview Banner */}
+        {isDemoAdmin && (
+          <div className="bg-amber-50 border border-amber-200 text-amber-900 rounded-xl p-3.5 flex items-center gap-2.5 text-xs font-medium">
+            <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0" />
+            <div>
+              <span className="font-bold">{en ? "Preview Mode (Demo Admin):" : "पूर्वावलोकन मोड (डेमो व्यवस्थापक):"}</span>{" "}
+              {en
+                ? "You are exploring the administration console in preview mode. Destructive actions (deleting users, role changes, database wiping) are disabled to protect live platform data."
+                : "आप पूर्वावलोकन मोड में प्रशासन कंसोल देख रहे हैं। लाइव डेटा की सुरक्षा के लिए उपयोगकर्ताओं को हटाना या बदलना अक्षम है।"}
+            </div>
+          </div>
+        )}
 
         {/* Success message alert */}
         {successMsg && (
