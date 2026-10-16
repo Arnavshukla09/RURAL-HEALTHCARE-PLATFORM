@@ -4,6 +4,52 @@ All notable changes to the Rural Healthcare Platform will be documented in this 
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres roughly to chronological feature milestones.
 
+## [v1.20.18] - 2026-10-16 — ASHA & ANM Community Health Worker Field Copilot & Patient ABDM FHIR Bundle Export
+
+### 1. Grassroots Field Decision Support Copilot (`components/HealthInfoHub.tsx` & `lib/clinical/imci-anc.ts`)
+- **WHO/UNICEF IMCI Child Assessment**: Integrated interactive offline decision support for infants and children aged 2 months to 5 years. Evaluates general danger signs (inability to drink/breastfeed, vomiting everything, convulsions, lethargy), fast-breathing respiratory thresholds, chest indrawing, stridor, diarrhea dehydration, and dysentery.
+- **National High-Risk Pregnancy (ANC) Triage**: Evaluates pre-eclampsia danger signs (severe headache with blurred vision, facial/hand edema, elevated systolic/diastolic blood pressure), antepartum hemorrhage, reduced fetal movements, and foul-smelling discharge.
+- **Deterministic 3-Color Triaging**: Computes instantaneous clinical classifications and mandated action steps in English and Hindi (`EMERGENCY_RED` for immediate 108 ambulance dispatch and FRU referral, `URGENT_YELLOW` for 24-hour PHC/CHC referral, and `ROUTINE_GREEN` for home care).
+
+### 2. Patient-Facing ABDM FHIR R4 1-Click Export (`components/PatientRecords.tsx`)
+- **Direct FHIR Bundle Download**: Added 1-click "ABDM FHIR R4" export button on every stored medical record and prescription card.
+- **Standards-Compliant Serialization**: Downloads authenticated NRCES DocumentBundles (`.fhir.json`) from `GET /api/abdm/fhir-export?record_id=...` with proper `application/fhir+json` MIME typing.
+
+---
+
+## [v1.20.17] - 2026-10-16 — 2027 Placement Interview Technical Defense Guide & Automated System Integration Benchmark
+
+### 1. Master Placement Technical Defense Guide (`docs/PLACEMENT_INTERVIEW_DEFENSE.md`)
+- **Systems Design Playbook**: Comprehensive technical defense covering distributed systems concurrency, database transactions, offline-first PWA architecture, multi-tenant Row-Level Security (RLS), geospatial PostGIS indexing, and deterministic clinical safety.
+- **Architectural Trade-Off Analysis**: Explains technical justifications for chosen architectures over competing alternatives (e.g. Next.js Serverless BFF vs Express monolith, PostgreSQL RLS vs middleware `WHERE` checks, composite database exclusion constraints vs Node.js in-memory locks, IndexedDB outbox vs synchronous LocalStorage).
+- **25 Placement Interview Q&A**: Answers to top-tier technical interview questions asked by senior engineering panels at Google, Microsoft, Amazon, Atlassian, Uber, and Practo.
+
+### 2. Automated End-to-End System Integration Benchmark (`scripts/benchmark_system_integration.mjs`)
+- **21-Point Correctness Runner**: Automated benchmark verifying India bounding box validity, swapped coordinate traps, stable FNV-1a surrogate keys, 0 ms Tier-0 clinical emergency gate, prompt injection neutralization, `Promise.all()` concurrent slot collision resolution, jittered exponential backoff dynamics, ABHA standards conformance, and FHIR R4 referential integrity.
+- **CI Integration**: Added `npm run benchmark:integration` to `.github/workflows/ci.yml` and `package.json`.
+
+---
+
+## [v1.20.16] - 2026-10-16 — Ayushman Bharat Digital Mission (ABDM) & HL7 FHIR R4 Interoperability
+
+### 1. Pure TypeScript HL7 FHIR R4 Bundle Generators (`lib/abdm/fhir.ts`)
+- **NRCES DocumentBundle Conformance**: Implemented bundle generators producing valid FHIR R4 DocumentBundles (`https://nrces.in/ndhm/fhir/r4/StructureDefinition/DocumentBundle`) with `Composition` as mandatory index 0.
+- **Prescription Bundles (`generateFhirPrescriptionBundle`)**: Generates LOINC `57833-6` prescriptions with structured `MedicationRequest` entries.
+- **Diagnostic Report Bundles (`generateFhirDiagnosticBundle`)**: Generates LOINC `11502-2` laboratory and diagnostic reports with discrete `Observation` resources, UCUM units, and interpretation flags.
+- **Encounter & Vital Signs Bundles (`generateFhirEncounterBundle`)**: Encapsulates clinical encounters with ambulatory class (`AMB`) and vital signs observations (Systolic BP `8480-6`, Diastolic BP `8462-4`, Heart Rate `8867-4`, SpO2 `2708-6`, Temperature `8310-5`).
+
+### 2. Referential Integrity & Conformance Validator (`validateFhirBundle`)
+- **Zero Dangling Pointers**: Algorithmic validation engine ensuring that every internal URN reference declared in `subject`, `author`, `custodian`, `performer`, and `result` resolves to an existing `fullUrl` within the bundle.
+
+### 3. ABDM FHIR Export API Route (`app/api/abdm/fhir-export/route.ts`)
+- **Cross-Tenant Authorization**: Secure endpoint `GET /api/abdm/fhir-export?record_id=<UUID>` enforcing that patients can only export their own records, while clinicians and administrators can export within their operational scope.
+- **MIME & Headers**: Returns `application/fhir+json; charset=utf-8` with `X-ABDM-Conformance: NRCES-FHIR-R4-M2`.
+
+### 4. Technical Documentation & Defense Guide (`docs/ABDM_FHIR_INTEROPERABILITY.md`)
+- Complete architectural specification detailing ABDM M1, M2, and M3 milestones, NRCES mapping tables, and 10 technical defense interview responses.
+
+---
+
 ## [v1.20.15] - 2026-10-16 — Security Overhaul: Tokenized Clinician Claim Guard, Admin Approval Gate, 5-per-Page Scheme Pagination & Patient Records Resilience
 
 ### 1. Identity Theft Protection & Tokenized Doctor Claim Guard (`app/doctor/claim/page.tsx`, `lib/doctor-claims.ts`, & `components/Header.tsx`)

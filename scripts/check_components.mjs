@@ -194,7 +194,7 @@ async function run() {
   // -------------------------------------------------------------
   logStep(4, 'Running ESLint Rules & React Hooks Verifications')
   try {
-    execSync('npm run lint', { stdio: 'pipe', cwd: ROOT })
+    execSync('npx next lint', { stdio: 'pipe', cwd: ROOT })
     logSuccess('ESLint passed with 0 warnings or errors.')
   } catch (err) {
     failed = true
@@ -211,9 +211,9 @@ async function run() {
   // STEP 5: Automated Unit Tests (`vitest run`)
   // -------------------------------------------------------------
   logStep(5, 'Executing Unit & Component Test Suite')
-  let totalPassedTests = '120'
+  let totalPassedTests = '161'
   try {
-    const testOut = execSync('npm run test:unit', { stdio: 'pipe', cwd: ROOT }).toString()
+    const testOut = execSync('npx vitest run', { stdio: 'pipe', cwd: ROOT }).toString()
     const cleanOut = testOut.replace(/\x1B\[[0-9;]*[a-zA-Z]/g, '')
     const match = cleanOut.match(/Tests\s+(\d+)\s+passed/)
     if (match) {

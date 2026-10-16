@@ -645,12 +645,27 @@ export function PatientRecords({ language, user }: PatientRecordsProps) {
                         </button>
                       </div>
                       <p className="text-sm text-gray-700 line-clamp-2">{rec.content}</p>
-                      {rec.file_url && (
-                        <a href={rec.file_url} target="_blank" rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-xs text-teal-600 hover:underline mt-1">
-                          <Download className="h-3 w-3" />{en ? 'View file' : 'फाइल देखें'}
-                        </a>
-                      )}
+                      <div className="flex items-center gap-2 mt-2">
+                        {rec.file_url && (
+                          <a href={rec.file_url} target="_blank" rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-xs text-teal-600 hover:underline">
+                            <Download className="h-3 w-3" />{en ? 'View file' : 'फाइल देखें'}
+                          </a>
+                        )}
+                        {rec.id && (
+                          <a
+                            href={`/api/abdm/fhir-export?record_id=${rec.id}`}
+                            download={`record-${rec.id}.fhir.json`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-2 py-0.5 rounded border border-blue-200 transition-colors"
+                            title="Download ABDM NRCES HL7 FHIR R4 Document Bundle"
+                          >
+                            <FileText className="h-3 w-3" />
+                            {en ? 'ABDM FHIR R4' : 'एबीडीएम एफएचआईआर'}
+                          </a>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
