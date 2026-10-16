@@ -40,6 +40,39 @@ GROUP BY schemaname, tablename
 ORDER BY tablename;
 ```
 
+### Pre-Deploy Step: Doctor-to-Provider Linkage Reconciliation
+Before locking down RLS policies, all existing clinicians with `role = 'doctor'` in `public.patients` MUST have their `user_id` linked to a row in `public.healthcare_providers`. Otherwise, because `has_care_relationship()` resolves doctor identity through `healthcare_providers.user_id = auth.uid()`, unlinked doctors will see 0 patients after migration.
+
+1. **Audit Unlinked Doctors Query:**
+```sql
+SELECT p.id AS patient_id, p.user_id, p.first_name, p.last_name, p.email, p.role
+FROM public.patients p
+LEFT JOIN public.healthcare_providers hp ON hp.user_id = p.user_id
+WHERE p.role = 'doctor' AND hp.id IS NULL;
+```
+
+2. **Reconciliation Tool Execution:**
+Execute the reconciliation CLI script against your staging/target database:
+```bash
+node scripts/reconcile_doctor_providers.mjs
+# To automatically link unlinked doctors whose email matches an unlinked provider 1:1:
+node scripts/reconcile_doctor_providers.mjs --auto-link
+```
+
+3. **Manual Administrative Linkage API:**
+For remaining doctors with email discrepancies or multiple listings, use the administrative API:
+```bash
+# View unlinked doctors and available providers:
+curl -X GET https://<your-domain>/api/admin/doctor-provider-link \
+  -H "Cookie: sb-access-token=..."
+
+# Link a specific doctor to a provider row:
+curl -X POST https://<your-domain>/api/admin/doctor-provider-link \
+  -H "Content-Type: application/json" \
+  -H "Cookie: sb-access-token=..." \
+  -d '{"user_id": "<DOCTOR_AUTH_USER_ID>", "provider_id": "<HEALTHCARE_PROVIDER_UUID>"}'
+```
+
 ---
 
 ## 2. Step-by-Step Production Migration Sequence

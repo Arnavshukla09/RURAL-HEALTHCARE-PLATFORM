@@ -12,7 +12,7 @@ License: MIT
 
 ## 1. Executive Summary
 
-The Rural Healthcare Platform is a production-grade, offline-first mobile Progressive Web Application (PWA) designed to serve rural, tier-3, and tier-4 populations across India. Operating strictly within a 100% free-tier cloud infrastructure ($0 operating cost), the platform addresses structural challenges in rural medicine: specialist scarcity, high cellular packet loss (2G/3G networks), low smartphone compute specifications, and fragmented health records.
+The Rural Healthcare Platform is an open-source, resilient, offline-first mobile Progressive Web Application (PWA) under active security hardening, designed to serve rural, tier-3, and tier-4 populations across India. Operating strictly within a 100% free-tier cloud infrastructure ($0 operating cost), the platform addresses structural challenges in rural medicine: specialist scarcity, high cellular packet loss (2G/3G networks), low smartphone compute specifications, and fragmented health records.
 
 The platform integrates:
 - Passwordless, zero-auth guest teleconsultation rooms with 2G Opus audio fallback (16-24 kbps).

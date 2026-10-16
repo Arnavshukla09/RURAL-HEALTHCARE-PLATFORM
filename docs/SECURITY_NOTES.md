@@ -134,7 +134,26 @@ This document records the security audits and remediations applied to the Rural 
   1. **Provider Mapping:** Added `healthcare_providers.user_id` referencing `auth.users(id)` and revoked client-side write permissions to prevent arbitrary claiming. Linking is strictly performed by administrative claim verification via `getAdminClient()`.
   2. **Status Scoping (`scheduled` and `completed`):** Treating physicians require access to clinical history prior to an appointment (`scheduled`) and during post-consultation management, prescription authoring, and follow-up care (`completed`).
   3. **Exclusion of Cancelled Appointments:** Appointments with status `'cancelled'` do NOT constitute an active care relationship and grant zero read or write access to patient medical records.
-  4. **Exclusion of `doctor_requests` Table:** The `doctor_requests` table is an administrative onboarding queue for doctors requesting credential verification from platform administrators. It does not contain patient relationships or patient identifiers, and is excluded from care relationship logic.
+### 2.13 Security Audit Policy & Expiring Dependency Allowlist
+* **Zero Critical Vulnerabilities:** Automated CI workflows strictly gate builds on `npm audit --audit-level=critical` (0 critical vulnerabilities allowed).
+* **High Severity Policy with Expiring Allowlist:**
+  - Automated gate via `scripts/audit_allowlist.mjs` enforces zero high-severity vulnerabilities unless explicitly authorized in `audit-allowlist.json`.
+  - Every allowlisted item requires a technical justification explaining why runtime exploitability is absent, paired with a mandatory hard expiration date.
+  - If an allowlist entry expires, CI fails immediately to prevent stale security exceptions.
+
+| Package | Advisory | Severity | Expiration | Risk Assessment & Justification |
+| :--- | :--- | :--- | :--- | :--- |
+| `braces` | GHSA-vfj7-8cjw-p6xm | High | 2026-12-31 | Transitive build-time dependency bundled inside `@ducanh2912/next-pwa` -> `workbox-build` -> `fast-glob` -> `micromatch`. Only invoked during Next.js service worker compilation; never processes user-controlled regex patterns at runtime. |
+| `micromatch` | via `braces` | High | 2026-12-31 | Transitive dependency inside `workbox-build` via `fast-glob`; build-time service worker generation only. |
+| `fast-glob` | via `micromatch` | High | 2026-12-31 | Transitive dependency inside `workbox-build`; build-time service worker asset globbing only. |
+| `@ducanh2912/next-pwa` | via `workbox-build` | High | 2026-12-31 | Next.js PWA generation plugin. Vulnerability is in upstream Google Workbox build toolchain, which has not yet published an updated major release. |
+| `postcss` | GHSA-6g55-p6wh-862q, GHSA-r28c-9q8g-f849 | High | 2026-12-31 | CSS `sourceMappingURL` parsing vulnerability bundled in Next.js build-time pipeline. Build-time compilation only; no arbitrary CSS or source maps from untrusted users are processed at runtime. |
+| `serialize-javascript` | GHSA-5c6j-r48x-rmvq | High | 2026-12-31 | Transitive dependency in `workbox-build` and `terser` used during webpack service-worker minification. Only runs on static application code during `npm run build`. |
+
+### 2.14 Content Security Policy (CSP) Enforcement Posture
+* **Current Mode:** `Content-Security-Policy-Report-Only` (in `next.config.mjs`).
+* **Operational Rationale:** The application interfaces with external zero-auth teleconsultation WebRTC infrastructure (`meet.jit.si`, `8x8.vc`), Google Translate dynamic assets, and CartoCDN tile endpoints. To prevent accidental disruption of clinical consultations in rural areas, CSP is deployed in Report-Only mode to log client-side violations before moving to blocking mode (`Content-Security-Policy`).
+* **Roadmap to Enforced Mode:** Following preview and staging verification across all supported browsers, the header key will be switched to `Content-Security-Policy` with an inline nonce generator for server-rendered scripts.
 
 ---
 

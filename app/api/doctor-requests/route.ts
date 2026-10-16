@@ -175,8 +175,15 @@ export async function PATCH(req: NextRequest) {
     let adminClient: any
     try {
       adminClient = getAdminClient()
-    } catch {
-      adminClient = supabase
+    } catch (err: any) {
+      await supabase
+        .from("doctor_requests")
+        .update({ status: "pending", reviewed_at: null, admin_notes: null })
+        .eq("id", request_id)
+      return NextResponse.json({
+        error: "Service role client configuration error: " + (err?.message || "SUPABASE_SERVICE_ROLE_KEY missing"),
+        code: "ADMIN_CLIENT_ERROR",
+      }, { status: 500 })
     }
 
     const { error: roleError } = await adminClient
@@ -185,72 +192,131 @@ export async function PATCH(req: NextRequest) {
       .eq("user_id", request.user_id)
 
     if (roleError) {
+      await supabase
+        .from("doctor_requests")
+        .update({ status: "pending", reviewed_at: null, admin_notes: null })
+        .eq("id", request_id)
       return NextResponse.json({
         error: "Request approved but role update failed: " + roleError.message,
+        code: "ROLE_UPDATE_FAILED",
       }, { status: 500 })
     }
 
-    // Link or create healthcare_providers entry for the approved doctor
-    try {
-      let existingProvider = null
-      if (request.user_id) {
-        const { data: byUser } = await adminClient
-          .from("healthcare_providers")
-          .select("id, user_id, email")
-          .eq("user_id", request.user_id)
-          .maybeSingle()
-        existingProvider = byUser
-      }
+    // Link or create healthcare_providers entry for the approved doctor (BLOCKING with rollback)
+    let existingProvider = null
+    if (request.user_id) {
+      const { data: byUser, error: byUserErr } = await adminClient
+        .from("healthcare_providers")
+        .select("id, user_id, email")
+        .eq("user_id", request.user_id)
+        .maybeSingle()
 
-      if (!existingProvider && request.email) {
-        const { data: byEmail } = await adminClient
-          .from("healthcare_providers")
-          .select("id, user_id, email")
-          .eq("email", request.email)
-          .maybeSingle()
-        existingProvider = byEmail
+      if (byUserErr) {
+        await adminClient.from("patients").update({ role: "patient" }).eq("user_id", request.user_id)
+        await supabase.from("doctor_requests").update({ status: "pending", reviewed_at: null, admin_notes: null }).eq("id", request_id)
+        return NextResponse.json({
+          error: "Failed to check existing provider by user_id: " + byUserErr.message,
+          code: "PROVIDER_QUERY_FAILED",
+        }, { status: 500 })
       }
-
-      if (existingProvider) {
-        await adminClient
-          .from("healthcare_providers")
-          .update({
-            user_id: request.user_id,
-            is_verified: true,
-            ...(request.specialization ? { specialization: request.specialization } : {}),
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", existingProvider.id)
-      } else {
-        await adminClient
-          .from("healthcare_providers")
-          .insert({
-            user_id: request.user_id,
-            name: request.full_name || request.email,
-            email: request.email,
-            specialization: request.specialization || "General Medicine",
-            is_verified: true,
-          })
-      }
-    } catch (linkErr) {
-      console.error("[doctor-requests] Non-blocking provider linking error:", linkErr)
+      existingProvider = byUser
     }
+
+    if (!existingProvider && request.email) {
+      const { data: byEmail, error: byEmailErr } = await adminClient
+        .from("healthcare_providers")
+        .select("id, user_id, email")
+        .eq("email", request.email)
+        .maybeSingle()
+
+      if (byEmailErr) {
+        await adminClient.from("patients").update({ role: "patient" }).eq("user_id", request.user_id)
+        await supabase.from("doctor_requests").update({ status: "pending", reviewed_at: null, admin_notes: null }).eq("id", request_id)
+        return NextResponse.json({
+          error: "Failed to check existing provider by email: " + byEmailErr.message,
+          code: "PROVIDER_QUERY_FAILED",
+        }, { status: 500 })
+      }
+      existingProvider = byEmail
+    }
+
+    if (existingProvider) {
+      // SECURITY GUARD: Never overwrite a provider row whose user_id belongs to another user
+      if (existingProvider.user_id && existingProvider.user_id !== request.user_id) {
+        await adminClient.from("patients").update({ role: "patient" }).eq("user_id", request.user_id)
+        await supabase.from("doctor_requests").update({ status: "pending", reviewed_at: null, admin_notes: null }).eq("id", request_id)
+        return NextResponse.json({
+          error: `Healthcare provider (${existingProvider.id}) is already linked to another user (${existingProvider.user_id}). Linking aborted.`,
+          code: "PROVIDER_ALREADY_LINKED",
+        }, { status: 409 })
+      }
+
+      const { error: linkUpdateErr } = await adminClient
+        .from("healthcare_providers")
+        .update({
+          user_id: request.user_id,
+          is_verified: true,
+          ...(request.specialization ? { specialization: request.specialization } : {}),
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", existingProvider.id)
+
+      if (linkUpdateErr) {
+        await adminClient.from("patients").update({ role: "patient" }).eq("user_id", request.user_id)
+        await supabase.from("doctor_requests").update({ status: "pending", reviewed_at: null, admin_notes: null }).eq("id", request_id)
+        return NextResponse.json({
+          error: "Failed to link existing provider: " + linkUpdateErr.message,
+          code: "PROVIDER_LINK_FAILED",
+        }, { status: 500 })
+      }
+    } else {
+      const { error: linkInsertErr } = await adminClient
+        .from("healthcare_providers")
+        .insert({
+          user_id: request.user_id,
+          name: request.full_name || request.email,
+          email: request.email,
+          specialization: request.specialization || "General Medicine",
+          is_verified: true,
+        })
+
+      if (linkInsertErr) {
+        await adminClient.from("patients").update({ role: "patient" }).eq("user_id", request.user_id)
+        await supabase.from("doctor_requests").update({ status: "pending", reviewed_at: null, admin_notes: null }).eq("id", request_id)
+        return NextResponse.json({
+          error: "Failed to create and link healthcare provider: " + linkInsertErr.message,
+          code: "PROVIDER_CREATE_FAILED",
+        }, { status: 500 })
+      }
+    }
+
+    const { data: targetProfile } = await adminClient
+      .from("patients")
+      .select("id")
+      .eq("user_id", request.user_id)
+      .maybeSingle()
 
     await logAuditEvent({
       action: "doctor_request_approved",
       resourceType: "doctor_requests",
       resourceId: request_id,
-      patientId: request.user_id,
+      patientId: targetProfile?.id || null,
       userId: user.id,
       userRole: "admin",
       details: { role_promoted_to: "doctor", email: request.email },
     })
   } else if (action === "rejected") {
+    const { data: targetProfile } = await supabase
+      .from("patients")
+      .select("id")
+      .eq("user_id", request.user_id)
+      .maybeSingle()
+
     await logAuditEvent({
       action: "doctor_request_rejected",
       resourceType: "doctor_requests",
       resourceId: request_id,
-      patientId: request.user_id,
+      patientId: targetProfile?.id || null,
       userId: user.id,
       userRole: "admin",
       details: { email: request.email, admin_notes: admin_notes || null },

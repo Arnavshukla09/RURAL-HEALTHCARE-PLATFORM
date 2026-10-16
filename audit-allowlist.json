@@ -1,0 +1,44 @@
+[
+  {
+    "name": "braces",
+    "advisory": "GHSA-vfj7-8cjw-p6xm",
+    "severity": "high",
+    "reason": "Transitive build-time dependency bundled inside @ducanh2912/next-pwa -> workbox-build -> fast-glob -> micromatch. Only invoked during Next.js service worker compilation; never processes user-controlled regex patterns at runtime.",
+    "expiry": "2026-12-31"
+  },
+  {
+    "name": "micromatch",
+    "advisory": "via braces (GHSA-vfj7-8cjw-p6xm)",
+    "severity": "high",
+    "reason": "Transitive dependency inside workbox-build via fast-glob; build-time service worker generation only.",
+    "expiry": "2026-12-31"
+  },
+  {
+    "name": "fast-glob",
+    "advisory": "via micromatch (GHSA-vfj7-8cjw-p6xm)",
+    "severity": "high",
+    "reason": "Transitive dependency inside workbox-build; build-time service worker asset globbing only.",
+    "expiry": "2026-12-31"
+  },
+  {
+    "name": "@ducanh2912/next-pwa",
+    "advisory": "via workbox-build/fast-glob",
+    "severity": "high",
+    "reason": "Next.js PWA generation plugin. Vulnerability is in upstream Google Workbox build toolchain, which has not yet published an updated major release.",
+    "expiry": "2026-12-31"
+  },
+  {
+    "name": "postcss",
+    "advisory": "GHSA-6g55-p6wh-862q, GHSA-r28c-9q8g-f849",
+    "severity": "high",
+    "reason": "CSS sourceMappingURL parsing vulnerability bundled in Next.js build-time pipeline. Build-time compilation only; no arbitrary CSS or source maps from untrusted users are processed at runtime.",
+    "expiry": "2026-12-31"
+  },
+  {
+    "name": "serialize-javascript",
+    "advisory": "GHSA-5c6j-r48x-rmvq",
+    "severity": "high",
+    "reason": "Transitive dependency in workbox-build and terser used during webpack service-worker minification. Only runs on static application code during npm run build.",
+    "expiry": "2026-12-31"
+  }
+]

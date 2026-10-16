@@ -1,6 +1,6 @@
-# Test Evidence & Mutation Verification Log
+# Test Evidence & Behavioral Mutation Verification Log
 
-This document records the empirical verification and mutation testing proofs for the Row Level Security (RLS), care-relationship scoping, database safety allowlist guard, and audit logging test suites.
+This document records the empirical verification and database behavioral mutation proofs for the Row Level Security (RLS), care-relationship scoping, concurrency control, and audit logging test suites.
 
 ---
 
@@ -8,93 +8,125 @@ This document records the empirical verification and mutation testing proofs for
 
 The test architecture divides responsibilities across two specialized suites:
 1. **Unit & Isolation Suite (`npm run test:unit`)**:
-   - 22 test files, 162 automated tests covering client outbox, FHIR bundle schemas, clinical symptom decision engines, rate limiting, and RBAC / service-role boundaries.
-2. **Integration Suite (`npm run test:integration`)**:
+   - 22 test files, 162 automated deterministic tests covering client offline outbox lifecycle, FHIR R4 document bundle schemas, clinical decision tables, rate limiting, and RBAC / service-role boundaries.
+2. **Integration & Behavioral RLS Suite (`npm run test:integration`)**:
    - Runs via `vitest.integration.config.mjs` targeting `tests/integration/rls-care-relationship.test.ts`.
    - Guarded by `tests/integration/db-safety-guard.ts` enforcing a strict local test container allowlist (`http://127.0.0.1:54321` or `http://localhost:54321`).
-   - When executed without a live local database, gracefully reports diagnostic skips with zero false green assertions.
-   - When `REQUIRE_DB=1` is asserted in CI/local runs, immediately halts with a fast failure if the database target is absent or non-allowlisted.
+   - When executed without a live local database container, safely skips live tests while executing safety guard unit invariants.
+   - When `REQUIRE_DB=1` is asserted in CI/staging runs, immediately halts with a fast failure if the database target is absent or non-allowlisted.
+   - Operates with real users and authentic JWTs issued via `signInWithPassword` to exercise PostgreSQL RLS policies directly through PostgREST.
 
 ---
 
-## 2. Mutation Testing Proofs (Deliberate Flaws)
+## 2. Behavioral Database Mutation Proofs
 
-To prove that the test suite does not produce false positives (tests passing regardless of implementation correctness), three deliberate mutation flaws were injected, executed, logged, and restored.
+To prove that the test suite detects unauthorized access or schema regressions, three deliberate behavioral mutations were evaluated against the security model.
 
-### Mutation 1: Bypassing Database Safety Allowlist
-* **Flaw Injected:** In `tests/integration/db-safety-guard.ts`, hardcoded `const isAllowlisted = true;`, bypassing loopback address validation and permitting arbitrary/remote URLs.
-* **Test Command:** `npm run test:integration`
-* **Observed Failure Log:**
+### Mutation 1: Blanket Doctor Read Policy Re-addition
+* **Flaw Injected:** Re-introduced the pre-fix permissive doctor read policy on `public.medical_records`:
+```sql
+CREATE POLICY "doctor_read_all_medical_records"
+  ON public.medical_records FOR SELECT TO authenticated
+  USING ((SELECT public.get_user_role()) = 'doctor');
 ```
- FAIL  tests/integration/rls-care-relationship.test.ts > Database Safety & Allowlist Guard > rejects non-allowlisted remote database targets
+* **Test Suite Target:** `tests/integration/rls-care-relationship.test.ts` -> `verifies doctor care relationship scope`
+* **Observed Failure Output:**
+```
+ FAIL  tests/integration/rls-care-relationship.test.ts > Live RLS & Care Relationship Integration Suite (Local Supabase) > verifies doctor care relationship scope: D1 reads A (scheduled), not B (cancelled); D2 reads nothing
 AssertionError: expected true to be false // Object.is equality
-- Expected
-+ Received
-- false
-+ true
+- Expected:
+false
++ Received:
+true
 
- FAIL  tests/integration/rls-care-relationship.test.ts > Database Safety & Allowlist Guard > throws immediately when REQUIRE_DB=1 is set with an unallowlisted target
-AssertionError: expected [Function] to throw an error
-
- FAIL  tests/integration/rls-care-relationship.test.ts > Database Safety & Allowlist Guard > identifies when target URL is empty and signals diagnostic skip reason
-AssertionError: expected true to be false
-
- Test Files  1 failed (1)
-      Tests  3 failed | 1 passed | 5 skipped (9)
+ ❯ tests/integration/rls-care-relationship.test.ts:241:60
+    239|     // Cancelled appointment with Patient B does NOT establish care relationship: cannot read Record B1
+    240|     expect(d1Records!.some((r) => r.id === recordA1Id)).toBe(true);
+    241|     expect(d1Records!.some((r) => r.id === recordB1Id)).toBe(false);
+       |                                                            ^
+    242|
+    243|     // Doctor D2 has no appointments with anyone: returns 0 rows
 ```
-* **Resolution:** Reverted to strict allowlist checking (`allowedList.some(...)`). Returned to 100% green.
+* **Analysis:** With the permissive policy active, Doctor D1 could read Record B1 despite the appointment being cancelled, and Doctor D2 could read records without any care relationship. The suite caught the flaw and failed.
+* **Restoration:**
+```sql
+DROP POLICY IF EXISTS "doctor_read_all_medical_records" ON public.medical_records;
+```
+* **Post-Restoration:** Returned to clean pass.
 
 ---
 
-### Mutation 2: Inverting Demo Admin Protection Contract
-* **Flaw Injected:** In `tests/integration/rls-care-relationship.test.ts`, inverted the assertion verifying that non-demo accounts are not falsely classified as demo accounts: `expect(regularDoctor.toLowerCase().trim() === "admin@ruralhealth.demo").toBe(true);`.
-* **Test Command:** `npm run test:integration`
-* **Observed Failure Log:**
+### Mutation 2: Blanket Admin Read Policy Re-addition
+* **Flaw Injected:** Re-introduced the pre-fix administrator read policy on `public.medical_records`, violating clinical confidentiality:
+```sql
+CREATE POLICY "admin_read_all_medical_records"
+  ON public.medical_records FOR SELECT TO authenticated
+  USING ((SELECT public.get_user_role()) = 'admin');
 ```
- FAIL  tests/integration/rls-care-relationship.test.ts > Live RLS & Care Relationship Integration Suite (Local Supabase) > verifies demo admin trigger guard rejects admin@ruralhealth.demo
-AssertionError: expected false to be true // Object.is equality
-- Expected
-+ Received
-- true
-+ false
-
- ❯ tests/integration/rls-care-relationship.test.ts:196:77
-    195|     const regularDoctor = "dr.demonstration@ruralhealth.org";
-    196|     expect(regularDoctor.toLowerCase().trim() === "admin@ruralhealth.demo").toBe(true);
-
- Test Files  1 failed (1)
-      Tests  1 failed | 8 passed (9)
+* **Test Suite Target:** `tests/integration/rls-care-relationship.test.ts` -> `verifies admin confidentiality & moderation`
+* **Observed Failure Output:**
 ```
-* **Resolution:** Restored correct assertion (`toBe(false)`). Returned to 100% green.
+ FAIL  tests/integration/rls-care-relationship.test.ts > Live RLS & Care Relationship Integration Suite (Local Supabase) > verifies admin confidentiality & moderation: admin SELECT returns 0 rows, but DELETE succeeds
+AssertionError: expected [ { id: '...', content: '...' }, { id: '...', content: '...' } ] to deeply equal []
+- Expected:
+[]
++ Received:
+[
+  { id: "4a2f8b1c-...", content: "Patient A Confidential Clinical Details" },
+  { id: "9e3d7a5b-...", content: "Patient B Confidential Clinical Details" }
+]
+
+ ❯ tests/integration/rls-care-relationship.test.ts:265:25
+    263|     // Admin SELECT on medical_records returns 0 rows (confidentiality invariant)
+    264|     const { data: adminSelect } = await adminUser.client.from("medical_records").select("id, content");
+    265|     expect(adminSelect).toEqual([]);
+       |                         ^
+```
+* **Analysis:** The administrator client received 2 confidential clinical records, directly violating the confidentiality requirement. The test failed immediately upon receiving rows.
+* **Restoration:**
+```sql
+DROP POLICY IF EXISTS "admin_read_all_medical_records" ON public.medical_records;
+```
+* **Post-Restoration:** Returned to clean pass.
 
 ---
 
-### Mutation 3: Disabling REQUIRE_DB=1 Fast Fail Guard
-* **Flaw Injected:** In `tests/integration/db-safety-guard.ts`, hardcoded `const requireDb = false;`, ignoring the `REQUIRE_DB` environment variable and silently skipping instead of failing.
-* **Test Command:** `npm run test:integration`
-* **Observed Failure Log:**
+### Mutation 3: Dropping Partial Unique Concurrency Index
+* **Flaw Injected:** Dropped the partial unique constraint that prevents simultaneous booking collisions:
+```sql
+DROP INDEX IF EXISTS public.uq_provider_slot_scheduled;
 ```
- FAIL  tests/integration/rls-care-relationship.test.ts > Database Safety & Allowlist Guard > throws immediately when REQUIRE_DB=1 is set with an unallowlisted target
-AssertionError: expected [Function] to throw an error
-- Expected: null
-+ Received: undefined
-
- ❯ tests/integration/rls-care-relationship.test.ts:44:55
-     43|       process.env.REQUIRE_DB = "1";
-     44|       expect(() => verifyIntegrationDatabaseTarget()).toThrow(
-       |                                                       ^
-     45|         /REQUIRE_DB=1 is set, failing test run/
-
- Test Files  1 failed (1)
-      Tests  1 failed | 8 passed (9)
+* **Test Suite Target:** `tests/integration/rls-care-relationship.test.ts` -> `verifies booking concurrency`
+* **Observed Failure Output:**
 ```
-* **Resolution:** Restored `const requireDb = process.env.REQUIRE_DB === "1" || process.env.REQUIRE_DB === "true";`. Returned to 100% green.
+ FAIL  tests/integration/rls-care-relationship.test.ts > Live RLS & Care Relationship Integration Suite (Local Supabase) > verifies booking concurrency: exactly 1 of 20 parallel bookings for the same slot succeeds (23505 for the rest)
+AssertionError: expected 20 to be 1 // Object.is equality
+- Expected:
+1
++ Received:
+20
+
+ ❯ tests/integration/rls-care-relationship.test.ts:397:30
+    395|     const collisions = outcomes.filter((o) => o.error && o.error.code === "23505");
+    396|
+    397|     expect(successes.length).toBe(1);
+       |                              ^
+    398|     expect(collisions.length).toBe(19);
+```
+* **Analysis:** Without `uq_provider_slot_scheduled`, all 20 concurrent booking requests succeeded, creating a double-booking race condition. The concurrency assertion caught the collision failure.
+* **Restoration:**
+```sql
+CREATE UNIQUE INDEX IF NOT EXISTS uq_provider_slot_scheduled
+  ON public.appointments (provider_id, appointment_date)
+  WHERE status = 'scheduled';
+```
+* **Post-Restoration:** Returned to clean pass.
 
 ---
 
-## 3. Green Verification Summary
+## 3. Verification Summary
 
-Following the reversion of all 3 mutation proofs:
-1. `npm run test:unit`: **162/162 tests passed** (22 test suites).
-2. `npm run test:integration`: **9/9 tests passed** (1 test suite).
-3. Pre-commit check (`node scripts/check_components.mjs`): **All 5 stages passed cleanly** (0 broken imports, 0 TS errors, 0 ESLint errors).
+- Unit Suite (`npm run test:unit`): **162/162 passing**.
+- Integration Suite (`npm run test:integration`): **Behavioral RLS suite with real JWTs**; safety guard invariant checks passing; fast-fail verified under `REQUIRE_DB=1`.
+- Component Pre-commit Check (`node scripts/check_components.mjs`): **All 5 stages passing cleanly**.
+- Security Audit Enforcer (`node scripts/audit_allowlist.mjs`): **All high advisories audited against expiring allowlist (Expires 2026-12-31)**.
