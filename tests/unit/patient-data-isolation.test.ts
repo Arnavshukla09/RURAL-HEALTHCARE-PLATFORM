@@ -41,16 +41,20 @@ vi.mock("@/lib/rate-limit", () => ({
 }))
 
 // Mock admin client
+const mockAdminChain: any = {
+  select: vi.fn().mockReturnThis(),
+  insert: vi.fn().mockResolvedValue({ data: null, error: null }),
+  update: vi.fn().mockReturnThis(),
+  upsert: vi.fn().mockReturnThis(),
+  delete: vi.fn().mockReturnThis(),
+  eq: vi.fn().mockReturnThis(),
+  single: vi.fn().mockResolvedValue({ data: null, error: null }),
+  maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+}
+
 vi.mock("@/lib/supabase/admin", () => ({
   getAdminClient: vi.fn(() => ({
-    from: vi.fn(() => ({
-      upsert: vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({ data: null, error: null }),
-        }),
-      }),
-      insert: vi.fn().mockResolvedValue({ error: null }),
-    })),
+    from: vi.fn(() => mockAdminChain),
   })),
   createAdminClient: vi.fn(() => {
     if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
@@ -59,6 +63,7 @@ vi.mock("@/lib/supabase/admin", () => ({
     return {} as any
   }),
 }))
+
 
 // Mock Jitsi token generator
 vi.mock("@/lib/jitsi/jwt", () => ({
@@ -350,6 +355,55 @@ describe("Patient Data Isolation & Privileged Access Guards (Phase 2, P0/P1)", (
       const json = await res.json()
       expect(json.error).toBe("Admin access required")
     })
+
+    it("allows admin to approve doctor request and links provider user_id", async () => {
+      // Supabase server client returns admin user
+      queryChain.single
+        .mockResolvedValueOnce({
+          data: { role: "admin" },
+          error: null,
+        })
+        .mockResolvedValueOnce({
+          data: {
+            user_id: doctorUser.id,
+            email: "doctor@test.com",
+            full_name: "Dr. Doctor",
+            specialization: "Cardiology",
+          },
+          error: null,
+        })
+
+      mockAdminChain.maybeSingle.mockResolvedValueOnce({
+        data: { id: "prov-123", email: "doctor@test.com" },
+        error: null,
+      })
+
+      const req = new NextRequest("http://localhost:3000/api/doctor-requests", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          request_id: "77777777-7777-4777-8777-777777777777",
+          action: "approved",
+          admin_notes: "Verified MMC license",
+        }),
+      })
+
+      const res = await updateDoctorRequest(req)
+      expect(res.status).toBe(200)
+      const json = await res.json()
+      expect(json.message).toBe("Request approved successfully")
+      expect(json.user_id).toBe(doctorUser.id)
+
+      // Verify admin client updated role to doctor in patients
+      expect(mockAdminChain.update).toHaveBeenCalledWith(
+        expect.objectContaining({ role: "doctor" })
+      )
+      // Verify admin client linked user_id in healthcare_providers
+      expect(mockAdminChain.update).toHaveBeenCalledWith(
+        expect.objectContaining({ user_id: doctorUser.id, is_verified: true })
+      )
+    })
+
 
     it("throws an explicit error if service role client is requested without server-side environment secrets", () => {
       const originalKey = process.env.SUPABASE_SERVICE_ROLE_KEY

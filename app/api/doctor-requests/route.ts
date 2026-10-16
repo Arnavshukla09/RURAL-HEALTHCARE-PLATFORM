@@ -5,6 +5,7 @@ import { z } from "zod"
 
 import { requireUser, getPatientProfile, authErrorResponse } from "@/lib/auth/guard"
 import { parsePaginationParams, paginateResults } from "@/lib/pagination"
+import { getAdminClient } from "@/lib/supabase/admin"
 
 // GET — admin fetches all pending requests (with pagination)
 export async function GET(req: NextRequest) {
@@ -143,10 +144,10 @@ export async function PATCH(req: NextRequest) {
 
   const { request_id, action, admin_notes } = parsed.data
 
-  // Get the request to find user_id
+  // Get the request to find user_id and clinician details
   const { data: request } = await supabase
     .from("doctor_requests")
-    .select("user_id, email")
+    .select("user_id, email, full_name, specialization, license_number, hospital_affiliation, experience_years")
     .eq("id", request_id)
     .single()
 
@@ -168,9 +169,16 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: updateError.message }, { status: 500 })
   }
 
-  // If approved — update the patient's role to doctor
+  // If approved — update the patient's role to doctor and link healthcare_providers entry
   if (action === "approved") {
-    const { error: roleError } = await supabase
+    let adminClient: any
+    try {
+      adminClient = getAdminClient()
+    } catch {
+      adminClient = supabase
+    }
+
+    const { error: roleError } = await adminClient
       .from("patients")
       .update({ role: "doctor" })
       .eq("user_id", request.user_id)
@@ -179,6 +187,52 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({
         error: "Request approved but role update failed: " + roleError.message,
       }, { status: 500 })
+    }
+
+    // Link or create healthcare_providers entry for the approved doctor
+    try {
+      let existingProvider = null
+      if (request.user_id) {
+        const { data: byUser } = await adminClient
+          .from("healthcare_providers")
+          .select("id, user_id, email")
+          .eq("user_id", request.user_id)
+          .maybeSingle()
+        existingProvider = byUser
+      }
+
+      if (!existingProvider && request.email) {
+        const { data: byEmail } = await adminClient
+          .from("healthcare_providers")
+          .select("id, user_id, email")
+          .eq("email", request.email)
+          .maybeSingle()
+        existingProvider = byEmail
+      }
+
+      if (existingProvider) {
+        await adminClient
+          .from("healthcare_providers")
+          .update({
+            user_id: request.user_id,
+            is_verified: true,
+            ...(request.specialization ? { specialization: request.specialization } : {}),
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", existingProvider.id)
+      } else {
+        await adminClient
+          .from("healthcare_providers")
+          .insert({
+            user_id: request.user_id,
+            name: request.full_name || request.email,
+            email: request.email,
+            specialization: request.specialization || "General Medicine",
+            is_verified: true,
+          })
+      }
+    } catch (linkErr) {
+      console.error("[doctor-requests] Non-blocking provider linking error:", linkErr)
     }
   }
 
