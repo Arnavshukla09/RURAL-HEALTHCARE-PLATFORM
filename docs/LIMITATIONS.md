@@ -1,0 +1,78 @@
+# Platform Limitations, Engineering Boundaries & Security Model
+
+This document provides a transparent, evidence-based technical disclosure of the known boundaries, operational constraints, and intentional security trade-offs in the **Rural Healthcare Platform**.
+
+---
+
+## 1. Status & Conformance Taxonomy
+
+Every subsystem in the repository is tracked against a strict 4-tier verification taxonomy:
+
+| Tier | Status Label | Verification Standard |
+|---|---|---|
+| **Tier 1** | `Implemented & Unit Tested` | Complete production implementation verified by automated deterministic Vitest suites (`npm run test:unit`, 161 tests). |
+| **Tier 2** | `Implemented & Simulation Tested` | End-to-end algorithmic behaviors verified through deterministic offline simulation suites (`npm run test:integration`, `scripts/benchmark_system_integration.mjs`). |
+| **Tier 3** | `Tested Real Database` | Live migration and row-level security policy behavior validated against local or staging PostgreSQL/Supabase instances (`supabase migration up`). |
+| **Tier 4** | `Planned / Roadmap` | Architecture and schema specified in documentation and database migrations, pending live integration with external national APIs (e.g. ABDM Sandbox Gateway). |
+
+---
+
+## 2. Directory & Provider Data Boundaries
+
+### Facility Contacts vs. Personal Doctor Mobiles
+* **Source Truth:** Public facilities (AIIMS, GMCs, District Hospitals, CHCs, PHCs) are sourced directly from official open government datasets (`data.gov.in`, MP Health Directory).
+* **Boundary:** Phone numbers for public healthcare centers represent institutional contact desks, nodal officers, or department lines—**not** personal mobile devices of individual medical practitioners.
+* **Integrity Guard:** The platform strictly prohibits fabricating `'Dr. '` prefixes, OPD consultation fees, or invented specialties. Facilities without specific named doctors are transparently labeled as `Medical Officer / Facility Contact` or `Institutional Contact Desk`.
+* **Doctor Claim Workflow:** Individual doctors claim, verify medical registration certificates, and set OPD schedules through `/doctor/claim`. Unclaimed institutional listings have appointment booking disabled.
+
+---
+
+## 3. ABDM & FHIR Interoperability Boundaries
+
+### Profile Alignment vs. National Gateway Certification
+* **Conformance Status:** The platform formats medical records into **HL7 FHIR R4 Document Bundles** modelled on the National Resource Centre for EHR in India (NRCES) ABDM profiles (`PrescriptionBundle`, `DiagnosticReportBundle`, `OPConsultationBundle`).
+* **Boundary:** The implementation has **not** yet underwent formal milestone certification against the official National Health Authority (NHA) ABDM Sandbox validator gateway.
+* **Strict Rejection Over Fabrication:** If a record lacks required clinical data (e.g., medication timing, diagnosis code, practitioner reference), the API returns **HTTP 422 Unprocessable Entity** detailing missing fields. The platform never injects default placeholders or fabricated observation codes.
+
+---
+
+## 4. Doctor-Patient Confidentiality & Admin Safety Model
+
+### Administrator Read Restriction
+* **Clinical Confidentiality Rule:** To protect medical privacy under clinical ethics and data protection standards (DPDP Act 2023), administrators **never have read access** to confidential diagnoses, clinical consultation notes, or patient medical files (`file_url`).
+* **Implementation:**
+  * Direct PostgreSQL RLS: Admin role has no `SELECT` policy on `public.medical_records`.
+  * Administrative API (`GET /api/medical-records?all=true`): Masks all note text with `[Protected Health Information — Confidential Patient Record]` and suppresses `file_url`, returning only `has_file: boolean`.
+* **Administrative Moderation Rights:** Administrators retain `DELETE` capabilities strictly for storage hygiene and right-to-erasure / regulatory compliance.
+
+### Demo Admin Preview Mode
+* **Boundary Guard:** Demo administrative accounts (`admin@ruralhealth.demo` or email containing `demo`) operate exclusively in **Preview Mode**.
+* **Protections:**
+  * Frontend UI: Displays persistent amber preview alert banners and disables mutating actions.
+  * API Routes: All mutating requests (`DELETE`, `PATCH`, role modifications) return **HTTP 403 Forbidden** with code `DEMO_MODE_RESTRICTED`.
+  * PostgreSQL Trigger: `guard_demo_admin_safety()` halts transactions attempting to delete rows or escalate patient roles.
+
+---
+
+## 5. Doctor Access Scoping
+
+### Care Relationship Requirement
+* **Doctor RLS:** A doctor cannot browse all patients across the platform.
+* **Condition:** A doctor can only view medical records and patient demographics if an active care relationship exists via `public.has_care_relationship(p_patient_id)`.
+* **Criteria:** An established appointment (scheduled, confirmed, completed) or an approved consultation request between the provider and the patient.
+
+---
+
+## 6. Connectivity & Teleconsultation Boundaries
+
+### Offline Resilient PWA Architecture
+* **IndexedDB Outbox:** When offline, prescriptions, symptom submissions, and appointment bookings are queued in client-side IndexedDB (`rural-healthcare-db`).
+* **Background Sync:** Queued items replay with exponential backoff and randomized jitter upon network reconnection.
+* **Teleconsultation Fallback:** While video consultations require WebRTC peer connectivity (minimum ~150 kbps), low-bandwidth rural connections automatically downgrade to low-bitrate audio or asynchronous messaging with clinical review queues.
+
+---
+
+## 7. Security Advisory Posture
+
+* **Next.js Version:** `15.5.28` (patched against all critical and high-severity Next.js image optimization, middleware bypass, and SSRF advisories).
+* **Audit Enforcement:** Automated CI workflows strictly fail on any critical security advisory (`npm audit --audit-level=critical`).

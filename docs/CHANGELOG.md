@@ -4,6 +4,37 @@ All notable changes to the Rural Healthcare Platform will be documented in this 
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres roughly to chronological feature milestones.
 
+## [v1.0.0-hardened] - 2026-10-16 — Production Hardening, Doctor-Patient Confidentiality, Demo Safety & Truthful Data Pipeline
+
+### 1. Doctor-Patient Confidentiality & Access Control Architecture
+- **Admin File & Clinical Privacy Posture:** Implemented strict architectural separation: Administrators have moderation and deletion rights for right-to-erasure and quota management, but **zero read access** to confidential patient diagnoses, clinical notes, or medical files (`file_url`). Direct RLS denies admin SELECT on `medical_records`; administrative API route (`/api/medical-records?all=true`) masks notes with `[Protected Health Information — Confidential Patient Record]` and strips `file_url`.
+- **Doctor Care-Relationship Scoping:** Doctors can no longer query all platform patients or records. Access is strictly scoped via `public.has_care_relationship(p_patient_id)` requiring an active or scheduled appointment/referral.
+- **Demo Admin Preview Mode:** Guarded `admin@ruralhealth.demo` and demo accounts against data loss. Blocks user deletion, role alterations, record deletion, and appointment modifications across frontend UI banners, API route handlers (`403 DEMO_MODE_RESTRICTED`), and PostgreSQL database triggers (`guard_demo_admin_safety()`).
+- **Access Audit Log:** Created append-only `access_audit_log` table with RLS tracking all sensitive patient record and administrative access events.
+
+### 2. Truthful Clinical & Facility Data Pipeline
+- **Purged Fabricated Data:** Eliminated artificial `'Dr. ' +` string prepending, invented consultation fees, and assumed OPD timings from open datasets.
+- **Honest Facility Contact Labeling:** Public healthcare contacts are accurately labeled as "Medical Officer / Facility Contact" or "Institutional Contact Desk", disabling booking for non-clinician contacts.
+- **Evidence-Based Dataset Audit:** Rewrote `scripts/report_dataset.mjs` to deterministically verify that 100% of facility contacts retain original dataset naming without fabrication. Exits with code 1 if rules are violated.
+
+### 3. Truthful FHIR Interoperability Export
+- **No Hallucinated Clinical Values:** Removed fabricated medication instructions ("Standard dose", "As directed", "5 days") and hardcoded observation codes. Incomplete records return **HTTP 422 Unprocessable Entity** specifying missing fields.
+- **Truthful Demographic Mappings:** Patient gender maps to `"unknown"`, never silently defaulting to `"male"`.
+- **Honest Conformance Claims:** Clarified all documentation to state that exports are modelled on NRCES ABDM profiles rather than officially certified against the national validator gateway.
+
+### 4. Integration Testing & Production Database Safety
+- **Database Safety Guard (`tests/integration/db-safety-guard.ts`):** Integration test runner strictly halts if target database matches production project reference (`boyzdmlvzvcplzolenef`) or production URLs.
+- **Offline Simulation Transparency:** Relabeled `scripts/benchmark_system_integration.mjs` as an offline algorithmic simulation runner.
+
+### 5. Dependency Hardening & CI Enforcement
+- **Next.js 15.5.28 Upgrade:** Upgraded Next.js and ESLint plugin to 15.5.28, resolving critical image optimization, middleware bypass, and SSRF security advisories (0 critical vulnerabilities remain).
+- **Strict CI Audit:** Removed `|| true` from `.github/workflows/ci.yml` and enforced `npm audit --audit-level=critical`.
+
+### 6. Single Source of Truth for Database Migrations
+- **Supabase Migrations Consolidation:** Removed legacy duplicate root SQL files (`supabase/01_*.sql` through `11_*.sql`), establishing `supabase/migrations/` as the single source of truth and `supabase/seed.sql` for test fixtures.
+
+---
+
 ## [v1.20.18] - 2026-10-16 — ASHA & ANM Community Health Worker Field Copilot & Patient ABDM FHIR Bundle Export
 
 ### 1. Grassroots Field Decision Support Copilot (`components/HealthInfoHub.tsx` & `lib/clinical/imci-anc.ts`)

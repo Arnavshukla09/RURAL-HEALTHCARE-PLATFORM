@@ -29,7 +29,7 @@ The platform integrates:
 ## 2. Technology Stack
 
 ### Frontend Application Layer
-- Framework: Next.js 15.2 (App Router, React 18 Server Components with Incremental Static Regeneration)
+- Framework: Next.js 15.5.28 (App Router, React 18 Server Components with Incremental Static Regeneration)
 - Language: TypeScript 5.x (Strict type safety, zero `any` leaks in core domains)
 - Styling: Tailwind CSS 3.4, Radix UI Primitives, shadcn/ui Component Suite
 - Iconography: Lucide React
@@ -222,8 +222,8 @@ RURAL-HEALTHCARE-PLATFORM/
 |   |   `-- rules.ts               # Severity escalation rules
 |   `-- utils.ts                   # General utilities (cn, format)
 |
-|-- supabase/                      # Database definitions
-|   |-- migrations/                # 9 versioned Flyway-style migrations
+|-- supabase/                      # Database definitions (Single Source of Truth)
+|   |-- migrations/                # 10 sequential PostgreSQL migrations
 |   |   |-- 20260701000000_core_schema.sql
 |   |   |-- 20260702000000_functions_triggers.sql
 |   |   |-- 20260703000000_rls_policies.sql
@@ -232,22 +232,15 @@ RURAL-HEALTHCARE-PLATFORM/
 |   |   |-- 20260706000000_security_warnings.sql
 |   |   |-- 20260707000000_seed_camps.sql
 |   |   |-- 20260708000000_fix_permissions.sql
-|   |   `-- 20261011000000_scale_and_security.sql
-|   |-- 01_schema.sql              # Reference schema (applies directly)
-|   |-- 02_functions_triggers.sql  # PostgreSQL functions & triggers
-|   |-- 03_rls.sql                 # Row-Level Security policies
-|   |-- 04_seed_data.sql           # Demo account seeds
-|   |-- 05_chat_cache.sql          # Semantic cache table
-|   |-- 05_security_patch.sql      # Auth security patches
-|   |-- 06_security_warnings_final.sql
-|   |-- 07_seed_camps.sql          # Medical camp seed data
-|   |-- 08_fix_permissions.sql     # RLS policy fixes
-|   |-- 09_scale_and_security.sql  # PostGIS + index optimizations
-|   |-- 11_rls_initplan.sql        # RLS INITPLAN optimization
-|   `-- fix_security_warnings.sql  # Security advisory fixes
+|   |   |-- 20261011000000_scale_and_security.sql
+|   |   `-- 20261016000000_scope_doctor_access_and_audit.sql
+|   `-- seed.sql                   # Test fixture seeds
 |
 |-- tests/                         # Test suite
-|   |-- unit/                      # 21 Vitest unit and integration test files
+|   |-- integration/               # Database integration tests with strict safety guard
+|   |   |-- db-safety-guard.ts     # Refuses execution against production URLs
+|   |   `-- rls-care-relationship.test.ts
+|   |-- unit/                      # 22 Vitest unit and regression test files (161 tests)
 |   |   |-- appointments-and-auth.test.ts
 |   |   |-- clinical-safety-eval.test.ts
 |   |   |-- client-offline-resilience.test.ts

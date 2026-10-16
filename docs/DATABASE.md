@@ -222,18 +222,67 @@ All queries executed by API routes utilize dedicated indexes to ensure sub-milli
 
 ## 4. Row Level Security (RLS) Policy Matrix
 
-| Table | Patient Access | Doctor Access | Admin Access |
-|---|---|---|---|
-| `patients` | Own row (SELECT, UPDATE profile only) | All rows (SELECT) | All rows (all ops) |
-| `healthcare_providers` | Public verified (SELECT) | Own profile (all ops) | All rows (all ops) |
-| `appointments` | Own appointments (SELECT, INSERT, cancel) | Assigned appointments (SELECT, complete) | All appointments (all ops) |
-| `medical_records` | Own records (SELECT) | Assigned patients (SELECT, INSERT) | All records (all ops) |
-| `health_data` | Own vitals (SELECT, INSERT, UPDATE) | Assigned patients (SELECT) | All vitals (SELECT) |
-| `processed_client_ops` | Own ops (SELECT, INSERT) | Own ops (SELECT, INSERT) | All ops (all ops) |
-| `notifications` | Own notifications (SELECT, UPDATE is_read) | Own notifications (SELECT, UPDATE is_read) | All notifications (all ops) |
-| `healthcare_facilities`| Public (SELECT) | Public (SELECT) | All facilities (all ops) |
-| `camps` | Public (SELECT) | Public (SELECT) | All camps (all ops) |
-| `chat_cache` | Service role only (bypasses RLS) | Service role only | Service role only |
+| Table | Patient Access | Doctor Access | Admin Access | Demo Admin Mode |
+|---|---|---|---|---|
+| `patients` | Own row (`SELECT`, `UPDATE` non-role) | Care relationship patients only (`SELECT` via `has_care_relationship`) | Directory oversight (`SELECT`, `DELETE`) | `SELECT` only; role edits & deletes prohibited |
+| `healthcare_providers` | Public verified (`SELECT`) | Own profile (all ops) | All rows (all ops) | Read only |
+| `appointments` | Own appointments (`SELECT`, `INSERT`, cancel) | Assigned appointments (`SELECT`, complete) | Directory oversight (`SELECT`, `DELETE`) | `SELECT` only; mutations blocked |
+| `medical_records` | Own records (`SELECT`, `INSERT`, `UPDATE`, `DELETE`) | Assigned patients under care (`SELECT`, `INSERT`) | Confidentiality: `SELECT` denied directly (redacted via API); `DELETE` for moderation | Read denied; mutations blocked |
+| `access_audit_log` | None (`INSERT` via service role / auth) | None (`INSERT` via service role / auth) | Audit review (`SELECT`); updates/deletes revoked | Read only |
+| `health_data` | Own vitals (`SELECT`, `INSERT`, `UPDATE`) | Care relationship patients (`SELECT`) | Aggregate metadata | Read only |
+| `processed_client_ops` | Own ops (`SELECT`, `INSERT`) | Own ops (`SELECT`, `INSERT`) | All ops (all ops) | Read only |
+| `notifications` | Own notifications (`SELECT`, `UPDATE is_read`) | Own notifications (`SELECT`, `UPDATE is_read`) | All notifications (`SELECT`, `INSERT`) | Read only |
+| `healthcare_facilities`| Public (`SELECT`) | Public (`SELECT`) | All facilities (all ops) | Read only |
+| `camps` | Public (`SELECT`) | Public (`SELECT`) | All camps (all ops) | Read only |
+| `chat_cache` | Service role only (bypasses RLS) | Service role only | Service role only | Service role only |
+
+---
+
+## 5. Doctor-Patient Confidentiality & Care-Relationship Functions
+
+### `has_care_relationship` Security Definer Function
+Restricts clinician visibility exclusively to patients with whom an active or scheduled appointment exists:
+```sql
+CREATE OR REPLACE FUNCTION public.has_care_relationship(p_patient_id uuid)
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, auth
+STABLE
+AS $$
+BEGIN
+  -- Returns true if current auth.uid() doctor has an appointment or referral with p_patient_id
+  RETURN EXISTS (
+    SELECT 1 FROM public.appointments a
+    WHERE a.patient_id = p_patient_id
+      AND (a.provider_id = auth.uid() OR a.provider_id IN (
+        SELECT hp.id FROM public.healthcare_providers hp WHERE hp.user_id = auth.uid()
+      ))
+  );
+END;
+$$;
+```
+
+### `guard_demo_admin_safety` Trigger
+Prevents preview demo accounts (`admin@ruralhealth.demo`) from mutating live records or dropping data:
+```sql
+CREATE OR REPLACE FUNCTION public.guard_demo_admin_safety()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, auth
+AS $$
+DECLARE
+  v_user_email text;
+BEGIN
+  SELECT email INTO v_user_email FROM auth.users WHERE id = auth.uid();
+  IF v_user_email ILIKE '%demo%' OR v_user_email = 'admin@ruralhealth.demo' THEN
+    RAISE EXCEPTION 'Demo admin mode restricted: Modifying or destructive operations are prohibited for preview accounts.';
+  END IF;
+  RETURN COALESCE(NEW, OLD);
+END;
+$$;
+```
 
 ---
 
