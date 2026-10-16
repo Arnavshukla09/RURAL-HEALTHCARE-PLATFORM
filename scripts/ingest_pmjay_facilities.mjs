@@ -142,18 +142,24 @@ async function run() {
       type = 'clinic'
     }
 
-    // Synthetic stable OSM ID: 9000000000 + line index
+    // Internal surrogate ID: 9000000000 + line index (used strictly as an internal unique key for non-OSM records)
     const osmId = 9000000000 + i
 
     const state = normalizeStateName(stateRaw)
 
     const tags = {
       source: 'PM-JAY National Health Authority',
+      source_name: 'National Health Authority AB-PMJAY Empaneled Hospital Directory',
+      source_url: 'https://data.gov.in/resource/national-hospital-directory-geo-code-and-additional-parameters-updated-till-last-month',
       nin_pmjay: nin,
       contact_person: contact || null,
       category: category || 'PM-JAY Empaneled',
       is_pmjay_empaneled: true,
-      phone_verified: true,
+      phone_verified: false, // Honest: contact is confirmed from official registry, not independently telecom pinged
+      phone_source_confirmed: true,
+      verification_status: 'source_confirmed',
+      verification_method: 'government_open_data_import',
+      last_verified_at: '2026-06-02T00:00:00Z',
       pincode: pincode || null
     }
 

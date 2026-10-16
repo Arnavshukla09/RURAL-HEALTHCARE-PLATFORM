@@ -95,17 +95,11 @@ for (let i = 1; i < lines.length; i++) {
   const cleanHospital = hospital.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')
   const cleanDistrict = district.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')
 
-  const regNo = `NMC/PMJAY-${nin.replace(/[^\d]/g, '').slice(-5) || Math.floor(10000 + Math.random() * 90000)}`
-
   extractedDoctors.push({
     id: `doc-pmjay-${nin.toLowerCase()}`,
     name: docName,
-    qualifications: 'MBBS, MD / MS (Clinical Specialist)',
-    regNo,
     specialty: specialty.key,
     specialtyName: specialty.name,
-    experience: Math.floor(12 + (i % 18)),
-    rating: Math.round((4.3 + ((i % 7) * 0.1)) * 10) / 10,
     hospitalAffiliation: cleanHospital,
     stateCode,
     stateName,
@@ -114,11 +108,17 @@ for (let i = 1; i < lines.length; i++) {
     phone: formattedPhone,
     opdTimings: 'Mon - Sat: 09:30 AM - 01:30 PM',
     consultationFee: 0, // PM-JAY / Govt empaneled free or nominal
-    verified: true,
+    verified: false, // Not an independently verified private clinician
+    verificationStatus: 'source_confirmed',
+    recordType: 'facility_nodal_contact',
+    sourceName: 'National Health Authority AB-PMJAY Empaneled Hospital Directory',
+    sourceRecordId: nin.toUpperCase(),
+    sourceUrl: 'https://data.gov.in/resource/national-hospital-directory-geo-code-and-additional-parameters-updated-till-last-month',
+    lastVerifiedAt: '2026-06-02T00:00:00Z',
     available: true,
     lat,
     lon,
-    bio: `Consultant Medical Specialist at ${cleanHospital}, empaneled under National Health Authority AB-PMJAY serving ${cleanDistrict} and surrounding community health districts.`
+    bio: `Institutional Nodal Medical Contact at ${cleanHospital}, empaneled under AB-PMJAY serving ${cleanDistrict}. Contact details confirmed from official NHA hospital registry.`
   })
 }
 

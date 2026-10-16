@@ -343,7 +343,7 @@ export function Directory({ language }: DirectoryProps) {
     const specName = doc.specialtyName.toLowerCase()
     const spec = doc.specialty.toLowerCase()
     const hosp = doc.hospitalAffiliation.toLowerCase()
-    const qual = doc.qualifications.toLowerCase()
+    const qual = doc.qualifications ? doc.qualifications.toLowerCase() : ""
     const bio = doc.bio.toLowerCase()
     const dist = doc.districtName.toLowerCase()
     const st = doc.stateName.toLowerCase()
@@ -415,7 +415,7 @@ export function Directory({ language }: DirectoryProps) {
       if (userCoords && a.distance !== undefined && b.distance !== undefined) {
         return a.distance - b.distance
       }
-      return b.rating - a.rating
+      return (b.rating ?? 0) - (a.rating ?? 0)
     })
 
     return list
@@ -461,7 +461,7 @@ export function Directory({ language }: DirectoryProps) {
         <div className="text-center max-w-3xl mx-auto space-y-2">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold">
             <Sparkles className="h-3.5 w-3.5" />
-            <span>NMC Verified • Proximity-Restricted Doctor Directory</span>
+            <span>{language === "hi" ? "सत्यापित चिकित्सक एवं स्वास्थ्य सुविधा निर्देशिका" : "Clinician & Facility Directory • Radius-Scoped"}</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">{t.title}</h1>
           <p className="text-sm text-gray-600">
@@ -897,7 +897,7 @@ export function Directory({ language }: DirectoryProps) {
               <div className="flex items-center gap-2 flex-wrap">
                 <div className="flex items-center gap-1.5 font-bold text-gray-900 text-sm">
                   <Stethoscope className="h-4 w-4 text-blue-600" />
-                  <span>Verified Doctors ({processedDoctors.length})</span>
+                  <span>{language === "hi" ? "सत्यापित चिकित्सक एवं नोडल संपर्क" : "Clinicians & Verified Contacts"} ({processedDoctors.length})</span>
                 </div>
                 {userCoords ? (
                   <Badge variant="outline" className="text-emerald-700 bg-emerald-50 border-emerald-200 text-[10px] font-bold">
@@ -943,11 +943,23 @@ export function Directory({ language }: DirectoryProps) {
                             <div className="flex flex-wrap items-center gap-2">
                               <h3 className="text-lg font-bold text-gray-900">{doctor.name}</h3>
 
-                              {/* Verified NMC Badge */}
-                              <Badge className="bg-emerald-50 text-emerald-800 border-emerald-200 text-[10px] font-semibold gap-1">
-                                <CheckCircle2 className="h-3 w-3 text-emerald-600" />
-                                <span>{t.verified} • {doctor.regNo}</span>
-                              </Badge>
+                              {/* Truthful Verification Badge */}
+                              {doctor.recordType === 'facility_nodal_contact' ? (
+                                <Badge className="bg-blue-50 text-blue-800 border-blue-200 text-[10px] font-semibold gap-1">
+                                  <Building2 className="h-3 w-3 text-blue-600" />
+                                  <span>{language === "hi" ? "पीएम-जय सुविधा संपर्क" : "PM-JAY Facility Contact"}</span>
+                                </Badge>
+                              ) : doctor.verificationStatus === 'independently_verified' && doctor.regNo ? (
+                                <Badge className="bg-emerald-50 text-emerald-800 border-emerald-200 text-[10px] font-semibold gap-1">
+                                  <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                                  <span>{t.verified} • {doctor.regNo}</span>
+                                </Badge>
+                              ) : (
+                                <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 text-[10px] font-semibold gap-1">
+                                  <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                                  <span>{t.verified}</span>
+                                </Badge>
+                              )}
 
                               {/* Distance Badge — ONLY shown when user explicitly uses GPS */}
                               {userCoords && doctor.distance !== undefined && (
@@ -974,8 +986,12 @@ export function Directory({ language }: DirectoryProps) {
                             {/* Qualifications & Specialty */}
                             <div className="text-xs font-semibold text-blue-700 flex items-center gap-1.5 flex-wrap">
                               <span>{doctor.specialtyName}</span>
-                              <span className="text-gray-300">•</span>
-                              <span className="text-gray-600 font-normal">{doctor.qualifications}</span>
+                              {doctor.qualifications && (
+                                <>
+                                  <span className="text-gray-300">•</span>
+                                  <span className="text-gray-600 font-normal">{doctor.qualifications}</span>
+                                </>
+                              )}
                             </div>
 
                             {/* Hospital Affiliation */}
@@ -997,13 +1013,15 @@ export function Directory({ language }: DirectoryProps) {
 
                             {/* Rating, Reviews & Experience */}
                             <div className="flex items-center gap-2.5 text-xs text-gray-600 pt-1 flex-wrap">
-                              <div className="flex items-center gap-1">
-                                <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500" />
-                                <span className="font-bold text-gray-800">{doctor.rating}</span>
-                                {doctor.reviewCount && (
-                                  <span className="text-[11px] text-gray-400">({doctor.reviewCount} reviews)</span>
-                                )}
-                              </div>
+                              {doctor.rating !== undefined && doctor.rating > 0 && (
+                                <div className="flex items-center gap-1">
+                                  <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500" />
+                                  <span className="font-bold text-gray-800">{doctor.rating}</span>
+                                  {doctor.reviewCount && (
+                                    <span className="text-[11px] text-gray-400">({doctor.reviewCount} reviews)</span>
+                                  )}
+                                </div>
+                              )}
                               {doctor.patientRecommendationPercent && (
                                 <>
                                   <span>•</span>
@@ -1012,8 +1030,12 @@ export function Directory({ language }: DirectoryProps) {
                                   </span>
                                 </>
                               )}
-                              <span>•</span>
-                              <span>{doctor.experience} {t.yearsExp}</span>
+                              {doctor.experience !== undefined && doctor.experience > 0 && (
+                                <>
+                                  <span>•</span>
+                                  <span>{doctor.experience} {t.yearsExp}</span>
+                                </>
+                              )}
                               <span>•</span>
                               <div className="flex items-center gap-1 text-gray-600">
                                 <Phone className="h-3 w-3 text-gray-400" />

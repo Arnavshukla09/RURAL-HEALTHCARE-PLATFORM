@@ -194,7 +194,7 @@ export function ConsultationPortal({ language, user, symptomResult }: Consultati
         d.hospitalAffiliation.toLowerCase().includes(q) ||
         d.districtName.toLowerCase().includes(q) ||
         d.stateName.toLowerCase().includes(q) ||
-        d.qualifications.toLowerCase().includes(q)
+        (d.qualifications ? d.qualifications.toLowerCase().includes(q) : false)
       )
     }
 

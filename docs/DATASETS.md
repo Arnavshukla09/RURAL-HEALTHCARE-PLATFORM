@@ -94,50 +94,51 @@ flowchart TD
 
 ---
 
-### 2.2 Practitioner & Specialist Dataset (`lib/data/real-doctors.ts`)
+### 2.2 Practitioner & Health Facility Contact Dataset (`lib/data/real-doctors.ts`)
 
 * **Storage Target:** In-memory TypeScript catalog in `lib/data/real-doctors.ts`.
-* **Total Doctors:** **913 verified doctors** (100% compliant with name and phone schemas).
-* **Primary Sources:**
-  1. **Apex Public Medical Institutions & Medical Colleges:**
-     * Faculty, consultants, and senior residents from premier medical institutions:
+* **Total Records:** **913 entries**, categorized into strict provenance tiers to maintain medical integrity.
+* **Composition & Provenance Tiers:**
+  1. **Tier 1 — Curated Apex Medical Consultants (30 Clinicians):**
+     * `recordType: 'clinician'`
+     * `verificationStatus: 'independently_verified'`
+     * Faculty, consultants, and senior clinical leads from premier public medical institutions:
        * All India Institute of Medical Sciences (AIIMS) — Bhopal, New Delhi, Rishikesh, Jodhpur, Patna, Raipur.
        * Gandhi Medical College & Hamidia Hospital, Bhopal.
        * Bhopal Memorial Hospital & Research Centre (BMHRC), Bhopal.
        * Maharaja Yeshwantrao Hospital (MY Hospital) & MGM Medical College, Indore.
        * King George's Medical University (KGMU), Lucknow.
        * Post Graduate Institute of Medical Education & Research (PGIMER), Chandigarh.
-       * Sawai Man Singh (SMS) Medical College, Jaipur.
        * Government Medical College & District Hospitals across Sehore, Vidisha, Raisen, Dewas, and Hoshangabad.
-  2. **National Medical Register (NMR) & State Medical Councils:**
-     * Registration credentials verified against National Medical Commission (NMC) and State Medical Councils:
-       * Madhya Pradesh Medical Council (MPMC)
-       * Delhi Medical Council (DMC)
-       * Maharashtra Medical Council (MMC)
-       * Karnataka Medical Council (KMC)
-       * Tamil Nadu Medical Council (TMC)
-       * West Bengal Medical Council (WBMC)
-  3. **Online Patient Review Aggregators (Practo / Patient Satisfaction Surveys):**
-     * Sourced from verified patient feedback datasets (`Ayush-Verma29/Practo-Fee-Prediction` containing 8,047 records).
-     * 60 top-reviewed specialists across metro and tier-2 hubs enriched with:
-       * `reviewCount`: Total patient votes (up to 1,312 reviews per practitioner).
-       * `patientRecommendationPercent`: Patient satisfaction rate (90% to 99% positive recommendation rates).
-       * `consultationFee`: Transparent OPD consultation fees (₹0 for government/PM-JAY facilities, ₹300–₹800 for private clinics).
-       * `experience`: Verified clinical practice duration (8 to 35+ years).
+     * Verified against National Medical Commission (NMC) and State Medical Councils (MPMC, DMC, MMC, KMC, TMC, WBMC). Includes verified registration numbers, qualifications, and department affiliations.
+  2. **Tier 2 — Patient-Reviewed Clinicians (60 Clinicians):**
+     * `recordType: 'clinician'`
+     * `verificationStatus: 'source_confirmed'`
+     * Sourced from verified patient feedback datasets (`Ayush-Verma29/Practo-Fee-Prediction` containing 8,047 records) across metro and tier-2 hubs.
+     * Enriched with source-confirmed `reviewCount`, `patientRecommendationPercent`, transparent OPD fees, and clinical practice experience.
+  3. **Tier 3 — AB-PMJAY & NHM Facility Nodal Contacts (823 Contacts):**
+     * `recordType: 'facility_nodal_contact'`
+     * `verificationStatus: 'source_confirmed'`
+     * Sourced from the official National Health Authority (NHA) empanelled hospital registry and MoHFW Open Data (`devdattaT/vaccination.csv`).
+     * Provides authentic dialing and location coordinates for public hospitals, CHCs, and PHCs across India.
+     * **Engineering Integrity Policy:** Fabricated NMC registration numbers (`NMC/PMJAY-XXXX`), synthetic ratings (`Math.random()`), and generated qualifications were completely eliminated from these records. They represent verified institutional nodal contact points rather than individual private clinicians.
 
 #### Schema Definition (`RealDoctor` Interface)
 
 ```typescript
 export interface RealDoctor {
-  id: string                             // Unique doctor ID (e.g., 'doc-mp-01', 'doc-pmjay-hs...')
+  id: string                             // Unique doctor ID (e.g., 'doc-mp-01', 'doc-rev-del-01', 'doc-pmjay-hs001')
   name: string                           // Full name, strictly starting with 'Dr.'
-  qualifications: string                 // Degrees: MBBS, MD, MS, DM, MCh, DNB
-  regNo: string                          // NMC or State Medical Council Registration No.
+  recordType: 'clinician' | 'facility_nodal_contact' // Distinguishes individual clinicians from facility contacts
+  verificationStatus: 'independently_verified' | 'source_confirmed' | 'unverified'
+  sourceName: string                     // Data provenance source (e.g., 'AIIMS Faculty Directory', 'AB-PMJAY Registry')
+  qualifications?: string                // Degrees: MBBS, MD, MS, DM, MCh, DNB (clinicians only)
+  regNo?: string                         // Official NMC or State Medical Council Reg No. (clinicians only)
   specialty: 'general' | 'cardiology' | 'pediatrics' | 'gynecology' | 'orthopedics' | 
              'neurology' | 'pulmonology' | 'oncology' | 'ent' | 'dermatology'
   specialtyName: string                  // User-facing specialty label
-  experience: number                     // Years of clinical experience
-  rating: number                         // Clinical rating (1.0 - 5.0)
+  experience?: number                    // Years of clinical experience (clinicians only)
+  rating?: number                        // Clinical rating 1.0 - 5.0 (clinicians only)
   reviewCount?: number                   // Sourced online patient review count
   patientRecommendationPercent?: number  // Sourced patient satisfaction recommendation %
   hospitalAffiliation: string            // Associated hospital, medical college, or clinic
@@ -148,11 +149,11 @@ export interface RealDoctor {
   phone: string                          // Contact telephone number (+91 format)
   opdTimings: string                     // Clinical consultation hours
   consultationFee: number                // Fee in INR (0 = Free/Govt OPD)
-  verified: boolean                      // Credential verification status
+  verified: boolean                      // Credential verification status (true for independently verified clinicians)
   available: boolean                     // Current OPD availability flag
   lat: number                            // Latitude (WGS84)
   lon: number                            // Longitude (WGS84)
-  bio: string                            // Clinical focus, research, and rural outreach experience
+  bio: string                            // Clinical focus, research, and facility profile
   distance?: number                      // Computed dynamically at runtime based on user GPS
 }
 ```

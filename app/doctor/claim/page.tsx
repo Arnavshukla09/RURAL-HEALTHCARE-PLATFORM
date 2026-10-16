@@ -78,7 +78,7 @@ function DoctorClaimContent() {
   // Initialize prefilled fields when doctor & token are verified
   useState(() => {
     if (targetDoctor) {
-      setCouncilRegInput(targetDoctor.regNo)
+      setCouncilRegInput(targetDoctor.regNo || "")
       const cleanPhone = targetDoctor.phone.replace(/[^\d]/g, "").slice(-10)
       setMobileNumber(cleanPhone)
       setCustomUpi(`${targetDoctor.name.toLowerCase().replace(/[^a-z]/g, "")}@upi`)
@@ -129,7 +129,7 @@ function DoctorClaimContent() {
       const claim = saveDoctorClaim({
         doctorId: targetDoctor.id,
         doctorName: targetDoctor.name,
-        regNo: councilRegInput || targetDoctor.regNo,
+        regNo: councilRegInput || targetDoctor.regNo || "",
         specialtyName: targetDoctor.specialtyName,
         hospitalAffiliation: targetDoctor.hospitalAffiliation,
         mobileNumber: mobileNumber,

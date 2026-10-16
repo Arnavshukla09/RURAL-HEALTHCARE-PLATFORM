@@ -345,21 +345,39 @@ describe("Multilingual Engine & Dialect Mapping", () => {
     
     expect(REAL_DOCTORS.length).toBeGreaterThanOrEqual(20)
     
-    // Check NMC registration numbers and doctor properties
+    // Check provenance, coordinates, and properties according to recordType
+    let clinicianCount = 0
+    let facilityContactCount = 0
+
     for (const doc of REAL_DOCTORS) {
       expect(doc.name).toMatch(/^Dr\./)
-      expect(doc.regNo).toBeTruthy()
-      expect(doc.qualifications).toBeTruthy()
       expect(doc.hospitalAffiliation).toBeTruthy()
       expect(doc.phone).toMatch(/^\+91/)
       expect(doc.lat).toBeGreaterThan(5)
       expect(doc.lat).toBeLessThan(38)
       expect(doc.lon).toBeGreaterThan(68)
       expect(doc.lon).toBeLessThan(98)
-      expect(doc.verified).toBe(true)
-      expect(doc.experience).toBeGreaterThan(5)
-      expect(doc.rating).toBeGreaterThanOrEqual(4.0)
+      expect(['clinician', 'facility_nodal_contact']).toContain(doc.recordType)
+      expect(['independently_verified', 'source_confirmed', 'unverified']).toContain(doc.verificationStatus)
+      expect(doc.sourceName).toBeTruthy()
+
+      if (doc.recordType === 'clinician') {
+        clinicianCount++
+        expect(doc.regNo).toBeTruthy()
+        expect(doc.qualifications).toBeTruthy()
+        expect(doc.verified).toBe(true)
+        expect(doc.experience).toBeGreaterThan(5)
+        expect(doc.rating).toBeGreaterThanOrEqual(4.0)
+      } else {
+        facilityContactCount++
+        expect(doc.verificationStatus).toBe('source_confirmed')
+        expect(doc.verified).toBe(false)
+        expect(doc.regNo).toBeUndefined()
+      }
     }
+
+    expect(clinicianCount).toBeGreaterThanOrEqual(20)
+    expect(facilityContactCount).toBeGreaterThanOrEqual(100)
 
     // Distance calculation accuracy test: Bhopal AIIMS (23.2081, 77.4587) to Sehore District Hospital (23.2032, 77.0844) ~ 38 km
     const distBhopalToSehore = calculateDistanceKm(23.2081, 77.4587, 23.2032, 77.0844)

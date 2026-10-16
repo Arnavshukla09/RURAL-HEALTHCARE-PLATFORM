@@ -39,6 +39,9 @@ interface Facility {
   regNo?: string
   consultationFee?: number
   opdTimings?: string
+  recordType?: 'clinician' | 'facility_nodal_contact'
+  verificationStatus?: 'independently_verified' | 'source_confirmed' | 'unverified'
+  sourceName?: string
 }
 
 interface MapViewProps {
@@ -513,6 +516,9 @@ export function MapView({ language }: MapViewProps) {
       regNo: d.regNo,
       consultationFee: d.consultationFee,
       opdTimings: d.opdTimings,
+      recordType: d.recordType,
+      verificationStatus: d.verificationStatus,
+      sourceName: d.sourceName,
     }))
   }, [userCoords, center, radiusKm, selectedState, selectedDistrict])
 
@@ -821,11 +827,15 @@ export function MapView({ language }: MapViewProps) {
                         </p>
                       )}
 
-                      {isDoc && f.regNo && (
+                      {isDoc && (
                         <div className="flex items-center gap-1">
                           <ShieldCheck className="h-3 w-3 text-emerald-600 shrink-0" />
                           <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
-                            {f.regNo}
+                            {f.verificationStatus === 'independently_verified' && f.regNo
+                              ? `NMC: ${f.regNo}`
+                              : f.recordType === 'facility_nodal_contact'
+                              ? (en ? 'Facility Nodal Contact' : 'सुविधा नोडल संपर्क')
+                              : (en ? 'Source Verified Clinician' : 'स्रोत सत्यापित चिकित्सक')}
                           </span>
                         </div>
                       )}
@@ -914,7 +924,7 @@ export function MapView({ language }: MapViewProps) {
               <Star className="h-4 w-4 fill-amber-400 text-amber-500" />
               <span>
                 {filter === "doctors" 
-                  ? (en ? "Verified Doctors Directory" : "सत्यापित डॉक्टर निर्देशिका")
+                  ? (en ? "Clinician & Facility Contact Directory" : "चिकित्सक एवं सुविधा संपर्क निर्देशिका")
                   : (en ? "Healthcare Facilities & Doctors" : "स्वास्थ्य केंद्र एवं डॉक्टर")}
               </span>
               <span className="text-xs font-normal text-gray-500">
@@ -980,9 +990,17 @@ export function MapView({ language }: MapViewProps) {
                               <span>👨‍⚕️</span>
                               <span>{f.specialtyName}</span>
                             </span>
-                            {f.regNo && (
+                            {f.verificationStatus === 'independently_verified' && f.regNo ? (
                               <span className="text-[9px] font-bold bg-purple-50 text-purple-700 border border-purple-200 px-1 py-0.5 rounded">
                                 NMC Verified
+                              </span>
+                            ) : f.recordType === 'facility_nodal_contact' ? (
+                              <span className="text-[9px] font-bold bg-blue-50 text-blue-700 border border-blue-200 px-1 py-0.5 rounded">
+                                {en ? "Facility Contact" : "सुविधा संपर्क"}
+                              </span>
+                            ) : (
+                              <span className="text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-1 py-0.5 rounded">
+                                {en ? "Verified Clinician" : "सत्यापित चिकित्सक"}
                               </span>
                             )}
                             <span className="text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-1 py-0.5 rounded">

@@ -5,6 +5,14 @@ import { useRouter } from "next/navigation"
 
 export default function Page() {
   const { setUser, language } = useApp()
-  const router = useRouter()
-  return <Authentication setUser={setUser} setCurrentPage={(p) => router.push(p === "home" ? "/" : `/${p}`)} language={language} />
+  return (
+    <Authentication
+      setUser={setUser}
+      setCurrentPage={(p) => {
+        const dest = p === "home" ? "/" : `/${p}`
+        window.location.href = dest
+      }}
+      language={language}
+    />
+  )
 }

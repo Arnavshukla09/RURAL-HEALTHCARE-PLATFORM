@@ -134,7 +134,7 @@ export function AdminUserManagement({ language }: AdminUserManagementProps) {
       (d) =>
         d.name.toLowerCase().includes(q) ||
         d.hospitalAffiliation.toLowerCase().includes(q) ||
-        d.regNo.toLowerCase().includes(q) ||
+        (d.regNo ? d.regNo.toLowerCase().includes(q) : false) ||
         d.districtName.toLowerCase().includes(q)
     ).slice(0, 5)
   }, [inviteSearch])
