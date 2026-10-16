@@ -17,7 +17,7 @@ The platform integrates:
 - Tri-modal payment gateway supporting dynamic NPCI UPI QR deep links, cash at clinic counter, and Ayushman Bharat PM-JAY / BPL exemptions.
 - Deterministic appointment slot locking to prevent scheduling collisions.
 - Tokenized doctor claim protection and an administrative verification queue preventing clinician identity theft.
-- Pan-India geospatial facility directory indexing 6,616 public health institutions and 913 National Medical Commission (NMC) verified practitioners across 755 districts.
+- Pan-India geospatial facility directory indexing 6,616 public health institutions and 913 registered clinicians and facility contacts across 755 districts (featuring 3-tier provenance: 30 Curated Apex Consultants, 60 Practo Reviewed Clinicians, and 823 verified AB-PMJAY Facility Nodal Contacts).
 - Comprehensive Central and State government health schemes directory with 5-per-page pagination and demographic vulnerability filtering.
 - Clinical AI safety gate with deterministic regex, scoped negation, and inherently negative allowlists intercepting life-threatening conditions with 0 ms AI latency.
 - Resilient offline outbox queue persisting clinical entries to IndexedDB and synchronizing idempotently upon network restoration.
@@ -174,7 +174,7 @@ RURAL-HEALTHCARE-PLATFORM/
 |   |   `-- types.ts               # Shared chat type definitions
 |   |-- clinical/imci-anc.ts       # IMCI & ANC clinical triage rules
 |   |-- data/
-|   |   `-- real-doctors.ts        # 913 NMC-verified practitioners (827KB)
+|   |   `-- real-doctors.ts        # 913 clinicians & facility nodal contacts (3-tier provenance)
 |   |-- doctor-claims.ts           # Tokenized doctor invite + admin approval
 |   |-- emergency/                 # Emergency subsystem
 |   |   |-- audio-blackbox.ts      # Audio recording vault for SOS
@@ -245,7 +245,7 @@ RURAL-HEALTHCARE-PLATFORM/
 |   `-- fix_security_warnings.sql  # Security advisory fixes
 |
 |-- tests/                         # Test suite
-|   |-- unit/                      # 16 Vitest unit and integration test files
+|   |-- unit/                      # 17 Vitest unit and integration test files
 |   |   |-- appointments-and-auth.test.ts
 |   |   |-- doctor-claim-and-booking-lifecycle.test.ts
 |   |   |-- emergency.test.ts
@@ -256,13 +256,14 @@ RURAL-HEALTHCARE-PLATFORM/
 |   |   |-- multilingual-engine.test.ts
 |   |   |-- notifications.test.ts
 |   |   |-- offline-sync.test.ts
+|   |   |-- patient-data-isolation.test.ts
 |   |   |-- phase3-ecosystem.test.ts
 |   |   |-- pwa-strategy.test.ts
 |   |   |-- rate-limit-and-gateway.test.ts
 |   |   |-- routing-golden.test.ts
 |   |   |-- semantic-cache.test.ts
 |   |   `-- symptoms.test.ts
-|   |-- e2e.spec.ts                # Playwright end-to-end persona tests
+|   |-- e2e.spec.ts                # Playwright end-to-end persona tests (5 flows)
 |   `-- chat-routing.cases.json    # 40 golden routing test vectors
 |
 |-- scripts/                       # Developer tooling
@@ -421,7 +422,7 @@ xychart-beta
 ```mermaid
 xychart-beta
     title "Pan-India Data Assets"
-    x-axis ["NMC Doctors", "IPHS Facilities", "LGD Districts", "Helplines", "Schemes"]
+    x-axis ["Clinicians & Contacts", "IPHS Facilities", "LGD Districts", "Helplines", "Schemes"]
     y-axis "Count" 0 --> 7000
     bar [913, 6616, 755, 120, 85]
 ```
@@ -434,7 +435,7 @@ xychart-beta
 
 ```mermaid
 flowchart LR
-    A["Open PWA"] --> B["Search Directory\n6,616 Facilities / 913 Doctors"]
+    A["Open PWA"] --> B["Search Directory\n6,616 Facilities / 913 Clinicians & Contacts"]
     B --> C["Symptom Check\nAI Triage"]
     C --> D{Acute Emergency?}
     D -- Yes --> E["108 Ambulance SOS\n+ Audio Blackbox"]
@@ -532,8 +533,11 @@ flowchart LR
 - Query Benchmark: 274 ms average query latency, 558 ms P95 latency across 1,000 automated benchmark runs.
 - Mutually Exclusive Search: GPS Proximity Mode (Haversine km radius) versus Administrative Mode (State & District drop-down with 10 results per page).
 
-### National Medical Commission (NMC) Practitioner Directory
-- 913 Registered Specialists: Complete with verified NMC / State Medical Council registration numbers, qualifications, hospital affiliations, OPD timings, and consultation fee schedules.
+### Clinician and Healthcare Facility Contact Directory
+- 913 Registered Specialists & Facility Nodal Contacts: Built on a transparent 3-tier provenance model:
+  - Tier 1: 30 Curated Apex Consultants (AIIMS Bhopal, Hamidia GMC, BMHRC, Sultania Zanana) with independently verified registration numbers, qualifications, and hospital departments.
+  - Tier 2: 60 Practo-Reviewed Clinicians across major metropolitan and district hubs with source-confirmed credentials.
+  - Tier 3: 823 AB-PMJAY Empanelled Facility Nodal Contacts providing verified operational hospital phone numbers, district locations, and institutional linkages without synthetic qualifications or ratings.
 - Data file: `lib/data/real-doctors.ts` (827 KB, 21,205 lines).
 
 ### Government Schemes Repository
@@ -550,11 +554,11 @@ Automated testing enforces regression prevention on every commit:
 
 | Test Dimension | Tool / Engine | Coverage | Result |
 | :--- | :--- | :---: | :---: |
-| Unit & Integration Tests | Vitest 5.0 | 93 tests across 16 suites | 100% Pass (971ms) |
-| Component Validation | Custom Static Analyzer | 103 UI components, 47 routes | 0 errors, 100% valid imports |
+| Unit & Integration Tests | Vitest 5.0 | 103 tests across 17 suites | 100% Pass (~1.08s) |
+| Component Validation | Custom Static Analyzer | 101 UI components, 31 app pages/routes | 0 errors, 100% valid imports |
 | TypeScript Type Safety | `tsc --noEmit` | Entire codebase | 0 compilation errors |
 | ESLint & Hook Rules | ESLint 8.x | Entire codebase | 0 warnings or errors |
-| End-to-End User Journeys | Playwright | 5 critical persona flows | 100% Pass (22.0s) |
+| End-to-End User Journeys | Playwright | 5 critical persona flows | 100% Pass (45.3s) |
 | PostGIS Spatial Routing | k6 & Edge Fetch | 1,000 spatial queries | 274 ms average latency |
 | Security & RLS Posture | Automated Penetration | 10-point audit | 100% Pass |
 
@@ -562,19 +566,20 @@ Automated testing enforces regression prevention on every commit:
 
 ```mermaid
 flowchart LR
-    T["93 Tests\n16 Suites"] --> A["appointments-and-auth\n9 tests"]
-    T --> B["doctor-claim-lifecycle\n5 tests"]
-    T --> C["routing-golden\n1 test (40 vectors)"]
-    T --> D["symptoms\n5 tests"]
+    T["103 Tests\n17 Suites"] --> A["appointments-and-auth\n11 tests"]
+    T --> B["patient-data-isolation\n9 tests"]
+    T --> C["doctor-claim-lifecycle\n5 tests"]
+    T --> D["multilingual-engine\n10 tests"]
     T --> E["rate-limit-gateway\n7 tests"]
     T --> F["notifications\n5 tests"]
-    T --> G["offline-sync\n6 tests"]
-    T --> H["phase3-ecosystem\n7 tests"]
-    T --> I["emergency + vault\n8 tests"]
+    T --> G["offline-sync\n5 tests"]
+    T --> H["phase3-ecosystem\n8 tests"]
+    T --> I["emergency + vault\n13 tests"]
     T --> J["medical-brain\n6 tests"]
-    T --> K["multilingual-engine\n3 tests"]
-    T --> L["logger + semantic-cache\n5 tests"]
-    T --> M["pwa-strategy + helplines\n11 tests"]
+    T --> K["helplines\n5 tests"]
+    T --> L["logger + semantic-cache\n9 tests"]
+    T --> M["symptoms + routing\n6 tests"]
+    T --> N["pwa-strategy\n4 tests"]
 ```
 
 ---
@@ -628,7 +633,7 @@ UPSTASH_REDIS_REST_TOKEN=your_upstash_token
 ### Quality Assurance Commands
 
 ```bash
-# Run 93 unit and integration tests
+# Run 103 unit and integration tests
 npm run test:unit
 
 # Run full component validation (imports, types, lint, tests)
@@ -658,7 +663,7 @@ All engineering documents are located in the `docs/` directory:
 | Document | Purpose |
 | :--- | :--- |
 | `docs/SYSTEM_DESIGN.md` | Master system design blueprint with 8 subsystem breakdowns |
-| `docs/QA_REPORT.md` | 93-test scorecard with detailed per-suite breakdown |
+| `docs/QA_REPORT.md` | 103-test scorecard with detailed per-suite breakdown |
 | `docs/COMPONENTS.md` | Component reference catalog with props and data sources |
 | `docs/CHANGELOG.md` | Chronological feature release history |
 | `docs/DATABASE.md` | Schema diagrams, RLS policies, and index strategies |

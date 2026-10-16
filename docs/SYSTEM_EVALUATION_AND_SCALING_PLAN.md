@@ -89,7 +89,7 @@ flowchart TD
 
 ### Detailed Phase Status & Roadmap
 
-### Phase 1: Immediate Safety, Security & Pipeline Fixes (✅ Completed in Codebase)
+### Phase 1: Immediate Safety, Security & Pipeline Fixes (Completed in Codebase)
 1. **Server-Side Emergency Gate (`app/api/ai-chat/route.ts`):**
    - Calls `detectTier0Emergency(sanitizedMessage, lang)` prior to any knowledge engine or LLM lookup.
 2. **Clinical Regex & Negation Overhaul (`lib/chat/emergency.ts`):**
@@ -106,7 +106,7 @@ flowchart TD
    - Added `.github/workflows/ci.yml` running lint, unit tests, and build checks.
    - Fixed `package.json` scripts.
 
-### Phase 2: Geographic & Data Architecture Expansion (✅ Completed in Codebase)
+### Phase 2: Geographic & Data Architecture Expansion (Completed in Codebase)
 1. **LGD Geographic Hierarchy (`lib/geo/lgd-iphs.ts`):**
    - Implemented standard LGD mapping: State (MP 23, RJ 08, MH 27) $\to$ District $\to$ Sub-district/Block.
    - Integrated LGD state and district dropdown selector directly into `components/MapView.tsx`.
@@ -119,7 +119,7 @@ flowchart TD
 4. **Institutional Directory Transition (`components/Directory.tsx`):**
    - Transitioned mock doctor listings to Official Hospital Specialist Departments and OPD consultation desks.
 
-### Phase 3: Digital Health Ecosystem & Teleconsultation Hardening (✅ Completed in Codebase)
+### Phase 3: Digital Health Ecosystem & Teleconsultation Hardening (Completed in Codebase)
 1. **Cryptographic Teleconsultation (`lib/jitsi/jwt.ts` & `components/JitsiMeeting.tsx`):**
    - Zero-cost architecture: purely local cryptographic HS256 JWT generation with strict 1-hour expiration and participant claim gating.
    - Graceful zero-secret fallback: if `JITSI_APP_SECRET` or `JAAS_API_KEY` is not present, functions in time-gated access mode without requiring any paid subscription.
@@ -147,6 +147,7 @@ flowchart TD
 
 ## 4. Verification & QA Status
 
-- **Unit Test Suite (`vitest`):** **71/71 passing** across 13 test files (including new comprehensive test suites in `tests/unit/phase3-ecosystem.test.ts` and `tests/unit/emergency.test.ts`).
-- **Production Build (`next build`):** **Compiled successfully** across all 45 static and serverless routes.
+- **Unit Test Suite (`vitest`):** **103/103 passing** across 17 test files.
+- **Production Build (`next build`):** **Compiled successfully** across all 49 static and serverless routes.
+- **End-to-End User Journeys (`playwright`):** **5/5 passed** across all user personas.
 - **Stress Test Suite (`scratch/test-chatbot-stress.ts`):** **8/8 checks passing** (Emergency regex, Injection defense, Payload truncation, Concurrency burst, Gateway failover, Quota guard).

@@ -18,9 +18,9 @@ export function AccessibilityBar() {
   const { toast } = useToast()
 
   const t = {
-    en: { title: "Accessibility Options", fontSize: "Font Size", decrease: "Decrease", increase: "Increase", contrast: "High Contrast", language: "Language", readAloud: "Read Aloud", stopReading: "Stop Reading", reset: "Reset Settings", on: "On", off: "Off" },
-    hi: { title: "पहुंच विकल्प", fontSize: "फ़ॉन्ट आकार", decrease: "घटाएं", increase: "बढ़ाएं", contrast: "उच्च कंट्रास्ट", language: "भाषा", readAloud: "जोर से पढ़ें", stopReading: "पढ़ना बंद करें", reset: "रीसेट करें", on: "चालू", off: "बंद" }
-  }[language as "en" | "hi"] ?? { title: "Accessibility Options", fontSize: "Font Size", decrease: "Decrease", increase: "Increase", contrast: "High Contrast", language: "Language", readAloud: "Read Aloud", stopReading: "Stop Reading", reset: "Reset Settings", on: "On", off: "Off" }
+    en: { title: "Accessibility Options", fontSize: "Font Size", decrease: "Decrease", increase: "Increase", contrast: "High Contrast", readAloud: "Read Aloud", stopReading: "Stop Reading", reset: "Reset Settings", on: "On", off: "Off" },
+    hi: { title: "पहुंच विकल्प", fontSize: "फ़ॉन्ट आकार", decrease: "घटाएं", increase: "बढ़ाएं", contrast: "उच्च कंट्रास्ट", readAloud: "जोर से पढ़ें", stopReading: "पढ़ना बंद करें", reset: "रीसेट करें", on: "चालू", off: "बंद" }
+  }[language as "en" | "hi"] ?? { title: "Accessibility Options", fontSize: "Font Size", decrease: "Decrease", increase: "Increase", contrast: "High Contrast", readAloud: "Read Aloud", stopReading: "Stop Reading", reset: "Reset Settings", on: "On", off: "Off" }
 
   const adjustFontSize = (dir: "increase" | "decrease") => {
     const next = Math.max(12, Math.min(24, fontSize + (dir === "increase" ? 2 : -2)))
