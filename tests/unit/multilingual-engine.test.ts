@@ -350,7 +350,6 @@ describe("Multilingual Engine & Dialect Mapping", () => {
     let facilityContactCount = 0
 
     for (const doc of REAL_DOCTORS) {
-      expect(doc.name).toMatch(/^Dr\./)
       expect(doc.hospitalAffiliation).toBeTruthy()
       expect(doc.phone).toMatch(/^\+91/)
       expect(doc.lat).toBeGreaterThan(5)
@@ -363,6 +362,7 @@ describe("Multilingual Engine & Dialect Mapping", () => {
 
       if (doc.recordType === 'clinician') {
         clinicianCount++
+        expect(doc.name).toMatch(/^Dr\./)
         expect(doc.regNo).toBeTruthy()
         expect(doc.qualifications).toBeTruthy()
         expect(doc.verified).toBe(true)
@@ -373,6 +373,7 @@ describe("Multilingual Engine & Dialect Mapping", () => {
         expect(doc.verificationStatus).toBe('source_confirmed')
         expect(doc.verified).toBe(false)
         expect(doc.regNo).toBeUndefined()
+        expect(doc.available).toBe(false)
       }
     }
 

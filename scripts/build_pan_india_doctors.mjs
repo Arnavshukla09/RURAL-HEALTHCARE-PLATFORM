@@ -74,55 +74,55 @@ for (let i = 1; i < lines.length; i++) {
 
   if (!stateCode) continue
 
-  const specialty = inferSpecialty(hospital)
-  const countKey = `${stateCode}_${specialty.key}`
+  const countKey = `${stateCode}_nodal`
   const curCount = stateSpecialtyCount[countKey] || 0
 
-  // Allow up to 12 doctors per specialty per state
-  if (curCount >= 12) continue
+  // Allow up to 25 hospital contacts per state
+  if (curCount >= 25) continue
   stateSpecialtyCount[countKey] = curCount + 1
 
-  // Format clean doctor name (strictly starts with 'Dr. ')
-  let docName = contact.trim().replace(/^dr[\.\s]+/i, '')
-  docName = 'Dr. ' + docName.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')
-  // Format phone to standard +91 international dialing format
+  // Format clean contact person name without fabricating 'Dr. ' prefix
+  const cleanContact = contact.trim().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')
+  // Format phone to standard +91 international dialing format (strictly 10 digits)
   let rawDigits = mobile.replace(/[^\d]/g, '')
   if (rawDigits.startsWith('91') && rawDigits.length === 12) rawDigits = rawDigits.slice(2)
-  const formattedPhone = rawDigits.length === 10 
-    ? `+91 ${rawDigits.slice(0, 5)} ${rawDigits.slice(5)}`
-    : `+91 ${mobile.replace(/^\+91[\s-]*/, '')}`
+  if (rawDigits.length !== 10) continue
+  const formattedPhone = `+91 ${rawDigits.slice(0, 5)} ${rawDigits.slice(5)}`
+
+  let docId = nin ? `doc-pmjay-${nin.toLowerCase()}` : `doc-pmjay-fac-${i}`
+  if (extractedDoctors.some(d => d.id === docId)) {
+    docId = `${docId}-${i}`
+  }
 
   const cleanHospital = hospital.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')
   const cleanDistrict = district.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')
 
   extractedDoctors.push({
-    id: `doc-pmjay-${nin.toLowerCase()}`,
-    name: docName,
-    specialty: specialty.key,
-    specialtyName: specialty.name,
+    id: docId,
+    name: cleanContact,
+    contactPersonName: cleanContact,
+    specialty: 'unspecified',
+    specialtyName: 'Facility Medical Desk / Hospital Nodal Contact',
     hospitalAffiliation: cleanHospital,
     stateCode,
     stateName,
     districtName: cleanDistrict,
     location: address || `${cleanHospital}, ${cleanDistrict}, ${stateName} ${pincode}`,
     phone: formattedPhone,
-    opdTimings: 'Mon - Sat: 09:30 AM - 01:30 PM',
-    consultationFee: 0, // PM-JAY / Govt empaneled free or nominal
     verified: false, // Not an independently verified private clinician
     verificationStatus: 'source_confirmed',
     recordType: 'facility_nodal_contact',
     sourceName: 'National Health Authority AB-PMJAY Empaneled Hospital Directory',
     sourceRecordId: nin.toUpperCase(),
     sourceUrl: 'https://data.gov.in/resource/national-hospital-directory-geo-code-and-additional-parameters-updated-till-last-month',
-    lastVerifiedAt: '2026-06-02T00:00:00Z',
-    available: true,
+    available: false, // Cannot be booked online; direct facility phone contact only
     lat,
     lon,
-    bio: `Institutional Nodal Medical Contact at ${cleanHospital}, empaneled under AB-PMJAY serving ${cleanDistrict}. Contact details confirmed from official NHA hospital registry.`
+    bio: `Institutional nodal medical contact at ${cleanHospital}, empaneled under AB-PMJAY serving ${cleanDistrict}. Contact details confirmed from official NHA hospital registry. Please contact facility directly to verify doctor OPD schedules.`
   })
 }
 
-console.log(`Extracted ${extractedDoctors.length} verified real doctors across ${Object.keys(stateSpecialtyCount).length} state-specialty combinations!`)
+console.log(`Extracted ${extractedDoctors.length} hospital nodal contacts across ${Object.keys(stateSpecialtyCount).length} states!`)
 
 // Read existing real-doctors.ts
 const existingContent = fs.readFileSync('lib/data/real-doctors.ts', 'utf8')
@@ -143,13 +143,20 @@ if (arrayCloseIdx === -1) {
   process.exit(1)
 }
 
-const existingArrayStr = parts[1].slice(0, arrayCloseIdx)
-const remainder = parts[1].slice(arrayCloseIdx)
+let baseArrayStr = parts[1].slice(0, arrayCloseIdx)
+const firstPmjayIdx = baseArrayStr.indexOf('"doc-pmjay')
+if (firstPmjayIdx !== -1) {
+  const lastBraceBeforePmjay = baseArrayStr.lastIndexOf('},', firstPmjayIdx)
+  if (lastBraceBeforePmjay !== -1) {
+    baseArrayStr = baseArrayStr.slice(0, lastBraceBeforePmjay + 2)
+  }
+}
 
 // Format new doctor objects
 const newDoctorsStr = extractedDoctors.map(d => `  ${JSON.stringify(d, null, 2).replace(/\n/g, '\n  ')},`).join('\n')
 
-const updatedContent = parts[0] + marker + existingArrayStr + '\n  // --- PAN-INDIA VERIFIED PM-JAY PRACTITIONERS & SPECIALISTS (REAL VERIFIED CONTACTS) ---\n' + newDoctorsStr + remainder
+const remainder = parts[1].slice(arrayCloseIdx)
+const updatedContent = parts[0] + marker + baseArrayStr + '\n  // --- PAN-INDIA HOSPITAL NODAL CONTACTS (OFFICIAL AB-PMJAY REGISTRY) ---\n' + newDoctorsStr + remainder
 
 fs.writeFileSync('lib/data/real-doctors.ts', updatedContent, 'utf8')
-console.log('✅ Successfully updated lib/data/real-doctors.ts with PAN-India verified doctors!')
+console.log('Successfully updated lib/data/real-doctors.ts with PAN-India hospital nodal contacts.')
