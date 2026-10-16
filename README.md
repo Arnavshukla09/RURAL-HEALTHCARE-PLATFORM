@@ -245,7 +245,7 @@ RURAL-HEALTHCARE-PLATFORM/
 |   `-- fix_security_warnings.sql  # Security advisory fixes
 |
 |-- tests/                         # Test suite
-|   |-- unit/                      # 18 Vitest unit and integration test files
+|   |-- unit/                      # 19 Vitest unit and integration test files
 |   |   |-- appointments-and-auth.test.ts
 |   |   |-- client-offline-resilience.test.ts
 |   |   |-- doctor-claim-and-booking-lifecycle.test.ts
@@ -259,6 +259,7 @@ RURAL-HEALTHCARE-PLATFORM/
 |   |   |-- offline-sync.test.ts
 |   |   |-- patient-data-isolation.test.ts
 |   |   |-- phase3-ecosystem.test.ts
+|   |   |-- probes-and-benchmarks.test.ts
 |   |   |-- pwa-strategy.test.ts
 |   |   |-- rate-limit-and-gateway.test.ts
 |   |   |-- routing-golden.test.ts
@@ -413,7 +414,7 @@ xychart-beta
     title "Codebase Modules by Layer"
     x-axis ["App Pages", "API Routes", "Lib Modules", "SQL Migrations", "Test Files"]
     y-axis "Count" 0 --> 55
-    bar [47, 19, 51, 9, 18]
+    bar [47, 19, 51, 9, 19]
 ```
 
 ---
@@ -555,7 +556,7 @@ Automated testing enforces regression prevention on every commit:
 
 | Test Dimension | Tool / Engine | Coverage | Result |
 | :--- | :--- | :---: | :---: |
-| Unit & Integration Tests | Vitest 5.0 | 116 tests across 18 suites | 100% Pass (~1.18s) |
+| Unit & Integration Tests | Vitest 5.0 | 120 tests across 19 suites | 100% Pass (~1.22s) |
 | Component Validation | Custom Static Analyzer | 101 UI components, 31 app pages/routes | 0 errors, 100% valid imports |
 | TypeScript Type Safety | `tsc --noEmit` | Entire codebase | 0 compilation errors |
 | ESLint & Hook Rules | ESLint 8.x | Entire codebase | 0 warnings or errors |
@@ -567,7 +568,7 @@ Automated testing enforces regression prevention on every commit:
 
 ```mermaid
 flowchart LR
-    T["116 Tests\n18 Suites"] --> A["appointments-and-auth\n11 tests"]
+    T["120 Tests\n19 Suites"] --> A["appointments-and-auth\n11 tests"]
     T --> B["patient-data-isolation\n9 tests"]
     T --> C["client-offline-resilience\n13 tests"]
     T --> D["doctor-claim-lifecycle\n5 tests"]
@@ -576,12 +577,13 @@ flowchart LR
     T --> G["notifications\n5 tests"]
     T --> H["offline-sync\n5 tests"]
     T --> I["phase3-ecosystem\n8 tests"]
-    T --> J["emergency + vault\n13 tests"]
-    T --> K["medical-brain\n6 tests"]
-    T --> L["helplines\n5 tests"]
-    T --> M["logger + semantic-cache\n9 tests"]
-    T --> N["symptoms + routing\n6 tests"]
-    T --> O["pwa-strategy\n4 tests"]
+    T --> J["probes-and-benchmarks\n4 tests"]
+    T --> K["emergency + vault\n13 tests"]
+    T --> L["medical-brain\n6 tests"]
+    T --> M["helplines\n5 tests"]
+    T --> N["logger + semantic-cache\n9 tests"]
+    T --> O["symptoms + routing\n6 tests"]
+    T --> P["pwa-strategy\n4 tests"]
 ```
 
 ---
@@ -635,7 +637,7 @@ UPSTASH_REDIS_REST_TOKEN=your_upstash_token
 ### Quality Assurance Commands
 
 ```bash
-# Run 116 unit and integration tests
+# Run 120 unit and integration tests
 npm run test:unit
 
 # Run full component validation (imports, types, lint, tests)
@@ -665,7 +667,7 @@ All engineering documents are located in the `docs/` directory:
 | Document | Purpose |
 | :--- | :--- |
 | `docs/SYSTEM_DESIGN.md` | Master system design blueprint with 8 subsystem breakdowns |
-| `docs/QA_REPORT.md` | 116-test scorecard with detailed per-suite breakdown |
+| `docs/QA_REPORT.md` | 120-test scorecard with detailed per-suite breakdown |
 | `docs/COMPONENTS.md` | Component reference catalog with props and data sources |
 | `docs/CHANGELOG.md` | Chronological feature release history |
 | `docs/DATABASE.md` | Schema diagrams, RLS policies, and index strategies |

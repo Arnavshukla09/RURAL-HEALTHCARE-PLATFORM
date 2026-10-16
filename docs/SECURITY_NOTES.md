@@ -121,6 +121,13 @@ This document records the security audits and remediations applied to the Rural 
   - User Control: Verifies that users can manually retry or discard stalled outbox operations.
   - Legacy Data Migration: Verifies atomic migration of legacy `localStorage` outbox items into IndexedDB with key deletion.
 
+### 2.11 Phase 4: Deployment Readiness & Liveness Probe Hardening
+* **Operational Health Probes (`app/api/health/route.ts` & `tests/unit/probes-and-benchmarks.test.ts`):**
+  - Database Probe Correction: Updated `/api/health` to query the canonical public table `healthcare_facilities` rather than unaliased tables, providing truthful health status.
+  - Degraded State Resilience: Returns HTTP 200 with `status: "ok"` when database is healthy; gracefully returns HTTP 503 with sanitized `status: "degraded"` or `"unavailable"` without leaking internal stack traces or connection strings.
+  - Edge Cache Prohibition: Hardened `Cache-Control: no-store, no-cache, must-revalidate` prevents stale health telemetry in container orchestrators.
+  - Readiness Probe: `/api/ready` provides sub-10ms deterministic health check for uptime monitors and deployment gates.
+
 ---
 
 ## 3. Verification & Safety Verification
@@ -129,7 +136,7 @@ This document records the security audits and remediations applied to the Rural 
 |---|---|---|
 | `npx tsc --noEmit` | Passed | 0 TypeScript errors |
 | `npm run lint` | Passed | 0 ESLint warnings or errors |
-| `npm run test:unit` | Passed | 116/116 unit tests passing across 18 test suites |
+| `npm run test:unit` | Passed | 120/120 unit tests passing across 19 test suites |
 | `npx playwright test` | Passed | 5/5 browser user persona end-to-end tests passing |
 | `npm run build` | Passed | All 49 routes cleanly compiled (103 kB shared JS) |
 

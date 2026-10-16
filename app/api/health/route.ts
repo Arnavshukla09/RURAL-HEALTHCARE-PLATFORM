@@ -18,7 +18,7 @@ export async function GET() {
   // 1. Database check: trivial 1-row query
   try {
     const supabase = await createClient()
-    const { error } = await supabase.from("facilities").select("id").limit(1)
+    const { error } = await supabase.from("healthcare_facilities").select("id").limit(1)
     dbStatus = error ? "degraded" : "connected"
   } catch {
     dbStatus = "unavailable"

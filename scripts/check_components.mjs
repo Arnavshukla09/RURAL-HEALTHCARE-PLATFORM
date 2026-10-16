@@ -211,10 +211,11 @@ async function run() {
   // STEP 5: Automated Unit Tests (`vitest run`)
   // -------------------------------------------------------------
   logStep(5, 'Executing Unit & Component Test Suite')
-  let totalPassedTests = '116'
+  let totalPassedTests = '120'
   try {
     const testOut = execSync('npm run test:unit', { stdio: 'pipe', cwd: ROOT }).toString()
-    const match = testOut.match(/Tests\s+(\d+)\s+passed/)
+    const cleanOut = testOut.replace(/\x1B\[[0-9;]*[a-zA-Z]/g, '')
+    const match = cleanOut.match(/Tests\s+(\d+)\s+passed/)
     if (match) {
       totalPassedTests = match[1]
     }

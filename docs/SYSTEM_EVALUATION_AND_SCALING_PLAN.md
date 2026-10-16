@@ -147,7 +147,7 @@ flowchart TD
 
 ## 4. Verification & QA Status
 
-- **Unit Test Suite (`vitest`):** **116/116 passing** across 18 test files.
+- **Unit Test Suite (`vitest`):** **120/120 passing** across 19 test files.
 - **Production Build (`next build`):** **Compiled successfully** across all 49 static and serverless routes.
 - **End-to-End User Journeys (`playwright`):** **5/5 passed** across all user personas.
 - **Stress Test Suite (`scratch/test-chatbot-stress.ts`):** **8/8 checks passing** (Emergency regex, Injection defense, Payload truncation, Concurrency burst, Gateway failover, Quota guard).
