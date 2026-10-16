@@ -885,7 +885,7 @@ export function MapView({ language }: MapViewProps) {
 
                       {/* Action buttons */}
                       <div className="pt-1 flex flex-col gap-1">
-                        {isDoc && (
+                        {isDoc && f.recordType === 'clinician' && (
                           <a
                             href="/consultation"
                             className="w-full text-center py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded text-xs font-semibold flex items-center justify-center gap-1"
@@ -1070,7 +1070,7 @@ export function MapView({ language }: MapViewProps) {
                           </span>
                         )}
 
-                        {isDoc && (
+                        {isDoc && f.recordType === 'clinician' && (
                           <a
                             href="/consultation"
                             className="h-7 px-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors"

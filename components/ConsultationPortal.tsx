@@ -171,9 +171,9 @@ export function ConsultationPortal({ language, user, symptomResult }: Consultati
     }))
   }, [])
 
-  // Filter 913 Real Doctors
+  // Filter Real Verified Clinicians for Online Consultations
   const filteredDoctors = useMemo(() => {
-    let list = REAL_DOCTORS
+    let list = REAL_DOCTORS.filter(d => d.recordType === 'clinician')
 
     // 1. Specialty Filter
     if (specialtyFilter !== "all") {
@@ -684,7 +684,7 @@ export function ConsultationPortal({ language, user, symptomResult }: Consultati
                         <span>{doc.experience} {en ? "yrs exp" : "वर्ष अनुभव"}</span>
                         <span>•</span>
                         <span className="font-semibold text-emerald-700">
-                          {doc.consultationFee > 0 ? `₹${doc.consultationFee}` : (en ? "Free Govt OPD" : "मुफ्त सरकारी")}
+                          {doc.consultationFee && doc.consultationFee > 0 ? `₹${doc.consultationFee}` : (en ? "Free Govt OPD" : "मुफ्त सरकारी")}
                         </span>
                       </div>
                     </div>
@@ -749,7 +749,7 @@ export function ConsultationPortal({ language, user, symptomResult }: Consultati
                 <span>{en ? `Step 3 — Schedule Slot with ${selectedDoctor.name}` : `चरण 3 — ${selectedDoctor.name} के साथ समय चुनें`}</span>
               </div>
               <Badge className="bg-emerald-600 text-white text-[10px]">
-                {selectedDoctor.consultationFee > 0 ? `₹${selectedDoctor.consultationFee}` : "100% Free OPD"}
+                {(selectedDoctor.consultationFee ?? 0) > 0 ? `₹${selectedDoctor.consultationFee}` : "100% Free OPD"}
               </Badge>
             </CardTitle>
           </CardHeader>

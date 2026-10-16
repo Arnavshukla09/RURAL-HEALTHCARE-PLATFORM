@@ -1006,10 +1006,17 @@ export function Directory({ language }: DirectoryProps) {
                             </div>
 
                             {/* OPD Timings */}
-                            <div className="text-xs text-amber-800 bg-amber-50/80 px-2.5 py-1 rounded-md inline-flex items-center gap-1.5 border border-amber-200/60 font-medium">
-                              <Clock className="h-3 w-3 text-amber-600 shrink-0" />
-                              <span>{t.opdTimings}: {doctor.opdTimings}</span>
-                            </div>
+                            {doctor.opdTimings ? (
+                              <div className="text-xs text-amber-800 bg-amber-50/80 px-2.5 py-1 rounded-md inline-flex items-center gap-1.5 border border-amber-200/60 font-medium">
+                                <Clock className="h-3 w-3 text-amber-600 shrink-0" />
+                                <span>{t.opdTimings}: {doctor.opdTimings}</span>
+                              </div>
+                            ) : (
+                              <div className="text-xs text-gray-600 bg-gray-50 px-2.5 py-1 rounded-md inline-flex items-center gap-1.5 border border-gray-200/80 font-medium">
+                                <Clock className="h-3 w-3 text-gray-400 shrink-0" />
+                                <span>{language === "hi" ? "समय: पुष्टि के लिए कॉल करें" : "Timings: Call to confirm"}</span>
+                              </div>
+                            )}
 
                             {/* Rating, Reviews & Experience */}
                             <div className="flex items-center gap-2.5 text-xs text-gray-600 pt-1 flex-wrap">
@@ -1048,12 +1055,25 @@ export function Directory({ language }: DirectoryProps) {
                         {/* Right: Consultation Fees & Call to Actions */}
                         <div className="flex flex-col sm:flex-row lg:flex-col items-stretch lg:items-end justify-between gap-3 w-full lg:w-auto shrink-0 pt-2 lg:pt-0 border-t lg:border-t-0 border-gray-100">
                           <div className="text-left lg:text-right">
-                            <p className="text-xl font-black text-emerald-700">
-                              {doctor.consultationFee > 0 ? `₹${doctor.consultationFee}` : t.free}
-                            </p>
-                            <p className="text-[11px] text-gray-400 font-medium">
-                              {doctor.consultationFee > 0 ? "OPD Consultation" : "Govt Free OPD"}
-                            </p>
+                            {doctor.consultationFee !== undefined && doctor.consultationFee !== null ? (
+                              <>
+                                <p className="text-xl font-black text-emerald-700">
+                                  {doctor.consultationFee > 0 ? `₹${doctor.consultationFee}` : t.free}
+                                </p>
+                                <p className="text-[11px] text-gray-400 font-medium">
+                                  {doctor.consultationFee > 0 ? "OPD Consultation" : "Govt Free OPD"}
+                                </p>
+                              </>
+                            ) : (
+                              <>
+                                <p className="text-sm font-semibold text-gray-700">
+                                  {language === "hi" ? "शुल्क: सूचीबद्ध नहीं" : "Fee: Not listed"}
+                                </p>
+                                <p className="text-[11px] text-gray-400 font-medium">
+                                  {language === "hi" ? "अस्पताल संपर्क" : "Hospital contact"}
+                                </p>
+                              </>
+                            )}
                           </div>
 
                           <div className="flex flex-wrap sm:flex-nowrap gap-2">
@@ -1066,15 +1086,17 @@ export function Directory({ language }: DirectoryProps) {
                               <span>{t.callNow}</span>
                             </Button>
 
-                            <Button
-                              size="sm"
-                              variant="secondary"
-                              className="text-xs h-8 px-3 font-semibold rounded-lg flex items-center gap-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100"
-                              onClick={() => router.push("/consultation")}
-                            >
-                              <Calendar className="h-3.5 w-3.5" />
-                              <span>{t.bookAppointment}</span>
-                            </Button>
+                            {doctor.recordType === 'clinician' && (
+                              <Button
+                                size="sm"
+                                variant="secondary"
+                                className="text-xs h-8 px-3 font-semibold rounded-lg flex items-center gap-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100"
+                                onClick={() => router.push("/consultation")}
+                              >
+                                <Calendar className="h-3.5 w-3.5" />
+                                <span>{t.bookAppointment}</span>
+                              </Button>
+                            )}
                           </div>
                         </div>
                       </div>

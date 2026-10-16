@@ -56,10 +56,14 @@ function DoctorClaimContent() {
   const [submittedClaim, setSubmittedClaim] = useState<DoctorClaim | null>(null)
   const [errorMsg, setErrorMsg] = useState("")
 
-  // Resolve target doctor from query parameter
+  // Resolve target doctor from query parameter (strictly clinicians only)
   const targetDoctor: RealDoctor | null = useMemo(() => {
     if (!docIdParam) return null
-    return REAL_DOCTORS.find((d) => d.id === docIdParam) || null
+    const doc = REAL_DOCTORS.find((d) => d.id === docIdParam) || null
+    if (doc && doc.recordType === 'facility_nodal_contact') {
+      return null // Institutional facility contacts cannot be claimed as personal physician accounts
+    }
+    return doc
   }, [docIdParam])
 
   // Verify token
