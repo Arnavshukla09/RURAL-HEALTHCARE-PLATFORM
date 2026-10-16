@@ -4,15 +4,29 @@ require('dotenv').config({ path: '.env.local' });
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
+if (!supabaseUrl || !supabaseKey) {
+  throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY environment variables.');
+}
+
+const adminPassword = process.env.E2E_ADMIN_PASSWORD;
+const doctorPassword = process.env.E2E_DOCTOR_PASSWORD;
+const patientPassword = process.env.E2E_PATIENT_PASSWORD;
+
+if (!adminPassword || !doctorPassword || !patientPassword) {
+  throw new Error(
+    'Missing required E2E credentials: E2E_ADMIN_PASSWORD, E2E_DOCTOR_PASSWORD, and E2E_PATIENT_PASSWORD must all be defined.'
+  );
+}
+
 const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: { autoRefreshToken: false, persistSession: false }
 });
 
 async function seed() {
   const users = [
-    { email: 'admin@ruralhealth.com', password: 'Admin@123', role: 'admin', name: 'Admin User' },
-    { email: 'doctor@ruralhealth.com', password: 'Doctor@123', role: 'doctor', name: 'Dr. Smith' },
-    { email: 'patient@ruralhealth.com', password: 'Patient@123', role: 'patient', name: 'John Doe' }
+    { email: process.env.E2E_ADMIN_EMAIL || 'admin@ruralhealth.demo', password: adminPassword, role: 'admin', name: 'Admin User' },
+    { email: process.env.E2E_DOCTOR_EMAIL || 'doctor@ruralhealth.demo', password: doctorPassword, role: 'doctor', name: 'Dr. Smith' },
+    { email: process.env.E2E_PATIENT_EMAIL || 'patient@ruralhealth.demo', password: patientPassword, role: 'patient', name: 'John Doe' }
   ];
 
   for (const u of users) {
