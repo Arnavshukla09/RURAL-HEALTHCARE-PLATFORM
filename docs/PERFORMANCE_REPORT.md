@@ -131,7 +131,7 @@ across 8 public routes:
 
 - **TypeScript (`npx tsc --noEmit`)**: 0 errors
 - **ESLint (`npm run lint`)**: 0 warnings, 0 errors
-- **Unit & Integration Tests (`npm run test:unit`)**: 144 / 144 passing across 21 suites (100% pass rate) in ~1.04s
+- **Unit & Integration Tests (`npm run test:unit`)**: 161 / 161 passing across 22 suites (100% pass rate) in ~1.22s
 - **Component Validation (`npm run check:components`)**: 132 files scanned, 0 broken imports, 0 type errors, 0 lint errors
 - **Production Build (`npm run build`)**: 45 / 45 static pages cleanly generated without SSR runtime exceptions
 - **Cost**: $0.00 / month guaranteed.

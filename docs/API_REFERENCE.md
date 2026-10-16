@@ -182,6 +182,52 @@ Creates a medical record entry.
   }
   ```
 
+### 3.3 `GET /api/abdm/fhir-export`
+Exports a medical record as an ABDM NRCES-compliant HL7 FHIR R4 Document Bundle.
+- **Auth:** Required (Patient for own records, Doctor or Admin for any clinical record)
+- **Rate Limit:** Tier 2 (120/min)
+- **Headers:** `Content-Type: application/fhir+json; charset=utf-8`, `X-ABDM-Conformance: NRCES-FHIR-R4-M2`
+- **Query Parameters:**
+  - `record_id` (required, UUID): The ID of the target `medical_records` row.
+- **Response (200 OK):**
+  ```json
+  {
+    "resourceType": "Bundle",
+    "id": "bundle-rx-rec-001",
+    "meta": {
+      "versionId": "1",
+      "lastUpdated": "2026-10-16T12:00:00.000Z",
+      "profile": [
+        "https://nrces.in/ndhm/fhir/r4/StructureDefinition/DocumentBundle"
+      ]
+    },
+    "type": "document",
+    "entry": [
+      {
+        "fullUrl": "urn:uuid:comp-rec-001",
+        "resource": {
+          "resourceType": "Composition",
+          "id": "comp-rec-001",
+          "status": "final",
+          "type": { "coding": [{ "system": "https://projectndhm.gov.in/document-types", "code": "PRE", "display": "Prescription" }] },
+          "subject": { "reference": "urn:uuid:pat-rec-001" },
+          "section": [{ "title": "OPD Prescription", "code": { "coding": [{ "system": "http://loinc.org", "code": "57833-6" }] } }]
+        }
+      },
+      { "fullUrl": "urn:uuid:pat-rec-001", "resource": { "resourceType": "Patient", "id": "pat-rec-001", "name": [{ "text": "Rameshwar Prasad" }], "gender": "male" } },
+      { "fullUrl": "urn:uuid:pract-rec-001", "resource": { "resourceType": "Practitioner", "id": "pract-rec-001", "name": [{ "text": "Dr. Ajay Goenka" }] } },
+      { "fullUrl": "urn:uuid:org-rec-001", "resource": { "resourceType": "Organization", "id": "org-rec-001", "name": "District Hospital Sehore" } },
+      { "fullUrl": "urn:uuid:med-req-rec-001-1", "resource": { "resourceType": "MedicationRequest", "id": "med-req-rec-001-1", "status": "active", "intent": "order", "medicationCodeableConcept": { "text": "Amoxicillin 500mg" } } }
+    ]
+  }
+  ```
+- **Error Codes:**
+  - `400 BAD_REQUEST`: Missing required `record_id` query parameter.
+  - `401 UNAUTHORIZED`: Authentication required.
+  - `403 FORBIDDEN`: Attempted export of another patient's record without doctor or admin privileges.
+  - `404 NOT_FOUND`: Requested medical record does not exist.
+  - `500 INTERNAL_ERROR`: Generated bundle failed NRCES conformance validation.
+
 ---
 
 ## 4. Notifications (Polling-Optimized)

@@ -645,7 +645,7 @@ UPSTASH_REDIS_REST_TOKEN=your_upstash_token
 ### Quality Assurance Commands
 
 ```bash
-# Run 144 unit and integration tests
+# Run 161 unit and integration tests
 npm run test:unit
 
 # Run full component validation (imports, types, lint, tests)
@@ -675,14 +675,15 @@ All engineering documents are located in the `docs/` directory:
 | Document | Purpose |
 | :--- | :--- |
 | `docs/SYSTEM_DESIGN.md` | Master system design blueprint with 8 subsystem breakdowns |
-| `docs/QA_REPORT.md` | 144-test scorecard with detailed per-suite breakdown |
+| `docs/QA_REPORT.md` | 161-test scorecard with detailed per-suite breakdown |
 | `docs/CLINICAL_SAFETY.md` | Clinical decision tables, prompt injection defense, and FNR = 0% evaluation |
+| `docs/ABDM_FHIR_INTEROPERABILITY.md` | ABDM and HL7 FHIR R4 interoperability architecture and 2027 placement defense |
 | `docs/COMPONENTS.md` | Component reference catalog with props and data sources |
 | `docs/CHANGELOG.md` | Chronological feature release history |
 | `docs/DATABASE.md` | Schema diagrams, RLS policies, and index strategies |
 | `docs/DATASETS.md` | Dataset provenance, size, and ingestion methodology |
 | `docs/DATA_PROVENANCE.md` | Canonical schema, bounding box rules, and ETL idempotency |
-| `docs/API_REFERENCE.md` | 19 REST endpoints with request/response schemas |
+| `docs/API_REFERENCE.md` | 20 REST endpoints with request/response schemas |
 | `docs/ARCHITECTURE.md` | System architecture deep-dive and decision log |
 | `docs/DEPLOY_CHECKLIST.md` | Step-by-step production deployment checklist |
 | `docs/SECURITY_NOTES.md` | Security controls, threat model, and RLS audit |

@@ -11,20 +11,21 @@
 
 | Test Suite / Audit Dimension | Framework / Tool | Tests Executed | Passed | Failed | Pass Rate | Execution Duration |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: |
-| **Unit & Integration Suite** | Vitest 5.0 (Node.js) | 144 | 144 | 0 | **100%** | ~1.04s |
-| **Component Validation Checker** | Custom Static Analyzer (`scripts/check_components.mjs`) | 132 files | 132 | 0 | **100%** | ~8.02s |
+| **Unit & Integration Suite** | Vitest 5.0 (Node.js) | 161 | 161 | 0 | **100%** | ~1.22s |
+| **Component Validation Checker** | Custom Static Analyzer (`scripts/check_components.mjs`) | 132 files | 132 | 0 | **100%** | ~8.26s |
 | **End-to-End User Flow Suite** | Playwright (Chromium) | 5 | 5 | 0 | **100%** | ~45.3s |
 | **PostGIS Spatial Performance** | Automated Edge Query Benchmark | 1,000 queries | 1,000 | 0 | **100%** | 274ms avg / 558ms P95 |
 | **Security Audit & RLS Verification** | Automated Penetration & Header Checks | 10 audit rules | 10 | 0 | **100%** | Instant |
 
 ---
 
-## 2. Automated Unit & Integration Test Breakdown (144 Tests)
+## 2. Automated Unit & Integration Test Breakdown (161 Tests)
 
-The platform runs 144 unit and integration tests across 21 specialized test files via `npm run test:unit`:
+The platform runs 161 unit and integration tests across 22 specialized test files via `npm run test:unit`:
 
 | Test File | Domain / Subsystem Verified | Tests | Status | Key Assertions & Scenarios |
 | :--- | :--- | :---: | :---: | :--- |
+| [`abdm-fhir-conformance.test.ts`](file:///c:/Users/aarrn/Desktop/rural%20health/RURAL-HEALTHCARE-PLATFORM-main/tests/unit/abdm-fhir-conformance.test.ts) | ABDM & HL7 FHIR R4 Interoperability | 17 | Pass | Indian ABHA 14-digit number and ABHA address (`@abdm`, `@sbx`, `@e-swasthya`) validation, NRCES DocumentBundle generation (`Composition`, `Patient`, `Practitioner`, `Organization`, `MedicationRequest`), LOINC coded diagnostic lab reports and vital signs observations, referential integrity verification (0 dangling pointers), zero-cost simulated sandbox mode, and `/api/abdm/fhir-export` route authorization. |
 | [`clinical-safety-eval.test.ts`](file:///c:/Users/aarrn/Desktop/rural%20health/RURAL-HEALTHCARE-PLATFORM-main/tests/unit/clinical-safety-eval.test.ts) | Clinical Safety & Decision Tables | 11 | Pass | 50-case curated benchmark, 100% sensitivity on emergencies, 0.0% False Negative Rate (FNR = 0.0), prompt injection neutralization, scoped negation without false sirens, inherent negative protection, NTEP chronic cough TB referral, animal bite rabies PEP routing, decision table auditability. |
 | [`data-provenance-and-pipeline.test.ts`](file:///c:/Users/aarrn/Desktop/rural%20health/RURAL-HEALTHCARE-PLATFORM-main/tests/unit/data-provenance-and-pipeline.test.ts) | Data Engineering & Spatial Provenance | 13 | Pass | Indian territorial bounding box ($6.5^\circ-37.5^\circ\text{N}, 68.7^\circ-97.5^\circ\text{E}$), GIS coordinate inversion detection, telephone normalization and shared helpline clustering, deterministic canonical ID generation (`osm_id`), idempotent deduplication preserving higher tier verification, comprehensive data quality scorecard calculation. |
 | [`emergency.test.ts`](file:///c:/Users/aarrn/Desktop/rural%20health/RURAL-HEALTHCARE-PLATFORM-main/tests/unit/emergency.test.ts) | Clinical Regex & Emergency Gate | 8 | Pass | Tier-0 detection, pediatric asphyxia, obstetric hemorrhage, scoped negation, inherently negative allowlist. |
@@ -73,11 +74,11 @@ Running automated component checks before commit...
   - ESLint passed with 0 warnings or errors.
 
 [Step 5] Executing Unit & Component Test Suite
-  - Test suite passed cleanly (120 passed).
+  ✔ Test suite passed cleanly (161 passed).
 
 ============================================================
 ALL COMPONENTS VERIFIED & STABLE
-0 broken imports • 0 type errors • 0 lint errors • 144 tests passing
+0 broken imports • 0 type errors • 0 lint errors • 161 tests passing
 Pre-commit check passed cleanly. Commit proceeding!
 ============================================================
 ```
