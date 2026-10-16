@@ -1,9 +1,9 @@
 /**
  * scripts/report_dataset.mjs
  *
- * Dataset inspection, validation, and reporting utility for Rural Healthcare Platform.
- * Generates an executive summary of facilities, doctors, and geographic coverage.
- * Run via: node scripts/report_dataset.mjs
+ * Evidence-based dataset audit and provenance report for Rural Healthcare Platform.
+ * Validates local file datasets against strict integrity rules.
+ * Fails with process.exit(1) if any integrity or provenance invariant is violated.
  */
 
 import fs from 'fs'
@@ -11,94 +11,151 @@ import path from 'path'
 
 function runReport() {
   console.log('='.repeat(70))
-  console.log(' RURAL HEALTHCARE PLATFORM — DATASET AUDIT & PROVENANCE REPORT')
-  console.log(' Generated: ' + new Date().toISOString())
+  console.log(' RURAL HEALTHCARE PLATFORM - DATASET INTEGRITY & PROVENANCE AUDIT')
+  console.log(' Mode: Local File Audit')
+  console.log(' Timestamp: ' + new Date().toISOString())
   console.log('='.repeat(70) + '\n')
+
+  let failureCount = 0
+  function assertRule(name, passed, detail) {
+    if (passed) {
+      console.log(`  [PASS] ${name}${detail ? ': ' + detail : ''}`)
+    } else {
+      console.error(`  [FAIL] ${name}: ${detail}`)
+      failureCount++
+    }
+  }
 
   // 1. Doctors Dataset Audit
   const doctorsPath = path.resolve('lib/data/real-doctors.ts')
   if (!fs.existsSync(doctorsPath)) {
-    console.error('❌ lib/data/real-doctors.ts not found')
-    return
+    console.error('Fatal: lib/data/real-doctors.ts not found')
+    process.exit(1)
   }
 
   const doctorContent = fs.readFileSync(doctorsPath, 'utf8')
   
-  // Extract doctors
-  const idMatches = doctorContent.match(/["']?id["']?\s*:\s*["'][^"']+["']/g) || []
-  const nameMatches = doctorContent.match(/["']?name["']?\s*:\s*["']Dr\.[^"']+["']/g) || []
-  const phoneMatches = doctorContent.match(/["']?phone["']?\s*:\s*["']\+91[^"']+["']/g) || []
-  const regMatches = doctorContent.match(/["']?regNo["']?\s*:\s*["'](NMC|MPMC|DMC|MMC|KMC|TMC|WBMC|PMC)[^"']+["']/g) || []
-  const reviewMatches = doctorContent.match(/["']?reviewCount["']?\s*:\s*\d+/g) || []
-  const feeMatches = doctorContent.match(/["']?consultationFee["']?\s*:\s*\d+/g) || []
+  // Extract all JSON objects from the array
+  const marker = 'export const REAL_DOCTORS: RealDoctor[] = ['
+  const startIdx = doctorContent.indexOf(marker)
+  if (startIdx === -1) {
+    console.error('Fatal: REAL_DOCTORS array marker not found')
+    process.exit(1)
+  }
 
-  // Specialty Breakdown
-  const specialtyMatches = doctorContent.match(/["']?specialty["']?\s*:\s*["'][^"']+["']/g) || []
-  const specialtyCounts = {}
-  specialtyMatches.forEach(s => {
-    const spec = s.replace(/["']?specialty["']?\s*:\s*["']/, '').replace(/["']/, '')
-    specialtyCounts[spec] = (specialtyCounts[spec] || 0) + 1
-  })
+  // Regex-extract structured doctor records
+  const idMatches = (doctorContent.match(/"id"\s*:\s*"([^"]+)"/g) || []).map(m => m.split(':')[1].replace(/["\s]/g, ''))
+  const recordTypeMatches = (doctorContent.match(/"recordType"\s*:\s*"([^"]+)"/g) || []).map(m => m.split(':')[1].replace(/["\s]/g, ''))
+  const verificationMatches = (doctorContent.match(/"verificationStatus"\s*:\s*"([^"]+)"/g) || []).map(m => m.split(':')[1].replace(/["\s]/g, ''))
+  const lats = (doctorContent.match(/"lat"\s*:\s*([\d\.\-]+)/g) || []).map(m => parseFloat(m.split(':')[1].trim()))
+  const lons = (doctorContent.match(/"lon"\s*:\s*([\d\.\-]+)/g) || []).map(m => parseFloat(m.split(':')[1].trim()))
+  const phones = (doctorContent.match(/"phone"\s*:\s*"([^"]+)"/g) || []).map(m => m.split(':')[1].replace(/["\s]/g, ''))
+  const opdMatches = doctorContent.match(/"opdTimings"\s*:\s*"([^"]+)"/g) || []
 
-  // State Breakdown
-  const stateMatches = doctorContent.match(/["']?stateName["']?\s*:\s*["'][^"']+["']/g) || []
-  const stateCounts = {}
-  stateMatches.forEach(s => {
-    const st = s.replace(/["']?stateName["']?\s*:\s*["']/, '').replace(/["']/, '')
-    stateCounts[st] = (stateCounts[st] || 0) + 1
-  })
+  console.log('1. DIRECTORY DATASET PROVENANCE (lib/data/real-doctors.ts)')
+  console.log(`   - Total Extracted Directory Records: ${idMatches.length}`)
+  
+  // Rule: Unique IDs
+  const idSet = new Set(idMatches)
+  assertRule('Unique Record Identifiers', idSet.size === idMatches.length, `${idSet.size} unique across ${idMatches.length} records`)
 
-  console.log('📌 1. PRACTITIONER & SPECIALIST DATASET (lib/data/real-doctors.ts)')
-  console.log(`   - Total Registered Doctors:       ${idMatches.length}`)
-  console.log(`   - Validated "Dr." Names:          ${nameMatches.length} / ${idMatches.length} (${((nameMatches.length/idMatches.length)*100).toFixed(1)}%)`)
-  console.log(`   - Verified +91 Phone Contacts:    ${phoneMatches.length} / ${idMatches.length} (${((phoneMatches.length/idMatches.length)*100).toFixed(1)}%)`)
-  console.log(`   - Official Medical Council Reg:   ${regMatches.length} / ${idMatches.length}`)
-  console.log(`   - Doctors with Online Reviews:    ${reviewMatches.length} (Practo / Patient Aggregators)`)
-  console.log(`   - Specialty Categories:           ${Object.keys(specialtyCounts).length}`)
-  console.log(`   - States / UTs Covered:           ${Object.keys(stateCounts).length}`)
+  // Rule: Phone format
+  const validPhones = phones.filter(p => /^\+91\d{10}$/.test(p.replace(/[\s\-]/g, '')))
+  assertRule('Standard +91 Phone Format', validPhones.length === phones.length, `${validPhones.length}/${phones.length} conformant`)
+
+  // Rule: Coordinate bounds (India Bounding Box: 6.5°N - 37.5°N, 68.7°E - 97.5°E)
+  let validCoords = 0
+  let swappedCoords = 0
+  for (let i = 0; i < lats.length; i++) {
+    const lat = lats[i]
+    const lon = lons[i]
+    if (lat >= 6.5 && lat <= 37.5 && lon >= 68.7 && lon <= 97.5) {
+      validCoords++
+    }
+    // Check swapped lat/lon (lon is between 6.5-37.5 and lat is between 68.7-97.5)
+    if (lon >= 6.5 && lon <= 37.5 && lat >= 68.7 && lat <= 97.5) {
+      swappedCoords++
+    }
+  }
+  assertRule('Coordinates Within India Bounding Box', validCoords === lats.length, `${validCoords}/${lats.length} within 6.5-37.5N, 68.7-97.5E`)
+  assertRule('Zero Swapped Latitude/Longitude Coordinates', swappedCoords === 0, `${swappedCoords} detected swapped`)
+
+  // Rule: Facility Nodal Contacts must NOT have fabricated OPD Timings
+  const facilityCount = recordTypeMatches.filter(r => r === 'facility_nodal_contact').length
+  const clinicianCount = recordTypeMatches.filter(r => r === 'clinician').length
+  console.log(`   - Clinician Records: ${clinicianCount}`)
+  console.log(`   - Facility Nodal Contact Records: ${facilityCount}`)
+  assertRule('Facility Contacts Have No Fabricated Timings', opdMatches.length <= clinicianCount, `OPD timings count (${opdMatches.length}) does not exceed clinician count (${clinicianCount})`)
+
   console.log('')
-  console.log('   Specialty Distribution:')
-  Object.entries(specialtyCounts).sort((a,b) => b[1]-a[1]).forEach(([k, v]) => {
-    console.log(`     * ${k.padEnd(16)} : ${v} doctors`)
-  })
-  console.log('')
 
-  // 2. Facilities Dataset Audit
-  console.log('📌 2. HEALTHCARE FACILITIES & POSTGIS DATASET')
+  // 2. Facilities Raw CSV Audit
+  console.log('2. RAW PM-JAY FACILITIES AUDIT (pmjay_facilities_contacts.csv)')
   if (fs.existsSync('pmjay_facilities_contacts.csv')) {
     const pmjayContent = fs.readFileSync('pmjay_facilities_contacts.csv', 'utf8')
-    const pmjayLines = pmjayContent.split('\n').filter(Boolean)
-    console.log(`   - Raw PM-JAY Facility Records:     ${pmjayLines.length - 1} records across 36 States/UTs`)
-    console.log(`   - Ingested PM-JAY Verified DB:     8,013 facilities (with verified phone & GPS)`)
-    console.log(`   - Base NHP/Govt Health Centres:    2,729 facilities`)
-    console.log(`   - Total Supabase Facilities:       10,742 facilities (PostGIS Geography Point 4326)`)
-    console.log(`   - Artificial "108" Fallbacks:      0 (Eliminated in v1.20.4; unlisted tagged as Walk-in)`)
+    const lines = pmjayContent.split('\n').filter(l => l.trim().length > 0)
+    const dataLines = lines.slice(1)
+    let validPmjayGps = 0
+    let validPmjayPhone = 0
+    
+    function parseCsvLine(text) {
+      const res = []
+      let cur = ''
+      let inQ = false
+      for (let i = 0; i < text.length; i++) {
+        const c = text[i]
+        if (c === '"') inQ = !inQ
+        else if (c === ',' && !inQ) { res.push(cur); cur = '' }
+        else cur += c
+      }
+      res.push(cur)
+      return res
+    }
+
+    for (const line of dataLines) {
+      const parts = parseCsvLine(line)
+      const lat = parseFloat(parts[3])
+      const lon = parseFloat(parts[4])
+      const mobile = (parts[6] || '').trim()
+      if (!isNaN(lat) && !isNaN(lon) && lat >= 6.5 && lat <= 37.5 && lon >= 68.7 && lon <= 97.5) {
+        validPmjayGps++
+      }
+      if (mobile && mobile.replace(/[^\d]/g, '').length >= 10) {
+        validPmjayPhone++
+      }
+    }
+
+    console.log(`   - Total Raw Facility Rows: ${dataLines.length}`)
+    console.log(`   - Valid Coordinate Rows:   ${validPmjayGps}`)
+    console.log(`   - Valid Phone Contact Rows: ${validPmjayPhone}`)
+    assertRule('Raw Dataset Has Valid Coordinate Density', validPmjayGps > 5000, `${validPmjayGps} rows pass bounding box`)
   } else {
-    console.log(`   - Total Indexed PostGIS Facilities: 10,742 facilities in Supabase`)
+    console.log('   - Note: pmjay_facilities_contacts.csv not found in working tree')
   }
+
   console.log('')
 
   // 3. Geographic Boundary Audit
-  console.log('📌 3. LGD GEOGRAPHIC DIRECTORY (lib/geo/pan-india-lgd.json)')
+  console.log('3. LGD GEOGRAPHIC REFERENCE AUDIT (lib/geo/pan-india-lgd.json)')
   if (fs.existsSync('lib/geo/pan-india-lgd.json')) {
     const lgd = JSON.parse(fs.readFileSync('lib/geo/pan-india-lgd.json', 'utf8'))
     let totalDistricts = 0
     lgd.forEach(s => totalDistricts += (s.districts || []).length)
-    console.log(`   - States & UTs Mapped:             ${lgd.length} / 36`)
+    console.log(`   - States and UTs Mapped: ${lgd.length}`)
     console.log(`   - Administrative Districts Mapped: ${totalDistricts}`)
+    assertRule('LGD Directory Covers All States and UTs', lgd.length >= 36, `${lgd.length} states/UTs mapped`)
+    assertRule('LGD Directory Covers National Districts', totalDistricts >= 700, `${totalDistricts} districts mapped`)
   }
-  console.log('')
 
-  // 4. Data Hygiene & Integrity Rule Checks
-  console.log('📌 4. AUTOMATED DATA HYGIENE & QUALITY COMPLIANCE (PHASE 5)')
-  console.log(`   - Doctor Name Prefix Compliance:   ${idMatches.length === nameMatches.length ? '✅ PASSED (100%)' : '❌ FAILED'}`)
-  console.log(`   - Phone Contact Format (+91):      ${idMatches.length === phoneMatches.length ? '✅ PASSED (100%)' : '❌ FAILED'}`)
-  console.log(`   - Coordinates Validity (India BB): ✅ PASSED (Lat 6.5°-37.5°N, Lon 68.7°-97.5°E)`)
-  console.log(`   - Swapped Lat/Lon Detection:       ✅ ZERO INVERSIONS (Validated by facility-provenance.ts)`)
-  console.log(`   - Deterministic Idempotent Upsert: ✅ ACTIVE (osm_id derived via stable FNV-1a hash)`)
-  console.log(`   - 3-Tier Contact Verification:     ✅ ENFORCED (independently_verified / source_confirmed / nodal)`)
-  console.log(`   - Component & Type Integrity:      ✅ PASSED (scripts/check_components.mjs)`)
-  console.log('\n' + '='.repeat(70) + '\n')
+  console.log('\n' + '='.repeat(70))
+  if (failureCount > 0) {
+    console.error(`AUDIT FAILED: ${failureCount} integrity rules violated.`)
+    console.log('='.repeat(70) + '\n')
+    process.exit(1)
+  } else {
+    console.log('AUDIT PASSED: All evidence-based dataset rules satisfied.')
+    console.log('='.repeat(70) + '\n')
+  }
 }
 
 runReport()
