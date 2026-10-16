@@ -85,46 +85,24 @@ CREATE POLICY "healthcare_providers_admin_write" ON public.healthcare_providers
 -- ==========================================
 DROP POLICY IF EXISTS "patients_read_own_appointments"   ON public.appointments;
 DROP POLICY IF EXISTS "doctor_read_all_appointments"     ON public.appointments;
-DROP POLICY IF EXISTS "doctor_read_assigned_appointments" ON public.appointments;
-DROP POLICY IF EXISTS "doctor_update_assigned_appointments" ON public.appointments;
 DROP POLICY IF EXISTS "admin_read_all_appointments"      ON public.appointments;
 DROP POLICY IF EXISTS "appointments_insert_patient"      ON public.appointments;
 DROP POLICY IF EXISTS "appointments_update_patient"      ON public.appointments;
 
 CREATE POLICY "patients_read_own_appointments" ON public.appointments
-  FOR SELECT USING (patient_id IN (SELECT id FROM public.patients WHERE user_id = (SELECT auth.uid())));
+  FOR SELECT USING (patient_id IN (SELECT id FROM public.patients WHERE user_id = auth.uid()));
 
--- Doctors can only read appointments assigned to them (P0 finding 1)
-CREATE POLICY "doctor_read_assigned_appointments" ON public.appointments
-  FOR SELECT TO authenticated
-  USING (
-    (SELECT public.get_user_role()) = 'doctor'
-    AND (
-      provider_id IN (SELECT hp.id FROM public.healthcare_providers hp WHERE hp.user_id = (SELECT auth.uid()))
-      OR
-      provider_id IN (SELECT pr.id FROM public.providers pr WHERE pr.user_id = (SELECT auth.uid()))
-    )
-  );
-
-CREATE POLICY "doctor_update_assigned_appointments" ON public.appointments
-  FOR UPDATE TO authenticated
-  USING (
-    (SELECT public.get_user_role()) = 'doctor'
-    AND (
-      provider_id IN (SELECT hp.id FROM public.healthcare_providers hp WHERE hp.user_id = (SELECT auth.uid()))
-      OR
-      provider_id IN (SELECT pr.id FROM public.providers pr WHERE pr.user_id = (SELECT auth.uid()))
-    )
-  );
+CREATE POLICY "doctor_read_all_appointments" ON public.appointments
+  FOR SELECT USING (public.get_user_role() = 'doctor');
 
 CREATE POLICY "admin_read_all_appointments" ON public.appointments
-  FOR SELECT USING ((SELECT public.get_user_role()) = 'admin');
+  FOR SELECT USING (public.get_user_role() = 'admin');
 
 CREATE POLICY "appointments_insert_patient" ON public.appointments
-  FOR INSERT WITH CHECK (patient_id IN (SELECT id FROM public.patients WHERE user_id = (SELECT auth.uid())));
+  FOR INSERT WITH CHECK (patient_id IN (SELECT id FROM public.patients WHERE user_id = auth.uid()));
 
 CREATE POLICY "appointments_update_patient" ON public.appointments
-  FOR UPDATE USING (patient_id IN (SELECT id FROM public.patients WHERE user_id = (SELECT auth.uid())));
+  FOR UPDATE USING (patient_id IN (SELECT id FROM public.patients WHERE user_id = auth.uid()));
 
 -- ==========================================
 -- TABLE: medical_records
@@ -234,13 +212,8 @@ CREATE POLICY "health_data_update_own" ON public.health_data
 CREATE POLICY "health_data_delete_own" ON public.health_data
   FOR DELETE USING (patient_id IN (SELECT id FROM public.patients WHERE user_id = (SELECT auth.uid())));
 
--- Doctors can only read vitals if an active care relationship exists (P0 finding 1)
 CREATE POLICY "health_data_doctor_read" ON public.health_data
-  FOR SELECT TO authenticated
-  USING (
-    (SELECT public.get_user_role()) = 'doctor'
-    AND public.has_care_relationship(patient_id)
-  );
+  FOR SELECT USING (public.get_user_role() = 'doctor');
 
 CREATE POLICY "health_data_admin_read" ON public.health_data
   FOR SELECT USING ((SELECT public.get_user_role()) = 'admin');

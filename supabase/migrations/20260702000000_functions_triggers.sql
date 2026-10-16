@@ -29,30 +29,6 @@ $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 REVOKE EXECUTE ON FUNCTION public.get_current_user_role FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.get_current_user_role TO authenticated, service_role;
 
--- 1c. Baseline Care Relationship Checker
-CREATE OR REPLACE FUNCTION public.has_care_relationship(p_patient_id uuid)
-RETURNS boolean AS $$
-BEGIN
-  IF (SELECT auth.uid()) IS NULL OR p_patient_id IS NULL THEN
-    RETURN false;
-  END IF;
-
-  RETURN EXISTS (
-    SELECT 1 FROM public.appointments a
-    WHERE a.patient_id = p_patient_id
-      AND a.status IN ('scheduled', 'completed')
-      AND (
-        a.provider_id IN (SELECT hp.id FROM public.healthcare_providers hp WHERE hp.user_id = (SELECT auth.uid()))
-        OR
-        a.provider_id IN (SELECT pr.id FROM public.providers pr WHERE pr.user_id = (SELECT auth.uid()))
-      )
-  );
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
-
-REVOKE EXECUTE ON FUNCTION public.has_care_relationship FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.has_care_relationship TO authenticated, service_role;
-
 -- 2. PostGIS auto-population trigger
 CREATE OR REPLACE FUNCTION public.set_facility_geom()
 RETURNS trigger AS $$
