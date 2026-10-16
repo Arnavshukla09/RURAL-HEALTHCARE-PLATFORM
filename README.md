@@ -688,6 +688,7 @@ All engineering documents are located in the `docs/` directory:
 | `docs/API_REFERENCE.md` | 20 REST endpoints with request/response schemas |
 | `docs/ARCHITECTURE.md` | System architecture deep-dive and decision log |
 | `docs/DEPLOY_CHECKLIST.md` | Step-by-step production deployment checklist |
+| `docs/ROLLOUT_RLS_FIX.md` | Production migration rollout, diagnostic verification, and rollback runbook |
 | `docs/SECURITY_NOTES.md` | Security controls, threat model, and RLS audit |
 | `docs/POSTMORTEM_CONCURRENCY_DOUBLE_BOOKING.md` | Engineering postmortem on concurrent double booking and health check probe table fix |
 | `docs/PERFORMANCE_REPORT.md` | Lighthouse scores, benchmark results, load test outcomes |
