@@ -17,10 +17,14 @@ export const dynamic = "force-dynamic"
 /**
  * GET /api/abdm/fhir-export?record_id=<id>
  *
- * Exports a clinical record in ABDM NRCES-compliant HL7 FHIR R4 Document Bundle format.
- * Enforces cross-tenant data isolation:
- * - Patients can only export their own records.
- * - Doctors and administrators may export records within their clinical scope.
+ * Exports a clinical record in FHIR R4 structured format, modelled on ABDM NRCES profiles
+ * (not yet officially certified against the national validator).
+ *
+ * Enforces strict confidentiality & access controls:
+ * - Patients can export their own records.
+ * - Doctors can export records ONLY if they have an active care relationship (appointment) with the patient.
+ * - Administrators CANNOT view or export clinical bundles (doctor-patient confidentiality protection).
+ * - Rejects incomplete records with HTTP 422; never fabricates clinical values.
  */
 export async function GET(request: NextRequest) {
   try {
@@ -61,22 +65,68 @@ export async function GET(request: NextRequest) {
 
     const callerRole = callerPatient?.role || "patient"
     const isOwner = callerPatient?.id === record.patient_id
-    const isPrivileged = callerRole === "doctor" || callerRole === "admin"
 
-    if (!isOwner && !isPrivileged) {
-      return NextResponse.json(
-        { error: "Access denied. You are not authorized to export this patient's clinical bundle." },
-        { status: 403 }
-      )
+    if (!isOwner) {
+      // Admin is strictly denied viewing/exporting clinical health files
+      if (callerRole === "admin") {
+        return NextResponse.json(
+          { error: "Access denied. Administrators cannot view or export confidential patient clinical bundles." },
+          { status: 403 }
+        )
+      }
+
+      // Doctor must prove active care relationship with this patient
+      if (callerRole === "doctor") {
+        const { data: provider } = await supabase
+          .from("healthcare_providers")
+          .select("id")
+          .eq("user_id", user.id)
+          .single()
+
+        if (!provider) {
+          return NextResponse.json(
+            { error: "Access denied. Healthcare provider profile not found." },
+            { status: 403 }
+          )
+        }
+
+        const { data: careRelationship } = await supabase
+          .from("appointments")
+          .select("id")
+          .eq("patient_id", record.patient_id)
+          .eq("provider_id", provider.id)
+          .in("status", ["scheduled", "completed"])
+          .limit(1)
+
+        if (!careRelationship || careRelationship.length === 0) {
+          return NextResponse.json(
+            { error: "Access denied. You do not have an established care relationship with this patient." },
+            { status: 403 }
+          )
+        }
+      } else {
+        return NextResponse.json(
+          { error: "Access denied. You are not authorized to export this patient's clinical bundle." },
+          { status: 403 }
+        )
+      }
     }
 
-    // 3. Assemble Patient Demographics
+    // 3. Assemble Patient Demographics (truthful mappings: unknown stays unknown, never default to male)
     const pat = record.patients || {}
     const patientName = [pat.first_name, pat.last_name].filter(Boolean).join(" ") || "Patient"
+    const genderMapped = pat.gender === "female" 
+      ? "female" 
+      : pat.gender === "other" 
+        ? "other" 
+        : pat.gender === "male" 
+          ? "male" 
+          : "unknown"
+
     const demographics: PatientDemographics = {
       id: pat.id || record.patient_id,
       name: patientName,
-      gender: pat.gender === "female" ? "female" : pat.gender === "other" ? "other" : "male",
+      gender: genderMapped,
       birthDate: pat.date_of_birth || undefined,
       phone: pat.phone || undefined,
       district: pat.district || undefined,
@@ -85,24 +135,53 @@ export async function GET(request: NextRequest) {
       abhaAddress: pat.abha_address || undefined,
     }
 
-    // 4. Generate bundle based on record_type
+    // 4. Generate bundle based on record_type (strictly require real clinical data; return 422 if incomplete)
     let bundle: Record<string, any>
 
     if (record.record_type === "prescription") {
-      const parsedMedications = record.metadata?.medications || [
-        {
-          medicineName: record.content || "Prescription item",
-          dosage: "Standard dose",
-          frequency: "As directed",
-          duration: "5 days",
-        },
-      ]
+      const parsedMedications = record.metadata?.medications
+      if (!parsedMedications || !Array.isArray(parsedMedications) || parsedMedications.length === 0) {
+        return NextResponse.json(
+          {
+            error: "INCOMPLETE_CLINICAL_RECORD",
+            message: "Prescription record is missing structured medication items. Fabricated default dosages are prohibited.",
+            missing_fields: ["metadata.medications"],
+          },
+          { status: 422 }
+        )
+      }
+
+      for (const med of parsedMedications) {
+        if (!med.medicineName || !med.dosage || !med.frequency || !med.duration) {
+          return NextResponse.json(
+            {
+              error: "INCOMPLETE_CLINICAL_RECORD",
+              message: "Medication item is missing required clinical fields (medicineName, dosage, frequency, or duration).",
+              missing_fields: ["medicineName", "dosage", "frequency", "duration"].filter((k) => !med[k]),
+            },
+            { status: 422 }
+          )
+        }
+      }
+
+      const doctorName = record.metadata?.doctor_name
+      const facilityName = record.metadata?.facility_name
+      if (!doctorName || !facilityName) {
+        return NextResponse.json(
+          {
+            error: "INCOMPLETE_CLINICAL_RECORD",
+            message: "Prescription record is missing treating clinician or facility details.",
+            missing_fields: [!doctorName && "metadata.doctor_name", !facilityName && "metadata.facility_name"].filter(Boolean),
+          },
+          { status: 422 }
+        )
+      }
 
       const prescriptionRecord: PrescriptionRecord = {
         id: record.id,
-        doctorName: record.metadata?.doctor_name || "Treating Clinician",
+        doctorName,
         doctorRegistrationNumber: record.metadata?.doctor_registration || undefined,
-        facilityName: record.metadata?.facility_name || "Rural Health Centre",
+        facilityName,
         date: record.created_at || new Date().toISOString(),
         diagnosis: record.metadata?.diagnosis || record.content,
         medications: parsedMedications,
@@ -110,30 +189,50 @@ export async function GET(request: NextRequest) {
 
       bundle = generateFhirPrescriptionBundle(demographics, prescriptionRecord)
     } else if (record.record_type === "lab_result" || record.record_type === "diagnosis") {
+      const doctorName = record.metadata?.doctor_name
+      const facilityName = record.metadata?.facility_name
+      if (!doctorName || !facilityName) {
+        return NextResponse.json(
+          {
+            error: "INCOMPLETE_CLINICAL_RECORD",
+            message: "Diagnostic record is missing pathologist/clinician or facility details.",
+            missing_fields: [!doctorName && "metadata.doctor_name", !facilityName && "metadata.facility_name"].filter(Boolean),
+          },
+          { status: 422 }
+        )
+      }
+
       const diagnosticRecord: DiagnosticReportRecord = {
         id: record.id,
-        doctorName: record.metadata?.doctor_name || "Pathologist / Clinician",
+        doctorName,
         doctorRegistrationNumber: record.metadata?.doctor_registration || undefined,
-        facilityName: record.metadata?.facility_name || "Diagnostic Laboratory",
+        facilityName,
         date: record.created_at || new Date().toISOString(),
         category: "LAB",
         conclusion: record.content,
-        observations: record.metadata?.observations || [
-          {
-            code: "11502-2",
-            display: "Clinical Diagnostic Finding",
-            value: record.content,
-          },
-        ],
+        observations: record.metadata?.observations || [],
       }
 
       bundle = generateFhirDiagnosticBundle(demographics, diagnosticRecord)
     } else {
+      const doctorName = record.metadata?.doctor_name
+      const facilityName = record.metadata?.facility_name
+      if (!doctorName || !facilityName) {
+        return NextResponse.json(
+          {
+            error: "INCOMPLETE_CLINICAL_RECORD",
+            message: "Encounter record is missing treating clinician or facility details.",
+            missing_fields: [!doctorName && "metadata.doctor_name", !facilityName && "metadata.facility_name"].filter(Boolean),
+          },
+          { status: 422 }
+        )
+      }
+
       const encounterRecord: EncounterRecord = {
         id: record.id,
-        doctorName: record.metadata?.doctor_name || "Medical Officer",
+        doctorName,
         doctorRegistrationNumber: record.metadata?.doctor_registration || undefined,
-        facilityName: record.metadata?.facility_name || "Primary Health Centre",
+        facilityName,
         date: record.created_at || new Date().toISOString(),
         reasonForVisit: record.content || "General Medical Encounter",
         serviceType: (record.metadata?.service_type as any) || "OPD",
@@ -143,12 +242,12 @@ export async function GET(request: NextRequest) {
       bundle = generateFhirEncounterBundle(demographics, encounterRecord)
     }
 
-    // 5. Strict FHIR Validation
+    // 5. Strict FHIR Referential Integrity Validation
     const validation = validateFhirBundle(bundle)
     if (!validation.isValid) {
       return NextResponse.json(
         {
-          error: "Generated FHIR bundle failed NRCES conformance validation",
+          error: "Generated FHIR bundle failed referential integrity validation",
           validationErrors: validation.errors,
         },
         { status: 500 }
@@ -161,7 +260,7 @@ export async function GET(request: NextRequest) {
       headers: {
         "Content-Type": "application/fhir+json; charset=utf-8",
         "Cache-Control": "private, no-cache, no-store, must-revalidate",
-        "X-ABDM-Conformance": "NRCES-FHIR-R4-M2",
+        "X-ABDM-Conformance": "FHIR-R4-NRCES-Modelled",
       },
     })
   } catch (error: any) {

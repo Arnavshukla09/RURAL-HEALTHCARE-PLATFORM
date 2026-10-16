@@ -19,7 +19,7 @@ export interface PatientDemographics {
   abhaNumber?: string
   abhaAddress?: string
   name: string
-  gender: "male" | "female" | "other"
+  gender: "male" | "female" | "other" | "unknown"
   birthDate?: string // YYYY-MM-DD
   phone?: string
   district?: string
@@ -64,7 +64,7 @@ export interface DiagnosticReportRecord {
   date: string // ISO string
   category: "LAB" | "RAD" // Laboratory or Radiology
   conclusion?: string
-  observations: LabObservationItem[]
+  observations?: LabObservationItem[]
 }
 
 export interface EncounterVitals {
@@ -448,7 +448,8 @@ export function generateFhirDiagnosticBundle(
   const observationReferences: Array<{ reference: string; display: string }> = []
 
   // 5. Observation Resources
-  report.observations.forEach((obs, idx) => {
+  const obsList = report.observations || []
+  obsList.forEach((obs, idx) => {
     const obsId = `obs-${report.id}-${idx + 1}`
     const obsUrn = `urn:uuid:${obsId}`
     observationReferences.push({
@@ -556,7 +557,7 @@ export function generateFhirDiagnosticBundle(
           reference: `urn:uuid:${practitionerResourceId}`,
         },
       ],
-      result: observationReferences,
+      result: observationReferences.length > 0 ? observationReferences : undefined,
       conclusion: report.conclusion,
     },
   })

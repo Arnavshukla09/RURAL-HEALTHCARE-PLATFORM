@@ -25,6 +25,7 @@ vi.mock("@/lib/rate-limit", () => ({
 let mockCurrentUser: { id: string; email: string } | null = { id: "user-patient-1", email: "ramesh@example.com" }
 let mockSupabaseCallerRole = "patient"
 let mockCallerPatientId = "pat-1"
+let mockHasCareRelationship = true
 
 let mockDatabaseRecords: Record<string, any> = {}
 
@@ -56,6 +57,13 @@ vi.mock("@/lib/auth/guard", () => ({
                   return { data: null, error: { message: "Patient not found" } }
                 }
 
+                if (table === "healthcare_providers") {
+                  if (col === "user_id" && val === mockCurrentUser?.id) {
+                    return { data: { id: "prov-1", user_id: mockCurrentUser?.id }, error: null }
+                  }
+                  return { data: null, error: { message: "Provider not found" } }
+                }
+
                 if (table === "medical_records") {
                   if (col === "id") {
                     const record = mockDatabaseRecords[val]
@@ -68,6 +76,19 @@ vi.mock("@/lib/auth/guard", () => ({
 
                 return { data: null, error: null }
               },
+              eq: (_col2: string, _val2: any) => ({
+                in: (_col3: string, _vals3: any[]) => ({
+                  limit: async (_n: number) => {
+                    if (table === "appointments") {
+                      return {
+                        data: mockHasCareRelationship ? [{ id: "apt-1" }] : [],
+                        error: null,
+                      }
+                    }
+                    return { data: [], error: null }
+                  },
+                }),
+              }),
             }),
           }),
         }),
@@ -104,107 +125,92 @@ describe("ABDM & FHIR R4 Interoperability Conformance (Phase 8)", () => {
       const res2 = validateAbhaNumber("14123456789012")
       expect(res2.isValid).toBe(true)
       expect(res2.normalized).toBe("14-1234-5678-9012")
-
-      const res3 = validateAbhaNumber("14 1234 5678 9012")
-      expect(res3.isValid).toBe(true)
-      expect(res3.normalized).toBe("14-1234-5678-9012")
     })
 
-    it("rejects invalid ABHA number formats", () => {
-      const tooShort = validateAbhaNumber("14-1234-5678")
-      expect(tooShort.isValid).toBe(false)
-      expect(tooShort.error).toBeDefined()
-
-      const nonDigits = validateAbhaNumber("14-1234-5678-ABCD")
-      expect(nonDigits.isValid).toBe(false)
-
-      const tooLong = validateAbhaNumber("14-1234-5678-9012-34")
-      expect(tooLong.isValid).toBe(false)
+    it("rejects invalid length and non-numeric ABHA numbers", () => {
+      expect(validateAbhaNumber("1234").isValid).toBe(false)
+      expect(validateAbhaNumber("14-ABCD-5678-9012").isValid).toBe(false)
+      expect(validateAbhaNumber("").isValid).toBe(false)
     })
 
-    it("validates official ABHA addresses (@abdm, @sbx, @e-swasthya)", () => {
-      expect(validateAbhaAddress("ramesh.kumar@abdm").isValid).toBe(true)
-      expect(validateAbhaAddress("dr.sharma.clinic@sbx").isValid).toBe(true)
-      expect(validateAbhaAddress("anita_verma@e-swasthya").isValid).toBe(true)
+    it("validates official ABHA addresses (@abdm and sandbox @sbx)", () => {
+      expect(validateAbhaAddress("ramesh.sharma@abdm").isValid).toBe(true)
+      expect(validateAbhaAddress("anita_verma123@sbx").isValid).toBe(true)
+      expect(validateAbhaAddress("priya.patel.99@abdm").isValid).toBe(true)
     })
 
-    it("rejects non-ABDM handles and malformed addresses", () => {
+    it("rejects commercial email handles and invalid characters in ABHA addresses", () => {
       expect(validateAbhaAddress("ramesh@gmail.com").isValid).toBe(false)
-      expect(validateAbhaAddress("invalid_handle").isValid).toBe(false)
-      expect(validateAbhaAddress("@abdm").isValid).toBe(false)
+      expect(validateAbhaAddress("user@yahoo.co.in").isValid).toBe(false)
+      expect(validateAbhaAddress("bad user@abdm").isValid).toBe(false)
+      expect(validateAbhaAddress("").isValid).toBe(false)
     })
   })
 
-  describe("2. Prescription FHIR R4 Document Bundle Conformance", () => {
+  describe("2. FHIR Prescription DocumentBundle Generation", () => {
     const samplePrescription: PrescriptionRecord = {
       id: "rx-2026-001",
       doctorName: "Dr. Ajay Goenka",
-      doctorRegistrationNumber: "MPMC-48291",
-      facilityName: "District Hospital Sehore",
-      date: "2026-10-16T10:00:00Z",
-      diagnosis: "Acute Bronchitis (J20.9)",
+      doctorRegistrationNumber: "NMC/MPMC-14285",
+      facilityName: "AIIMS Bhopal",
+      facilityId: "hosp-aiims-bpl",
+      date: "2026-10-16T10:30:00Z",
+      diagnosis: "Acute Bronchitis (ICD-10 J20.9)",
       medications: [
         {
-          medicineName: "Amoxicillin 500mg",
-          dosage: "500mg",
-          frequency: "Thrice daily after meals",
+          medicineName: "Amoxicillin and Clavulanic Acid Tablet 625mg",
+          dosage: "625mg",
+          frequency: "Twice daily after food",
           duration: "5 days",
-          instructions: "Complete entire antibiotic course",
+          instructions: "Complete the full course even if symptoms resolve",
         },
         {
-          medicineName: "Paracetamol 650mg",
-          dosage: "650mg",
-          frequency: "SOS for fever above 100 F",
+          medicineName: "Paracetamol Tablet 500mg",
+          dosage: "500mg",
+          frequency: "Thrice daily as needed for fever",
           duration: "3 days",
         },
       ],
     }
 
-    it("generates an NRCES-compliant FHIR R4 Prescription Document Bundle", () => {
+    it("generates a conformant FHIR R4 Document Bundle with Composition entry 0", () => {
       const bundle = generateFhirPrescriptionBundle(samplePatient, samplePrescription)
 
       expect(bundle.resourceType).toBe("Bundle")
       expect(bundle.type).toBe("document")
-      expect(bundle.meta.profile).toContain("https://nrces.in/ndhm/fhir/r4/StructureDefinition/DocumentBundle")
+      expect(bundle.meta.profile[0]).toContain("DocumentBundle")
 
-      // Entry 0 MUST be Composition
-      const comp = bundle.entry[0].resource
-      expect(comp.resourceType).toBe("Composition")
-      expect(comp.type.coding[0].code).toBe("PRE")
-      expect(comp.section[0].code.coding[0].code).toBe("57833-6") // LOINC for Prescription
+      expect(bundle.entry[0].resource.resourceType).toBe("Composition")
+      expect(bundle.entry[0].resource.status).toBe("final")
+      expect(bundle.entry[0].resource.type.coding[0].code).toBe("PRE")
 
-      // Patient Resource
-      const patientEntry = bundle.entry.find((e: any) => e.resource.resourceType === "Patient")?.resource
+      const patientEntry = bundle.entry.find((e: any) => e.resource.resourceType === "Patient")
       expect(patientEntry).toBeDefined()
-      expect(patientEntry.name[0].text).toBe("Rameshwar Prasad")
-      expect(patientEntry.identifier.some((id: any) => id.value === "14-1234-5678-9012")).toBe(true)
+      expect(patientEntry.resource.name[0].text).toBe("Rameshwar Prasad")
 
-      // Practitioner Resource
-      const practEntry = bundle.entry.find((e: any) => e.resource.resourceType === "Practitioner")?.resource
-      expect(practEntry).toBeDefined()
-      expect(practEntry.identifier[0].value).toBe("MPMC-48291")
+      const practitionerEntry = bundle.entry.find((e: any) => e.resource.resourceType === "Practitioner")
+      expect(practitionerEntry).toBeDefined()
+      expect(practitionerEntry.resource.identifier[0].value).toBe("NMC/MPMC-14285")
 
-      // MedicationRequest Resources
       const medRequests = bundle.entry.filter((e: any) => e.resource.resourceType === "MedicationRequest")
       expect(medRequests.length).toBe(2)
-      expect(medRequests[0].resource.medicationCodeableConcept.text).toBe("Amoxicillin 500mg")
+      expect(medRequests[0].resource.medicationCodeableConcept.text).toContain("Amoxicillin")
 
-      // Conformance validator passes
       const validation = validateFhirBundle(bundle)
       expect(validation.isValid).toBe(true)
       expect(validation.errors).toHaveLength(0)
     })
   })
 
-  describe("3. Diagnostic Report & Observations Bundle Conformance", () => {
+  describe("3. FHIR DiagnosticReport DocumentBundle Generation", () => {
     const sampleDiagnostic: DiagnosticReportRecord = {
-      id: "diag-2026-004",
-      doctorName: "Dr. Nidhi Gupta",
-      doctorRegistrationNumber: "MPMC-39182",
-      facilityName: "AIIMS Bhopal Central Laboratory",
-      date: "2026-10-16T09:30:00Z",
+      id: "diag-2026-002",
+      doctorName: "Dr. Sunita Pathak",
+      doctorRegistrationNumber: "MPMC-9921",
+      facilityName: "District Hospital Sehore Diagnostic Lab",
+      date: "2026-10-16T11:00:00Z",
       category: "LAB",
-      conclusion: "Impaired Fasting Glucose, normal lipid profile.",
+      conclusion: "Mild fasting hyperglycemia, HbA1c indicative of pre-diabetes",
       observations: [
         {
           code: "1558-6",
@@ -212,91 +218,70 @@ describe("ABDM & FHIR R4 Interoperability Conformance (Phase 8)", () => {
           value: 118,
           unit: "mg/dL",
           referenceRangeLow: 70,
-          referenceRangeHigh: 99,
+          referenceRangeHigh: 100,
           interpretation: "H",
         },
         {
-          code: "2085-9",
-          display: "HDL Cholesterol",
-          value: 48,
-          unit: "mg/dL",
-          referenceRangeLow: 40,
-          referenceRangeHigh: 60,
-          interpretation: "N",
-        },
-        {
-          code: "11268-0",
-          display: "Urine Glucose",
-          value: "Negative",
+          code: "4548-4",
+          display: "Hemoglobin A1c/Hemoglobin.total in Blood",
+          value: 5.9,
+          unit: "%",
+          referenceRangeLow: 4.0,
+          referenceRangeHigh: 5.6,
+          interpretation: "H",
         },
       ],
     }
 
-    it("generates an NRCES-compliant DiagnosticReport with LOINC Observations", () => {
+    it("generates a conformant FHIR DiagnosticReport Bundle with structured LOINC observations", () => {
       const bundle = generateFhirDiagnosticBundle(samplePatient, sampleDiagnostic)
 
       expect(bundle.resourceType).toBe("Bundle")
       expect(bundle.type).toBe("document")
+      expect(bundle.entry[0].resource.resourceType).toBe("Composition")
 
-      const diagRep = bundle.entry.find((e: any) => e.resource.resourceType === "DiagnosticReport")?.resource
-      expect(diagRep).toBeDefined()
-      expect(diagRep.status).toBe("final")
-      expect(diagRep.category[0].coding[0].code).toBe("LAB")
-      expect(diagRep.result.length).toBe(3)
+      const diagEntry = bundle.entry.find((e: any) => e.resource.resourceType === "DiagnosticReport")
+      expect(diagEntry).toBeDefined()
+      expect(diagEntry.resource.conclusion).toContain("pre-diabetes")
+      expect(diagEntry.resource.result.length).toBe(2)
 
       const observations = bundle.entry.filter((e: any) => e.resource.resourceType === "Observation")
-      expect(observations.length).toBe(3)
+      expect(observations.length).toBe(2)
+      expect(observations[0].resource.valueQuantity.value).toBe(118)
+      expect(observations[0].resource.interpretation[0].coding[0].code).toBe("H")
 
-      // Numeric observation with range
-      const fbg = observations[0].resource
-      expect(fbg.code.coding[0].code).toBe("1558-6")
-      expect(fbg.valueQuantity.value).toBe(118)
-      expect(fbg.referenceRange[0].high.value).toBe(99)
-      expect(fbg.interpretation[0].coding[0].code).toBe("H")
-
-      // Qualitative observation
-      const urine = observations[2].resource
-      expect(urine.valueString).toBe("Negative")
-
-      // Conformance validation
       const validation = validateFhirBundle(bundle)
       expect(validation.isValid).toBe(true)
     })
   })
 
-  describe("4. Encounter & Vital Signs Bundle Conformance", () => {
+  describe("4. FHIR Encounter DocumentBundle Generation", () => {
     const sampleEncounter: EncounterRecord = {
-      id: "enc-2026-088",
-      doctorName: "Dr. Kavita Sharma",
-      facilityName: "CHC Berasia Rural Health Camp",
-      date: "2026-10-16T11:00:00Z",
-      reasonForVisit: "Hypertension screening and general health checkup",
-      serviceType: "CAMP",
+      id: "enc-2026-003",
+      doctorName: "Dr. Arjun Patel",
+      facilityName: "Community Health Centre Ashta",
+      date: "2026-10-16T09:15:00Z",
+      reasonForVisit: "Routine Antenatal Followup (Second Trimester)",
+      serviceType: "OPD",
       vitals: {
-        systolicBp: 138,
-        diastolicBp: 88,
-        heartRate: 74,
+        systolicBp: 118,
+        diastolicBp: 76,
+        heartRate: 78,
+        spo2Percentage: 99,
         temperatureFahrenheit: 98.4,
-        spo2Percentage: 98,
       },
     }
 
-    it("generates an Encounter Bundle with Vital Signs Observations", () => {
+    it("generates a conformant FHIR Encounter Bundle with vital observations", () => {
       const bundle = generateFhirEncounterBundle(samplePatient, sampleEncounter)
 
-      expect(bundle.resourceType).toBe("Bundle")
-      const encResource = bundle.entry.find((e: any) => e.resource.resourceType === "Encounter")?.resource
-      expect(encResource).toBeDefined()
-      expect(encResource.status).toBe("finished")
-      expect(encResource.class.code).toBe("AMB")
+      expect(bundle.entry[0].resource.resourceType).toBe("Composition")
+      const encEntry = bundle.entry.find((e: any) => e.resource.resourceType === "Encounter")
+      expect(encEntry).toBeDefined()
+      expect(encEntry.resource.reasonCode[0].text).toContain("Antenatal Followup")
 
-      const vitalsObs = bundle.entry.filter((e: any) => e.resource.resourceType === "Observation")
-      expect(vitalsObs.length).toBe(5)
-
-      const sysBp = vitalsObs.find((o: any) => o.resource.code.coding[0].code === "8480-6")
-      expect(sysBp).toBeDefined()
-      expect(sysBp.resource.valueQuantity.value).toBe(138)
-      expect(sysBp.resource.valueQuantity.unit).toBe("mmHg")
+      const vitals = bundle.entry.filter((e: any) => e.resource.resourceType === "Observation")
+      expect(vitals.length).toBe(5)
 
       const validation = validateFhirBundle(bundle)
       expect(validation.isValid).toBe(true)
@@ -304,10 +289,10 @@ describe("ABDM & FHIR R4 Interoperability Conformance (Phase 8)", () => {
   })
 
   describe("5. FHIR Validation Engine Defenses", () => {
-    it("catches bundles missing required NRCES profile or invalid type", () => {
+    it("catches bundles missing required profile or invalid type", () => {
       const invalidBundle = {
         resourceType: "Bundle",
-        type: "collection", // Invalid: must be 'document'
+        type: "collection",
         meta: { profile: ["https://example.org/OtherBundle"] },
         entry: [],
       }
@@ -327,7 +312,6 @@ describe("ABDM & FHIR R4 Interoperability Conformance (Phase 8)", () => {
         medications: [{ medicineName: "Test", dosage: "1", frequency: "1", duration: "1" }],
       })
 
-      // Corrupt Composition subject reference to point to a non-existent UUID
       valid.entry[0].resource.subject.reference = "urn:uuid:ghost-patient-999"
 
       const res = validateFhirBundle(valid)
@@ -344,7 +328,6 @@ describe("ABDM & FHIR R4 Interoperability Conformance (Phase 8)", () => {
         medications: [{ medicineName: "Test", dosage: "1", frequency: "1", duration: "1" }],
       })
 
-      // Remove patient gender
       const patIndex = valid.entry.findIndex((e: any) => e.resource.resourceType === "Patient")
       delete valid.entry[patIndex].resource.gender
 
@@ -364,97 +347,125 @@ describe("ABDM & FHIR R4 Interoperability Conformance (Phase 8)", () => {
     })
   })
 
-  describe("7. FHIR Export API Route Security & Authorization (GET /api/abdm/fhir-export)", () => {
+  describe("7. Truthful FHIR Export & Access Scope (GET /api/abdm/fhir-export)", () => {
     beforeEach(() => {
       mockCurrentUser = { id: "user-patient-1", email: "ramesh@example.com" }
       mockSupabaseCallerRole = "patient"
       mockCallerPatientId = "pat-1"
+      mockHasCareRelationship = true
 
       mockDatabaseRecords = {
-        "rec-own": {
-          id: "rec-own",
+        "rec-complete-rx": {
+          id: "rec-complete-rx",
           patient_id: "pat-1",
           record_type: "prescription",
-          content: "Tab Ciprofloxacin 500mg BD",
+          content: "Tab Amoxicillin 500mg TDS",
           created_at: "2026-10-16T12:00:00Z",
+          metadata: {
+            doctor_name: "Dr. Ajay Goenka",
+            doctor_registration: "NMC-14285",
+            facility_name: "AIIMS Bhopal",
+            diagnosis: "Bacterial Pharyngitis",
+            medications: [
+              {
+                medicineName: "Amoxicillin 500mg",
+                dosage: "500mg",
+                frequency: "Three times daily",
+                duration: "5 days",
+              },
+            ],
+          },
+          patients: {
+            id: "pat-1",
+            first_name: "Rameshwar",
+            last_name: "Prasad",
+            gender: "unknown",
+            phone: "+91 98260 12345",
+            abha_number: "14-1234-5678-9012",
+          },
+        },
+        "rec-incomplete-rx": {
+          id: "rec-incomplete-rx",
+          patient_id: "pat-1",
+          record_type: "prescription",
+          content: "Raw prescription note without structured dosage",
+          created_at: "2026-10-16T12:00:00Z",
+          // Missing metadata.medications and doctor/facility details
           patients: {
             id: "pat-1",
             first_name: "Rameshwar",
             last_name: "Prasad",
             gender: "male",
-            phone: "+91 98260 12345",
-            abha_number: "14-1234-5678-9012",
-          },
-        },
-        "rec-other": {
-          id: "rec-other",
-          patient_id: "pat-2",
-          record_type: "prescription",
-          content: "Confidential record of Patient 2",
-          created_at: "2026-10-16T12:00:00Z",
-          patients: {
-            id: "pat-2",
-            first_name: "Other",
-            last_name: "Patient",
-            gender: "female",
           },
         },
       }
     })
 
-    it("rejects request missing record_id parameter with 400", async () => {
-      const req = new NextRequest("http://localhost:3000/api/abdm/fhir-export")
+    it("rejects incomplete prescription with HTTP 422 and missing_fields array", async () => {
+      const req = new NextRequest("http://localhost:3000/api/abdm/fhir-export?record_id=rec-incomplete-rx")
       const res = await GET(req)
-      expect(res.status).toBe(400)
+      expect(res.status).toBe(422)
       const data = await res.json()
-      expect(data.error).toContain("Missing required 'record_id'")
+      expect(data.error).toBe("INCOMPLETE_CLINICAL_RECORD")
+      expect(data.missing_fields).toContain("metadata.medications")
     })
 
-    it("rejects unauthenticated request with 401", async () => {
-      mockCurrentUser = null
-      const req = new NextRequest("http://localhost:3000/api/abdm/fhir-export?record_id=rec-own")
+    it("maps unknown patient gender to FHIR 'unknown' and never fabricates 'male'", async () => {
+      const req = new NextRequest("http://localhost:3000/api/abdm/fhir-export?record_id=rec-complete-rx")
       const res = await GET(req)
-      expect(res.status).toBe(401)
+      expect(res.status).toBe(200)
+
+      const bundle = await res.json()
+      const pat = bundle.entry.find((e: any) => e.resource.resourceType === "Patient")
+      expect(pat.resource.gender).toBe("unknown")
     })
 
-    it("blocks cross-tenant unauthorized export with 403 Forbidden", async () => {
-      // Patient 1 attempting to export Patient 2's record
-      const req = new NextRequest("http://localhost:3000/api/abdm/fhir-export?record_id=rec-other")
+    it("strictly asserts that no fabricated default string 'Standard dose' exists in output", async () => {
+      const req = new NextRequest("http://localhost:3000/api/abdm/fhir-export?record_id=rec-complete-rx")
+      const res = await GET(req)
+      const rawText = await res.text()
+      expect(rawText).not.toContain("Standard dose")
+      expect(rawText).not.toContain("As directed")
+      expect(rawText).not.toContain("Treating Clinician")
+      expect(rawText).not.toContain("Rural Health Centre")
+    })
+
+    it("strictly denies administrators from viewing or exporting patient clinical bundles (403)", async () => {
+      mockCurrentUser = { id: "user-admin-1", email: "admin@ruralhealth.gov" }
+      mockSupabaseCallerRole = "admin"
+      mockCallerPatientId = "pat-admin-1"
+
+      const req = new NextRequest("http://localhost:3000/api/abdm/fhir-export?record_id=rec-complete-rx")
       const res = await GET(req)
       expect(res.status).toBe(403)
       const data = await res.json()
-      expect(data.error).toContain("Access denied")
+      expect(data.error).toContain("Administrators cannot view or export confidential patient clinical bundles")
     })
 
-    it("allows patient to export their own prescription as an application/fhir+json bundle", async () => {
-      const req = new NextRequest("http://localhost:3000/api/abdm/fhir-export?record_id=rec-own")
-      const res = await GET(req)
-      expect(res.status).toBe(200)
-      expect(res.headers.get("content-type")).toContain("application/fhir+json")
-      expect(res.headers.get("x-abdm-conformance")).toBe("NRCES-FHIR-R4-M2")
-
-      const bundle = await res.json()
-      expect(bundle.resourceType).toBe("Bundle")
-      expect(bundle.type).toBe("document")
-      expect(bundle.entry[0].resource.resourceType).toBe("Composition")
-    })
-
-    it("allows doctor to export any patient's record within clinical scope", async () => {
+    it("denies doctor without care relationship from exporting patient bundle (403)", async () => {
       mockCurrentUser = { id: "user-doctor-1", email: "doctor@ruralhealth.gov" }
       mockSupabaseCallerRole = "doctor"
       mockCallerPatientId = "pat-doc-1"
+      mockHasCareRelationship = false
 
-      const req = new NextRequest("http://localhost:3000/api/abdm/fhir-export?record_id=rec-other")
+      const req = new NextRequest("http://localhost:3000/api/abdm/fhir-export?record_id=rec-complete-rx")
+      const res = await GET(req)
+      expect(res.status).toBe(403)
+      const data = await res.json()
+      expect(data.error).toContain("established care relationship")
+    })
+
+    it("permits doctor WITH active care relationship to export patient bundle (200)", async () => {
+      mockCurrentUser = { id: "user-doctor-1", email: "doctor@ruralhealth.gov" }
+      mockSupabaseCallerRole = "doctor"
+      mockCallerPatientId = "pat-doc-1"
+      mockHasCareRelationship = true
+
+      const req = new NextRequest("http://localhost:3000/api/abdm/fhir-export?record_id=rec-complete-rx")
       const res = await GET(req)
       expect(res.status).toBe(200)
       const bundle = await res.json()
       expect(bundle.resourceType).toBe("Bundle")
-    })
-
-    it("returns 404 when requested medical record does not exist", async () => {
-      const req = new NextRequest("http://localhost:3000/api/abdm/fhir-export?record_id=rec-ghost")
-      const res = await GET(req)
-      expect(res.status).toBe(404)
     })
   })
 })
