@@ -2,18 +2,13 @@
  * tests/integration/db-safety-guard.ts
  *
  * Strict safety guard enforcing:
- * 1. ZERO tests run against production Supabase instances.
- * 2. Refuses execution if URL matches production project reference (boyzdmlvzvcplzolenef)
- *    or any non-local/non-test environment.
- * 3. Gracefully skips tests with a clear diagnostic message if a local/staging
- *    Supabase instance is not active.
+ * 1. Allowlist-only execution: Integration tests execute ONLY against local test containers
+ *    (http://127.0.0.1:54321 or http://localhost:54321) or URLs explicitly allowlisted
+ *    in INTEGRATION_ALLOWED_URLS.
+ * 2. Non-allowlisted database targets (including remote/cloud instances) are rejected.
+ * 3. Never hardcodes production project references.
+ * 4. When REQUIRE_DB=1 is set, fails fast if the test database is absent or unallowlisted.
  */
-
-const KNOWN_PRODUCTION_REFS = [
-  "boyzdmlvzvcplzolenef",
-  "ruralhealth",
-  "production",
-];
 
 export interface DatabaseTargetSafety {
   isSafeToExecute: boolean;
@@ -30,29 +25,38 @@ export function verifyIntegrationDatabaseTarget(): DatabaseTargetSafety {
   ).trim();
 
   const url = rawUrl === "undefined" ? "" : rawUrl.toLowerCase();
+  const requireDb = process.env.REQUIRE_DB === "1" || process.env.REQUIRE_DB === "true";
 
-  // 1. HARD FAIL: If the target matches production, abort immediately
-  const isProduction = KNOWN_PRODUCTION_REFS.some((ref) => url.includes(ref));
-  if (isProduction) {
-    throw new Error(
-      `[SECURITY HALT] Integration tests REFUSE to run against production database target: "${url}". ` +
-      `Integration tests MUST run only against a local Supabase CLI container (http://127.0.0.1:54321) ` +
-      `or an isolated staging database.`
-    );
-  }
+  // Strict allowlist: local test instances or explicit allowed list
+  const allowedList = [
+    "http://127.0.0.1:54321",
+    "http://localhost:54321",
+    "https://127.0.0.1:54321",
+    "https://localhost:54321",
+    "127.0.0.1:54321",
+    "localhost:54321",
+    ...(process.env.INTEGRATION_ALLOWED_URLS
+      ? process.env.INTEGRATION_ALLOWED_URLS.split(",").map((u) => u.trim().toLowerCase())
+      : []),
+  ];
 
-  // 2. CHECK: Is a valid local instance explicitly available?
-  const isLocalOrTest =
-    Boolean(url) &&
-    (url.includes("127.0.0.1") || url.includes("localhost"));
+  const isAllowlisted =
+    Boolean(url) && allowedList.some((allowed) => url === allowed || url.startsWith(allowed));
 
-  if (!isLocalOrTest) {
+  if (!isAllowlisted) {
+    const reason =
+      `[SECURITY GUARD] Database target "${url || "EMPTY"}" is NOT in the integration allowlist. ` +
+      `Integration tests MUST run only against a local test container (http://127.0.0.1:54321) ` +
+      `or explicit INTEGRATION_ALLOWED_URLS.`;
+
+    if (requireDb) {
+      throw new Error(`${reason} REQUIRE_DB=1 is set, failing test run.`);
+    }
+
     return {
       isSafeToExecute: false,
       targetUrl: url,
-      skipReason:
-        "No local Supabase test instance detected (expected http://127.0.0.1:54321 or SUPABASE_INTEGRATION_TEST_URL). " +
-        "To run live integration tests: start local Supabase with `npx supabase start`.",
+      skipReason: reason,
     };
   }
 
