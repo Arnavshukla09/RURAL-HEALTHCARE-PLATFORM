@@ -172,7 +172,25 @@ export async function GET(request: NextRequest) {
       abhaAddress: pat.abha_address || undefined,
     }
 
-    // 4. Generate bundle based on record_type (strictly require real clinical data; return 422 if incomplete)
+    // 4. Resolve Clinician / Facility details (prefer metadata, fallback to linked healthcare_providers)
+    let doctorName = record.metadata?.doctor_name
+    let facilityName = record.metadata?.facility_name
+    let doctorRegistration = record.metadata?.doctor_registration
+
+    if ((!doctorName || !facilityName || !doctorRegistration) && record.provider_id) {
+      const { data: prov } = await supabase
+        .from("healthcare_providers")
+        .select("name, hospital_affiliation, registration_number")
+        .eq("id", record.provider_id)
+        .maybeSingle()
+      if (prov) {
+        if (!doctorName && prov.name) doctorName = prov.name
+        if (!facilityName && prov.hospital_affiliation) facilityName = prov.hospital_affiliation
+        if (!doctorRegistration && prov.registration_number) doctorRegistration = prov.registration_number
+      }
+    }
+
+    // Generate bundle based on record_type (strictly require real clinical data; return 422 if incomplete)
     let bundle: Record<string, any>
 
     if (record.record_type === "prescription") {
@@ -201,8 +219,6 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      const doctorName = record.metadata?.doctor_name
-      const facilityName = record.metadata?.facility_name
       if (!doctorName || !facilityName) {
         return NextResponse.json(
           {
@@ -217,7 +233,7 @@ export async function GET(request: NextRequest) {
       const prescriptionRecord: PrescriptionRecord = {
         id: record.id,
         doctorName,
-        doctorRegistrationNumber: record.metadata?.doctor_registration || undefined,
+        doctorRegistrationNumber: doctorRegistration || undefined,
         facilityName,
         date: record.created_at || new Date().toISOString(),
         diagnosis: record.metadata?.diagnosis || record.content,
@@ -226,8 +242,6 @@ export async function GET(request: NextRequest) {
 
       bundle = generateFhirPrescriptionBundle(demographics, prescriptionRecord)
     } else if (record.record_type === "lab_result" || record.record_type === "diagnosis") {
-      const doctorName = record.metadata?.doctor_name
-      const facilityName = record.metadata?.facility_name
       if (!doctorName || !facilityName) {
         return NextResponse.json(
           {
@@ -242,7 +256,7 @@ export async function GET(request: NextRequest) {
       const diagnosticRecord: DiagnosticReportRecord = {
         id: record.id,
         doctorName,
-        doctorRegistrationNumber: record.metadata?.doctor_registration || undefined,
+        doctorRegistrationNumber: doctorRegistration || undefined,
         facilityName,
         date: record.created_at || new Date().toISOString(),
         category: "LAB",
@@ -252,8 +266,6 @@ export async function GET(request: NextRequest) {
 
       bundle = generateFhirDiagnosticBundle(demographics, diagnosticRecord)
     } else {
-      const doctorName = record.metadata?.doctor_name
-      const facilityName = record.metadata?.facility_name
       if (!doctorName || !facilityName) {
         return NextResponse.json(
           {
@@ -268,7 +280,7 @@ export async function GET(request: NextRequest) {
       const encounterRecord: EncounterRecord = {
         id: record.id,
         doctorName,
-        doctorRegistrationNumber: record.metadata?.doctor_registration || undefined,
+        doctorRegistrationNumber: doctorRegistration || undefined,
         facilityName,
         date: record.created_at || new Date().toISOString(),
         reasonForVisit: record.content || "General Medical Encounter",

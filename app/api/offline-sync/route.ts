@@ -29,6 +29,10 @@ const MedicalRecordDataSchema = z
 
 const HealthDataSchema = z
   .object({
+    data_type: z.string().min(1).optional(),
+    value: z.number().optional(),
+    unit: z.string().max(50).optional(),
+    notes: z.string().max(500).optional(),
     blood_pressure: z.string().max(20).optional(),
     temperature: z.number().min(80).max(115).optional(),
     pulse_rate: z.number().int().min(30).max(250).optional(),
@@ -95,11 +99,19 @@ export async function POST(request: NextRequest) {
 
     // 1. Fetch existing processed operations for idempotency check (C4, 09_scale §5)
     const clientOpIds = operations.map((op) => op.client_op_id)
-    const { data: alreadyProcessed } = await supabase
+    const { data: alreadyProcessed, error: fetchProcessedError } = await supabase
       .from("processed_client_ops")
       .select("client_op_id")
       .eq("user_id", user.id)
       .in("client_op_id", clientOpIds)
+
+    if (fetchProcessedError) {
+      console.error("[offline-sync] Idempotency lookup error:", fetchProcessedError)
+      return NextResponse.json(
+        { error: "Failed to verify offline sync idempotency state", code: "IDEMPOTENCY_CHECK_FAILED" },
+        { status: 500 }
+      )
+    }
 
     const processedSet = new Set((alreadyProcessed ?? []).map((row: any) => row.client_op_id))
 
@@ -120,8 +132,10 @@ export async function POST(request: NextRequest) {
           if (op.table === "appointments") {
             const val = AppointmentDataSchema.safeParse(op.data)
             if (!val.success) throw new Error(`Schema error: ${JSON.stringify(val.error.flatten().fieldErrors)}`)
+            const { consultation_type, ...restAppt } = val.data
             sanitizedPayload = {
-              ...val.data,
+              ...restAppt,
+              ...(consultation_type ? { consultation_type } : {}),
               patient_id: patient.id, // Force session patient_id
               status: "scheduled",
             }
@@ -161,8 +175,16 @@ export async function POST(request: NextRequest) {
 
           let sanitizedPayload: Record<string, any>
           if (op.table === "appointments") {
-            const val = z.object({ status: z.enum(["scheduled", "cancelled", "completed"]).optional(), notes: z.string().max(1000).optional() }).strict().safeParse(op.data)
+            const val = z.object({
+              status: z.enum(["scheduled", "cancelled", "completed"]).optional(),
+              notes: z.string().max(1000).optional(),
+            }).strict().safeParse(op.data)
             if (!val.success) throw new Error("Invalid update data")
+
+            // Restrict status transition: patients CANNOT mark appointments completed (P1 finding 6)
+            if (val.data.status === "completed" && patient.role !== "doctor" && patient.role !== "admin") {
+              throw new Error("Patients are not authorized to mark appointments as completed")
+            }
             sanitizedPayload = val.data
           } else if (op.table === "notifications") {
             const val = z.object({ is_read: z.boolean() }).strict().safeParse(op.data)
@@ -196,10 +218,11 @@ export async function POST(request: NextRequest) {
 
     // 3. Record newly processed operations in idempotency table
     if (opsToRecordInIdempotency.length > 0) {
-      try {
-        await supabase.from("processed_client_ops").insert(opsToRecordInIdempotency)
-      } catch (idemErr) {
-        console.warn("[offline-sync] Idempotency record insert skipped:", idemErr)
+      const { error: idemInsertErr } = await supabase
+        .from("processed_client_ops")
+        .insert(opsToRecordInIdempotency)
+      if (idemInsertErr) {
+        console.error("[offline-sync] Idempotency record insert error:", idemInsertErr)
       }
     }
 

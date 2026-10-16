@@ -9,12 +9,49 @@ RETURNS text AS $$
 DECLARE
   role text;
 BEGIN
-  SELECT p.role INTO role FROM public.patients p WHERE p.user_id = auth.uid() LIMIT 1;
+  SELECT p.role INTO role FROM public.patients p WHERE p.user_id = (SELECT auth.uid()) LIMIT 1;
   RETURN role;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
--- SECURITY FIX: Revoke public execution
-REVOKE EXECUTE ON FUNCTION public.get_user_role FROM PUBLIC, anon, authenticated;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+-- Grant EXECUTE to authenticated and service_role so RLS policies can evaluate it
+REVOKE EXECUTE ON FUNCTION public.get_user_role FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_user_role TO authenticated, service_role;
+
+-- 1b. Compatibility alias get_current_user_role()
+CREATE OR REPLACE FUNCTION public.get_current_user_role()
+RETURNS text AS $$
+BEGIN
+  RETURN public.get_user_role();
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+REVOKE EXECUTE ON FUNCTION public.get_current_user_role FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_current_user_role TO authenticated, service_role;
+
+-- 1c. Baseline Care Relationship Checker
+CREATE OR REPLACE FUNCTION public.has_care_relationship(p_patient_id uuid)
+RETURNS boolean AS $$
+BEGIN
+  IF (SELECT auth.uid()) IS NULL OR p_patient_id IS NULL THEN
+    RETURN false;
+  END IF;
+
+  RETURN EXISTS (
+    SELECT 1 FROM public.appointments a
+    WHERE a.patient_id = p_patient_id
+      AND a.status IN ('scheduled', 'completed')
+      AND (
+        a.provider_id IN (SELECT hp.id FROM public.healthcare_providers hp WHERE hp.user_id = (SELECT auth.uid()))
+        OR
+        a.provider_id IN (SELECT pr.id FROM public.providers pr WHERE pr.user_id = (SELECT auth.uid()))
+      )
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+REVOKE EXECUTE ON FUNCTION public.has_care_relationship FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.has_care_relationship TO authenticated, service_role;
 
 -- 2. PostGIS auto-population trigger
 CREATE OR REPLACE FUNCTION public.set_facility_geom()
@@ -65,7 +102,7 @@ BEGIN
   ON CONFLICT DO NOTHING;
   RETURN new;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 REVOKE EXECUTE ON FUNCTION public.handle_new_user FROM PUBLIC, anon, authenticated;
 
 -- Drop trigger first in case it exists, then recreate

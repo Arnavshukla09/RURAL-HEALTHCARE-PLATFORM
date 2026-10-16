@@ -28,6 +28,10 @@ describe("Phase 5: Data Engineering, Geospatial Search & Provenance Pipeline", (
       // Leh, Ladakh (Northern point)
       const north = validateCoordinates(34.1526, 77.5771)
       expect(north.isValid).toBe(true)
+
+      // Western Gujarat / Kachchh (Western point ~68.58°E)
+      const kachchh = validateCoordinates(23.83, 68.58)
+      expect(kachchh.isValid).toBe(true)
     })
 
     it("detects and flags swapped latitude/longitude (GIS coordinate inversion)", () => {

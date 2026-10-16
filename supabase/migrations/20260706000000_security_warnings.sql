@@ -54,14 +54,24 @@ DROP POLICY IF EXISTS "patients_service_insert" ON public.patients;
 REVOKE EXECUTE ON FUNCTION public.audit_medical_records()
   FROM anon, authenticated;
 
+-- get_current_user_role and get_user_role must remain executable by authenticated to evaluate RLS
 REVOKE EXECUTE ON FUNCTION public.get_current_user_role()
-  FROM anon, authenticated;
-
-REVOKE EXECUTE ON FUNCTION public.get_tables()
-  FROM anon, authenticated;
+  FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_current_user_role()
+  TO authenticated, service_role;
 
 REVOKE EXECUTE ON FUNCTION public.get_user_role()
-  FROM anon, authenticated;
+  FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_user_role()
+  TO authenticated, service_role;
+
+-- Safely revoke get_tables if present (production advisory P0 finding 4)
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'get_tables') THEN
+    EXECUTE 'REVOKE EXECUTE ON FUNCTION public.get_tables() FROM PUBLIC, anon, authenticated';
+  END IF;
+END $$;
 
 REVOKE EXECUTE ON FUNCTION public.handle_new_user()
   FROM anon, authenticated;

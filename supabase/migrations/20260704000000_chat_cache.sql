@@ -40,37 +40,20 @@ WITH CHECK (
 );
 
 -- 3. Only Doctors and Admins can update status (approve / reject / edit)
+-- Evaluates server-controlled role strictly; user_metadata and unverified providers removed (P0 findings 2, 3)
 CREATE POLICY "Admins and doctors can update chat cache entries"
 ON public.chat_cache
 FOR UPDATE
+TO authenticated
 USING (
-    EXISTS (
-        SELECT 1 FROM public.providers
-        WHERE user_id = auth.uid()
-    )
-    OR
-    EXISTS (
-        SELECT 1 FROM public.patients
-        WHERE user_id = auth.uid() AND role IN ('admin', 'doctor')
-    )
-    OR
-    (auth.jwt() -> 'user_metadata' ->> 'role') IN ('admin', 'doctor')
+    (SELECT public.get_user_role()) IN ('admin', 'doctor')
 );
 
 -- 4. Admins and doctors can view all pending entries for review
 CREATE POLICY "Admins and doctors can view pending entries for review"
 ON public.chat_cache
 FOR SELECT
+TO authenticated
 USING (
-    EXISTS (
-        SELECT 1 FROM public.providers
-        WHERE user_id = auth.uid()
-    )
-    OR
-    EXISTS (
-        SELECT 1 FROM public.patients
-        WHERE user_id = auth.uid() AND role IN ('admin', 'doctor')
-    )
-    OR
-    (auth.jwt() -> 'user_metadata' ->> 'role') IN ('admin', 'doctor')
+    (SELECT public.get_user_role()) IN ('admin', 'doctor')
 );

@@ -61,6 +61,7 @@ erDiagram
         integer duration_minutes "Default: 30"
         text status "scheduled, in_progress, completed, cancelled"
         text notes
+        text consultation_type "teleconsult, in_person, camp (Default: teleconsult)"
         text teleconsult_room_id "Cryptographically random UUID"
         timestamptz created_at
         timestamptz updated_at
@@ -73,6 +74,7 @@ erDiagram
         text record_type "diagnosis, prescription, lab_result, vaccination, other"
         text content
         text file_url "Supabase Storage URL"
+        jsonb metadata "Structured prescriptions, observations, vitals"
         timestamptz record_date
         timestamptz created_at
     }
@@ -159,6 +161,7 @@ Teleconsultation and clinic booking registry.
 - `duration_minutes` (INTEGER, DEFAULT 30)
 - `status` (TEXT, `CHECK (status IN ('scheduled', 'in_progress', 'completed', 'cancelled'))`, DEFAULT `'scheduled'`)
 - `notes` (TEXT)
+- `consultation_type` (TEXT, `CHECK (consultation_type IN ('teleconsult', 'in_person', 'camp'))`, DEFAULT `'teleconsult'`)
 - `teleconsult_room_id` (TEXT, NOT NULL, Cryptographic UUID for Jitsi rooms)
 
 **Double-Booking Prevention Constraint:**
@@ -170,7 +173,32 @@ WHERE status = 'scheduled';
 ```
 When violated, Postgres throws error code `23505`, which API route `/api/appointments` maps directly to HTTP `409 Conflict` (`code: "SLOT_TAKEN"`).
 
-### 2.3 `processed_client_ops`
+### 2.3 `medical_records`
+Patient electronic health records, prescriptions, and diagnostic reports.
+- `id` (UUID, Primary Key, `default gen_random_uuid()`)
+- `patient_id` (UUID, References `patients(id) ON DELETE CASCADE`, NOT NULL)
+- `provider_id` (UUID, References `healthcare_providers(id) ON DELETE SET NULL`)
+- `appointment_id` (UUID, References `appointments(id) ON DELETE SET NULL`)
+- `record_type` (TEXT, `CHECK (record_type IN ('diagnosis', 'prescription', 'lab_result', 'vaccination', 'other'))`, NOT NULL)
+- `content` (TEXT, NOT NULL)
+- `file_url` (TEXT)
+- `metadata` (JSONB, DEFAULT `'{}'::jsonb`)
+- `record_date` (TIMESTAMPTZ, DEFAULT NOW())
+- `created_at` (TIMESTAMPTZ, DEFAULT NOW())
+- `updated_at` (TIMESTAMPTZ, DEFAULT NOW())
+
+### 2.4 `health_data`
+Temporal biometric indicators and vitals log.
+- `id` (UUID, Primary Key, `default gen_random_uuid()`)
+- `patient_id` (UUID, References `patients(id) ON DELETE CASCADE`, NOT NULL)
+- `metric_type` (TEXT, NOT NULL) — e.g. `'heart_rate'`, `'blood_pressure'`, `'blood_sugar'`, `'temperature'`, `'oxygen_level'`
+- `metric_value` (TEXT, NOT NULL)
+- `unit` (TEXT)
+- `device_id` (TEXT)
+- `recorded_at` (TIMESTAMPTZ, DEFAULT NOW())
+- `created_at` (TIMESTAMPTZ, DEFAULT NOW())
+
+### 2.5 `processed_client_ops`
 Idempotency table for offline sync queue replay.
 - `client_op_id` (UUID, Primary Key)
 - `user_id` (UUID, References `auth.users(id) ON DELETE CASCADE`, NOT NULL)
@@ -179,7 +207,7 @@ Idempotency table for offline sync queue replay.
 
 When the client flushes its IndexedDB offline outbox, each operation sends its client-generated UUID. If the server already contains that `client_op_id`, the operation is skipped without error, guaranteeing atomic at-most-once execution across network retries.
 
-### 2.4 `healthcare_facilities`
+### 2.6 `healthcare_facilities`
 National geospatial directory of healthcare facilities, hospitals, clinics, and individual registered doctors across India.
 - `id` (UUID, Primary Key, `default gen_random_uuid()`)
 - `osm_id` (BIGINT, UNIQUE) — Natural deduplication key from OpenStreetMap nodes/ways/relations.
@@ -210,9 +238,14 @@ All queries executed by API routes utilize dedicated indexes to ensure sub-milli
 |---|---|---|---|
 | `healthcare_facilities` | `idx_facilities_geom` | `USING GIST (geom)` | PostGIS bounding-box & spherical distance queries |
 | `appointments` | `idx_appointments_provider_slot_active` | `UNIQUE (provider_id, appointment_date) WHERE status = 'scheduled'` | Double-booking prevention |
+| `appointments` | `idx_appointments_patient_id` | `(patient_id)` | Foreign key join covering index |
+| `appointments` | `idx_appointments_provider_id` | `(provider_id)` | Foreign key join covering index |
 | `appointments` | `idx_appointments_patient_date` | `(patient_id, appointment_date DESC)` | Patient appointment list & cursor pagination |
 | `appointments` | `idx_appointments_provider_date` | `(provider_id, appointment_date DESC)` | Doctor appointment queue & cursor pagination |
+| `medical_records` | `idx_medical_records_patient_id` | `(patient_id)` | Foreign key join covering index |
+| `medical_records` | `idx_medical_records_provider_id` | `(provider_id)` | Foreign key join covering index |
 | `medical_records` | `idx_records_patient_date` | `(patient_id, record_date DESC)` | Patient records timeline & cursor pagination |
+| `notifications` | `idx_notifications_recipient_id` | `(recipient_id)` | Foreign key join covering index |
 | `notifications` | `idx_notifications_recipient_created` | `(recipient_id, created_at DESC)` | Notification history |
 | `notifications` | `idx_notifications_unread` | `(recipient_id, is_read, created_at DESC)` | Unread notification badge query |
 | `health_data` | `idx_health_data_patient_recorded` | `(patient_id, recorded_at DESC)` | Vitals historical charts |
@@ -225,16 +258,15 @@ All queries executed by API routes utilize dedicated indexes to ensure sub-milli
 | Table | Patient Access | Doctor Access | Admin Access | Demo Admin Mode |
 |---|---|---|---|---|
 | `patients` | Own row (`SELECT`, `UPDATE` non-role) | Care relationship patients only (`SELECT` via `has_care_relationship`) | Directory oversight (`SELECT`, `DELETE`) | `SELECT` only; role edits & deletes prohibited |
-| `healthcare_providers` | Public verified (`SELECT`) | Own profile (all ops) | All rows (all ops) | Read only |
+| `healthcare_providers` | Public verified (`SELECT`) | Own profile (`SELECT`, `UPDATE`) | All rows (`SELECT`, `INSERT`, `UPDATE`, `DELETE`) | Read only |
 | `appointments` | Own appointments (`SELECT`, `INSERT`, cancel) | Assigned appointments (`SELECT`, complete) | Directory oversight (`SELECT`, `DELETE`) | `SELECT` only; mutations blocked |
 | `medical_records` | Own records (`SELECT`, `INSERT`, `UPDATE`, `DELETE`) | Assigned patients under care (`SELECT`, `INSERT`) | Confidentiality: `SELECT` denied directly (redacted via API); `DELETE` for moderation | Read denied; mutations blocked |
-| `access_audit_log` | None (`INSERT` via service role / auth) | None (`INSERT` via service role / auth) | Audit review (`SELECT`); updates/deletes revoked | Read only |
-| `health_data` | Own vitals (`SELECT`, `INSERT`, `UPDATE`) | Care relationship patients (`SELECT`) | Aggregate metadata | Read only |
+| `access_audit_log` | Own rows (`SELECT`, `INSERT`) | Own rows (`SELECT`, `INSERT`) | Audit review (`SELECT`); updates/deletes revoked | Read only |
+| `health_data` | Own vitals (`SELECT`, `INSERT`, `UPDATE`) | Care relationship patients (`SELECT` via `has_care_relationship`) | Aggregate metadata | Read only |
 | `processed_client_ops` | Own ops (`SELECT`, `INSERT`) | Own ops (`SELECT`, `INSERT`) | All ops (all ops) | Read only |
 | `notifications` | Own notifications (`SELECT`, `UPDATE is_read`) | Own notifications (`SELECT`, `UPDATE is_read`) | All notifications (`SELECT`, `INSERT`) | Read only |
 | `healthcare_facilities`| Public (`SELECT`) | Public (`SELECT`) | All facilities (all ops) | Read only |
-| `camps` | Public (`SELECT`) | Public (`SELECT`) | All camps (all ops) | Read only |
-| `chat_cache` | Service role only (bypasses RLS) | Service role only | Service role only | Service role only |
+| `chat_cache` | None | Moderation (`SELECT`, `UPDATE`) if verified doctor | Full moderation (`SELECT`, `INSERT`, `UPDATE`, `DELETE`) | Read only |
 
 ---
 

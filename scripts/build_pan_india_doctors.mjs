@@ -14,20 +14,6 @@ lgdData.forEach(s => {
   if (s.nameEn === 'Uttarakhand') stateCodeMap.set('uttaranchal', s.code)
 })
 
-function inferSpecialty(hospitalName) {
-  const h = hospitalName.toLowerCase()
-  if (h.includes('heart') || h.includes('cardio') || h.includes('cardiac')) return { key: 'cardiology', name: 'Cardiology' }
-  if (h.includes('pediatric') || h.includes('children') || h.includes('child') || h.includes('shishu')) return { key: 'pediatrics', name: 'Pediatrics & Child Care' }
-  if (h.includes('maternity') || h.includes('women') || h.includes('zanana') || h.includes('ob') || h.includes('gyn') || h.includes('mahila')) return { key: 'gynecology', name: 'Obstetrics & Gynecology' }
-  if (h.includes('ortho') || h.includes('bone') || h.includes('joint') || h.includes('fracture') || h.includes('spine')) return { key: 'orthopedics', name: 'Orthopedics & Joint Care' }
-  if (h.includes('neuro') || h.includes('brain') || h.includes('mental')) return { key: 'neurology', name: 'Neurology' }
-  if (h.includes('cancer') || h.includes('onco')) return { key: 'oncology', name: 'Oncology' }
-  if (h.includes('ent') || h.includes('ear') || h.includes('eye') || h.includes('netra')) return { key: 'ent', name: 'ENT & Specialist Care' }
-  if (h.includes('chest') || h.includes('pulmo') || h.includes('lung') || h.includes('tb')) return { key: 'pulmonology', name: 'Pulmonology' }
-  if (h.includes('skin') || h.includes('derma')) return { key: 'dermatology', name: 'Dermatology' }
-  return { key: 'general', name: 'General Medicine & Surgery' }
-}
-
 function parseCsv(text) {
   const res = []
   let cur = ''

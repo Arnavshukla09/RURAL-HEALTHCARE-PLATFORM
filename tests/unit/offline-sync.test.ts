@@ -223,4 +223,87 @@ describe("Offline Sync Rewrite (Audit C4, §2.4)", () => {
     expect(insertedRecords).toHaveLength(1)
     expect(insertedRecords[0].data[0].patient_id).toBe(dummyPatient.id)
   })
+
+  it("6. Rejects patient attempt to mark an appointment as completed offline", async () => {
+    vi.mocked(getPatientProfile).mockResolvedValueOnce({
+      ...dummyPatient,
+      role: "patient",
+    } as any)
+
+    const opId = "99999999-9999-4999-8999-999999999999"
+    const req = new NextRequest("http://localhost:3000/api/offline-sync", {
+      method: "POST",
+      body: JSON.stringify({
+        operations: [
+          {
+            client_op_id: opId,
+            table: "appointments",
+            type: "UPDATE",
+            id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+            data: { status: "completed" },
+          },
+        ],
+      }),
+    })
+
+    const res = await POST(req)
+    expect(res.status).toBe(200)
+    const json = await res.json()
+    expect(json.results[0].status).toBe("rejected")
+    expect(json.results[0].error).toContain("Patients are not authorized to mark appointments as completed")
+  })
+
+  it("7. Aborts batch with 500 when idempotency database check fails", async () => {
+    mockSupabase.from = vi.fn((table: string) => ({
+      select: vi.fn(() => ({
+        eq: vi.fn(() => ({
+          in: vi.fn(async () => ({ data: null, error: { message: "Database connection failed" } })),
+        })),
+      })),
+    }))
+
+    const req = new NextRequest("http://localhost:3000/api/offline-sync", {
+      method: "POST",
+      body: JSON.stringify({
+        operations: [
+          {
+            client_op_id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+            table: "medical_records",
+            type: "INSERT",
+            data: { record_type: "prescription", content: "Valid test" },
+          },
+        ],
+      }),
+    })
+
+    const res = await POST(req)
+    expect(res.status).toBe(500)
+    const json = await res.json()
+    expect(json.code).toBe("IDEMPOTENCY_CHECK_FAILED")
+  })
+
+  it("8. Successfully processes EAV-formatted vitals data (data_type, value, unit, notes)", async () => {
+    const opId = "cccccccc-cccc-4ccc-8ccc-cccccccccccc"
+    const req = new NextRequest("http://localhost:3000/api/offline-sync", {
+      method: "POST",
+      body: JSON.stringify({
+        operations: [
+          {
+            client_op_id: opId,
+            table: "health_data",
+            type: "INSERT",
+            data: { data_type: "heart_rate", value: 72, unit: "bpm", notes: "Normal resting" },
+          },
+        ],
+      }),
+    })
+
+    const res = await POST(req)
+    expect(res.status).toBe(200)
+    const json = await res.json()
+    expect(json.results[0].status).toBe("ok")
+    expect(insertedRecords).toHaveLength(1)
+    expect(insertedRecords[0].data[0].data_type).toBe("heart_rate")
+    expect(insertedRecords[0].data[0].value).toBe(72)
+  })
 })

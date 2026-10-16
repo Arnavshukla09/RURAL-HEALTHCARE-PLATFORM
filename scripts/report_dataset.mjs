@@ -72,12 +72,12 @@ function runReport() {
     if (lat >= 6.5 && lat <= 37.5 && lon >= 68.7 && lon <= 97.5) {
       validCoords++
     }
-    // Check swapped lat/lon (lon is between 6.5-37.5 and lat is between 68.7-97.5)
-    if (lon >= 6.5 && lon <= 37.5 && lat >= 68.7 && lat <= 97.5) {
+    // Check swapped lat/lon (lon is between 6.5-37.5 and lat is between 68.0-97.5)
+    if (lon >= 6.5 && lon <= 37.5 && lat >= 68.0 && lat <= 97.5) {
       swappedCoords++
     }
   }
-  assertRule('Coordinates Within India Bounding Box', validCoords === lats.length, `${validCoords}/${lats.length} within 6.5-37.5N, 68.7-97.5E`)
+  assertRule('Coordinates Within India Bounding Box', validCoords === lats.length, `${validCoords}/${lats.length} within 6.5-37.5N, 68.0-97.5E`)
   assertRule('Zero Swapped Latitude/Longitude Coordinates', swappedCoords === 0, `${swappedCoords} detected swapped`)
 
   // Rule: Facility Nodal Contacts must NOT have fabricated OPD Timings
@@ -117,7 +117,7 @@ function runReport() {
       const lat = parseFloat(parts[3])
       const lon = parseFloat(parts[4])
       const mobile = (parts[6] || '').trim()
-      if (!isNaN(lat) && !isNaN(lon) && lat >= 6.5 && lat <= 37.5 && lon >= 68.7 && lon <= 97.5) {
+      if (!isNaN(lat) && !isNaN(lon) && lat >= 6.5 && lat <= 37.5 && lon >= 68.0 && lon <= 97.5) {
         validPmjayGps++
       }
       if (mobile && mobile.replace(/[^\d]/g, '').length >= 10) {

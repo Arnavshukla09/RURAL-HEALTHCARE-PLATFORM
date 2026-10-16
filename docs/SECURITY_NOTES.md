@@ -171,6 +171,35 @@ This document records the security audits and remediations applied to the Rural 
 * **Signed URL Generation:**
   - Access to patient attachments and lab reports requires short-lived, cryptographically signed URLs generated via `createSignedUrl()`, ensuring that unauthenticated third parties cannot enumerate or access sensitive medical files.
 
+### 2.17 October 16, 2026 Audit Remediations & Migration Harmonization
+* **Migration Baseline Harmonization:**
+  - Resolved `supabase db reset` failure (`ERROR: relation "public.health_data" does not exist (SQLSTATE 42P01)`) by declaring `health_data` in initial baseline migration `20260701000000_core_schema.sql`.
+  - Added schema-aligned columns: `consultation_type` on `appointments` and `metadata JSONB` on `medical_records`.
+* **Function Permissions & Search Path Integrity:**
+  - Enforced `SET search_path = public` across `get_user_role()`, `get_current_user_role()`, and `handle_new_user()`.
+  - Granted `EXECUTE` on `get_user_role()` and `get_current_user_role()` to `authenticated, service_role`, ensuring Postgres RLS policies evaluate caller role without permission errors.
+* **Provider Profile Gating & Elimination of Self-Service Elevation:**
+  - Dropped self-service insert policy (`providers_insert_own`) on `healthcare_providers`.
+  - Restricted provider profile creation strictly to administrators (`providers_admin_insert`), preventing unverified accounts from creating clinician profiles to gain moderation or clinical access.
+* **Chat Cache Moderation Lockdown:**
+  - Purged editable user metadata (`auth.jwt() -> 'user_metadata' ->> 'role'`) and unverified provider row conditions from `chat_cache` RLS policies.
+  - Moderation is strictly gated by verified role: `(SELECT public.get_user_role()) IN ('admin', 'doctor')`.
+* **Scoped Doctor Access via Care Relationship:**
+  - Scoped doctor appointment access to assigned appointments (`doctor_read_assigned_appointments` & `doctor_update_assigned_appointments`).
+  - Scoped `health_data` access to active care relationship via `public.has_care_relationship(patient_id)`.
+* **RLS InitPlan Optimization:**
+  - Replaced bare `auth.uid()` and `get_user_role()` with scalar subqueries `(SELECT auth.uid())` and `(SELECT public.get_user_role())`, enabling single-execution InitPlan optimization across row evaluations.
+* **Foreign Key Covering Indexes:**
+  - Created covering indexes on `appointments(patient_id)`, `appointments(provider_id)`, `medical_records(patient_id)`, `medical_records(provider_id)`, and `notifications(recipient_id)`.
+* **Western Gujarat Geographic Bounds:**
+  - Widened `MIN_LON` bound to `68.0` in `lib/geo/facility-provenance.ts`, ensuring 100% density across Western Gujarat (Kachchh 68.58°E).
+* **Offline Sync Robustness & Status Guard:**
+  - Surfaced database errors during idempotency queries in `processed_client_ops`.
+  - Supported dual EAV and wide vitals format.
+  - Prevented non-clinician roles from transitioning appointment status to `"completed"` offline.
+* **CI Node.js Modernization:**
+  - Bumped CI runtime from Node 20 to Node 22 across all workflow jobs (`test-and-build`, `db-tests`, `e2e`).
+
 ---
 
 ## 3. Verification & Safety Verification
@@ -179,7 +208,7 @@ This document records the security audits and remediations applied to the Rural 
 |---|---|---|
 | `npx tsc --noEmit` | Passed | 0 TypeScript errors |
 | `npm run lint` | Passed | 0 ESLint warnings or errors |
-| `npm run test:unit` | Passed | 173 unit tests passing across 21 test suites |
+| `npm run test:unit` | Passed | 176 unit tests passing across 21 test suites |
 | `npx playwright test` | Passed | 5/5 browser user persona end-to-end tests passing |
 | `npm run build` | Passed | All routes cleanly compiled |
 

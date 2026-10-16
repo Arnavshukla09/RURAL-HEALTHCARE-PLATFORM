@@ -48,20 +48,23 @@ CREATE POLICY "patients_insert_own" ON public.patients
 -- ==========================================
 DROP POLICY IF EXISTS "providers_select_own"       ON public.providers;
 DROP POLICY IF EXISTS "providers_insert_own"       ON public.providers;
+DROP POLICY IF EXISTS "providers_admin_insert"     ON public.providers;
 DROP POLICY IF EXISTS "providers_update_own"       ON public.providers;
 DROP POLICY IF EXISTS "providers_admin_read_all"   ON public.providers;
 
 CREATE POLICY "providers_select_own" ON public.providers
-  FOR SELECT USING (user_id = auth.uid());
+  FOR SELECT USING (user_id = (SELECT auth.uid()));
 
 CREATE POLICY "providers_admin_read_all" ON public.providers
-  FOR SELECT USING (public.get_user_role() = 'admin');
+  FOR SELECT USING ((SELECT public.get_user_role()) = 'admin');
 
 CREATE POLICY "providers_update_own" ON public.providers
-  FOR UPDATE USING (user_id = auth.uid());
+  FOR UPDATE USING (user_id = (SELECT auth.uid()));
 
-CREATE POLICY "providers_insert_own" ON public.providers
-  FOR INSERT WITH CHECK (user_id = auth.uid());
+-- Only admins can onboard or create provider rows (P0 finding 2)
+CREATE POLICY "providers_admin_insert" ON public.providers
+  FOR INSERT TO authenticated
+  WITH CHECK ((SELECT public.get_user_role()) = 'admin');
 
 -- ==========================================
 -- TABLE: healthcare_providers (public directory)
@@ -74,32 +77,54 @@ CREATE POLICY "healthcare_providers_public_read" ON public.healthcare_providers
 
 CREATE POLICY "healthcare_providers_admin_write" ON public.healthcare_providers
   FOR ALL TO authenticated
-  USING (public.get_user_role() = 'admin')
-  WITH CHECK (public.get_user_role() = 'admin');
+  USING ((SELECT public.get_user_role()) = 'admin')
+  WITH CHECK ((SELECT public.get_user_role()) = 'admin');
 
 -- ==========================================
 -- TABLE: appointments
 -- ==========================================
 DROP POLICY IF EXISTS "patients_read_own_appointments"   ON public.appointments;
 DROP POLICY IF EXISTS "doctor_read_all_appointments"     ON public.appointments;
+DROP POLICY IF EXISTS "doctor_read_assigned_appointments" ON public.appointments;
+DROP POLICY IF EXISTS "doctor_update_assigned_appointments" ON public.appointments;
 DROP POLICY IF EXISTS "admin_read_all_appointments"      ON public.appointments;
 DROP POLICY IF EXISTS "appointments_insert_patient"      ON public.appointments;
 DROP POLICY IF EXISTS "appointments_update_patient"      ON public.appointments;
 
 CREATE POLICY "patients_read_own_appointments" ON public.appointments
-  FOR SELECT USING (patient_id IN (SELECT id FROM public.patients WHERE user_id = auth.uid()));
+  FOR SELECT USING (patient_id IN (SELECT id FROM public.patients WHERE user_id = (SELECT auth.uid())));
 
-CREATE POLICY "doctor_read_all_appointments" ON public.appointments
-  FOR SELECT USING (public.get_user_role() = 'doctor');
+-- Doctors can only read appointments assigned to them (P0 finding 1)
+CREATE POLICY "doctor_read_assigned_appointments" ON public.appointments
+  FOR SELECT TO authenticated
+  USING (
+    (SELECT public.get_user_role()) = 'doctor'
+    AND (
+      provider_id IN (SELECT hp.id FROM public.healthcare_providers hp WHERE hp.user_id = (SELECT auth.uid()))
+      OR
+      provider_id IN (SELECT pr.id FROM public.providers pr WHERE pr.user_id = (SELECT auth.uid()))
+    )
+  );
+
+CREATE POLICY "doctor_update_assigned_appointments" ON public.appointments
+  FOR UPDATE TO authenticated
+  USING (
+    (SELECT public.get_user_role()) = 'doctor'
+    AND (
+      provider_id IN (SELECT hp.id FROM public.healthcare_providers hp WHERE hp.user_id = (SELECT auth.uid()))
+      OR
+      provider_id IN (SELECT pr.id FROM public.providers pr WHERE pr.user_id = (SELECT auth.uid()))
+    )
+  );
 
 CREATE POLICY "admin_read_all_appointments" ON public.appointments
-  FOR SELECT USING (public.get_user_role() = 'admin');
+  FOR SELECT USING ((SELECT public.get_user_role()) = 'admin');
 
 CREATE POLICY "appointments_insert_patient" ON public.appointments
-  FOR INSERT WITH CHECK (patient_id IN (SELECT id FROM public.patients WHERE user_id = auth.uid()));
+  FOR INSERT WITH CHECK (patient_id IN (SELECT id FROM public.patients WHERE user_id = (SELECT auth.uid())));
 
 CREATE POLICY "appointments_update_patient" ON public.appointments
-  FOR UPDATE USING (patient_id IN (SELECT id FROM public.patients WHERE user_id = auth.uid()));
+  FOR UPDATE USING (patient_id IN (SELECT id FROM public.patients WHERE user_id = (SELECT auth.uid())));
 
 -- ==========================================
 -- TABLE: medical_records
@@ -198,22 +223,27 @@ DROP POLICY IF EXISTS "health_data_doctor_read" ON public.health_data;
 DROP POLICY IF EXISTS "health_data_admin_read"  ON public.health_data;
 
 CREATE POLICY "health_data_select_own" ON public.health_data
-  FOR SELECT USING (patient_id IN (SELECT id FROM public.patients WHERE user_id = auth.uid()));
+  FOR SELECT USING (patient_id IN (SELECT id FROM public.patients WHERE user_id = (SELECT auth.uid())));
 
 CREATE POLICY "health_data_insert_own" ON public.health_data
-  FOR INSERT WITH CHECK (patient_id IN (SELECT id FROM public.patients WHERE user_id = auth.uid()));
+  FOR INSERT WITH CHECK (patient_id IN (SELECT id FROM public.patients WHERE user_id = (SELECT auth.uid())));
 
 CREATE POLICY "health_data_update_own" ON public.health_data
-  FOR UPDATE USING (patient_id IN (SELECT id FROM public.patients WHERE user_id = auth.uid()));
+  FOR UPDATE USING (patient_id IN (SELECT id FROM public.patients WHERE user_id = (SELECT auth.uid())));
 
 CREATE POLICY "health_data_delete_own" ON public.health_data
-  FOR DELETE USING (patient_id IN (SELECT id FROM public.patients WHERE user_id = auth.uid()));
+  FOR DELETE USING (patient_id IN (SELECT id FROM public.patients WHERE user_id = (SELECT auth.uid())));
 
+-- Doctors can only read vitals if an active care relationship exists (P0 finding 1)
 CREATE POLICY "health_data_doctor_read" ON public.health_data
-  FOR SELECT USING (public.get_user_role() = 'doctor');
+  FOR SELECT TO authenticated
+  USING (
+    (SELECT public.get_user_role()) = 'doctor'
+    AND public.has_care_relationship(patient_id)
+  );
 
 CREATE POLICY "health_data_admin_read" ON public.health_data
-  FOR SELECT USING (public.get_user_role() = 'admin');
+  FOR SELECT USING ((SELECT public.get_user_role()) = 'admin');
 
 -- ==========================================
 -- TABLE: offline_sync_log
@@ -223,13 +253,44 @@ DROP POLICY IF EXISTS "offline_sync_insert_own" ON public.offline_sync_log;
 DROP POLICY IF EXISTS "offline_sync_delete_own" ON public.offline_sync_log;
 
 CREATE POLICY "offline_sync_select_own" ON public.offline_sync_log
-  FOR SELECT USING (user_id = auth.uid());
+  FOR SELECT USING (user_id = (SELECT auth.uid()));
 
 CREATE POLICY "offline_sync_insert_own" ON public.offline_sync_log
-  FOR INSERT WITH CHECK (user_id = auth.uid());
+  FOR INSERT WITH CHECK (user_id = (SELECT auth.uid()));
 
 CREATE POLICY "offline_sync_delete_own" ON public.offline_sync_log
-  FOR DELETE USING (user_id = auth.uid());
+  FOR DELETE USING (user_id = (SELECT auth.uid()));
+
+-- ==========================================
+-- TABLE: processed_client_ops (offline idempotency)
+-- ==========================================
+ALTER TABLE IF EXISTS public.processed_client_ops ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "processed_client_ops_own_select" ON public.processed_client_ops;
+DROP POLICY IF EXISTS "processed_client_ops_own_insert" ON public.processed_client_ops;
+
+CREATE POLICY "processed_client_ops_own_select" ON public.processed_client_ops
+  FOR SELECT TO authenticated
+  USING ((SELECT auth.uid()) = user_id);
+
+CREATE POLICY "processed_client_ops_own_insert" ON public.processed_client_ops
+  FOR INSERT TO authenticated
+  WITH CHECK ((SELECT auth.uid()) = user_id);
+
+-- ==========================================
+-- TABLE: payments
+-- ==========================================
+ALTER TABLE IF EXISTS public.payments ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "payments_select_own" ON public.payments;
+DROP POLICY IF EXISTS "payments_insert_own" ON public.payments;
+
+CREATE POLICY "payments_select_own" ON public.payments
+  FOR SELECT TO authenticated
+  USING ((SELECT auth.uid()) = user_id);
+
+-- User insert must restrict status to pending (P2 payment finding)
+CREATE POLICY "payments_insert_own" ON public.payments
+  FOR INSERT TO authenticated
+  WITH CHECK ((SELECT auth.uid()) = user_id AND status = 'pending');
 
 -- ==========================================
 -- TABLE: doctor_requests
@@ -242,22 +303,23 @@ DROP POLICY IF EXISTS "doctor_requests_admin_all"   ON public.doctor_requests;
 
 -- Users can read their own request
 CREATE POLICY "doctor_requests_select_own" ON public.doctor_requests
-  FOR SELECT USING (user_id = auth.uid());
+  FOR SELECT USING (user_id = (SELECT auth.uid()));
 
 -- Users can submit a request only for themselves
 CREATE POLICY "doctor_requests_insert_own" ON public.doctor_requests
-  FOR INSERT WITH CHECK (user_id = auth.uid());
+  FOR INSERT WITH CHECK (user_id = (SELECT auth.uid()));
 
 -- Admins can view all and approve/reject
 CREATE POLICY "doctor_requests_admin_all" ON public.doctor_requests
   FOR ALL TO authenticated
-  USING (public.get_user_role() = 'admin')
-  WITH CHECK (public.get_user_role() = 'admin');
+  USING ((SELECT public.get_user_role()) = 'admin')
+  WITH CHECK ((SELECT public.get_user_role()) = 'admin');
 
 -- ==========================================
 -- FUNCTION PERMISSIONS (defense in depth)
 -- ==========================================
-REVOKE EXECUTE ON FUNCTION public.get_user_role()    FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.get_user_role()    FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_user_role()     TO authenticated, service_role;
 REVOKE EXECUTE ON FUNCTION public.handle_new_user()  FROM PUBLIC, anon, authenticated;
 REVOKE EXECUTE ON FUNCTION public.nearby_facilities(double precision, double precision, text, double precision)
   FROM PUBLIC, anon;

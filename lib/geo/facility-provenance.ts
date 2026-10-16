@@ -63,12 +63,12 @@ export interface DataQualityReport {
 /**
  * Official Geographic Bounding Box for the Republic of India:
  * Latitude: 6.5° N (Indira Point / Great Nicobar) to 37.5° N (Indira Col / Ladakh)
- * Longitude: 68.7° E (Ghuar Moti / Gujarat) to 97.5° E (Kibithu / Arunachal Pradesh)
+ * Longitude: 68.0° E (Western Kachchh / Sir Creek / Gujarat) to 97.5° E (Kibithu / Arunachal Pradesh)
  */
 export const INDIA_BOUNDS = {
   MIN_LAT: 6.5,
   MAX_LAT: 37.5,
-  MIN_LON: 68.7,
+  MIN_LON: 68.0,
   MAX_LON: 97.5,
 } as const
 

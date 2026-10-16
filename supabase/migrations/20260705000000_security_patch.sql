@@ -48,11 +48,13 @@ CREATE POLICY "providers_admin_read_all" ON public.providers
 
 -- Providers can only update their own profile
 CREATE POLICY "providers_update_own" ON public.providers
-  FOR UPDATE USING (user_id = auth.uid());
+  FOR UPDATE USING (user_id = (SELECT auth.uid()));
 
--- Only the system (service_role) can insert new providers
-CREATE POLICY "providers_insert_own" ON public.providers
-  FOR INSERT WITH CHECK (user_id = auth.uid());
+-- Only admins can insert new providers (P0 finding 2)
+DROP POLICY IF EXISTS "providers_admin_insert" ON public.providers;
+CREATE POLICY "providers_admin_insert" ON public.providers
+  FOR INSERT TO authenticated
+  WITH CHECK ((SELECT public.get_user_role()) = 'admin');
 
 -- ============================================================
 -- STEP 3: Healthcare Providers (public directory) - lock writes
@@ -67,8 +69,8 @@ CREATE POLICY "healthcare_providers_public_read" ON public.healthcare_providers
 -- Only admins can insert, update, or delete doctors from the directory
 CREATE POLICY "healthcare_providers_admin_write" ON public.healthcare_providers
   FOR ALL TO authenticated
-  USING (public.get_user_role() = 'admin')
-  WITH CHECK (public.get_user_role() = 'admin');
+  USING ((SELECT public.get_user_role()) = 'admin')
+  WITH CHECK ((SELECT public.get_user_role()) = 'admin');
 
 -- ============================================================
 -- STEP 4: Health Data (Vitals) - ensure full CRUD is locked
@@ -81,22 +83,27 @@ DROP POLICY IF EXISTS "health_data_doctor_read"  ON public.health_data;
 DROP POLICY IF EXISTS "health_data_admin_read"   ON public.health_data;
 
 CREATE POLICY "health_data_select_own" ON public.health_data
-  FOR SELECT USING (patient_id IN (SELECT id FROM public.patients WHERE user_id = auth.uid()));
+  FOR SELECT USING (patient_id IN (SELECT id FROM public.patients WHERE user_id = (SELECT auth.uid())));
 
 CREATE POLICY "health_data_insert_own" ON public.health_data
-  FOR INSERT WITH CHECK (patient_id IN (SELECT id FROM public.patients WHERE user_id = auth.uid()));
+  FOR INSERT WITH CHECK (patient_id IN (SELECT id FROM public.patients WHERE user_id = (SELECT auth.uid())));
 
 CREATE POLICY "health_data_update_own" ON public.health_data
-  FOR UPDATE USING (patient_id IN (SELECT id FROM public.patients WHERE user_id = auth.uid()));
+  FOR UPDATE USING (patient_id IN (SELECT id FROM public.patients WHERE user_id = (SELECT auth.uid())));
 
 CREATE POLICY "health_data_delete_own" ON public.health_data
-  FOR DELETE USING (patient_id IN (SELECT id FROM public.patients WHERE user_id = auth.uid()));
+  FOR DELETE USING (patient_id IN (SELECT id FROM public.patients WHERE user_id = (SELECT auth.uid())));
 
+-- Doctors can only read health data where care relationship exists (P0 finding 1)
 CREATE POLICY "health_data_doctor_read" ON public.health_data
-  FOR SELECT USING (public.get_user_role() = 'doctor');
+  FOR SELECT TO authenticated
+  USING (
+    (SELECT public.get_user_role()) = 'doctor'
+    AND public.has_care_relationship(patient_id)
+  );
 
 CREATE POLICY "health_data_admin_read" ON public.health_data
-  FOR SELECT USING (public.get_user_role() = 'admin');
+  FOR SELECT USING ((SELECT public.get_user_role()) = 'admin');
 
 -- ============================================================
 -- STEP 5: Offline Sync Log - users only access their own
