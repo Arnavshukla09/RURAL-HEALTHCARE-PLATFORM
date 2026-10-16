@@ -131,6 +131,20 @@ async function run() {
       continue
     }
 
+    // Geospatial validation: Coordinates must lie within India's sovereign bounding box (6.5°–37.5°N, 68.7°–97.5°E)
+    // Detect and correct coordinate inversion (swapped lat/lon)
+    let validLat = lat
+    let validLon = lon
+    if (lat >= 68.7 && lat <= 97.5 && lon >= 6.5 && lon <= 37.5) {
+      validLat = lon
+      validLon = lat
+    }
+
+    if (validLat < 6.5 || validLat > 37.5 || validLon < 68.7 || validLon > 97.5) {
+      skipped++
+      continue
+    }
+
     // Determine type
     let type = 'hospital'
     const nameLower = name.toLowerCase()
@@ -142,8 +156,15 @@ async function run() {
       type = 'clinic'
     }
 
-    // Internal surrogate ID: 9000000000 + line index (used strictly as an internal unique key for non-OSM records)
-    const osmId = 9000000000 + i
+    // Deterministic surrogate ID derived stably from source identifier (NIN) or composite key
+    // Guarantees 100% idempotent upsert: running pipeline twice produces identical primary keys without row duplication
+    const sourceKey = nin || `${stateRaw}_${district}_${name}`
+    let hash = 0x811c9dc5
+    for (let j = 0; j < sourceKey.length; j++) {
+      hash ^= sourceKey.charCodeAt(j)
+      hash = Math.imul(hash, 0x01000193)
+    }
+    const osmId = 9000000000 + (hash >>> 0)
 
     const state = normalizeStateName(stateRaw)
 
@@ -151,6 +172,7 @@ async function run() {
       source: 'PM-JAY National Health Authority',
       source_name: 'National Health Authority AB-PMJAY Empaneled Hospital Directory',
       source_url: 'https://data.gov.in/resource/national-hospital-directory-geo-code-and-additional-parameters-updated-till-last-month',
+      canonical_facility_id: `fac_pmjay_${nin || (hash >>> 0)}`,
       nin_pmjay: nin,
       contact_person: contact || null,
       category: category || 'PM-JAY Empaneled',
@@ -171,8 +193,8 @@ async function run() {
       phone: mobile.slice(0, 50),
       district: district ? district.slice(0, 100) : null,
       state: state ? state.slice(0, 100) : null,
-      lat: Math.round(lat * 10000000) / 10000000,
-      lon: Math.round(lon * 10000000) / 10000000,
+      lat: Math.round(validLat * 10000000) / 10000000,
+      lon: Math.round(validLon * 10000000) / 10000000,
       tags
     })
 
