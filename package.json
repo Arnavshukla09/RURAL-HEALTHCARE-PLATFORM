@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "test:unit": "vitest run",
+    "test:integration": "vitest run --config vitest.integration.config.mjs",
     "check:components": "node scripts/check_components.mjs",
     "report:dataset": "node scripts/report_dataset.mjs",
     "benchmark:integration": "node scripts/benchmark_system_integration.mjs",

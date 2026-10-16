@@ -1,14 +1,12 @@
 /**
  * scripts/benchmark_system_integration.mjs
  *
- * Automated End-to-End System Integration & Correctness Benchmark.
- * Validates the 6 critical subsystems of the Rural Healthcare Platform:
- *   1. Spatial Data Provenance & Coordinate Integrity
- *   2. Clinical Decision Support & Prompt Injection Neutralization
- *   3. Appointment Concurrency & Double-Booking Protection
- *   4. Offline Outbox Exponential Backoff & Jitter Simulation
- *   5. ABDM ABHA Identifier & Address Standards Conformance
- *   6. HL7 FHIR R4 Document Bundle Structure & Referential Integrity
+ * Automated Offline Algorithmic Benchmark & Subsystem Simulation.
+ * NOTE: This benchmark evaluates purely offline mathematical and algorithmic models
+ * (spatial coordinate bounds, prompt injection regex gates, backoff formulas,
+ * ABDM identifier validators, and FHIR referential graph checkers).
+ * It does NOT connect to a live PostgreSQL/Supabase instance.
+ * For real database integration tests, see `tests/integration/`.
  *
  * Execution: node scripts/benchmark_system_integration.mjs
  */
@@ -277,8 +275,8 @@ async function runBenchmark() {
 
   // --- Summary Scorecard ---
   console.log('\n' + '='.repeat(72))
-  console.log(` INTEGRATION BENCHMARK RESULT: ${passedChecks} / ${totalChecks} CHECKS PASSED (100%)`)
-  console.log(' STATUS: ALL CRITICAL SUBSYSTEMS PRODUCTION READY & DEFENSIBLE')
+  console.log(` OFFLINE ALGORITHMIC BENCHMARK RESULT: ${passedChecks} / ${totalChecks} CHECKS PASSED (100%)`)
+  console.log(' STATUS: ALL OFFLINE ALGORITHMIC SUBSYSTEMS VERIFIED')
   console.log('='.repeat(72) + '\n')
 }
 
