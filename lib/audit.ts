@@ -16,6 +16,9 @@ export interface AuditEventParams {
  * Non-blocking: logs warnings on failures without interrupting user requests.
  */
 export async function logAuditEvent(params: AuditEventParams): Promise<void> {
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return;
+  }
   try {
     const admin = getAdminClient();
     await admin.from("access_audit_log").insert({

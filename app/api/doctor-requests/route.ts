@@ -6,6 +6,7 @@ import { z } from "zod"
 import { requireUser, getPatientProfile, authErrorResponse } from "@/lib/auth/guard"
 import { parsePaginationParams, paginateResults } from "@/lib/pagination"
 import { getAdminClient } from "@/lib/supabase/admin"
+import { logAuditEvent } from "@/lib/audit"
 
 // GET — admin fetches all pending requests (with pagination)
 export async function GET(req: NextRequest) {
@@ -234,6 +235,26 @@ export async function PATCH(req: NextRequest) {
     } catch (linkErr) {
       console.error("[doctor-requests] Non-blocking provider linking error:", linkErr)
     }
+
+    await logAuditEvent({
+      action: "doctor_request_approved",
+      resourceType: "doctor_requests",
+      resourceId: request_id,
+      patientId: request.user_id,
+      userId: user.id,
+      userRole: "admin",
+      details: { role_promoted_to: "doctor", email: request.email },
+    })
+  } else if (action === "rejected") {
+    await logAuditEvent({
+      action: "doctor_request_rejected",
+      resourceType: "doctor_requests",
+      resourceId: request_id,
+      patientId: request.user_id,
+      userId: user.id,
+      userRole: "admin",
+      details: { email: request.email, admin_notes: admin_notes || null },
+    })
   }
 
   return NextResponse.json({

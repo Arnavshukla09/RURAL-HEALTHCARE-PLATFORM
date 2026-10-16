@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit"
 import { requireUser, authErrorResponse } from "@/lib/auth/guard"
+import { logAuditEvent } from "@/lib/audit"
 
 // Schema for profile update (strictly omits role to prevent tampering)
 const ProfileSchema = z.object({
@@ -56,10 +57,29 @@ export async function PUT(request: NextRequest) {
     // Validate input against strict schema
     const parsed = ProfileSchema.safeParse(body)
     if (!parsed.success) {
+      if ((body as any)?.role) {
+        await logAuditEvent({
+          action: "profile_role_tamper_attempt",
+          resourceType: "patients",
+          userId: user.id,
+          userRole: "patient",
+          details: { attempted_role: (body as any).role },
+        })
+      }
       return NextResponse.json(
         { error: "Validation failed", details: parsed.error.flatten(), code: "VALIDATION_ERROR" },
         { status: 400 }
       )
+    }
+
+    if ((body as any)?.role) {
+      await logAuditEvent({
+        action: "profile_role_tamper_attempt",
+        resourceType: "patients",
+        userId: user.id,
+        userRole: "patient",
+        details: { attempted_role: (body as any).role },
+      })
     }
 
     const { profileType, ...data } = parsed.data

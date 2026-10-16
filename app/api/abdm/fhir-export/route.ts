@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { requireUser, authErrorResponse } from "@/lib/auth/guard"
 import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit"
+import { logAuditEvent } from "@/lib/audit"
 import {
   generateFhirPrescriptionBundle,
   generateFhirDiagnosticBundle,
@@ -69,6 +70,15 @@ export async function GET(request: NextRequest) {
     if (!isOwner) {
       // Admin is strictly denied viewing/exporting clinical health files
       if (callerRole === "admin") {
+        await logAuditEvent({
+          action: "fhir_export_denied",
+          resourceType: "medical_records",
+          resourceId: recordId,
+          patientId: record.patient_id,
+          userId: user.id,
+          userRole: callerRole,
+          details: { reason: "admin_confidentiality_restriction" },
+        })
         return NextResponse.json(
           { error: "Access denied. Administrators cannot view or export confidential patient clinical bundles." },
           { status: 403 }
@@ -84,6 +94,15 @@ export async function GET(request: NextRequest) {
           .single()
 
         if (!provider) {
+          await logAuditEvent({
+            action: "fhir_export_denied",
+            resourceType: "medical_records",
+            resourceId: recordId,
+            patientId: record.patient_id,
+            userId: user.id,
+            userRole: callerRole,
+            details: { reason: "provider_profile_missing" },
+          })
           return NextResponse.json(
             { error: "Access denied. Healthcare provider profile not found." },
             { status: 403 }
@@ -99,12 +118,30 @@ export async function GET(request: NextRequest) {
           .limit(1)
 
         if (!careRelationship || careRelationship.length === 0) {
+          await logAuditEvent({
+            action: "fhir_export_denied",
+            resourceType: "medical_records",
+            resourceId: recordId,
+            patientId: record.patient_id,
+            userId: user.id,
+            userRole: callerRole,
+            details: { reason: "no_care_relationship" },
+          })
           return NextResponse.json(
             { error: "Access denied. You do not have an established care relationship with this patient." },
             { status: 403 }
           )
         }
       } else {
+        await logAuditEvent({
+          action: "fhir_export_denied",
+          resourceType: "medical_records",
+          resourceId: recordId,
+          patientId: record.patient_id,
+          userId: user.id,
+          userRole: callerRole,
+          details: { reason: "unauthorized_role" },
+        })
         return NextResponse.json(
           { error: "Access denied. You are not authorized to export this patient's clinical bundle." },
           { status: 403 }
@@ -253,6 +290,17 @@ export async function GET(request: NextRequest) {
         { status: 500 }
       )
     }
+
+    // Log successful export in audit log
+    await logAuditEvent({
+      action: "fhir_export_success",
+      resourceType: "medical_records",
+      resourceId: recordId,
+      patientId: record.patient_id,
+      userId: user.id,
+      userRole: callerRole,
+      details: { record_type: record.record_type },
+    })
 
     // 6. Return standard application/fhir+json response
     return new NextResponse(JSON.stringify(bundle, null, 2), {
