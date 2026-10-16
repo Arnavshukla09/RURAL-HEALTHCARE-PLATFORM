@@ -10,6 +10,7 @@
     "test:unit": "vitest run",
     "check:components": "node scripts/check_components.mjs",
     "report:dataset": "node scripts/report_dataset.mjs",
+    "benchmark:integration": "node scripts/benchmark_system_integration.mjs",
     "ingest:facilities": "node scripts/ingest_pan_india_geojson.mjs",
     "ingest:doctors": "node scripts/ingest_pan_india_doctors.mjs"
   },

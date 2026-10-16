@@ -648,6 +648,9 @@ UPSTASH_REDIS_REST_TOKEN=your_upstash_token
 # Run 161 unit and integration tests
 npm run test:unit
 
+# Run automated system integration and defense benchmark
+npm run benchmark:integration
+
 # Run full component validation (imports, types, lint, tests)
 npm run check:components
 
@@ -675,6 +678,7 @@ All engineering documents are located in the `docs/` directory:
 | Document | Purpose |
 | :--- | :--- |
 | `docs/SYSTEM_DESIGN.md` | Master system design blueprint with 8 subsystem breakdowns |
+| `docs/PLACEMENT_INTERVIEW_DEFENSE.md` | 2027 placement interview technical defense guide and systems playbook |
 | `docs/QA_REPORT.md` | 161-test scorecard with detailed per-suite breakdown |
 | `docs/CLINICAL_SAFETY.md` | Clinical decision tables, prompt injection defense, and FNR = 0% evaluation |
 | `docs/ABDM_FHIR_INTEROPERABILITY.md` | ABDM and HL7 FHIR R4 interoperability architecture and 2027 placement defense |

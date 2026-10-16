@@ -13,6 +13,7 @@
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: |
 | **Unit & Integration Suite** | Vitest 5.0 (Node.js) | 161 | 161 | 0 | **100%** | ~1.22s |
 | **Component Validation Checker** | Custom Static Analyzer (`scripts/check_components.mjs`) | 132 files | 132 | 0 | **100%** | ~8.26s |
+| **System Integration Benchmark** | Automated Integration Runner (`scripts/benchmark_system_integration.mjs`) | 21 checks | 21 | 0 | **100%** | ~0.45s |
 | **End-to-End User Flow Suite** | Playwright (Chromium) | 5 | 5 | 0 | **100%** | ~45.3s |
 | **PostGIS Spatial Performance** | Automated Edge Query Benchmark | 1,000 queries | 1,000 | 0 | **100%** | 274ms avg / 558ms P95 |
 | **Security Audit & RLS Verification** | Automated Penetration & Header Checks | 10 audit rules | 10 | 0 | **100%** | Instant |

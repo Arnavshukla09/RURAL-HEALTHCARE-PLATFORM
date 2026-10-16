@@ -33,6 +33,9 @@ jobs:
       - name: Dataset Provenance Verification
         run: npm run report:dataset
 
+      - name: System Integration & Correctness Benchmark
+        run: npm run benchmark:integration
+
       - name: Automated Component Quality & Integrity Check
         run: npm run check:components
 
