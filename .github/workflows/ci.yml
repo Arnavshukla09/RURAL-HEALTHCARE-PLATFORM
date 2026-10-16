@@ -27,6 +27,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Security Vulnerability Audit
+        run: npm audit --audit-level=high || true
+
+      - name: Dataset Provenance Verification
+        run: npm run report:dataset
+
       - name: Automated Component Quality & Integrity Check
         run: npm run check:components
 

@@ -1,5 +1,7 @@
 # Rural Healthcare Platform
 
+[![Continuous Integration (CI)](https://github.com/Arnavshukla09/RURAL-HEALTHCARE-PLATFORM/actions/workflows/ci.yml/badge.svg)](https://github.com/Arnavshukla09/RURAL-HEALTHCARE-PLATFORM/actions/workflows/ci.yml)
+
 Bridging rural healthcare access through scalable serverless architecture, intelligent clinical triage, low-bandwidth WebRTC teleconsultation, and localized geospatial directories.
 
 Deployment: https://rural-healthcare-platform.vercel.app  
@@ -684,6 +686,7 @@ All engineering documents are located in the `docs/` directory:
 | `docs/ARCHITECTURE.md` | System architecture deep-dive and decision log |
 | `docs/DEPLOY_CHECKLIST.md` | Step-by-step production deployment checklist |
 | `docs/SECURITY_NOTES.md` | Security controls, threat model, and RLS audit |
+| `docs/POSTMORTEM_CONCURRENCY_DOUBLE_BOOKING.md` | Engineering postmortem on concurrent double booking and health check probe table fix |
 | `docs/PERFORMANCE_REPORT.md` | Lighthouse scores, benchmark results, load test outcomes |
 | `docs/LOAD_TESTING.md` | k6 load testing methodology and capacity model |
 | `docs/SYSTEM_EVALUATION_AND_SCALING_PLAN.md` | Scaling strategy and infrastructure upgrade path |

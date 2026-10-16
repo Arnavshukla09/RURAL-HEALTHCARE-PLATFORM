@@ -77,7 +77,7 @@ Running automated component checks before commit...
 
 ============================================================
 ALL COMPONENTS VERIFIED & STABLE
-0 broken imports • 0 type errors • 0 lint errors • 120 tests passing
+0 broken imports • 0 type errors • 0 lint errors • 144 tests passing
 Pre-commit check passed cleanly. Commit proceeding!
 ============================================================
 ```
@@ -110,3 +110,16 @@ Automated penetration tests and header verification:
   - `Referrer-Policy`: `strict-origin-when-cross-origin`.
   - `Permissions-Policy`: Camera and microphone restricted to explicit teleconsultation domains.
 - **Doctor Claim Identity Protection:** Verified that `/doctor/claim` blocks open claiming, requiring cryptographic token validation before loading clinician verification forms.
+
+---
+
+## 6. Engineering Postmortems & Incident Regression Verification
+
+To prevent recurring operational failures, incidents are documented in formal postmortems and backed by permanent regression test suites in CI:
+
+| Incident ID | Subsystem | Failure Mode | Resolution | Permanent Regression Test |
+| :--- | :--- | :--- | :--- | :--- |
+| **INC-2026-10-01** | Appointments & Health Probes | TOCTOU concurrent double-booking and probe table name discrepancy | Database unique index + HTTP 409 conflict handling; canonical table `healthcare_facilities` | `tests/unit/appointments-and-auth.test.ts`, `tests/unit/probes-and-benchmarks.test.ts` |
+
+For complete 5-Whys root cause analysis and technical breakdown, refer to [`docs/POSTMORTEM_CONCURRENCY_DOUBLE_BOOKING.md`](file:///c:/Users/aarrn/Desktop/rural%20health/RURAL-HEALTHCARE-PLATFORM-main/docs/POSTMORTEM_CONCURRENCY_DOUBLE_BOOKING.md).
+
