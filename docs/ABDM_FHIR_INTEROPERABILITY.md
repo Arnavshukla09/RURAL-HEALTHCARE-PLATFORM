@@ -61,7 +61,7 @@ The NHA defines three formal milestones for ABDM integration. The Rural Healthca
 | Milestone | Designation | Functional Scope | Repository Implementation | Status |
 | :--- | :--- | :--- | :--- | :---: |
 | **M1** | ABHA Creation & Verification | 14-digit ABHA generation, hyphenated formatting, ABHA Address (`@abdm`, `@sbx`, `@e-swasthya`) validation, and patient profile linking. | `lib/abdm/fhir.ts`: `validateAbhaNumber()`, `validateAbhaAddress()`, `abdmGateway.verifyAbha()` | **Implemented** |
-| **M2** | Health Information Provider (HIP) | Generation of structured HL7 FHIR R4 Document Bundles for Prescriptions (`PRE`), Diagnostic Reports (`DIAG`), and Encounters (`ENC`). REST Export API. | `lib/abdm/fhir.ts`: `generateFhirPrescriptionBundle()`, `generateFhirDiagnosticBundle()`, `generateFhirEncounterBundle()`, `validateFhirBundle()`; `app/api/abdm/fhir-export/route.ts` | **Implemented** |
+| **M2** | Health Information Provider (HIP) | Generation of structured HL7 FHIR R4 Document Bundles for Prescriptions (`PRE`), Diagnostic Reports (`DIAG`), and Encounters (`ENC`). REST Export API. | `lib/abdm/fhir.ts`: `generateFhirPrescriptionBundle()`, `generateFhirDiagnosticBundle()`, `generateFhirEncounterBundle()`, `validateFhirBundle()`; `app/api/abdm/fhir-export/route.ts` | **Implemented (Modelled on NRCES Profiles; Not Officially Certified)** |
 | **M3** | Health Information User (HIU) | Consuming external records, consent manager callback webhooks, decryption of incoming encrypted health streams. | `lib/abdm/fhir.ts`: `AbdmGatewayClient` seam; planned live webhook routes for sandbox integration. | **Partially Implemented (Seam Ready)** |
 
 ---
