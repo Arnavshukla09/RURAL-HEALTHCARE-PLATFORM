@@ -118,11 +118,16 @@ where schemaname='public' and (qual ilike '%user_metadata%' or with_check ilike 
   6. Test 16: Non-service callers cannot INSERT a non-patient role into `patients`.
 - **Mutation Proofs Recorded:** Documented Mutations 4, 5, and 6 in `docs/TEST_EVIDENCE.md` with exact failure outputs and restoration confirmation.
 
-### Step 4: CI Cleanup - COMPLETED
+### Step 4: CI Cleanup - COMPLETED & GREEN
 - **Workflow Permissions:** Added `permissions: contents: read` at top level of `.github/workflows/ci.yml`.
 - **Branch Triggers:** Added `"hotfix/*"` to push and pull_request branches in `.github/workflows/ci.yml`.
 - **Log Noise Reduction:** Removed `--debug` flags from `supabase start` and `supabase db reset` in both `db-tests` and `e2e` jobs.
 - **Vulnerability Audit Gate:** Replaced `npm audit --audit-level=critical` step with `node scripts/audit_allowlist.mjs`, enforcing zero unallowed high and critical vulnerabilities via the expiring allowlist.
 - **Workflow Job Dependencies:** Configured `e2e` job to depend on `[test-and-build, db-tests]`.
 - **Test Gate Assertion:** Updated `scripts/verify_integration_tests.mjs` and `.github/workflows/ci.yml` verification gate to require all 19 integration tests to execute and pass.
+- **Clean CI Run Verified (`run 39026437823`):**
+  - **Quality Checks, Tests & Build Verification:** `SUCCESS` (Audit allowlist, Dataset provenance, Subsystems simulation, Component checker, 176 unit tests, Safety guards, ESLint, Next.js production build).
+  - **Real Database Integration & RLS Contract Tests:** `SUCCESS` (All 19 live database integration tests executed against local Supabase container, 0 skipped, 0 failed).
+  - **Playwright End-to-End Tests:** `SUCCESS` (Executed against seeded local stack).
+  - **Run URL:** [https://github.com/Arnavshukla09/RURAL-HEALTHCARE-PLATFORM/actions/runs/39026437823](https://github.com/Arnavshukla09/RURAL-HEALTHCARE-PLATFORM/actions/runs/39026437823)
 
