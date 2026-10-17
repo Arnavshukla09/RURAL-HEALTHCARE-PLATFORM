@@ -99,7 +99,25 @@ where schemaname='public' and (qual ilike '%user_metadata%' or with_check ilike 
 - **`app/api/medical-records/route.ts` DELETE Updated:** Admin callers route through `admin_erase_medical_record` RPC instead of raw RLS queries.
 - **Documentation Updated:** `docs/LIMITATIONS.md` and `docs/SECURITY_NOTES.md` record the invariant: **admin has no SELECT or UPDATE on medical_records; admin can erase only through the audited function.**
 
-### Step 3: Test Fixtures & Mutation Proofs - PENDING
-- Update fixtures to use service role database insertions.
-- Add 6 automated security tests with documented mutation proofs.
+### Step 3: Test Fixtures & Mutation Proofs - COMPLETED
+- **Seed Scripts (`scripts/seed_e2e_users.js`):** Updated user provisioning to set roles in `app_metadata` and direct `patients.role` table insertion via service role, eliminating all reliance on `user_metadata.role`.
+- **Integration Test Actor Provisioning (`tests/integration/rls-care-relationship.test.ts`):** `provisionActor` now assigns roles via `app_metadata` and `patients.role` using service-role `adminClient`.
+- **Test 4 Remediated:** Removed workaround assertions and count-header adjustments. Test 4 verifies:
+  1. Admin `SELECT` on `medical_records` returns `[]`.
+  2. Non-admin (patient) calling `admin_erase_medical_record` is rejected with SQLSTATE `42501`.
+  3. Doctor calling `admin_erase_medical_record` is rejected with SQLSTATE `42501`.
+  4. Admin calling `admin_erase_medical_record` successfully erases the target row.
+  5. Target row is confirmed permanently deleted.
+  6. Audit entry verified in `access_audit_log` with correct actor UUID and patient ID.
+- **6 New Security Tests Added (Total Suite Size: 19 Tests):**
+  1. Test 11: Unauthenticated signup with `role: 'admin'`/`'doctor'` in metadata produces `role='patient'` and denies administrative/medical access.
+  2. Test 12: Signed-in patient calling `auth.updateUser({ data: { role: 'admin' } })` gains zero privileges (`get_user_role()` remains `'patient'`).
+  3. Test 13: JWT with `user_metadata.role = 'admin'` is ignored by all RLS policies (`providers_admin_insert`, `chat_cache_select_verified`, cross-patient `medical_records`).
+  4. Test 14: `get_user_role()` returns verified DB role for valid users and `NULL` for orphan users lacking a `patients` record.
+  5. Test 15: Admin `SELECT` on `medical_records` returns `[]` across all `record_type` values and content keyword filters.
+  6. Test 16: Non-service callers cannot INSERT a non-patient role into `patients`.
+- **Mutation Proofs Recorded:** Documented Mutations 4, 5, and 6 in `docs/TEST_EVIDENCE.md` with exact failure outputs and restoration confirmation.
+
+### Step 4: CI Cleanup - PENDING
+- Least-privilege permissions, removal of `--debug`, high audit gate via allowlist, e2e dependency harmonization.
 

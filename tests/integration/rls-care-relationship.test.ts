@@ -65,7 +65,8 @@ describe.skipIf(!isDbAvailable)("Live RLS & Care Relationship Integration Suite 
         email,
         password,
         email_confirm: true,
-        user_metadata: { role, full_name: name },
+        user_metadata: { full_name: name },
+        app_metadata: { role },
       });
 
       if (createErr && createErr.message.includes("already been registered")) {
@@ -74,7 +75,8 @@ describe.skipIf(!isDbAvailable)("Live RLS & Care Relationship Integration Suite 
         if (!existing) throw new Error(`Could not find pre-existing user for ${email}`);
         await adminClient.auth.admin.updateUserById(existing.id, {
           password,
-          user_metadata: { role, full_name: name },
+          user_metadata: { full_name: name },
+          app_metadata: { role },
         });
         user = existing;
       } else if (createErr) {
@@ -312,9 +314,9 @@ describe.skipIf(!isDbAvailable)("Live RLS & Care Relationship Integration Suite 
   });
 
   // --------------------------------------------------------------------------
-  // Test 4: Admin Confidentiality vs Moderation
+  // Test 4: Admin Confidentiality vs Audited Erasure
   // --------------------------------------------------------------------------
-  it("verifies admin confidentiality & moderation: admin SELECT returns 0 rows, but DELETE succeeds", async () => {
+  it("verifies admin confidentiality & audited erasure: admin SELECT returns 0 rows, erasure only via audited function", async () => {
     // Admin SELECT on medical_records returns 0 rows (confidentiality invariant)
     const { data: adminSelect, error: adminSelErr } = await adminUser.client.from("medical_records").select("id, content");
     expect(adminSelErr).toBeNull();
@@ -332,7 +334,7 @@ describe.skipIf(!isDbAvailable)("Live RLS & Care Relationship Integration Suite 
     }
     expect(roleCheck).toBe("admin");
 
-    // Create temporary disposable record to verify admin DELETE
+    // Create temporary disposable record to verify admin audited erasure
     const { data: disposable, error: dispErr } = await adminClient
       .from("medical_records")
       .insert({
@@ -346,25 +348,48 @@ describe.skipIf(!isDbAvailable)("Live RLS & Care Relationship Integration Suite 
     expect(dispErr).toBeNull();
     expect(disposable).toBeDefined();
 
-    // Admin DELETE succeeds
-    const delResp = await adminUser.client
-      .from("medical_records")
-      .delete()
-      .eq("id", disposable!.id);
-    const adminDelErr = delResp.error;
-    if (adminDelErr) {
-      throw new Error(`adminUser DELETE failed: ${adminDelErr.message} (code: ${adminDelErr.code})`);
-    }
-    expect(adminDelErr).toBeNull();
+    // 1. Non-admin (patient) calling admin_erase_medical_record gets error
+    const { error: patientEraseErr } = await patientA.client.rpc("admin_erase_medical_record", {
+      p_record_id: disposable!.id,
+      p_reason: "Unauthorized attempt by patient",
+    });
+    expect(patientEraseErr).toBeDefined();
+    expect(patientEraseErr?.message).toContain("Administrator privileges required");
 
-    // Verify record is permanently deleted
-    const { data: afterDel, error: afterErr } = await adminClient.from("medical_records").select("id").eq("id", disposable!.id);
+    // 2. Doctor calling admin_erase_medical_record gets error
+    const { error: doctorEraseErr } = await doctorD1.client.rpc("admin_erase_medical_record", {
+      p_record_id: disposable!.id,
+      p_reason: "Unauthorized attempt by doctor",
+    });
+    expect(doctorEraseErr).toBeDefined();
+    expect(doctorEraseErr?.message).toContain("Administrator privileges required");
+
+    // 3. Admin calls audited admin_erase_medical_record RPC
+    const { data: eraseRes, error: adminEraseErr } = await adminUser.client.rpc("admin_erase_medical_record", {
+      p_record_id: disposable!.id,
+      p_reason: "Right-to-erasure test execution",
+    });
+    expect(adminEraseErr).toBeNull();
+    expect(eraseRes).toBe(true);
+
+    // 4. Assert row is permanently gone
+    const { data: afterDel, error: afterErr } = await adminClient
+      .from("medical_records")
+      .select("id")
+      .eq("id", disposable!.id);
     expect(afterErr).toBeNull();
-    if (afterDel && afterDel.length > 0) {
-      const { data: curUser } = await adminUser.client.auth.getUser();
-      throw new Error(`Record was NOT deleted by adminUser: afterDel returned ${JSON.stringify(afterDel)}, status was ${delResp.status}, user=${JSON.stringify(curUser?.user?.id)}, role=${curUser?.user?.user_metadata?.role}`);
-    }
     expect(afterDel).toEqual([]);
+
+    // 5. Assert audit row written in access_audit_log
+    const { data: auditLog, error: auditErr } = await adminClient
+      .from("access_audit_log")
+      .select("id, user_id, action, resource_id, patient_id")
+      .eq("resource_id", disposable!.id)
+      .eq("action", "ERASE_MEDICAL_RECORD");
+    expect(auditErr).toBeNull();
+    expect(auditLog?.length).toBeGreaterThanOrEqual(1);
+    expect(auditLog![0].user_id).toBe(adminUser.user.id);
+    expect(auditLog![0].patient_id).toBe(patientA.patientId);
   });
 
   // --------------------------------------------------------------------------
@@ -553,6 +578,291 @@ describe.skipIf(!isDbAvailable)("Live RLS & Care Relationship Integration Suite 
     // guard_demo_admin_safety() trigger halts transaction
     expect(demoAdminErr).not.toBeNull();
     expect(demoAdminErr!.message).toContain("Demo admin mode restricted");
+  });
+
+  // --------------------------------------------------------------------------
+  // Test 11: Unauthenticated Signup Role Hardening
+  // --------------------------------------------------------------------------
+  it("verifies unauthenticated signup with role in metadata produces role='patient' and cannot read admin or medical data", async () => {
+    const attackEmail = `attacker_signup_${runId}_${crypto.randomUUID().slice(0, 6)}@test.local`;
+    const attackPassword = `AttackPass!_${runId}_123`;
+
+    // Attacker calls auth.signUp supplying role: 'admin' in metadata
+    const { data: signData, error: signErr } = await anonClient.auth.signUp({
+      email: attackEmail,
+      password: attackPassword,
+      options: {
+        data: {
+          role: "admin",
+          full_name: "Privilege Escalation Attacker",
+        },
+      },
+    });
+    expect(signErr).toBeNull();
+    expect(signData.user).toBeDefined();
+    const attackerUserId = signData.user!.id;
+
+    // Check database role in public.patients via adminClient
+    const { data: profile, error: profErr } = await adminClient
+      .from("patients")
+      .select("id, user_id, role")
+      .eq("user_id", attackerUserId)
+      .single();
+    expect(profErr).toBeNull();
+    // Must be 'patient' - NOT 'admin'
+    expect(profile!.role).toBe("patient");
+
+    // Sign in as attacker
+    const { data: authSession, error: loginErr } = await anonClient.auth.signInWithPassword({
+      email: attackEmail,
+      password: attackPassword,
+    });
+    expect(loginErr).toBeNull();
+    expect(authSession.session).toBeDefined();
+
+    const attackerClient = createClient(targetUrl, anonKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+      global: {
+        headers: {
+          Authorization: `Bearer ${authSession.session!.access_token}`,
+        },
+      },
+    });
+
+    // Verify attacker gets role 'patient' from get_user_role()
+    const { data: roleCheck, error: roleErr } = await attackerClient.rpc("get_user_role");
+    expect(roleErr).toBeNull();
+    expect(roleCheck).toBe("patient");
+
+    // Attacker cannot read Patient A's medical records
+    const { data: medRecords, error: medErr } = await attackerClient
+      .from("medical_records")
+      .select("*")
+      .eq("id", recordA1Id);
+    expect(medErr).toBeNull();
+    expect(medRecords).toEqual([]);
+
+    // Attacker cannot query all patients (admin-only)
+    const { data: allPatients, error: patErr } = await attackerClient
+      .from("patients")
+      .select("id, user_id");
+    expect(patErr).toBeNull();
+    expect(allPatients?.length).toBe(1);
+    expect(allPatients![0].user_id).toBe(attackerUserId);
+  });
+
+  // --------------------------------------------------------------------------
+  // Test 12: Client updateUser Role Escalation Prevention
+  // --------------------------------------------------------------------------
+  it("verifies signed-in patient calling updateUser({ data: { role: 'admin' } }) gains no privileges", async () => {
+    // Patient A updates user_metadata to role: 'admin'
+    const { data: updData, error: updErr } = await patientA.client.auth.updateUser({
+      data: { role: "admin" },
+    });
+    expect(updErr).toBeNull();
+    expect(updData.user?.user_metadata?.role).toBe("admin");
+
+    // Call get_user_role() - must return 'patient' from DB, ignoring user_metadata
+    const { data: roleCheck, error: roleErr } = await patientA.client.rpc("get_user_role");
+    expect(roleErr).toBeNull();
+    expect(roleCheck).toBe("patient");
+
+    // Admin-only read on patients returns only own row
+    const { data: patientsList, error: patErr } = await patientA.client.from("patients").select("id, user_id");
+    expect(patErr).toBeNull();
+    expect(patientsList?.length).toBe(1);
+    expect(patientsList![0].user_id).toBe(patientA.user.id);
+
+    // Cannot call admin erasure RPC
+    const { error: eraseErr } = await patientA.client.rpc("admin_erase_medical_record", {
+      p_record_id: recordA1Id,
+      p_reason: "Escalation exploit attempt",
+    });
+    expect(eraseErr).toBeDefined();
+    expect(eraseErr?.message).toContain("Administrator privileges required");
+  });
+
+  // --------------------------------------------------------------------------
+  // Test 13: JWT user_metadata Role Ignored by All RLS Policies
+  // --------------------------------------------------------------------------
+  it("verifies a JWT whose user_metadata.role = 'admin' is ignored by every policy", async () => {
+    // Patient A has user_metadata.role = 'admin' from Test 12
+    // Check healthcare_providers insert (protected by providers_admin_insert)
+    const { error: insertProvErr } = await patientA.client
+      .from("healthcare_providers")
+      .insert({
+        name: "Unauthorized Clinic",
+        email: "unauth@clinic.org",
+        specialization: "General",
+        is_verified: true,
+      });
+    expect(insertProvErr).not.toBeNull();
+
+    // Check chat_cache select (protected by chat_cache_select_verified: admin or doctor only)
+    const { data: chatData } = await patientA.client
+      .from("chat_cache")
+      .select("*");
+    expect(chatData ?? []).toEqual([]);
+
+    // Check medical_records cross-patient read (Patient A cannot read Patient B's record)
+    const { data: recB, error: recBErr } = await patientA.client
+      .from("medical_records")
+      .select("id")
+      .eq("id", recordB1Id);
+    expect(recBErr).toBeNull();
+    expect(recB).toEqual([]);
+  });
+
+  // --------------------------------------------------------------------------
+  // Test 14: get_user_role() Resolution & NULL Behavior
+  // --------------------------------------------------------------------------
+  it("verifies get_user_role() returns DB role for each fixture user and NULL for user with no patients row", async () => {
+    // 1. adminUser returns 'admin'
+    const { data: adminRole } = await adminUser.client.rpc("get_user_role");
+    expect(adminRole).toBe("admin");
+
+    // 2. doctorD1 returns 'doctor'
+    const { data: docRole } = await doctorD1.client.rpc("get_user_role");
+    expect(docRole).toBe("doctor");
+
+    // 3. patientA returns 'patient'
+    const { data: patRole } = await patientA.client.rpc("get_user_role");
+    expect(patRole).toBe("patient");
+
+    // 4. Temporary user with no patients row returns NULL
+    const orphanEmail = `orphan_${runId}_${crypto.randomUUID().slice(0, 6)}@test.local`;
+    const orphanPassword = `OrphanPass!_${runId}_123`;
+    const { data: orphanAuth } = await adminClient.auth.admin.createUser({
+      email: orphanEmail,
+      password: orphanPassword,
+      email_confirm: true,
+      user_metadata: { role: "admin" },
+    });
+    expect(orphanAuth?.user).toBeDefined();
+
+    // Delete any automatically created patients row
+    await adminClient.from("patients").delete().eq("user_id", orphanAuth!.user!.id);
+
+    const { data: orphanSession } = await anonClient.auth.signInWithPassword({
+      email: orphanEmail,
+      password: orphanPassword,
+    });
+    expect(orphanSession?.session).toBeDefined();
+
+    const orphanClient = createClient(targetUrl, anonKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+      global: {
+        headers: {
+          Authorization: `Bearer ${orphanSession!.session!.access_token}`,
+        },
+      },
+    });
+
+    const { data: orphanRole, error: orphanRoleErr } = await orphanClient.rpc("get_user_role");
+    expect(orphanRoleErr).toBeNull();
+    expect(orphanRole).toBeNull();
+  });
+
+  // --------------------------------------------------------------------------
+  // Test 15: Absolute Medical Record Confidentiality for Admins
+  // --------------------------------------------------------------------------
+  it("verifies admin SELECT on medical_records returns [] for rows of every record_type and content", async () => {
+    const testTypes = ["prescription", "diagnosis", "lab_report", "other"] as const;
+    const insertedIds: string[] = [];
+
+    for (const rType of testTypes) {
+      const { data: rec } = await adminClient
+        .from("medical_records")
+        .insert({
+          patient_id: patientA.patientId,
+          provider_id: doctorD1.providerId,
+          record_type: rType,
+          content: `Test content for ${rType} - contains erasure and disposable markers`,
+        })
+        .select("id")
+        .single();
+      if (rec?.id) insertedIds.push(rec.id);
+    }
+
+    expect(insertedIds.length).toBe(testTypes.length);
+
+    // Admin executes general SELECT *
+    const { data: adminAll, error: selAllErr } = await adminUser.client
+      .from("medical_records")
+      .select("*");
+    expect(selAllErr).toBeNull();
+    expect(adminAll).toEqual([]);
+
+    // Admin executes filtered SELECT for each type
+    for (const rType of testTypes) {
+      const { data: filtered, error: fErr } = await adminUser.client
+        .from("medical_records")
+        .select("*")
+        .eq("record_type", rType);
+      expect(fErr).toBeNull();
+      expect(filtered).toEqual([]);
+    }
+
+    // Admin queries specifically for "erasure" or "disposable" content
+    const { data: keywordQuery, error: kwErr } = await adminUser.client
+      .from("medical_records")
+      .select("*")
+      .ilike("content", "%erasure%");
+    expect(kwErr).toBeNull();
+    expect(keywordQuery).toEqual([]);
+
+    // Cleanup
+    for (const id of insertedIds) {
+      await adminClient.from("medical_records").delete().eq("id", id);
+    }
+  });
+
+  // --------------------------------------------------------------------------
+  // Test 16: Non-Service Caller INSERT Role Restrictions
+  // --------------------------------------------------------------------------
+  it("verifies non-service callers cannot INSERT a non-patient role into patients", async () => {
+    // 1. Authenticated patient attempting to insert non-patient role
+    const rogueId = crypto.randomUUID();
+    const { error: patInsErr } = await patientA.client
+      .from("patients")
+      .insert({
+        user_id: rogueId,
+        email: `rogue_${runId}@test.local`,
+        first_name: "Rogue",
+        role: "admin",
+      });
+    expect(patInsErr).not.toBeNull();
+
+    // 2. Unauthenticated anon caller attempting to insert non-patient role
+    const { error: anonInsErr } = await anonClient
+      .from("patients")
+      .insert({
+        user_id: crypto.randomUUID(),
+        email: `anon_rogue_${runId}@test.local`,
+        first_name: "AnonRogue",
+        role: "doctor",
+      });
+    expect(anonInsErr).not.toBeNull();
+
+    // 3. Service role CAN insert non-patient role
+    const docUserId = crypto.randomUUID();
+    const { data: servIns, error: servErr } = await adminClient
+      .from("patients")
+      .insert({
+        user_id: docUserId,
+        email: `valid_service_doc_${runId}@test.local`,
+        first_name: "ServiceDoc",
+        role: "doctor",
+      })
+      .select("id, role")
+      .single();
+    expect(servErr).toBeNull();
+    expect(servIns?.role).toBe("doctor");
+
+    // Cleanup
+    if (servIns?.id) {
+      await adminClient.from("patients").delete().eq("id", servIns.id);
+    }
   });
 });
 

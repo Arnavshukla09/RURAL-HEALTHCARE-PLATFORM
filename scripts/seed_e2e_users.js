@@ -36,7 +36,8 @@ async function seed() {
       email: u.email,
       password: u.password,
       email_confirm: true,
-      user_metadata: { full_name: u.name, role: u.role }
+      user_metadata: { full_name: u.name },
+      app_metadata: { role: u.role },
     });
 
     let userId = authData?.user?.id;
@@ -49,7 +50,8 @@ async function seed() {
         userId = existing.id;
         await supabase.auth.admin.updateUserById(userId, {
           password: u.password,
-          user_metadata: { full_name: u.name, role: u.role },
+          user_metadata: { full_name: u.name },
+          app_metadata: { role: u.role },
         });
         console.log(`Updated password and metadata for ${u.email}`);
       }

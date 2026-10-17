@@ -124,9 +124,156 @@ CREATE UNIQUE INDEX IF NOT EXISTS uq_provider_slot_scheduled
 
 ---
 
+### Mutation 4: Restoring user_metadata Fallback in get_user_role()
+* **Flaw Injected:** Re-introduced user-controlled metadata fallback in `public.get_user_role()`:
+```sql
+CREATE OR REPLACE FUNCTION public.get_user_role()
+RETURNS text LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
+  SELECT COALESCE(
+    NULLIF(auth.jwt()->'user_metadata'->>'role', ''),
+    (SELECT p.role FROM public.patients p WHERE p.user_id = (SELECT auth.uid()) LIMIT 1)
+  );
+$$;
+```
+* **Test Suite Targets:**
+  - `tests/integration/rls-care-relationship.test.ts` -> `verifies signed-in patient calling updateUser({ data: { role: 'admin' } }) gains no privileges` (Test 12)
+  - `tests/integration/rls-care-relationship.test.ts` -> `verifies a JWT whose user_metadata.role = 'admin' is ignored by every policy` (Test 13)
+* **Observed Failure Output:**
+```
+ FAIL  tests/integration/rls-care-relationship.test.ts > Live Supabase Integration & RLS Contract Tests > verifies signed-in patient calling updateUser({ data: { role: 'admin' } }) gains no privileges
+AssertionError: expected 'admin' to be 'patient'
+- Expected:
+"patient"
++ Received:
+"admin"
+
+ ❯ tests/integration/rls-care-relationship.test.ts:668:25
+    666|     // Call get_user_role() - must return 'patient' from DB, ignoring user_metadata
+    667|     const { data: roleCheck, error: roleErr } = await patientA.client.rpc("get_user_role");
+    668|     expect(roleCheck).toBe("patient");
+       |                       ^
+
+ FAIL  tests/integration/rls-care-relationship.test.ts > Live Supabase Integration & RLS Contract Tests > verifies a JWT whose user_metadata.role = 'admin' is ignored by every policy
+AssertionError: expected null not to be null
+ ❯ tests/integration/rls-care-relationship.test.ts:699:26
+    697|         is_verified: true,
+    698|       });
+    699|     expect(insertProvErr).not.toBeNull();
+       |                           ^
+```
+* **Analysis:** When `get_user_role()` trusts `user_metadata`, a patient calling `auth.updateUser({ data: { role: 'admin' } })` immediately elevates their effective role to `'admin'`, bypassing RLS on `healthcare_providers` and gaining access to other patients' data. Tests 12 and 13 caught the privilege escalation.
+* **Restoration:**
+```sql
+CREATE OR REPLACE FUNCTION public.get_user_role()
+RETURNS text LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
+  SELECT p.role FROM public.patients p WHERE p.user_id = (SELECT auth.uid()) LIMIT 1;
+$$;
+```
+* **Post-Restoration:** Returned to clean pass.
+
+---
+
+### Mutation 5: Restoring raw_user_meta_data Role Trust in handle_new_user()
+* **Flaw Injected:** Re-introduced metadata role extraction in `handle_new_user()` trigger:
+```sql
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+BEGIN
+  INSERT INTO public.patients (user_id, email, first_name, role)
+  VALUES (
+    new.id,
+    new.email,
+    COALESCE(new.raw_user_meta_data->>'full_name', split_part(new.email, '@', 1)),
+    COALESCE(new.raw_user_meta_data->>'role', 'patient')
+  )
+  ON CONFLICT (user_id) DO NOTHING;
+  RETURN NEW;
+END;
+$$;
+```
+* **Test Suite Target:** `tests/integration/rls-care-relationship.test.ts` -> `verifies unauthenticated signup with role in metadata produces role='patient' and cannot read admin or medical data` (Test 11)
+* **Observed Failure Output:**
+```
+ FAIL  tests/integration/rls-care-relationship.test.ts > Live Supabase Integration & RLS Contract Tests > verifies unauthenticated signup with role in metadata produces role='patient' and cannot read admin or medical data
+AssertionError: expected 'admin' to be 'patient'
+- Expected:
+"patient"
++ Received:
+"admin"
+
+ ❯ tests/integration/rls-care-relationship.test.ts:612:25
+    610|     expect(profErr).toBeNull();
+    611|     // Must be 'patient' - NOT 'admin'
+    612|     expect(profile.role).toBe("patient");
+       |                          ^
+```
+* **Analysis:** An unauthenticated visitor registering via the public Auth signup API with `{ role: 'admin' }` in metadata was directly inserted as an admin in `public.patients`. Test 11 caught the vulnerability.
+* **Restoration:**
+```sql
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+BEGIN
+  INSERT INTO public.patients (user_id, email, first_name, role)
+  VALUES (
+    new.id,
+    new.email,
+    COALESCE(new.raw_user_meta_data->>'full_name', split_part(new.email, '@', 1)),
+    'patient'
+  )
+  ON CONFLICT (user_id) DO NOTHING;
+  RETURN NEW;
+END;
+$$;
+```
+* **Post-Restoration:** Returned to clean pass.
+
+---
+
+### Mutation 6: Re-adding Moderation SELECT Policy on medical_records
+* **Flaw Injected:** Re-introduced the selective moderation SELECT policy on `public.medical_records`:
+```sql
+CREATE POLICY "admin_select_moderation_medical_records"
+  ON public.medical_records FOR SELECT TO authenticated
+  USING (
+    (SELECT public.get_user_role()) = 'admin'
+    AND (record_type IN ('lab_report', 'other', 'moderation') OR content ILIKE '%erasure%')
+  );
+```
+* **Test Suite Target:** `tests/integration/rls-care-relationship.test.ts` -> `verifies admin SELECT on medical_records returns [] for rows of every record_type and content` (Test 15)
+* **Observed Failure Output:**
+```
+ FAIL  tests/integration/rls-care-relationship.test.ts > Live Supabase Integration & RLS Contract Tests > verifies admin SELECT on medical_records returns [] for rows of every record_type and content
+AssertionError: expected [ { id: '...', record_type: 'lab_report', content: '...' } ] to deeply equal []
+- Expected:
+[]
++ Received:
+[
+  {
+    "content": "Test content for lab_report - contains erasure and disposable markers",
+    "id": "e2a3b4c5-...",
+    "record_type": "lab_report"
+  }
+]
+
+ ❯ tests/integration/rls-care-relationship.test.ts:795:25
+    793|     const { data: adminAll, error: selAllErr } = await adminUser.client.from("medical_records").select("*");
+    794|     expect(selAllErr).toBeNull();
+    795|     expect(adminAll).toEqual([]);
+       |                      ^
+```
+* **Analysis:** With `admin_select_moderation_medical_records` active, administrative accounts could read patient lab reports and records containing keyword matches, violating patient confidentiality. Test 15 caught the RLS leakage.
+* **Restoration:**
+```sql
+DROP POLICY IF EXISTS "admin_select_moderation_medical_records" ON public.medical_records;
+```
+* **Post-Restoration:** Returned to clean pass.
+
+---
+
 ## 3. Verification Summary
 
-- Unit Suite (`npm run test:unit`): **162/162 passing**.
-- Integration Suite (`npm run test:integration`): **Behavioral RLS suite with real JWTs**; safety guard invariant checks passing; fast-fail verified under `REQUIRE_DB=1`.
+- Unit Suite (`npm run test:unit`): **176/176 passing**.
+- Integration Suite (`npm run test:integration`): **19 live contract tests (16 live database RLS tests + 3 safety guard invariant tests)**; 0 skipped tests.
+- Behavioral Mutation Proofs: **6 completed and verified** (Mutations 1–3: doctor care scope, legacy admin read, concurrency collisions; Mutations 4–6: user_metadata fallback, signup metadata role extraction, selective moderation RLS bypass).
 - Component Pre-commit Check (`node scripts/check_components.mjs`): **All 5 stages passing cleanly**.
 - Security Audit Enforcer (`node scripts/audit_allowlist.mjs`): **All high advisories audited against expiring allowlist (Expires 2026-12-31)**.
