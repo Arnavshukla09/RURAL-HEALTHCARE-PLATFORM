@@ -109,14 +109,20 @@ jobs:
               const fs = require('fs');
               const r = JSON.parse(fs.readFileSync('vitest-integration-report.json', 'utf8'));
               console.log('Test Summary: passed=' + r.numPassedTests + ', failed=' + r.numFailedTests + ', skipped=' + (r.numPendingTests || 0));
+              let md = '### Integration Test Failures\n\n';
               for (const tr of r.testResults) {
                 for (const a of tr.assertionResults) {
                   if (a.status === 'failed') {
                     console.log('--- FAILED TEST: ' + a.title + ' ---');
                     console.log((a.failureMessages || []).join('\n'));
-                    console.error('::error::' + a.title.replace(/\r?\n/g, ' '));
+                    md += '#### ' + a.title + '\n```\n' + (a.failureMessages || []).join('\n') + '\n```\n';
+                    const detail = ((a.failureMessages || [])[0] || a.title).replace(/\r?\n/g, ' ').slice(0, 300);
+                    console.error('::error title=' + a.title.slice(0, 50) + '::' + detail);
                   }
                 }
+              }
+              if (process.env.GITHUB_STEP_SUMMARY) {
+                fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, md);
               }
             "
           fi

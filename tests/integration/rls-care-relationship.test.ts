@@ -319,8 +319,16 @@ describe.skipIf(!isDbAvailable)("Live RLS & Care Relationship Integration Suite 
     expect(adminSelErr).toBeNull();
     expect(adminSelect).toEqual([]);
 
+    // Check adminUser identity and patient role
+    const { data: userProfile, error: profErr } = await adminClient.from("patients").select("id, user_id, role").eq("user_id", adminUser.user.id).single();
+    expect(profErr).toBeNull();
+    expect(userProfile?.role).toBe("admin");
+
     // Verify admin role is active via security definer RPC
-    const { data: roleCheck } = await adminUser.client.rpc("get_user_role");
+    const { data: roleCheck, error: roleErr } = await adminUser.client.rpc("get_user_role");
+    if (roleErr) {
+      throw new Error(`get_user_role RPC failed for adminUser: ${roleErr.message}`);
+    }
     expect(roleCheck).toBe("admin");
 
     // Create temporary disposable record to verify admin DELETE
@@ -339,10 +347,17 @@ describe.skipIf(!isDbAvailable)("Live RLS & Care Relationship Integration Suite 
 
     // Admin DELETE succeeds
     const { error: adminDelErr } = await adminUser.client.from("medical_records").delete().eq("id", disposable!.id);
+    if (adminDelErr) {
+      throw new Error(`adminUser DELETE failed: ${adminDelErr.message} (code: ${adminDelErr.code})`);
+    }
     expect(adminDelErr).toBeNull();
 
     // Verify record is permanently deleted
-    const { data: afterDel } = await adminClient.from("medical_records").select("id").eq("id", disposable!.id);
+    const { data: afterDel, error: afterErr } = await adminClient.from("medical_records").select("id").eq("id", disposable!.id);
+    expect(afterErr).toBeNull();
+    if (afterDel && afterDel.length > 0) {
+      throw new Error(`Record was NOT deleted by adminUser: afterDel returned ${JSON.stringify(afterDel)}`);
+    }
     expect(afterDel).toEqual([]);
   });
 
