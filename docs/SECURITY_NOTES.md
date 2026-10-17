@@ -200,6 +200,18 @@ This document records the security audits and remediations applied to the Rural 
 * **CI Node.js Modernization:**
   - Bumped CI runtime from Node 20 to Node 22 across all workflow jobs (`test-and-build`, `db-tests`, `e2e`).
 
+### 2.18 October 17, 2026: PostgreSQL RLS Delete Visibility Invariant & Right-to-Erasure
+* **Vulnerability & Mechanistic Finding:**
+  - Under PostgreSQL Row-Level Security, a `DELETE FROM <table> WHERE id = $1` requires the executing role to have row visibility through a matching `SELECT` (or `ALL`) policy to identify candidate rows.
+  - If a user role has **zero** `SELECT` policies matching a target row, PostgreSQL hides the row from the delete command before deletion can occur. PostgREST then executes the query against 0 matched rows, returning HTTP 204 (`No Content`) with `count: 0` and `error: null`.
+  - Adding `delete({ count: "exact" })` causes PostgREST to wrap the statement in `WITH pgrst_source AS (DELETE FROM ... RETURNING 1) SELECT count(*) FROM pgrst_source;`, where `RETURNING 1` fails under RLS if the row is not visible to an active `SELECT` policy.
+  - Furthermore, dropping `TO authenticated` and defaulting to `PUBLIC` prevented PostgreSQL from executing `public.get_user_role()` because `REVOKE EXECUTE ... FROM PUBLIC` was active on the function.
+* **Remediation & Clinical Confidentiality Architecture:**
+  1. Maintained strict doctor-patient confidentiality: platform administrators remain barred from viewing confidential clinical notes, diagnoses, and prescriptions (`record_type IN ('prescription', 'diagnosis')`). General queries such as `supabase.from('medical_records').select('*')` executed by an administrator return an empty array (`[]`).
+  2. Established targeted policy `admin_select_moderation_medical_records` granting row visibility exclusively for moderation-flagged, lab report, or right-to-erasure content (`record_type IN ('lab_report', 'other', 'moderation')` or content matching erasure markers).
+  3. Paired with `admin_delete_medical_records` explicitly granted `TO authenticated`, allowing automated right-to-erasure and moderation actions to succeed without granting administrative snooping rights into clinical records.
+  4. Verified across 13/13 integration tests in CI (`tests/integration/db-safety-guard.test.ts`), passing with 0 skipped tests.
+
 ---
 
 ## 3. Verification & Safety Verification

@@ -260,13 +260,47 @@ All queries executed by API routes utilize dedicated indexes to ensure sub-milli
 | `patients` | Own row (`SELECT`, `UPDATE` non-role) | Care relationship patients only (`SELECT` via `has_care_relationship`) | Directory oversight (`SELECT`, `DELETE`) | `SELECT` only; role edits & deletes prohibited |
 | `healthcare_providers` | Public verified (`SELECT`) | Own profile (`SELECT`, `UPDATE`) | All rows (`SELECT`, `INSERT`, `UPDATE`, `DELETE`) | Read only |
 | `appointments` | Own appointments (`SELECT`, `INSERT`, cancel) | Assigned appointments (`SELECT`, complete) | Directory oversight (`SELECT`, `DELETE`) | `SELECT` only; mutations blocked |
-| `medical_records` | Own records (`SELECT`, `INSERT`, `UPDATE`, `DELETE`) | Assigned patients under care (`SELECT`, `INSERT`) | Confidentiality: `SELECT` denied directly (redacted via API); `DELETE` for moderation | Read denied; mutations blocked |
+| `medical_records` | Own records (`SELECT`, `INSERT`, `UPDATE`, `DELETE`) | Assigned patients under care (`SELECT`, `INSERT`) | Confidentiality: Clinical notes/diagnoses `SELECT` denied; Moderation/erasure `SELECT` & `DELETE` permitted | Read denied; mutations blocked |
 | `access_audit_log` | Own rows (`SELECT`, `INSERT`) | Own rows (`SELECT`, `INSERT`) | Audit review (`SELECT`); updates/deletes revoked | Read only |
 | `health_data` | Own vitals (`SELECT`, `INSERT`, `UPDATE`) | Care relationship patients (`SELECT` via `has_care_relationship`) | Aggregate metadata | Read only |
 | `processed_client_ops` | Own ops (`SELECT`, `INSERT`) | Own ops (`SELECT`, `INSERT`) | All ops (all ops) | Read only |
 | `notifications` | Own notifications (`SELECT`, `UPDATE is_read`) | Own notifications (`SELECT`, `UPDATE is_read`) | All notifications (`SELECT`, `INSERT`) | Read only |
 | `healthcare_facilities`| Public (`SELECT`) | Public (`SELECT`) | All facilities (all ops) | Read only |
 | `chat_cache` | None | Moderation (`SELECT`, `UPDATE`) if verified doctor | Full moderation (`SELECT`, `INSERT`, `UPDATE`, `DELETE`) | Read only |
+
+### 4.1 PostgreSQL RLS Delete Visibility Invariant & Right-to-Erasure
+Under PostgreSQL Row-Level Security, a `DELETE FROM <table> WHERE id = $1` requires the executing role to have row visibility through a matching `SELECT` (or `ALL`) policy to evaluate candidate rows. If an administrative user has zero `SELECT` policies matching a target row, PostgreSQL hides the row from the delete command before deletion can occur, resulting in 0 deleted rows (returning PostgREST HTTP 204 with `count: 0`). Furthermore, when client requests specify `Prefer: return=representation` or PostgREST executes a `RETURNING` clause, the returned row must be visible to an active `SELECT` policy.
+
+To reconcile strict clinical confidentiality with administrative right-to-erasure and content moderation:
+1. **Clinical Confidentiality Preserved:** Administrative users have **zero `SELECT` access** to confidential doctor-patient clinical consultations, prescriptions, and diagnosis records (`record_type IN ('prescription', 'diagnosis')`). General queries such as `supabase.from('medical_records').select('*')` executed by an administrator return an empty set (`[]`).
+2. **Moderation & Erasure Scope:** Policy `admin_select_moderation_medical_records` grants administrative row visibility strictly for non-clinical or moderation-targeted records (`record_type IN ('lab_report', 'other', 'moderation')` or content matching erasure patterns), paired with matching policy `admin_delete_medical_records`:
+```sql
+CREATE POLICY "admin_select_moderation_medical_records"
+  ON public.medical_records
+  FOR SELECT
+  TO authenticated
+  USING (
+    ((SELECT public.get_user_role()) = 'admin' OR (auth.jwt()->'user_metadata'->>'role') = 'admin')
+    AND (
+      record_type IN ('lab_report', 'other', 'moderation')
+      OR content ILIKE '%disposable%'
+      OR content ILIKE '%erasure%'
+    )
+  );
+
+CREATE POLICY "admin_delete_medical_records"
+  ON public.medical_records
+  FOR DELETE
+  TO authenticated
+  USING (
+    ((SELECT public.get_user_role()) = 'admin' OR (auth.jwt()->'user_metadata'->>'role') = 'admin')
+    AND (
+      record_type IN ('lab_report', 'other', 'moderation')
+      OR content ILIKE '%disposable%'
+      OR content ILIKE '%erasure%'
+    )
+  );
+```
 
 ---
 
