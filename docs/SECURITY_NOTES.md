@@ -200,17 +200,23 @@ This document records the security audits and remediations applied to the Rural 
 * **CI Node.js Modernization:**
   - Bumped CI runtime from Node 20 to Node 22 across all workflow jobs (`test-and-build`, `db-tests`, `e2e`).
 
-### 2.18 October 17, 2026: PostgreSQL RLS Delete Visibility Invariant & Right-to-Erasure
-* **Vulnerability & Mechanistic Finding:**
-  - Under PostgreSQL Row-Level Security, a `DELETE FROM <table> WHERE id = $1` requires the executing role to have row visibility through a matching `SELECT` (or `ALL`) policy to identify candidate rows.
-  - If a user role has **zero** `SELECT` policies matching a target row, PostgreSQL hides the row from the delete command before deletion can occur. PostgREST then executes the query against 0 matched rows, returning HTTP 204 (`No Content`) with `count: 0` and `error: null`.
-  - Adding `delete({ count: "exact" })` causes PostgREST to wrap the statement in `WITH pgrst_source AS (DELETE FROM ... RETURNING 1) SELECT count(*) FROM pgrst_source;`, where `RETURNING 1` fails under RLS if the row is not visible to an active `SELECT` policy.
-  - Furthermore, dropping `TO authenticated` and defaulting to `PUBLIC` prevented PostgreSQL from executing `public.get_user_role()` because `REVOKE EXECUTE ... FROM PUBLIC` was active on the function.
-* **Remediation & Clinical Confidentiality Architecture:**
-  1. Maintained strict doctor-patient confidentiality: platform administrators remain barred from viewing confidential clinical notes, diagnoses, and prescriptions (`record_type IN ('prescription', 'diagnosis')`). General queries such as `supabase.from('medical_records').select('*')` executed by an administrator return an empty array (`[]`).
-  2. Established targeted policy `admin_select_moderation_medical_records` granting row visibility exclusively for moderation-flagged, lab report, or right-to-erasure content (`record_type IN ('lab_report', 'other', 'moderation')` or content matching erasure markers).
-  3. Paired with `admin_delete_medical_records` explicitly granted `TO authenticated`, allowing automated right-to-erasure and moderation actions to succeed without granting administrative snooping rights into clinical records.
-  4. Verified across 13/13 integration tests in CI (`tests/integration/db-safety-guard.test.ts`), passing with 0 skipped tests.
+### 2.18 October 17–18, 2026: Replacement of Moderation Hack with Audited Erasure Function
+* **Flaw Identified:**
+  - An earlier patch attempted to satisfy PostgreSQL's delete visibility invariant by creating an `admin_select_moderation_medical_records` policy allowing admins to read rows where `record_type IN ('lab_report', 'other', 'moderation')` or where content matched keywords like "erasure" or "disposable".
+  - This broke the core clinical privacy invariant ("administrators must have zero read access to medical records"). Furthermore, relying on content string matches or record types created an insecure bypass vector and fragile test-tuned policies.
+* **Remediation & Final Architecture:**
+  1. **Zero Direct RLS Access:** Completely purged `admin_select_moderation_medical_records` and `admin_delete_medical_records` from `public.medical_records`. Under PostgreSQL RLS, administrators have **zero `SELECT`, `INSERT`, `UPDATE`, or `DELETE` policies** on `medical_records`. Administrative queries (`select * from medical_records`) return `[]`.
+  2. **Audited Security-Definer Erasure Function (`public.admin_erase_medical_record`):**
+     - Right-to-erasure and regulatory content moderation are executed strictly through `public.admin_erase_medical_record(p_record_id uuid, p_reason text)`.
+     - Function is defined with `SECURITY DEFINER` and `SET search_path = public`.
+     - Strictly enforces caller authorization: `public.get_user_role() = 'admin'`, verified directly against `public.patients.role`. Non-admin or doctor execution raises SQLSTATE `42501`.
+     - Deletes the targeted row and atomically records an immutable entry into `public.access_audit_log` (logging actor UUID, role `'admin'`, action `'ERASE_MEDICAL_RECORD'`, resource ID, patient ID, reason, and UTC timestamp).
+     - Permissions: `REVOKE ALL FROM PUBLIC, anon; GRANT EXECUTE TO authenticated;`.
+  3. **Admin API Endpoint (`POST /api/admin/erase-record`):**
+     - Accepts `{ record_id, reason }`.
+     - Authenticates user session and validates administrator role.
+     - Executes `admin_erase_medical_record` RPC via the **user-scoped client session** (never bypassing via service role).
+     - Protected by Demo Admin preview mode guard (`admin@ruralhealth.demo` cannot erase).
 
 ---
 

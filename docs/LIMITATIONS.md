@@ -39,12 +39,12 @@ Every subsystem in the repository is tracked against a strict 4-tier verificatio
 
 ## 4. Doctor-Patient Confidentiality & Admin Safety Model
 
-### Administrator Read Restriction
-* **Clinical Confidentiality Rule:** To protect medical privacy under clinical ethics and data protection standards (DPDP Act 2023), administrators **never have read access** to confidential diagnoses, clinical consultation notes, or patient medical files (`file_url`).
+### Administrator Read Restriction & Audited Erasure Invariant
+* **Strict Clinical Confidentiality Invariant:** To protect medical privacy under clinical ethics and data protection standards (DPDP Act 2023), administrators **never have read or update access** to confidential diagnoses, clinical consultation notes, or patient medical files (`file_url`).
 * **Implementation:**
-  * Direct PostgreSQL RLS: Admin role has no `SELECT` policy on `public.medical_records`.
-  * Administrative API (`GET /api/medical-records?all=true`): Masks all note text with `[Protected Health Information — Confidential Patient Record]` and suppresses `file_url`, returning only `has_file: boolean`.
-* **Administrative Moderation Rights:** Administrators retain `DELETE` capabilities strictly for storage hygiene and right-to-erasure / regulatory compliance.
+  * **Zero Direct Access:** Admin role has **zero `SELECT` or `UPDATE` policies** on `public.medical_records` under PostgreSQL Row-Level Security. General queries such as `supabase.from('medical_records').select('*')` executed by an administrator return an empty set (`[]`).
+  * **Audited Erasure Only:** Administrators cannot execute raw SQL `DELETE` on `medical_records`. Right-to-erasure and moderation actions can **only** be executed through the security-definer function `public.admin_erase_medical_record(p_record_id, p_reason)` or the admin endpoint `POST /api/admin/erase-record`, which strictly verifies admin status and atomically writes to `access_audit_log` (recording actor UUID, role, record ID, patient ID, reason, and UTC timestamp).
+  * **Administrative Metadata Overview:** The administrative API (`GET /api/medical-records?all=true`) masks all clinical notes with `[Protected Health Information — Confidential Patient Record]` and suppresses `file_url`, returning only `has_file: boolean`.
 
 ### Demo Admin Preview Mode
 * **Boundary Guard:** Demo administrative accounts (`admin@ruralhealth.demo` or email containing `demo`) operate exclusively in **Preview Mode**.

@@ -270,27 +270,43 @@ export async function DELETE(request: NextRequest) {
     }
 
 
-    // Administrative moderation: Non-demo admin can delete files/records for storage/erasure without viewing them
-    let query = supabase.from("medical_records").delete().eq("id", id)
-    if (patient.role !== "admin") {
-      query = query.eq("patient_id", patient.id)
-    }
-
-    const { error } = await query
-
-    if (error) {
-      return NextResponse.json({ error: "Failed to delete record", code: "DB_ERROR" }, { status: 500 })
-    }
-
+    // Administrative moderation: Non-demo admin uses audited security-definer erasure function
     if (patient.role === "admin") {
+      const { error: rpcError } = await supabase.rpc("admin_erase_medical_record", {
+        p_record_id: id,
+        p_reason: "Admin right-to-erasure / moderation via DELETE /api/medical-records",
+      })
+
+      if (rpcError) {
+        const isNotFound = rpcError.code === "P0002" || rpcError.message.includes("not found")
+        const isForbidden = rpcError.code === "42501" || rpcError.message.includes("Access denied")
+        return NextResponse.json(
+          { error: rpcError.message, code: isNotFound ? "NOT_FOUND" : isForbidden ? "FORBIDDEN" : "RPC_ERROR" },
+          { status: isNotFound ? 404 : isForbidden ? 403 : 500 }
+        )
+      }
+
       await logAuditEvent({
         action: "medical_records_delete_admin",
         resourceType: "medical_records",
         resourceId: id,
         userId: user.id,
         userRole: "admin",
-        details: { moderation: true },
+        details: { moderation: true, audited_function: true },
       })
+
+      return NextResponse.json({ success: true, erased: true })
+    }
+
+    // Patient deletion: RLS enforces own records
+    const { error } = await supabase
+      .from("medical_records")
+      .delete()
+      .eq("id", id)
+      .eq("patient_id", patient.id)
+
+    if (error) {
+      return NextResponse.json({ error: "Failed to delete record", code: "DB_ERROR" }, { status: 500 })
     }
 
     return NextResponse.json({ success: true })

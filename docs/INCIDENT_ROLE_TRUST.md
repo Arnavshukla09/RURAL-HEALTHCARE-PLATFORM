@@ -90,9 +90,14 @@ where schemaname='public' and (qual ilike '%user_metadata%' or with_check ilike 
   - `app/api/auth/login/route.ts`: Removed `user_metadata?.role` fallback. Role resolved strictly from database `patients.role`.
   - `components/Authentication.tsx`: Removed `role: "patient"` from client signup `options.data`.
 
-### Step 2: Replace Admin Moderation Hack with Audited Function - PENDING
-- Implement `public.admin_erase_medical_record(p_record_id uuid, p_reason text)`.
-- Expose admin erasure endpoint with session client.
+### Step 2: Replace Admin Moderation Hack with Audited Function - COMPLETED
+- **`public.admin_erase_medical_record(p_record_id uuid, p_reason text)`:** Implemented as `SECURITY DEFINER`, `SET search_path = public`.
+  - Enforces `public.get_user_role() = 'admin'`, verified strictly against `public.patients.role`.
+  - Atomic deletion: Locates target row, deletes row from `public.medical_records`, and writes an immutable audit record to `public.access_audit_log` with actor UUID, role `'admin'`, action `'ERASE_MEDICAL_RECORD'`, resource ID, patient ID, reason, and UTC timestamp.
+  - Permissions: `REVOKE ALL FROM PUBLIC, anon; GRANT EXECUTE TO authenticated;`.
+- **Admin Erasure Endpoint (`POST /api/admin/erase-record`):** Accepts `{ record_id, reason }`, validates admin role via session client, checks demo admin preview guard, and executes `admin_erase_medical_record` RPC with the user's session client.
+- **`app/api/medical-records/route.ts` DELETE Updated:** Admin callers route through `admin_erase_medical_record` RPC instead of raw RLS queries.
+- **Documentation Updated:** `docs/LIMITATIONS.md` and `docs/SECURITY_NOTES.md` record the invariant: **admin has no SELECT or UPDATE on medical_records; admin can erase only through the audited function.**
 
 ### Step 3: Test Fixtures & Mutation Proofs - PENDING
 - Update fixtures to use service role database insertions.
