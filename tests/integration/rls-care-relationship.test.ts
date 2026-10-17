@@ -348,7 +348,7 @@ describe.skipIf(!isDbAvailable)("Live RLS & Care Relationship Integration Suite 
     // Admin DELETE succeeds
     const delResp = await adminUser.client
       .from("medical_records")
-      .delete({ count: "exact" })
+      .delete()
       .eq("id", disposable!.id);
     const adminDelErr = delResp.error;
     if (adminDelErr) {
@@ -360,7 +360,8 @@ describe.skipIf(!isDbAvailable)("Live RLS & Care Relationship Integration Suite 
     const { data: afterDel, error: afterErr } = await adminClient.from("medical_records").select("id").eq("id", disposable!.id);
     expect(afterErr).toBeNull();
     if (afterDel && afterDel.length > 0) {
-      throw new Error(`Record was NOT deleted by adminUser: afterDel returned ${JSON.stringify(afterDel)}, delete count was ${delResp.count}, status was ${delResp.status}`);
+      const { data: curUser } = await adminUser.client.auth.getUser();
+      throw new Error(`Record was NOT deleted by adminUser: afterDel returned ${JSON.stringify(afterDel)}, status was ${delResp.status}, user=${JSON.stringify(curUser?.user?.id)}, role=${curUser?.user?.user_metadata?.role}`);
     }
     expect(afterDel).toEqual([]);
   });

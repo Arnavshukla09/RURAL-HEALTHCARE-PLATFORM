@@ -123,13 +123,15 @@ CREATE POLICY "doctor_update_care_medical_records"
 CREATE POLICY "admin_delete_medical_records"
   ON public.medical_records
   FOR DELETE
-  TO authenticated
   USING (
     public.get_user_role() = 'admin'
     OR (SELECT public.get_user_role()) = 'admin'
     OR (SELECT p.role FROM public.patients p WHERE p.user_id = auth.uid() LIMIT 1) = 'admin'
+    OR (SELECT p.role FROM public.patients p WHERE p.user_id = (SELECT auth.uid()) LIMIT 1) = 'admin'
+    OR (SELECT p.role FROM public.patients p WHERE p.email = (auth.jwt()->>'email') LIMIT 1) = 'admin'
     OR (auth.jwt()->'user_metadata'->>'role') = 'admin'
     OR (auth.jwt()->'app_metadata'->>'role') = 'admin'
+    OR (auth.jwt()->>'role') = 'admin'
   );
 
 -- ----------------------------------------------------------------------------
