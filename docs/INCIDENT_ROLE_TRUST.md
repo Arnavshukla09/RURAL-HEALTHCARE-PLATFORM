@@ -71,7 +71,30 @@ where schemaname='public' and (qual ilike '%user_metadata%' or with_check ilike 
 
 ---
 
-## 4. Next Actions (Upon Triage Analysis)
-- Step 1: Deploy migration `20261018000000_role_source_hotfix.sql` strictly restricting role lookup to `public.patients.role` (written only by service role or admin-approved server endpoints) and removing all metadata role trust.
-- Step 2: Replace admin medical records moderation/deletion RLS policies with `public.admin_erase_medical_record` security-definer function with audit logging.
-- Step 3: Refactor integration tests, seeds, and unit suites with mutation proofs.
+## 4. Remediation Progress
+
+### Step 1: Fix the Role Source (`20261018000000_role_source_hotfix.sql`) - COMPLETED
+- **`public.get_user_role()`:** Redefined with body strictly querying `SELECT p.role FROM public.patients p WHERE p.user_id = (SELECT auth.uid()) LIMIT 1;`. All metadata paths removed. Returns NULL when no row exists.
+- **`public.get_current_user_role()`:** Wraps `get_user_role()`.
+- **`public.handle_new_user()`:** Inserts `role = 'patient'` unconditionally on auth signup. Metadata role ignored completely. Uses `ON CONFLICT (user_id) DO NOTHING`.
+- **`public.guard_patient_privileges()`:** Removed blind `auth.uid() IS NULL` bypass on INSERT. Inserting a non-patient role strictly requires caller JWT role claim to be `service_role` or the caller to be a verified administrator.
+- **Policies Dropped & Recreated:**
+  - `healthcare_providers.providers_admin_insert`: Recreated with `WITH CHECK ((SELECT public.get_user_role()) = 'admin')`.
+  - `patients.patients_admin_select`: Recreated with `USING ((SELECT public.get_user_role()) = 'admin')`.
+  - `patients.patients_admin_delete`: Recreated with `USING ((SELECT public.get_user_role()) = 'admin')`.
+  - `chat_cache.chat_cache_select_verified`: Recreated with `USING ((SELECT public.get_user_role()) IN ('admin', 'doctor'))`.
+  - `chat_cache.chat_cache_update_verified`: Recreated with `USING ((SELECT public.get_user_role()) IN ('admin', 'doctor')) WITH CHECK ((SELECT public.get_user_role()) IN ('admin', 'doctor'))`.
+  - `medical_records.admin_select_moderation_medical_records`: Permanently dropped.
+  - `medical_records.admin_delete_medical_records`: Permanently dropped.
+- **Application Endpoints Updated:**
+  - `app/api/auth/login/route.ts`: Removed `user_metadata?.role` fallback. Role resolved strictly from database `patients.role`.
+  - `components/Authentication.tsx`: Removed `role: "patient"` from client signup `options.data`.
+
+### Step 2: Replace Admin Moderation Hack with Audited Function - PENDING
+- Implement `public.admin_erase_medical_record(p_record_id uuid, p_reason text)`.
+- Expose admin erasure endpoint with session client.
+
+### Step 3: Test Fixtures & Mutation Proofs - PENDING
+- Update fixtures to use service role database insertions.
+- Add 6 automated security tests with documented mutation proofs.
+

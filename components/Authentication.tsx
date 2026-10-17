@@ -215,7 +215,7 @@ export function Authentication({ setUser, setCurrentPage, language }: Authentica
         password: formData.password,
         options: {
           emailRedirectTo: `${window.location.origin}`,
-          data: { first_name: formData.name, role: "patient" },
+          data: { first_name: formData.name },
         },
       })
 
