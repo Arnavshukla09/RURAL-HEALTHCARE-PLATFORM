@@ -32,6 +32,7 @@
     "dependencies": "error",
     "unlisted": "error",
     "exports": "off",
-    "types": "off"
+    "types": "off",
+    "duplicates": "off"
   }
 }

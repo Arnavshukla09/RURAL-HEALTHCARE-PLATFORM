@@ -266,6 +266,55 @@ async function run() {
   }
 
   // -------------------------------------------------------------
+  // STEP 8: Modularity & File Length Standards (Invariant 5)
+  // -------------------------------------------------------------
+  logStep(8, 'Enforcing File Length & Modularity Limits (≤400 LOC / <150 LOC API)')
+  const EXEMPT_DATA_CATALOGS = [
+    'lib/data/real-doctors.ts',
+    'lib/schemes/health-schemes.ts',
+    'lib/emergency/helplines.ts',
+    'lib/i18n/translations.ts',
+    'lib/ai/clinical-dataset.ts',
+  ]
+
+  let lengthViolations = 0
+
+  function checkLength(dir, maxLines, exemptList = []) {
+    function walk(current) {
+      if (!fs.existsSync(current)) return
+      for (const item of fs.readdirSync(current)) {
+        const full = path.join(current, item)
+        const rel = path.relative(ROOT, full).replace(/\\/g, '/')
+        const stat = fs.statSync(full)
+        if (stat.isDirectory()) {
+          walk(full)
+        } else if (/\.(ts|tsx|js|mjs)$/.test(item)) {
+          if (exemptList.some(ex => rel.includes(ex))) continue
+          const lineCount = fs.readFileSync(full, 'utf8').split('\n').length
+          if (lineCount > maxLines) {
+            lengthViolations++
+            const errMsg = `File length violation: ${rel} has ${lineCount} lines (limit: ${maxLines})`
+            logError(errMsg)
+            failureReports.push(errMsg)
+            failed = true
+          }
+        }
+      }
+    }
+    walk(dir)
+  }
+
+  checkLength(COMPONENTS_DIR, 400, ['components/ui'])
+  checkLength(path.join(ROOT, 'lib'), 400, EXEMPT_DATA_CATALOGS)
+  checkLength(path.join(APP_DIR, 'api'), 150)
+
+  if (lengthViolations === 0) {
+    logSuccess('All non-ui components and lib modules ≤400 LOC, all API routes <150 LOC.')
+  } else {
+    logError(`Detected ${lengthViolations} modularity/file-length violations!`)
+  }
+
+  // -------------------------------------------------------------
   // FINAL VERDICT: PASS OR ABORT COMMIT
   // -------------------------------------------------------------
 
