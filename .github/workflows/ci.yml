@@ -2,9 +2,9 @@ name: Continuous Integration (CI)
 
 on:
   push:
-    branches: [main, "release/*", "hotfix/*"]
+    branches: [main, "release/*", "hotfix/*", "chore/*"]
   pull_request:
-    branches: [main, "release/*", "hotfix/*"]
+    branches: [main, "release/*", "hotfix/*", "chore/*"]
 
 permissions:
   contents: read
@@ -20,6 +20,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js 22
         uses: actions/setup-node@v4
@@ -30,8 +32,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Gitleaks Secret Scanner
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_CONFIG: .gitleaks.toml
+
       - name: Security Vulnerability Audit & Expiring Allowlist Enforcement (High & Critical)
         run: node scripts/audit_allowlist.mjs
+
 
       - name: Database Migration Immutability & Ordering Gate
         run: npm run check:migrations

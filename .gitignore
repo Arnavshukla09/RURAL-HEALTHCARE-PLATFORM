@@ -32,6 +32,10 @@ scripts/scrub_keys.ps1
 env_search.txt
 supabase/.temp/
 *.tsbuildinfo
+tsconfig.tsbuildinfo
+tokens.json
+loadtest/tokens.json
+
 
 # PWA and Serwist generated service worker outputs
 public/sw.js
