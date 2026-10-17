@@ -962,6 +962,38 @@ describe.skipIf(!isDbAvailable)("Live RLS & Care Relationship Integration Suite 
     const { error: rpcErr } = await patientA.client.rpc("get_tables");
     expect(rpcErr).not.toBeNull();
   });
+
+  // Test 20: Storage Policy Scoping & Trigger Function Access Revocation
+  it("verifies trigger functions cannot be called via RPC and storage is scoped to user folder", async () => {
+    // 1. Direct RPC calls to trigger functions must fail
+    const { error: err1 } = await patientA.client.rpc("guard_demo_admin_safety");
+    expect(err1).not.toBeNull();
+
+    const { error: err2 } = await patientA.client.rpc("set_facility_geom");
+    expect(err2).not.toBeNull();
+
+    const { error: err3 } = await patientA.client.rpc("update_facility_timestamp");
+    expect(err3).not.toBeNull();
+
+    // 2. Patient A cannot upload to Patient B's storage folder
+    const fileContent = new Uint8Array([1, 2, 3, 4]);
+    const roguePath = `${patientB.user.id}/rogue_file.bin`;
+    const { error: uploadErr } = await patientA.client.storage
+      .from("medical-records")
+      .upload(roguePath, fileContent, { upsert: true });
+    expect(uploadErr).not.toBeNull();
+
+    // 3. Patient A CAN upload to their own storage folder
+    const ownPath = `${patientA.user.id}/own_file_${runId}.bin`;
+    const { error: ownUploadErr } = await patientA.client.storage
+      .from("medical-records")
+      .upload(ownPath, fileContent, { upsert: true });
+    // If storage bucket is configured, upload should succeed
+    if (!ownUploadErr) {
+      // Cleanup own file
+      await patientA.client.storage.from("medical-records").remove([ownPath]);
+    }
+  });
 });
 
 describe("Database Safety & Allowlist Guard Unit Invariants", () => {

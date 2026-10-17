@@ -25,6 +25,8 @@ scripts/lighthouse_report.json
 scripts/benchmark_results.json
 benchmark_results.json
 scripts/*_report.json
+scripts/ci/*_report.json
+scripts/ci/benchmark_results.json
 
 # security & temporary scratch files
 scripts/replacements.txt

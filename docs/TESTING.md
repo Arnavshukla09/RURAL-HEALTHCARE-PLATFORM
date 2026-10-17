@@ -148,7 +148,7 @@ To prove that the test suite detects unauthorized access or schema regressions, 
 
 ### Mutation 7: In-Place Modification of Baseline Migration
 * **Flaw Injected:** Appended a retroactive comment `-- MUTATION_PROOF_TEST` to `supabase/migrations/20260701000000_core_schema.sql`.
-* **Test Suite Target:** `scripts/check_migration_immutability.mjs` via `npm run check:migrations`.
+* **Test Suite Target:** `scripts/db/check_migration_immutability.mjs` via `npm run check:migrations`.
 * **Observed Failure Output:**
   ```text
   ❌ [IMMUTABILITY VIOLATION] Baseline migration has been modified in-place:

@@ -267,27 +267,115 @@ FHIR resource generation (`lib/abdm/builders.ts`) is decomposed into modular sub
 ---
 
 ### D. Dependency & Security Metrics
-* **Production Dependencies:** Pruned obsolete `@ducanh2912/next-pwa` and unused Radix UI primitives.
-* **NPM Audit Summary (`npm audit --omit=dev`):** **0 vulnerabilities** in production dependencies.
+* **Production Dependencies:** Pruned obsolete `@ducanh2912/next-pwa` and unused Radix UI primitives (reduced from 60 to 24 dependencies).
+* **NPM Audit Summary (`npm audit --omit=dev`):**
+  * Exact command output: **2 vulnerabilities (1 moderate, 1 high)** in production dependencies (`postcss <=8.5.22` via `next`).
+  * Both are allowlisted in `audit-allowlist.json` (server-side CSS parsing in Next.js build pipeline without runtime user-controlled CSS stringification, tracking upstream Next.js patch).
+  * Automated enforcement: `node scripts/ci/audit_allowlist.mjs` strictly fails on any unallowlisted advisory.
 * **Gitleaks:** Automated secret scanner enabled in `.github/workflows/ci.yml` via `.gitleaks.toml`.
-* **Database Immutability:** SHA256 checksum manifest `supabase/migrations.sha256` validated in CI and pre-commit hooks via `scripts/check_migration_immutability.mjs`.
+* **Database Immutability:** SHA256 checksum manifest `supabase/migrations.sha256` validated in CI and pre-commit hooks via `scripts/db/check_migration_immutability.mjs`.
 
 ---
 
 ### E. Knip Verification Gate
 * **Unused Files:** **0** (All 44 unused UI primitives, duplicate hooks, and dead scripts purged).
 * **Unused Dependencies:** **0** (All pruned or registered with active runtime configurations).
-* **Automated CI Enforcement:** `npx knip` runs as a mandatory gating step in `scripts/check_components.mjs` and GitHub Actions.
+* **Automated CI Enforcement:** `npx knip` runs as a mandatory gating step in `scripts/ci/check_components.mjs` and GitHub Actions.
 
 ---
 
-### F. Performance & Test Suite Benchmarks
+### F. Performance & Compilation Benchmarks
 * **TypeScript Compilation Time (`npx tsc --noEmit`):** Clean pass with **0 type errors**.
-* **ESLint Validation (`next lint`):** Clean pass with **0 warnings / 0 errors**.
+* **ESLint Validation (`next lint`):** Passes with max-lines warning threshold at 300 LOC (exempt data catalogs); 0 errors.
 * **Vitest Unit Test Suite (`npm run test:unit`):** **176 tests passing** across 23 test suites in ~2.2 s.
 * **Next.js Production Build (`next build`):** **51 routes** successfully compiled, optimized, and bundled.
 
+#### Measured `next build` Route Table & First Load JS
+```text
+Route (app)                                     Size  First Load JS  Revalidate  Expire
+┌ ○ /                                        10.5 kB         191 kB          1h      1y
+├ ○ /_not-found                                200 B         105 kB
+├ ○ /admin/appointments                       5.1 kB         185 kB
+├ ○ /admin/campaigns                         6.61 kB         187 kB
+├ ○ /admin/chat-review                       3.04 kB         180 kB
+├ ○ /admin/dashboard                         1.51 kB         185 kB
+├ ○ /admin/notifications                     8.56 kB         186 kB
+├ ○ /admin/records                           6.03 kB         186 kB
+├ ○ /admin/users                             12.1 kB         236 kB
+├ ƒ /api/abdm/fhir-export                      200 B         105 kB
+├ ƒ /api/admin/doctor-provider-link            200 B         105 kB
+├ ƒ /api/admin/erase-record                    200 B         105 kB
+├ ƒ /api/ai-chat                               200 B         105 kB
+├ ƒ /api/appointments                          200 B         105 kB
+├ ƒ /api/auth/ensure-patient                   200 B         105 kB
+├ ƒ /api/auth/login                            200 B         105 kB
+├ ƒ /api/auth/profile                          200 B         105 kB
+├ ƒ /api/cache-status                          200 B         105 kB
+├ ƒ /api/chat-cache                            200 B         105 kB
+├ ƒ /api/doctor-requests                       200 B         105 kB
+├ ƒ /api/facilities/district/[districtCode]    200 B         105 kB
+├ ƒ /api/facilities/nearby                     200 B         105 kB
+├ ƒ /api/health                                200 B         105 kB
+├ ƒ /api/health-data                           200 B         105 kB
+├ ƒ /api/medical-records                       200 B         105 kB
+├ ƒ /api/notifications                         200 B         105 kB
+├ ƒ /api/offline-sync                          200 B         105 kB
+├ ƒ /api/providers                             200 B         105 kB
+├ ƒ /api/ready                                 200 B         105 kB
+├ ƒ /api/symptom-analyze                       200 B         105 kB
+├ ƒ /api/teleconsult/room                      200 B         105 kB
+├ ○ /appointments                            6.48 kB         198 kB
+├ ƒ /auth/callback                             200 B         105 kB
+├ ○ /camps                                   11.2 kB         191 kB          1h      1y
+├ ○ /consultation                            15.2 kB         273 kB
+├ ○ /dashboard                               5.94 kB         205 kB
+├ ○ /directory                               13.8 kB         269 kB          1h      1y
+├ ○ /doctor/claim                            9.02 kB         233 kB
+├ ○ /doctor/dashboard                         1.5 kB         186 kB
+├ ○ /doctor/patients                          6.6 kB         184 kB
+├ ○ /doctor/requests                         8.81 kB         186 kB
+├ ○ /emergency                               40.4 kB         253 kB          1h      1y
+├ ○ /health-info                             18.7 kB         196 kB          1h      1y
+├ ○ /health-info/schemes                     39.8 kB         221 kB          1h      1y
+├ ○ /locations                               3.94 kB         173 kB          1h      1y
+├ ○ /login                                   3.16 kB         192 kB
+├ ○ /offline                                 4.22 kB         121 kB
+├ ○ /records                                 11.5 kB         200 kB
+├ ○ /symptom-checker                         37.2 kB         218 kB          1h      1y
+├ ○ /teleconsult/confirm                      7.4 kB         184 kB
+└ ○ /teleconsult/room                        10.5 kB         123 kB
++ First Load JS shared by all                 105 kB
+  ├ chunks/2804-c43756fd712fde1b.js          47.7 kB
+  ├ chunks/4bd1b696-100b9d70ed4e49c1.js      54.2 kB
+  └ other shared chunks (total)              2.73 kB
+
+ƒ Middleware                                 90.7 kB
+```
+
 ---
 
-### G. Author Provenance & Copyright Preservation
+### G. Comprehensive Task Status & Close-Out Ledger
+
+| Task / Item | Status | Verification & Evidence |
+| :--- | :---: | :--- |
+| **Unsafe Debug Scripts Deletion** | **DONE** | All 8 unsafe scripts purged; 0 hardcoded password literals in codebase. |
+| **Obsolete PWA Package Removal** | **DONE** | `@ducanh2912/next-pwa` deleted; Serwist runtime active. |
+| **Component Modularity ($\le 400$ LOC)** | **DONE** | All 17 components + `app/teleconsult/room` (389 LOC) + `app/doctor/claim` (385 LOC) strictly $\le 400$ LOC. |
+| **API Route Thin Handlers ($<150$ LOC)** | **DONE** | All 18 route handlers $\le 63$ LOC delegating business logic to `lib/services/`. |
+| **Documentation Consolidation** | **DONE** | History archived in `docs/history/`; personal interview doc deleted; README streamlined to 188 LOC. |
+| **CI Gitleaks & Immutability Gates** | **DONE** | Gitleaks, knip, migration gate, and modularity gate active in `.github/workflows/ci.yml`. |
+| **Scripts Organization into Subfolders** | **DONE** | Scripts organized into `scripts/data/`, `scripts/db/`, `scripts/ci/`; `package.json` and CI workflows updated. |
+| **ESLint `max-lines` Rule** | **DONE** | `.eslintrc.json` configured with `max-lines` warning at 300 LOC (data catalogs exempt); Step 8 enforces error ceiling. |
+| **Housekeeping Migration** | **DONE (Ready)** | `supabase/migrations/20261019000000_housekeeping.sql` written; verification and rollback SQL prepared for manual apply. |
+| **Integration Test for Storage Isolation** | **DONE** | Test 20 added in `tests/integration/rls-care-relationship.test.ts`; CI threshold updated to 23 tests. |
+| **ABDM Milestone 2 Conformance Wording** | **DONE** | Reworded to "FHIR R4 structured export modelled on ABDM profiles; not validated against official profiles". |
+| **Remove `--debug` from CI Steps** | **DONE** | Removed `--debug` flag from both `db-tests` and `e2e` jobs in `.github/workflows/ci.yml`. |
+| **`healthcare_providers.user_id` Exposure** | **PENDING** | Technical options (explicit column grants vs public view) presented for user decision. |
+| **Large Data Bundles (`real-doctors.ts` etc.)** | **PENDING** | Trade-off options (streaming JSON / dynamic import / bundle retention) presented for user decision. |
+| **Seed Account Credential Rotation** | **NOT DONE** | Requires project owner manual execution in Supabase Dashboard (no production credentials in repo). |
+| **Branch Deletion & Tag `v1.0.0` Retagging** | **NOT DONE** | Safe git commands prepared; awaits project owner execution after CI runs. |
+
+---
+
+### H. Author Provenance & Copyright Preservation
 * Verified **156 files** across components, services, shims, tests, and documentation containing clear author attribution and provenance headers for **Arnav Shukla** (`github.com/Arnavshukla09`).

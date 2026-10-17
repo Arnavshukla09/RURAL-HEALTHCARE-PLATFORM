@@ -76,7 +76,7 @@ Every subsystem in the repository is tracked against a strict 4-tier verificatio
 ## 7. Security Advisory Posture
 
 * **Next.js Version:** `15.5.28` (patched against all critical and high-severity Next.js image optimization, middleware bypass, and SSRF advisories).
-* **Audit Enforcement:** Automated CI workflows strictly fail on any critical security advisory (`npm audit --audit-level=critical`) and enforce zero unallowlisted high advisories via `scripts/audit_allowlist.mjs`.
+* **Audit Enforcement:** Automated CI workflows strictly fail on any critical security advisory (`npm audit --audit-level=critical`) and enforce zero unallowlisted high advisories via `scripts/ci/audit_allowlist.mjs`.
 
 ---
 

@@ -137,7 +137,7 @@ This document records the security audits and remediations applied to the Rural 
 ### 2.13 Security Audit Policy & Expiring Dependency Allowlist
 * **Zero Critical Vulnerabilities:** Automated CI workflows strictly gate builds on `npm audit --audit-level=critical` (0 critical vulnerabilities allowed).
 * **High Severity Policy with Expiring Allowlist:**
-  - Automated gate via `scripts/audit_allowlist.mjs` enforces zero high-severity vulnerabilities unless explicitly authorized in `audit-allowlist.json`.
+  - Automated gate via `scripts/ci/audit_allowlist.mjs` enforces zero high-severity vulnerabilities unless explicitly authorized in `audit-allowlist.json`.
   - Every allowlisted item requires a technical justification explaining why runtime exploitability is absent, paired with a mandatory hard expiration date.
   - If an allowlist entry expires, CI fails immediately to prevent stale security exceptions.
 

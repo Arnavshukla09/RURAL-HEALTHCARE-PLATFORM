@@ -239,15 +239,14 @@ export interface RealDoctor {
 
 ## 3. Data Ingestion & Reporting Tools
 
-All dataset maintenance, validation, and reporting scripts reside in the `scripts/` directory:
+All dataset maintenance, validation, and reporting scripts reside in the `scripts/` directory (`scripts/{data,db,ci}/`):
 
 | Script Filename | Execution Command | Functionality |
 | :--- | :--- | :--- |
-| `scripts/report_dataset.mjs` | `npm run report:dataset` | Outputs real-time audit report of doctors, facilities, and hygiene compliance. |
-| `scripts/check_components.mjs` | `npm run check:components` | 5-stage automated component integrity and test verification engine. |
-| `scripts/ingest_pmjay_facilities.mjs` | `node scripts/ingest_pmjay_facilities.mjs` | Ingests PM-JAY facilities with verified contacts into Supabase PostGIS. |
-| `scripts/build_pan_india_doctors.mjs` | `node scripts/build_pan_india_doctors.mjs` | Normalizes PM-JAY medical officers into `lib/data/real-doctors.ts`. |
-| `scripts/seed_reviewed_doctors.js` | `node scripts/seed_reviewed_doctors.js` | Enriches doctors catalog with Practo review counts and satisfaction scores. |
+| `scripts/data/report_dataset.mjs` | `npm run report:dataset` | Outputs real-time audit report of doctors, facilities, and hygiene compliance. |
+| `scripts/ci/check_components.mjs` | `npm run check:components` | 8-stage automated component integrity and test verification engine. |
+| `scripts/data/ingest_pmjay_facilities.mjs` | `node scripts/data/ingest_pmjay_facilities.mjs` | Ingests PM-JAY facilities with verified contacts into Supabase PostGIS. |
+| `scripts/data/build_pan_india_doctors.mjs` | `node scripts/data/build_pan_india_doctors.mjs` | Normalizes PM-JAY medical officers into `lib/data/real-doctors.ts`. |
 
 ---
 

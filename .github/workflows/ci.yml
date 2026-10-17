@@ -39,7 +39,7 @@ jobs:
           GITLEAKS_CONFIG: .gitleaks.toml
 
       - name: Security Vulnerability Audit & Expiring Allowlist Enforcement (High & Critical)
-        run: node scripts/audit_allowlist.mjs
+        run: node scripts/ci/audit_allowlist.mjs
 
 
       - name: Database Migration Immutability & Ordering Gate
@@ -102,7 +102,7 @@ jobs:
       - name: Start Supabase Local Stack
         run: |
           supabase start
-          supabase db reset --debug
+          supabase db reset
 
       - name: Run Integration Tests against Local Supabase
         run: |
@@ -116,11 +116,11 @@ jobs:
           npm run test:integration -- --reporter=default --reporter=json --outputFile=vitest-integration-report.json
 
       - name: Verify Live Database Tests Executed (Fail on 0 or Skipped)
-        run: node scripts/verify_integration_tests.mjs vitest-integration-report.json 22
+        run: node scripts/ci/verify_integration_tests.mjs vitest-integration-report.json 23
 
       - name: Dump Vitest Failures If Failed
         if: failure()
-        run: node scripts/dump_vitest_failures.mjs vitest-integration-report.json
+        run: node scripts/ci/dump_vitest_failures.mjs vitest-integration-report.json
 
       - name: Stop Supabase Local Stack
         if: always()
@@ -151,7 +151,7 @@ jobs:
       - name: Start Supabase Local Stack
         run: |
           supabase start
-          supabase db reset --debug
+          supabase db reset
 
       - name: Seed Local E2E Test Accounts with Ephemeral Credentials
         run: |
@@ -177,7 +177,7 @@ jobs:
           E2E_ADMIN_PASSWORD="$E2E_ADMIN_PWD" \
           E2E_DOCTOR_PASSWORD="$E2E_DOCTOR_PWD" \
           E2E_PATIENT_PASSWORD="$E2E_PATIENT_PWD" \
-          node scripts/seed_e2e_users.js
+          node scripts/db/seed_e2e_users.js
 
       - name: Install Playwright Chromium with system dependencies
         run: npx playwright install --with-deps chromium

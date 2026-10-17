@@ -15,7 +15,7 @@ import type {
 
 /**
  * Generate an HL7 FHIR R4 Bundle for Health Camp & OPD Encounters
- * ABDM Milestone 2 (M2) compliant structure.
+ * FHIR R4 structured export modelled on ABDM profiles; not validated against official profiles.
  */
 export function generateFhirEncounterBundle(
   patient: PatientDemographics,

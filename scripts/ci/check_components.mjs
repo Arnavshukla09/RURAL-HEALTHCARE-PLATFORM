@@ -236,7 +236,7 @@ async function run() {
   // -------------------------------------------------------------
   logStep(6, 'Verifying Database Migration Immutability & Ordering')
   try {
-    execSync('node scripts/check_migration_immutability.mjs', { stdio: 'pipe', cwd: ROOT })
+    execSync('node scripts/db/check_migration_immutability.mjs', { stdio: 'pipe', cwd: ROOT })
     logSuccess('Migration manifest verified: all baseline migrations immutable and forward-ordered.')
   } catch (err) {
     failed = true
@@ -307,9 +307,10 @@ async function run() {
   checkLength(COMPONENTS_DIR, 400, ['components/ui'])
   checkLength(path.join(ROOT, 'lib'), 400, EXEMPT_DATA_CATALOGS)
   checkLength(path.join(APP_DIR, 'api'), 150)
+  checkLength(path.join(ROOT, 'app'), 400, ['app/api'])
 
   if (lengthViolations === 0) {
-    logSuccess('All non-ui components and lib modules ≤400 LOC, all API routes <150 LOC.')
+    logSuccess('All non-ui components, lib modules, and app pages ≤400 LOC, all API routes <150 LOC.')
   } else {
     logError(`Detected ${lengthViolations} modularity/file-length violations!`)
   }
