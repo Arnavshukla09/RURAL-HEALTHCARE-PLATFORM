@@ -33,6 +33,9 @@ jobs:
       - name: Security Vulnerability Audit & Expiring Allowlist Enforcement (High & Critical)
         run: node scripts/audit_allowlist.mjs
 
+      - name: Database Migration Immutability & Ordering Gate
+        run: npm run check:migrations
+
       - name: Dataset Provenance Verification
         run: npm run report:dataset
 

@@ -125,9 +125,18 @@ where schemaname='public' and (qual ilike '%user_metadata%' or with_check ilike 
 - **Vulnerability Audit Gate:** Replaced `npm audit --audit-level=critical` step with `node scripts/audit_allowlist.mjs`, enforcing zero unallowed high and critical vulnerabilities via the expiring allowlist.
 - **Workflow Job Dependencies:** Configured `e2e` job to depend on `[test-and-build, db-tests]`.
 - **Test Gate Assertion:** Updated `scripts/verify_integration_tests.mjs` and `.github/workflows/ci.yml` verification gate to require all 19 integration tests to execute and pass.
-- **Clean CI Run Verified (`run 39026437823`):**
-  - **Quality Checks, Tests & Build Verification:** `SUCCESS` (Audit allowlist, Dataset provenance, Subsystems simulation, Component checker, 176 unit tests, Safety guards, ESLint, Next.js production build).
-  - **Real Database Integration & RLS Contract Tests:** `SUCCESS` (All 19 live database integration tests executed against local Supabase container, 0 skipped, 0 failed).
-  - **Playwright End-to-End Tests:** `SUCCESS` (Executed against seeded local stack).
-  - **Run URL:** [https://github.com/Arnavshukla09/RURAL-HEALTHCARE-PLATFORM/actions/runs/39026437823](https://github.com/Arnavshukla09/RURAL-HEALTHCARE-PLATFORM/actions/runs/39026437823)
+- **Clean CI Run Verified (`run 39026437823`):** All 3 jobs (`Quality Checks`, `Database Tests`, `Playwright E2E`) succeeded; 19/19 live tests passed; URL: https://github.com/Arnavshukla09/RURAL-HEALTHCARE-PLATFORM/actions/runs/39026437823
+
+### Step 5: Migration Immutability & Ordering Gate - COMPLETED
+- **Cryptographic Baseline Manifest:** Generated `supabase/migrations.sha256` containing sha256 checksums for all 16 historical migrations as of the hotfix branch base (`d1c19e3`).
+- **Automated Verification Script:** Created `scripts/check_migration_immutability.mjs` which validates:
+  1. Every baseline migration matches its exact SHA-256 hash.
+  2. No baseline migration can be removed or renamed.
+  3. All new migrations strictly adhere to forward-chronological timestamps $\ge 20261017000500$.
+- **Pipeline & Hook Integration:**
+  - Added `npm run check:migrations` to `package.json`.
+  - Added `Database Migration Immutability & Ordering Gate` to `.github/workflows/ci.yml` in job `test-and-build`.
+  - Added Step 6 in `scripts/check_components.mjs` to enforce immutability locally before git commits.
+- **Mutation Proof (Mutation 7):** Intentionally altered `supabase/migrations/20260701000000_core_schema.sql` with a trailing comment; verified gate exited with code 1; restored and verified clean pass. Documented in `docs/TEST_EVIDENCE.md`.
+- **Historical In-Place Edits Audit:** Published `docs/SCHEMA_DRIFT_REPORT.md` documenting historical in-place edits in older migrations (`20260701` through `20260706`) and defining forward-only architectural invariants.
 

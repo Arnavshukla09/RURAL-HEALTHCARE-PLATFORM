@@ -10,6 +10,7 @@
     "test:unit": "vitest run",
     "test:integration": "vitest run --config vitest.integration.config.mjs",
     "check:components": "node scripts/check_components.mjs",
+    "check:migrations": "node scripts/check_migration_immutability.mjs",
     "report:dataset": "node scripts/report_dataset.mjs",
     "benchmark:integration": "node scripts/benchmark_system_integration.mjs",
     "ingest:facilities": "node scripts/ingest_pan_india_geojson.mjs",

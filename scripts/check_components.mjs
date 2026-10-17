@@ -232,6 +232,23 @@ async function run() {
   }
 
   // -------------------------------------------------------------
+  // STEP 6: Database Migration Immutability & Ordering Check
+  // -------------------------------------------------------------
+  logStep(6, 'Verifying Database Migration Immutability & Ordering')
+  try {
+    execSync('node scripts/check_migration_immutability.mjs', { stdio: 'pipe', cwd: ROOT })
+    logSuccess('Migration manifest verified: all baseline migrations immutable and forward-ordered.')
+  } catch (err) {
+    failed = true
+    const output = (err.stdout ? err.stdout.toString() : '') + (err.stderr ? err.stderr.toString() : '')
+    logError('Migration immutability check failed:')
+    output.split('\n').filter(l => l.includes('VIOLATION') || l.includes('FAILED')).forEach(l => {
+      console.log(`    ${colors.red}${l.trim()}${colors.reset}`)
+      failureReports.push(l.trim())
+    })
+  }
+
+  // -------------------------------------------------------------
   // FINAL VERDICT: PASS OR ABORT COMMIT
   // -------------------------------------------------------------
   const duration = ((Date.now() - startTime) / 1000).toFixed(2)

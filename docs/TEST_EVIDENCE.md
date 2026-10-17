@@ -268,12 +268,44 @@ DROP POLICY IF EXISTS "admin_select_moderation_medical_records" ON public.medica
 ```
 * **Post-Restoration:** Returned to clean pass.
 
+### Mutation 7: In-Place Modification of Baseline Migration
+* **Flaw Injected:** Appended a retroactive comment `-- MUTATION_PROOF_TEST` to historical baseline migration `supabase/migrations/20260701000000_core_schema.sql`.
+* **Test Suite Target:** `scripts/check_migration_immutability.mjs` via `npm run check:migrations` and `node scripts/check_components.mjs` (Step 6).
+* **Observed Failure Output:**
+```
+============================================================
+  🛡️  DATABASE MIGRATION IMMUTABILITY & ORDERING GATE       
+============================================================
+❌ [IMMUTABILITY VIOLATION] Baseline migration has been modified in-place:
+    File:     supabase/migrations/20260701000000_core_schema.sql
+    Expected: 780d9098f7ff489903bcac403e9c93d774bcaf9e385d8a1b0d7162d3ec6686ba
+    Actual:   bb018e4e2185287e75c3a9de9ada95e9d27b4f0f914187276bb114fa37bd5c12
+
+❌ FAILED: 1 migration immutability violation(s) detected.
+All historical migrations are immutable. Any database modifications MUST be created
+as forward-only, append-only migrations with timestamps after the baseline.
+```
+* **Analysis:** The immutability gate calculates the SHA-256 hash of every migration recorded in `supabase/migrations.sha256` and enforces strict forward-order timestamps on new migrations. Any in-place modification or back-dated migration immediately aborts commits and CI.
+* **Restoration:**
+```bash
+git checkout -- supabase/migrations/20260701000000_core_schema.sql
+```
+* **Post-Restoration:**
+```
+============================================================
+  🛡️  DATABASE MIGRATION IMMUTABILITY & ORDERING GATE       
+============================================================
+✔ PASS: All 16 baseline migrations verified against sha256 manifest.
+✔ PASS: Append-only ordering verified (baseline cutoff: 20261017000500).
+```
+
 ---
 
 ## 3. Verification Summary
 
 - Unit Suite (`npm run test:unit`): **176/176 passing**.
 - Integration Suite (`npm run test:integration`): **19 live contract tests (16 live database RLS tests + 3 safety guard invariant tests)**; 0 skipped tests.
-- Behavioral Mutation Proofs: **6 completed and verified** (Mutations 1–3: doctor care scope, legacy admin read, concurrency collisions; Mutations 4–6: user_metadata fallback, signup metadata role extraction, selective moderation RLS bypass).
-- Component Pre-commit Check (`node scripts/check_components.mjs`): **All 5 stages passing cleanly**.
+- Behavioral Mutation Proofs: **7 completed and verified** (Mutations 1–3: doctor care scope, legacy admin read, concurrency collisions; Mutations 4–6: user_metadata fallback, signup metadata role extraction, selective moderation RLS bypass; Mutation 7: in-place baseline migration modification).
+- Component Pre-commit Check (`node scripts/check_components.mjs`): **All 6 stages passing cleanly**.
 - Security Audit Enforcer (`node scripts/audit_allowlist.mjs`): **All high advisories audited against expiring allowlist (Expires 2026-12-31)**.
+- Migration Immutability Gate (`node scripts/check_migration_immutability.mjs`): **16/16 baseline migrations cryptographically locked via sha256 manifest**.
