@@ -16,7 +16,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 const reportPath = process.argv[2] || "vitest-integration-report.json";
-const minExpectedTests = parseInt(process.argv[3] || "12", 10);
+const minExpectedTests = parseInt(process.argv[3] || "19", 10);
 
 console.log(`\n============================================================`);
 console.log(`  🛡️  INTEGRATION TEST VERIFICATION GATE                     `);
