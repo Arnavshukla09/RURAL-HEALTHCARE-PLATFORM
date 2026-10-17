@@ -101,14 +101,23 @@ REVOKE EXECUTE ON FUNCTION public.handle_new_user()
   FROM anon, authenticated;
 
 -- PostGIS internal functions (3 overloads of st_estimatedextent)
-REVOKE EXECUTE ON FUNCTION public.st_estimatedextent(text, text)
-  FROM anon, authenticated;
-
-REVOKE EXECUTE ON FUNCTION public.st_estimatedextent(text, text, text)
-  FROM anon, authenticated;
-
-REVOKE EXECUTE ON FUNCTION public.st_estimatedextent(text, text, text, boolean)
-  FROM anon, authenticated;
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace WHERE n.nspname = 'public' AND p.proname = 'st_estimatedextent') THEN
+    BEGIN
+      EXECUTE 'REVOKE EXECUTE ON FUNCTION public.st_estimatedextent(text, text) FROM anon, authenticated';
+    EXCEPTION WHEN OTHERS THEN NULL;
+    END;
+    BEGIN
+      EXECUTE 'REVOKE EXECUTE ON FUNCTION public.st_estimatedextent(text, text, text) FROM anon, authenticated';
+    EXCEPTION WHEN OTHERS THEN NULL;
+    END;
+    BEGIN
+      EXECUTE 'REVOKE EXECUTE ON FUNCTION public.st_estimatedextent(text, text, text, boolean) FROM anon, authenticated';
+    EXCEPTION WHEN OTHERS THEN NULL;
+    END;
+  END IF;
+END $$;
 
 -- Re-grant nearby_facilities ONLY to authenticated users (needed by the map)
 -- (It was revoked above via get_user_role chain — re-grant explicitly)
@@ -125,13 +134,38 @@ GRANT EXECUTE ON FUNCTION public.nearby_facilities(double precision, double prec
 -- ================================================================
 
 -- Revoke access to the PostGIS spatial reference system table
-REVOKE ALL ON public.spatial_ref_sys FROM anon, authenticated;
-ALTER TABLE public.spatial_ref_sys ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Allow public read access to spatial_ref_sys" ON public.spatial_ref_sys FOR SELECT TO PUBLIC USING (true);
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'spatial_ref_sys') THEN
+    BEGIN
+      EXECUTE 'REVOKE ALL ON public.spatial_ref_sys FROM anon, authenticated';
+    EXCEPTION WHEN OTHERS THEN NULL;
+    END;
+    BEGIN
+      EXECUTE 'ALTER TABLE public.spatial_ref_sys ENABLE ROW LEVEL SECURITY';
+    EXCEPTION WHEN OTHERS THEN NULL;
+    END;
+    BEGIN
+      EXECUTE 'DROP POLICY IF EXISTS "Allow public read access to spatial_ref_sys" ON public.spatial_ref_sys';
+      EXECUTE 'CREATE POLICY "Allow public read access to spatial_ref_sys" ON public.spatial_ref_sys FOR SELECT TO PUBLIC USING (true)';
+    EXCEPTION WHEN OTHERS THEN NULL;
+    END;
+  END IF;
 
--- Revoke access to PostGIS geometry_columns and geography_columns views
-REVOKE ALL ON public.geometry_columns     FROM anon, authenticated;
-REVOKE ALL ON public.geography_columns    FROM anon, authenticated;
+  IF EXISTS (SELECT 1 FROM pg_views WHERE schemaname = 'public' AND viewname = 'geometry_columns') THEN
+    BEGIN
+      EXECUTE 'REVOKE ALL ON public.geometry_columns FROM anon, authenticated';
+    EXCEPTION WHEN OTHERS THEN NULL;
+    END;
+  END IF;
+
+  IF EXISTS (SELECT 1 FROM pg_views WHERE schemaname = 'public' AND viewname = 'geography_columns') THEN
+    BEGIN
+      EXECUTE 'REVOKE ALL ON public.geography_columns FROM anon, authenticated';
+    EXCEPTION WHEN OTHERS THEN NULL;
+    END;
+  END IF;
+END $$;
 
 
 -- ================================================================

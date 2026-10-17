@@ -84,8 +84,8 @@ jobs:
 
       - name: Start Supabase Local Stack
         run: |
-          supabase start
-          supabase db reset
+          supabase start --debug
+          supabase db reset --debug
 
       - name: Run Integration Tests against Local Supabase
         run: |
@@ -129,8 +129,8 @@ jobs:
 
       - name: Start Supabase Local Stack
         run: |
-          supabase start
-          supabase db reset
+          supabase start --debug
+          supabase db reset --debug
 
       - name: Seed Local E2E Test Accounts with Ephemeral Credentials
         run: |
