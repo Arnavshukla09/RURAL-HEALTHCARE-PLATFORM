@@ -146,5 +146,6 @@ across 8 public routes:
 | `GET /api/health` | Liveness Probe | Canonical PostGIS Database (`healthcare_facilities`) | ~45 ms | `Cache-Control: no-store` | 200 OK on connected / 503 on degraded |
 | `POST /api/appointments` | Transactional Mutation | Atomic Slot Booking (`Promise.all` collision) | ~78 ms | No cache | HTTP 409 on collision / 0 double-bookings |
 
-For full incident details, root cause analysis, and architectural preventative measures, see [`docs/POSTMORTEM_CONCURRENCY_DOUBLE_BOOKING.md`](file:///c:/Users/aarrn/Desktop/rural%20health/RURAL-HEALTHCARE-PLATFORM-main/docs/POSTMORTEM_CONCURRENCY_DOUBLE_BOOKING.md).
+For full incident details, root cause analysis, and architectural preventative measures, see [`POSTMORTEM_CONCURRENCY_DOUBLE_BOOKING.md`](POSTMORTEM_CONCURRENCY_DOUBLE_BOOKING.md).
+
 

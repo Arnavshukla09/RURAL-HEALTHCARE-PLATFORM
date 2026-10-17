@@ -41,7 +41,8 @@ The following table catalogs the in-place modifications made to baseline migrati
 
 ## 3. Cryptographic Baseline Manifest (`supabase/migrations.sha256`)
 
-To eliminate retroactive drift, the 16 historical migrations as of the hotfix branch base (`d1c19e3`) are cryptographically pinned in [`supabase/migrations.sha256`](file:///c:/Users/aarrn/Desktop/rural%20health/RURAL-HEALTHCARE-PLATFORM-main/supabase/migrations.sha256):
+To eliminate retroactive drift, the 16 historical migrations as of the hotfix branch base (`d1c19e3`) are cryptographically pinned in [`supabase/migrations.sha256`](../../supabase/migrations.sha256):
+
 
 ```
 780d9098f7ff489903bcac403e9c93d774bcaf9e385d8a1b0d7162d3ec6686ba  supabase/migrations/20260701000000_core_schema.sql
@@ -66,7 +67,8 @@ da9d92a827c9e18ca549400c410dd1a920bf8cf888461584365e923c51d381ae  supabase/migra
 
 ## 4. Automated Immutability & Ordering Gate
 
-The immutability gate is implemented in [`scripts/check_migration_immutability.mjs`](file:///c:/Users/aarrn/Desktop/rural%20health/RURAL-HEALTHCARE-PLATFORM-main/scripts/check_migration_immutability.mjs) and enforced at two mandatory levels:
+The immutability gate is implemented in [`scripts/check_migration_immutability.mjs`](../../scripts/check_migration_immutability.mjs) and enforced at two mandatory levels:
+
 1. **Pre-commit Hook:** Runs automatically via `node scripts/check_components.mjs` (Step 6) before any commit can be created.
 2. **CI Pipeline:** Runs automatically in job `test-and-build` via `npm run check:migrations`.
 
@@ -94,7 +96,8 @@ On 2026-10-17, live inspection of production Supabase database `boyzdmlvzvcplzol
 - Legacy diagnostic function `public.get_tables()` remained accessible.
 
 ### Reconciliation Execution:
-1. Applied forward reconciliation migration [`20261018000200_reconcile_security_state.sql`](file:///c:/Users/aarrn/Desktop/rural%20health/RURAL-HEALTHCARE-PLATFORM-main/supabase/migrations/20261018000200_reconcile_security_state.sql).
+1. Applied forward reconciliation migration [`20261018000200_reconcile_security_state.sql`](../../supabase/migrations/20261018000200_reconcile_security_state.sql).
+
 2. Completely dropped all legacy permissive policies and client metadata trust paths.
 3. Dropped schema enumeration function `public.get_tables()`.
 4. Removed redundant indexes (`patients_user_id_unique`, `idx_appointments_patient`, `idx_medical_records_patient`, etc.).

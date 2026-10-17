@@ -1,0 +1,6 @@
+Contact: https://github.com/Arnavshukla09/RURAL-HEALTHCARE-PLATFORM/issues
+Canonical: https://rural-healthcare-platform.vercel.app/.well-known/security.txt
+Preferred-Languages: en, hi
+Policy: https://github.com/Arnavshukla09/RURAL-HEALTHCARE-PLATFORM/blob/main/docs/SECURITY_NOTES.md
+Acknowledgments: https://github.com/Arnavshukla09/RURAL-HEALTHCARE-PLATFORM/blob/main/docs/CREDENTIAL_ROTATION_CHECKLIST.md
+Expires: 2027-10-18T00:00:00.000Z

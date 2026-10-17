@@ -190,5 +190,6 @@ The platform implements an autonomous, zero-cost, pure TypeScript adapter for th
 - **Integrity Verification:** Internal referential integrity is validated deterministically (`validateFhirBundle()`) to guarantee zero dangling URN references.
 - **REST Export Endpoint:** `GET /api/abdm/fhir-export?record_id=<UUID>` enforces cross-tenant data isolation and emits `application/fhir+json` responses.
 
-For detailed sequence diagrams, milestone breakdowns, and technical defense Q&A for placements, refer to [`docs/ABDM_FHIR_INTEROPERABILITY.md`](file:///c:/Users/aarrn/Desktop/rural%20health/RURAL-HEALTHCARE-PLATFORM-main/docs/ABDM_FHIR_INTEROPERABILITY.md).
+For detailed sequence diagrams, milestone breakdowns, and technical standards compliance, refer to [`docs/ABDM_FHIR_INTEROPERABILITY.md`](ABDM_FHIR_INTEROPERABILITY.md).
+
 

@@ -30,7 +30,10 @@ export const metadata: Metadata = {
     icon: "/icons/icon-192.png",
     apple: "/apple-touch-icon.png",
   },
+  authors: [{ name: "Arnav Shukla", url: "https://github.com/Arnavshukla09" }],
+  creator: "Arnav Shukla",
 }
+
 
 export const viewport = {
   themeColor: "#0ea5e9",
