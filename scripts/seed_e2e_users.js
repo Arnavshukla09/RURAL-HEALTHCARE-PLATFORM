@@ -47,8 +47,11 @@ async function seed() {
       const existing = listData.users.find(user => user.email === u.email);
       if (existing) {
         userId = existing.id;
-        await supabase.auth.admin.updateUserById(userId, { password: u.password });
-        console.log(`Updated password for ${u.email}`);
+        await supabase.auth.admin.updateUserById(userId, {
+          password: u.password,
+          user_metadata: { full_name: u.name, role: u.role },
+        });
+        console.log(`Updated password and metadata for ${u.email}`);
       }
     } else if (authErr) {
       console.error('Error creating user:', authErr.message);
@@ -64,12 +67,33 @@ async function seed() {
         .upsert({
           user_id: userId,
           first_name: u.name,
+          last_name: '',
+          email: u.email,
           role: u.role,
-          phone: '9999999999'
-        }, { onConflict: 'id' });
+          phone: '9999999999',
+        }, { onConflict: 'user_id' });
         
       if (profileErr) console.error('Error upserting profile:', profileErr.message);
       else console.log(`Upserted profile for ${u.email}`);
+
+      if (u.role === 'doctor') {
+        const { data: existingHp } = await supabase
+          .from('healthcare_providers')
+          .select('id')
+          .eq('user_id', userId)
+          .maybeSingle();
+
+        if (!existingHp) {
+          await supabase.from('healthcare_providers').insert({
+            user_id: userId,
+            name: u.name,
+            email: u.email,
+            specialization: 'General Medicine',
+            is_verified: true,
+          });
+          console.log(`Created healthcare provider record for ${u.email}`);
+        }
+      }
     }
   }
 }

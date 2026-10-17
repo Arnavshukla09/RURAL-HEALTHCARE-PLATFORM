@@ -94,9 +94,8 @@ SECURITY DEFINER
 SET search_path = public, auth
 AS $$
   SELECT COALESCE(
+    (NULLIF(auth.jwt()->'user_metadata'->>'role', '')),
     (SELECT p.role FROM public.patients p WHERE p.user_id = auth.uid() LIMIT 1),
-    (NULLIF(current_setting('request.jwt.claim.role', true), '')),
-    (auth.jwt()->'user_metadata'->>'role'),
     'patient'
   );
 $$;
@@ -116,6 +115,28 @@ $$;
 
 REVOKE EXECUTE ON FUNCTION public.get_current_user_role() FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.get_current_user_role() TO authenticated, service_role;
+
+-- Reconcile handle_new_user to honor metadata role and update on conflict
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS trigger AS $$
+BEGIN
+  INSERT INTO public.patients (user_id, email, first_name, last_name, role)
+  VALUES (
+    new.id,
+    new.email,
+    COALESCE(new.raw_user_meta_data->>'full_name', split_part(new.email, '@', 1)),
+    '',
+    COALESCE(new.raw_user_meta_data->>'role', 'patient')
+  )
+  ON CONFLICT (user_id) DO UPDATE SET
+    role = EXCLUDED.role,
+    first_name = EXCLUDED.first_name;
+  RETURN new;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+REVOKE EXECUTE ON FUNCTION public.handle_new_user() FROM PUBLIC, anon, authenticated;
+
 
 -- Revoke get_tables if present in live database
 DO $$

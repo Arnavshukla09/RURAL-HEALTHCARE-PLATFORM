@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
       .eq("user_id", data.user.id)
       .single()
 
-    const role = patient?.role || "patient"
+    const role = patient?.role || data.user.user_metadata?.role || "patient"
     const name = patient?.first_name
       ? patient.first_name + (patient.last_name ? ` ${patient.last_name}` : "")
       : data.user.user_metadata?.full_name || data.user.email?.split("@")[0] || "User"
