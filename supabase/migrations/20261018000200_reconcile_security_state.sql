@@ -280,11 +280,12 @@ REVOKE ALL ON FUNCTION public.has_care_relationship(uuid) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.has_care_relationship(uuid) TO authenticated, service_role;
 
 -- 2.6 Function: public.admin_erase_medical_record(p_record_id uuid, p_reason text)
+DROP FUNCTION IF EXISTS public.admin_erase_medical_record(uuid, text);
 CREATE OR REPLACE FUNCTION public.admin_erase_medical_record(
   p_record_id uuid,
-  p_reason text
+  p_reason text DEFAULT 'Admin right-to-erasure / moderation'
 )
-RETURNS jsonb
+RETURNS boolean
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
@@ -302,7 +303,7 @@ BEGIN
 
   caller_role := public.get_user_role();
   IF caller_role IS DISTINCT FROM 'admin' THEN
-    RAISE EXCEPTION 'Access denied. Only administrators can erase medical records' USING ERRCODE = '42501';
+    RAISE EXCEPTION 'Access denied: Administrator privileges required' USING ERRCODE = '42501';
   END IF;
 
   trimmed_reason := TRIM(COALESCE(p_reason, ''));
@@ -344,13 +345,7 @@ BEGIN
     )
   );
 
-  RETURN jsonb_build_object(
-    'success', true,
-    'erased_record_id', p_record_id,
-    'patient_id', rec_patient_id,
-    'reason', trimmed_reason,
-    'erased_at', NOW()
-  );
+  RETURN true;
 END;
 $$;
 
