@@ -1,0 +1,29 @@
+{
+  "$schema": "https://unpkg.com/knip@5/overview/configuration-schema.json",
+  "entry": [
+    "app/**/{page,layout,loading,error,not-found,route,default}.{js,jsx,ts,tsx}",
+    "app/sw.ts",
+    "scripts/**/*.{js,mjs}",
+    "loadtest/**/*.{js,mjs}",
+    "tests/**/*.{ts,js,json}",
+    "next.config.mjs"
+  ],
+  "project": [
+    "app/**/*.{js,jsx,ts,tsx}",
+    "components/**/*.{js,jsx,ts,tsx}",
+    "hooks/**/*.{js,jsx,ts,tsx}",
+    "lib/**/*.{js,jsx,ts,tsx}",
+    "scripts/**/*.{js,mjs}",
+    "types/**/*.{js,ts}"
+  ],
+  "ignoreDependencies": [
+    "serwist",
+    "@serwist/next",
+    "next-themes",
+    "sonner",
+    "recharts",
+    "tailwindcss-animate",
+    "glob",
+    "sharp"
+  ]
+}
