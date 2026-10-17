@@ -95,6 +95,7 @@ SET search_path = public, auth
 AS $$
   SELECT COALESCE(
     (NULLIF(auth.jwt()->'user_metadata'->>'role', '')),
+    (NULLIF(auth.jwt()->'app_metadata'->>'role', '')),
     (SELECT p.role FROM public.patients p WHERE p.user_id = auth.uid() LIMIT 1),
     'patient'
   );
@@ -161,13 +162,17 @@ CREATE POLICY "providers_admin_insert" ON public.providers
 -- 4b. Medical Records Moderation & Right-to-Erasure Reconciliation
 -- ----------------------------------------------------------------------------
 ALTER TABLE IF EXISTS public.medical_records ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "admin_delete_records" ON public.medical_records;
 DROP POLICY IF EXISTS "admin_delete_medical_records" ON public.medical_records;
 
 CREATE POLICY "admin_delete_medical_records" ON public.medical_records
   FOR DELETE TO authenticated
   USING (
-    (SELECT public.get_user_role()) = 'admin'
+    public.get_user_role() = 'admin'
+    OR (SELECT public.get_user_role()) = 'admin'
+    OR (SELECT p.role FROM public.patients p WHERE p.user_id = auth.uid() LIMIT 1) = 'admin'
     OR (auth.jwt()->'user_metadata'->>'role') = 'admin'
+    OR (auth.jwt()->'app_metadata'->>'role') = 'admin'
   );
 
 -- ----------------------------------------------------------------------------

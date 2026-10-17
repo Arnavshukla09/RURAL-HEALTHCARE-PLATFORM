@@ -125,8 +125,11 @@ CREATE POLICY "admin_delete_medical_records"
   FOR DELETE
   TO authenticated
   USING (
-    (SELECT public.get_user_role()) = 'admin'
+    public.get_user_role() = 'admin'
+    OR (SELECT public.get_user_role()) = 'admin'
+    OR (SELECT p.role FROM public.patients p WHERE p.user_id = auth.uid() LIMIT 1) = 'admin'
     OR (auth.jwt()->'user_metadata'->>'role') = 'admin'
+    OR (auth.jwt()->'app_metadata'->>'role') = 'admin'
   );
 
 -- ----------------------------------------------------------------------------
