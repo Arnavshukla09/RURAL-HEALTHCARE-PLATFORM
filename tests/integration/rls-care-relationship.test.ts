@@ -823,13 +823,13 @@ describe.skipIf(!isDbAvailable)("Live RLS & Care Relationship Integration Suite 
   // --------------------------------------------------------------------------
   it("verifies non-service callers cannot INSERT a non-patient role into patients", async () => {
     // 1. Authenticated patient attempting to insert non-patient role
-    const rogueId = crypto.randomUUID();
     const { error: patInsErr } = await patientA.client
       .from("patients")
       .insert({
-        user_id: rogueId,
+        user_id: patientA.user.id,
         email: `rogue_${runId}@test.local`,
         first_name: "Rogue",
+        last_name: "Attempt",
         role: "admin",
       });
     expect(patInsErr).not.toBeNull();
@@ -838,20 +838,32 @@ describe.skipIf(!isDbAvailable)("Live RLS & Care Relationship Integration Suite 
     const { error: anonInsErr } = await anonClient
       .from("patients")
       .insert({
-        user_id: crypto.randomUUID(),
+        user_id: patientA.user.id,
         email: `anon_rogue_${runId}@test.local`,
         first_name: "AnonRogue",
+        last_name: "Attempt",
         role: "doctor",
       });
     expect(anonInsErr).not.toBeNull();
 
-    // 3. Service role CAN insert non-patient role
-    const docUserId = crypto.randomUUID();
+    // 3. Service role CAN insert non-patient role (using valid auth user)
+    const testDocEmail = `valid_service_doc_${runId}@test.local`;
+    const { data: createdDocAuth, error: authErr } = await adminClient.auth.admin.createUser({
+      email: testDocEmail,
+      password: `DocPass!_${runId}_123`,
+      email_confirm: true,
+    });
+    expect(authErr).toBeNull();
+    const docUserId = createdDocAuth!.user!.id;
+
+    // Delete auto-created patient row from signup trigger so we can test explicit service INSERT
+    await adminClient.from("patients").delete().eq("user_id", docUserId);
+
     const { data: servIns, error: servErr } = await adminClient
       .from("patients")
       .insert({
         user_id: docUserId,
-        email: `valid_service_doc_${runId}@test.local`,
+        email: testDocEmail,
         first_name: "ServiceDoc",
         last_name: "Doc",
         role: "doctor",
@@ -865,6 +877,7 @@ describe.skipIf(!isDbAvailable)("Live RLS & Care Relationship Integration Suite 
     if (servIns?.id) {
       await adminClient.from("patients").delete().eq("id", servIns.id);
     }
+    await adminClient.auth.admin.deleteUser(docUserId);
   });
 });
 
