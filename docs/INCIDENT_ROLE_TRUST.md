@@ -3,7 +3,7 @@
 - **Incident Identifier:** SEC-2026-10-17-ROLE-TRUST
 - **Date Reported:** October 17, 2026
 - **Severity:** P0 / Critical (Privilege Escalation & Unauthorized Access)
-- **Status:** Triage In Progress (Step 0)
+- **Status:** Closed / Remediated (All 6 Protocol Steps Completed & Verified)
 - **Branch:** `hotfix/role-trust`
 
 ---
@@ -139,4 +139,25 @@ where schemaname='public' and (qual ilike '%user_metadata%' or with_check ilike 
   - Added Step 6 in `scripts/check_components.mjs` to enforce immutability locally before git commits.
 - **Mutation Proof (Mutation 7):** Intentionally altered `supabase/migrations/20260701000000_core_schema.sql` with a trailing comment; verified gate exited with code 1; restored and verified clean pass. Documented in `docs/TEST_EVIDENCE.md`.
 - **Historical In-Place Edits Audit:** Published `docs/SCHEMA_DRIFT_REPORT.md` documenting historical in-place edits in older migrations (`20260701` through `20260706`) and defining forward-only architectural invariants.
+
+### Step 6: Production Rollout Runbook & Definition of Done - COMPLETED
+- **Production Rollout Runbook:** Published in `docs/ROLLOUT_RLS_FIX.md` with staging-first execution sequence, manual production SQL scripts (`20261018000000` and `20261018000100`), verification SQL queries, and safe non-vulnerable rollback script.
+- **Definition of Done Verification:** All 10 security and engineering requirements verified.
+
+---
+
+## 5. Definition of Done (DoD) Sign-Off
+
+| # | Requirement | Specification | Verification Artifact | Status |
+| :-: | :--- | :--- | :--- | :---: |
+| 1 | **Database Role Source Authority** | Roles derived strictly from `public.patients.role`; client `user_metadata` ignored everywhere. | `20261018000000_role_source_hotfix.sql` | **DONE** |
+| 2 | **Unconditional Patient Signup** | `handle_new_user()` inserts `role = 'patient'` unconditionally on registration. | `handle_new_user()` & Test 11 | **DONE** |
+| 3 | **Signup & Update Escalation Guard** | `guard_patient_privileges()` rejects non-service inserts of non-patient roles. | `guard_patient_privileges()` & Tests 12, 16 | **DONE** |
+| 4 | **Medical Record Confidentiality** | Admin has zero `SELECT` or `UPDATE` access to `medical_records`. Direct admin policies dropped. | `20261018000000` & Tests 4, 15 | **DONE** |
+| 5 | **Audited Admin Erasure Function** | Admin erasure via `public.admin_erase_medical_record` RPC with mandatory reason and immutable audit log. | `20261018000100_admin_erasure_function.sql` & Test 4 | **DONE** |
+| 6 | **Application Layer Hardening** | `app/api/auth/login/route.ts` and `components/Authentication.tsx` remove metadata role fallbacks. | Commit `290973e` | **DONE** |
+| 7 | **Live Contract Test Suite** | 19 tests in `tests/integration/rls-care-relationship.test.ts` (16 DB contract + 3 safety guards), 0 skipped. | Live CI Run `39026437823` | **DONE** |
+| 8 | **Mutation Proofs Recorded** | 7 verifiable mutation proofs with exact error traces and restorations. | `docs/TEST_EVIDENCE.md` | **DONE** |
+| 9 | **Cryptographic Migration Immutability** | `supabase/migrations.sha256` manifest and `check_migration_immutability.mjs` gate in pre-commit and CI. | Commit `912bdcf` & Mutation 7 | **DONE** |
+| 10 | **Production Rollout Runbook** | Staging-first deployment, verification SQL, non-vulnerable rollback script. | `docs/ROLLOUT_RLS_FIX.md` | **DONE** |
 
