@@ -101,6 +101,24 @@ jobs:
       - name: Verify Live Database Tests Executed (Fail on 0 or Skipped)
         run: node scripts/verify_integration_tests.mjs vitest-integration-report.json 12
 
+      - name: Dump Vitest Failures If Failed
+        if: failure()
+        run: |
+          if [ -f vitest-integration-report.json ]; then
+            node -e "
+              const fs = require('fs');
+              const r = JSON.parse(fs.readFileSync('vitest-integration-report.json', 'utf8'));
+              console.log('Test Summary: passed=' + r.numPassedTests + ', failed=' + r.numFailedTests + ', skipped=' + (r.numPendingTests || 0));
+              for (const tr of r.testResults) {
+                for (const a of tr.assertionResults) {
+                  if (a.status === 'failed') {
+                    console.error('::error::FAILED TEST: ' + a.title + '\n' + (a.failureMessages || []).join('\n'));
+                  }
+                }
+              }
+            "
+          fi
+
       - name: Stop Supabase Local Stack
         if: always()
         run: supabase stop

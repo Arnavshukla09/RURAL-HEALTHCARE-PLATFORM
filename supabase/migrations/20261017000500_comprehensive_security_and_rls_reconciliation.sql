@@ -134,6 +134,8 @@ CREATE POLICY "providers_admin_insert" ON public.providers
 DROP POLICY IF EXISTS "doctor_read_all_appointments" ON public.appointments;
 DROP POLICY IF EXISTS "doctor_read_assigned_appointments" ON public.appointments;
 DROP POLICY IF EXISTS "doctor_update_assigned_appointments" ON public.appointments;
+DROP POLICY IF EXISTS "admin_delete_appointments" ON public.appointments;
+DROP POLICY IF EXISTS "admin_update_appointments" ON public.appointments;
 
 CREATE POLICY "doctor_read_assigned_appointments" ON public.appointments
   FOR SELECT TO authenticated
@@ -156,6 +158,14 @@ CREATE POLICY "doctor_update_assigned_appointments" ON public.appointments
       provider_id IN (SELECT pr.id FROM public.providers pr WHERE pr.user_id = (SELECT auth.uid()))
     )
   );
+
+CREATE POLICY "admin_delete_appointments" ON public.appointments
+  FOR DELETE TO authenticated
+  USING ((SELECT public.get_user_role()) = 'admin');
+
+CREATE POLICY "admin_update_appointments" ON public.appointments
+  FOR UPDATE TO authenticated
+  USING ((SELECT public.get_user_role()) = 'admin');
 
 -- ----------------------------------------------------------------------------
 -- 6. Health Data Vitals Scoping (P0 Finding 1)
