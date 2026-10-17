@@ -80,7 +80,7 @@ describe.skipIf(!isDbAvailable)("Live RLS & Care Relationship Integration Suite 
         });
         user = existing;
       } else if (createErr) {
-        throw new Error(`Failed to create test user ${email}: ${createErr.message}`);
+        throw new Error(`Failed to create test user ${email}: ${createErr.message || JSON.stringify(createErr)}`);
       } else {
         user = createData.user;
       }
@@ -99,6 +99,7 @@ describe.skipIf(!isDbAvailable)("Live RLS & Care Relationship Integration Suite 
         .insert({
           user_id: user!.id,
           first_name: name,
+          last_name: "",
           email: email,
           role: role,
         })
@@ -852,6 +853,7 @@ describe.skipIf(!isDbAvailable)("Live RLS & Care Relationship Integration Suite 
         user_id: docUserId,
         email: `valid_service_doc_${runId}@test.local`,
         first_name: "ServiceDoc",
+        last_name: "Doc",
         role: "doctor",
       })
       .select("id, role")

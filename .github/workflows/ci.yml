@@ -104,29 +104,7 @@ jobs:
 
       - name: Dump Vitest Failures If Failed
         if: failure()
-        run: |
-          if [ -f vitest-integration-report.json ]; then
-            node -e "
-              const fs = require('fs');
-              const r = JSON.parse(fs.readFileSync('vitest-integration-report.json', 'utf8'));
-              console.log('Test Summary: passed=' + r.numPassedTests + ', failed=' + r.numFailedTests + ', skipped=' + (r.numPendingTests || 0));
-              let md = '### Integration Test Failures\n\n';
-              for (const tr of r.testResults) {
-                for (const a of tr.assertionResults) {
-                  if (a.status === 'failed') {
-                    console.log('--- FAILED TEST: ' + a.title + ' ---');
-                    console.log((a.failureMessages || []).join('\n'));
-                    md += '#### ' + a.title + '\n```\n' + (a.failureMessages || []).join('\n') + '\n```\n';
-                    const detail = ((a.failureMessages || [])[0] || a.title).replace(/\r?\n/g, ' ').slice(0, 300);
-                    console.error('::error title=' + a.title.slice(0, 50) + '::' + detail);
-                  }
-                }
-              }
-              if (process.env.GITHUB_STEP_SUMMARY) {
-                fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, md);
-              }
-            "
-          fi
+        run: node scripts/dump_vitest_failures.mjs vitest-integration-report.json
 
       - name: Stop Supabase Local Stack
         if: always()

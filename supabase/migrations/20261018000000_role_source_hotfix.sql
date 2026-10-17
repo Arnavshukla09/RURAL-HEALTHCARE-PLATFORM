@@ -47,6 +47,17 @@ $$;
 REVOKE EXECUTE ON FUNCTION public.get_current_user_role() FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.get_current_user_role() TO authenticated, service_role;
 
+-- Ensure last_name has a safe default to avoid NOT NULL violations on single-name signups
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'patients' AND column_name = 'last_name'
+  ) THEN
+    ALTER TABLE public.patients ALTER COLUMN last_name SET DEFAULT '';
+  END IF;
+END $$;
+
 -- ----------------------------------------------------------------------------
 -- 3. Function: public.handle_new_user()
 -- ----------------------------------------------------------------------------
@@ -57,11 +68,12 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
-  INSERT INTO public.patients (user_id, email, first_name, role)
+  INSERT INTO public.patients (user_id, email, first_name, last_name, role)
   VALUES (
     new.id,
     new.email,
     COALESCE(new.raw_user_meta_data->>'full_name', split_part(new.email, '@', 1)),
+    COALESCE(new.raw_user_meta_data->>'last_name', ''),
     'patient'
   )
   ON CONFLICT (user_id) DO NOTHING;
