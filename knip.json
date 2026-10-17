@@ -17,6 +17,7 @@
     "types/**/*.{js,ts}"
   ],
   "ignoreDependencies": [
+    "k6",
     "serwist",
     "@serwist/next",
     "next-themes",
@@ -25,5 +26,12 @@
     "tailwindcss-animate",
     "glob",
     "sharp"
-  ]
+  ],
+  "rules": {
+    "files": "error",
+    "dependencies": "error",
+    "unlisted": "error",
+    "exports": "off",
+    "types": "off"
+  }
 }

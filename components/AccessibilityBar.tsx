@@ -4,7 +4,8 @@ import { usePathname } from "next/navigation"
 import { Button } from "./ui/button"
 import { Card, CardContent } from "./ui/card"
 import { Accessibility, Type, Volume2, Contrast, VolumeX, ChevronUp } from "lucide-react"
-import { useToast } from "@/components/ui/use-toast"
+import { useToast } from "@/hooks/use-toast"
+
 
 import { useApp } from "@/components/providers/AppProvider"
 

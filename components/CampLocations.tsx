@@ -23,7 +23,8 @@ import {
   Loader2,
   Info
 } from "lucide-react"
-import { useToast } from "@/components/ui/use-toast"
+import { useToast } from "@/hooks/use-toast"
+
 import dynamic from "next/dynamic"
 
 // Lazy-load the map — Leaflet is heavy (~150 KB) and only needed when user opens the map view

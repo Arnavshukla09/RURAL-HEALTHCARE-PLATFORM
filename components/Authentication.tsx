@@ -10,7 +10,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs"
 import { Alert, AlertDescription } from "./ui/alert"
 import { Eye, EyeOff, User, Mail, Phone, Loader2, Chrome, Heart } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
-import { useToast } from "@/components/ui/use-toast"
+import { useToast } from "@/hooks/use-toast"
+
 
 import { UserProfile } from "@/types"
 

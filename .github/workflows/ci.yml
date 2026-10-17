@@ -54,6 +54,10 @@ jobs:
       - name: Automated Component Quality & Integrity Check
         run: npm run check:components
 
+      - name: Knip Dead Code & Dependency Gate
+        run: npm run knip
+
+
       - name: Run Unit Tests (Vitest)
         run: npm run test:unit
 

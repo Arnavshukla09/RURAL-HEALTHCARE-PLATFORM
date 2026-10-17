@@ -249,8 +249,26 @@ async function run() {
   }
 
   // -------------------------------------------------------------
+  // STEP 7: Knip Dead Code & Dependency Gate
+  // -------------------------------------------------------------
+  logStep(7, 'Running Knip Dead Code & Dependency Analysis')
+  try {
+    execSync('npx knip', { stdio: 'pipe', cwd: ROOT })
+    logSuccess('Knip verification passed: 0 unused files or dependencies.')
+  } catch (err) {
+    failed = true
+    const output = (err.stdout ? err.stdout.toString() : '') + (err.stderr ? err.stderr.toString() : '')
+    logError('Knip verification detected unused files or dependencies:')
+    output.split('\n').filter(l => l.trim()).slice(0, 10).forEach(l => {
+      console.log(`    ${colors.red}${l.trim()}${colors.reset}`)
+      failureReports.push(l.trim())
+    })
+  }
+
+  // -------------------------------------------------------------
   // FINAL VERDICT: PASS OR ABORT COMMIT
   // -------------------------------------------------------------
+
   const duration = ((Date.now() - startTime) / 1000).toFixed(2)
   log(`\n${colors.blue}============================================================${colors.reset}`)
 

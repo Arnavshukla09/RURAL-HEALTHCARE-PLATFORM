@@ -4,7 +4,8 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
 import { Button } from "./ui/button"
 import { Badge } from "./ui/badge"
-import { useToast } from "@/components/ui/use-toast"
+import { useToast } from "@/hooks/use-toast"
+
 import {
   Activity, AlertTriangle, ArrowLeft, ArrowRight, CheckCircle,
   Brain, Eye, Ear, Heart, Wind, Droplet, Thermometer, User,
