@@ -509,6 +509,7 @@ DROP POLICY IF EXISTS "doctor_read_assigned_appointments" ON public.appointments
 DROP POLICY IF EXISTS "doctor_update_assigned_appointments" ON public.appointments;
 DROP POLICY IF EXISTS "admin_delete_appointments" ON public.appointments;
 DROP POLICY IF EXISTS "admin_update_appointments" ON public.appointments;
+DROP POLICY IF EXISTS "admin_select_appointments" ON public.appointments;
 
 -- Patient can read own appointments
 CREATE POLICY "patients_read_own_appointments" ON public.appointments
@@ -565,6 +566,10 @@ CREATE POLICY "doctor_update_assigned_appointments" ON public.appointments
   );
 
 -- Admin can manage appointments
+CREATE POLICY "admin_select_appointments" ON public.appointments
+  FOR SELECT TO authenticated
+  USING ((SELECT public.get_user_role()) = 'admin');
+
 CREATE POLICY "admin_delete_appointments" ON public.appointments
   FOR DELETE TO authenticated
   USING ((SELECT public.get_user_role()) = 'admin');
