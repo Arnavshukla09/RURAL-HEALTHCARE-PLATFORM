@@ -164,6 +164,20 @@ CREATE POLICY "providers_admin_insert" ON public.providers
 ALTER TABLE IF EXISTS public.medical_records ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "admin_delete_records" ON public.medical_records;
 DROP POLICY IF EXISTS "admin_delete_medical_records" ON public.medical_records;
+DROP POLICY IF EXISTS "admin_select_moderation_medical_records" ON public.medical_records;
+
+CREATE POLICY "admin_select_moderation_medical_records"
+  ON public.medical_records
+  FOR SELECT
+  TO authenticated
+  USING (
+    ((SELECT public.get_user_role()) = 'admin' OR (auth.jwt()->'user_metadata'->>'role') = 'admin')
+    AND (
+      record_type IN ('lab_report', 'other', 'moderation')
+      OR content ILIKE '%disposable%'
+      OR content ILIKE '%erasure%'
+    )
+  );
 
 CREATE POLICY "admin_delete_medical_records" ON public.medical_records
   FOR DELETE TO authenticated

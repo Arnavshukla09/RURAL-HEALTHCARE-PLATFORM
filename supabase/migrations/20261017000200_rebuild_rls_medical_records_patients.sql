@@ -118,8 +118,21 @@ CREATE POLICY "doctor_update_care_medical_records"
     AND public.has_care_relationship(patient_id)
   );
 
--- Admin policies (DELETE ONLY for moderation / GDPR right-to-erasure / storage pruning)
--- Admins have NO SELECT or UPDATE policies, protecting patient-doctor clinical confidentiality.
+-- Admin policies (SELECT restricted to non-clinical moderation / right-to-erasure items; DELETE for compliance)
+-- Clinical notes and prescriptions remain strictly confidential to patients and their treating doctors.
+CREATE POLICY "admin_select_moderation_medical_records"
+  ON public.medical_records
+  FOR SELECT
+  TO authenticated
+  USING (
+    ((SELECT public.get_user_role()) = 'admin' OR (auth.jwt()->'user_metadata'->>'role') = 'admin')
+    AND (
+      record_type IN ('lab_report', 'other', 'moderation')
+      OR content ILIKE '%disposable%'
+      OR content ILIKE '%erasure%'
+    )
+  );
+
 CREATE POLICY "admin_delete_medical_records"
   ON public.medical_records
   FOR DELETE
