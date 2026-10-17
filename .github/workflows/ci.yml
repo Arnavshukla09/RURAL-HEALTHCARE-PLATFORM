@@ -103,7 +103,7 @@ jobs:
           npm run test:integration -- --reporter=default --reporter=json --outputFile=vitest-integration-report.json
 
       - name: Verify Live Database Tests Executed (Fail on 0 or Skipped)
-        run: node scripts/verify_integration_tests.mjs vitest-integration-report.json 19
+        run: node scripts/verify_integration_tests.mjs vitest-integration-report.json 22
 
       - name: Dump Vitest Failures If Failed
         if: failure()

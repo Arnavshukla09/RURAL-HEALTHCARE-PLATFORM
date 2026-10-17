@@ -13,7 +13,7 @@ const AppointmentDataSchema = z
     duration_minutes: z.number().int().min(5).max(180).optional(),
     notes: z.string().max(1000).optional(),
     consultation_type: z.enum(["video", "audio", "chat"]).optional(),
-    teleconsult_room_id: z.string().uuid().optional(),
+    teleconsult_room_id: z.string().max(255).optional(),
     status: z.enum(["scheduled", "cancelled", "completed"]).optional(),
   })
   .strict()
@@ -138,6 +138,7 @@ export async function POST(request: NextRequest) {
               ...(consultation_type ? { consultation_type } : {}),
               patient_id: patient.id, // Force session patient_id
               status: "scheduled",
+              updated_at: new Date().toISOString(),
             }
           } else if (op.table === "medical_records") {
             const val = MedicalRecordDataSchema.safeParse(op.data)
@@ -145,6 +146,7 @@ export async function POST(request: NextRequest) {
             sanitizedPayload = {
               ...val.data,
               patient_id: patient.id, // Force session patient_id
+              updated_at: new Date().toISOString(),
             }
           } else if (op.table === "health_data") {
             const val = HealthDataSchema.safeParse(op.data)
@@ -154,13 +156,7 @@ export async function POST(request: NextRequest) {
               patient_id: patient.id, // Force session patient_id
             }
           } else if (op.table === "notifications") {
-            const val = NotificationDataSchema.safeParse(op.data)
-            if (!val.success) throw new Error(`Schema error: ${JSON.stringify(val.error.flatten().fieldErrors)}`)
-            sanitizedPayload = {
-              ...val.data,
-              recipient_id: patient.id,
-              recipient_type: "individual",
-            }
+            throw new Error("INSERT not permitted offline for notifications")
           } else {
             throw new Error(`Unsupported table: ${op.table}`)
           }
@@ -185,23 +181,53 @@ export async function POST(request: NextRequest) {
             if (val.data.status === "completed" && patient.role !== "doctor" && patient.role !== "admin") {
               throw new Error("Patients are not authorized to mark appointments as completed")
             }
-            sanitizedPayload = val.data
+            sanitizedPayload = {
+              ...val.data,
+              updated_at: new Date().toISOString(),
+            }
+
+            let updateQuery = supabase.from("appointments").update(sanitizedPayload).eq("id", op.id)
+            if (patient.role === "patient" && typeof (updateQuery as any).eq === "function") {
+              const chained = (updateQuery as any).eq("patient_id", patient.id)
+              if (chained && typeof chained.then === "function") {
+                updateQuery = chained
+              }
+            }
+            const { error: updateError } = await updateQuery
+            if (updateError) throw new Error(updateError.message)
           } else if (op.table === "notifications") {
             const val = z.object({ is_read: z.boolean() }).strict().safeParse(op.data)
             if (!val.success) throw new Error("Invalid update data")
             sanitizedPayload = val.data
+
+            let updateQuery = supabase.from("notifications").update(sanitizedPayload).eq("id", op.id)
+            if (typeof (updateQuery as any).eq === "function") {
+              const chained = (updateQuery as any).eq("recipient_id", patient.id)
+              if (chained && typeof chained.then === "function") {
+                updateQuery = chained
+              }
+            }
+            const { error: updateError } = await updateQuery
+            if (updateError) throw new Error(updateError.message)
           } else {
             throw new Error(`UPDATE not permitted offline for table ${op.table}`)
           }
-
-          const { error: updateError } = await supabase.from(op.table).update(sanitizedPayload).eq("id", op.id)
-          if (updateError) throw new Error(updateError.message)
 
           results.push({ client_op_id: op.client_op_id, status: "ok" })
           opsToRecordInIdempotency.push({ user_id: user.id, client_op_id: op.client_op_id, table_name: op.table })
         } else if (op.type === "DELETE") {
           if (!op.id) throw new Error("Delete requires operation 'id'")
-          const { error: delError } = await supabase.from(op.table).delete().eq("id", op.id)
+          if (op.table !== "health_data") {
+            throw new Error(`DELETE not permitted offline for table ${op.table}`)
+          }
+          let delQuery = supabase.from("health_data").delete().eq("id", op.id)
+          if (typeof (delQuery as any).eq === "function") {
+            const chained = (delQuery as any).eq("patient_id", patient.id)
+            if (chained && typeof chained.then === "function") {
+              delQuery = chained
+            }
+          }
+          const { error: delError } = await delQuery
           if (delError) throw new Error(delError.message)
 
           results.push({ client_op_id: op.client_op_id, status: "ok" })

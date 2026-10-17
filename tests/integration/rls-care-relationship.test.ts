@@ -879,6 +879,89 @@ describe.skipIf(!isDbAvailable)("Live RLS & Care Relationship Integration Suite 
     }
     await adminClient.auth.admin.deleteUser(docUserId);
   });
+
+  // Test 17: Payment Status Enforcement on Direct Client Insertion
+  it("verifies payment insertion requires status='pending' and rejects client completed/refunded", async () => {
+    // Attempt to insert with status = 'completed' -> must fail
+    const { error: compErr } = await patientA.client
+      .from("payments")
+      .insert({
+        user_id: patientA.user.id,
+        amount: 250.0,
+        currency: "INR",
+        status: "completed",
+      });
+    expect(compErr).not.toBeNull();
+
+    // Attempt to insert with status = 'refunded' -> must fail
+    const { error: refErr } = await patientA.client
+      .from("payments")
+      .insert({
+        user_id: patientA.user.id,
+        amount: 250.0,
+        currency: "INR",
+        status: "refunded",
+      });
+    expect(refErr).not.toBeNull();
+
+    // Inserting with status = 'pending' -> must succeed
+    const { data: pendData, error: pendErr } = await patientA.client
+      .from("payments")
+      .insert({
+        user_id: patientA.user.id,
+        amount: 250.0,
+        currency: "INR",
+        status: "pending",
+      })
+      .select("id, status")
+      .single();
+    expect(pendErr).toBeNull();
+    expect(pendData?.status).toBe("pending");
+
+    // Cleanup
+    if (pendData?.id) {
+      await adminClient.from("payments").delete().eq("id", pendData.id);
+    }
+  });
+
+  // Test 18: Patient Cannot Self-Complete Appointments
+  it("verifies patient cannot self-complete appointments via direct update", async () => {
+    // Fetch patient A's appointment
+    const { data: appt } = await patientA.client
+      .from("appointments")
+      .select("id, status")
+      .eq("patient_id", patientA.patientId)
+      .eq("status", "scheduled")
+      .limit(1)
+      .single();
+    expect(appt).toBeDefined();
+
+    // Attempt to mark as completed -> must fail under WITH CHECK
+    const { error: updErr } = await patientA.client
+      .from("appointments")
+      .update({ status: "completed" })
+      .eq("id", appt!.id);
+    expect(updErr).not.toBeNull();
+
+    // Attempt to cancel -> must succeed
+    const { error: cancelErr } = await patientA.client
+      .from("appointments")
+      .update({ status: "cancelled" })
+      .eq("id", appt!.id);
+    expect(cancelErr).toBeNull();
+
+    // Revert back to scheduled via adminClient for subsequent tests
+    await adminClient
+      .from("appointments")
+      .update({ status: "scheduled" })
+      .eq("id", appt!.id);
+  });
+
+  // Test 19: Insecure Diagnostic Functions Are Inaccessible
+  it("verifies get_tables() diagnostic helper cannot be executed by client", async () => {
+    const { error: rpcErr } = await patientA.client.rpc("get_tables");
+    expect(rpcErr).not.toBeNull();
+  });
 });
 
 describe("Database Safety & Allowlist Guard Unit Invariants", () => {

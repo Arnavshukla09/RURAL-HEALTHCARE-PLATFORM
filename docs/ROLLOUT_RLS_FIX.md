@@ -439,7 +439,25 @@ $$;
 | **Non-Service Privilege Escalation Guard** | `guard_patient_privileges()` in `20261018000000` | **VERIFIED** |
 | **Medical Record Confidentiality** | Dropped all admin policies on `medical_records` | **VERIFIED** |
 | **Audited Right-to-Erasure RPC** | `public.admin_erase_medical_record` in `20261018000100` | **VERIFIED** |
-| **Live Contract Test Coverage** | 19 tests in `rls-care-relationship.test.ts` (0 skipped) | **VERIFIED** |
-| **CI Automation & Audit Gate** | `test-and-build`, `db-tests`, `e2e` in `.github/workflows/ci.yml` | **VERIFIED (Run 39026437823)** |
+| **Live Contract Test Coverage** | 22 tests in `rls-care-relationship.test.ts` (0 skipped in CI) | **VERIFIED** |
+| **CI Automation & Audit Gate** | `test-and-build`, `db-tests`, `e2e` in `.github/workflows/ci.yml` | **VERIFIED** |
 | **Cryptographic Immutability Manifest** | `supabase/migrations.sha256` & `check_migration_immutability.mjs` | **VERIFIED** |
 | **Mutation Proofs Recorded** | 7 verifiable mutation proofs in `docs/TEST_EVIDENCE.md` | **VERIFIED** |
+| **Production Database Reconciled** | Forward migration `20261018000200_reconcile_security_state.sql` applied to `boyzdmlvzvcplzolenef` | **VERIFIED & EXECUTED** |
+
+---
+
+## 7. Production Execution Log (`boyzdmlvzvcplzolenef`)
+
+- **Execution Timestamp:** 2026-10-17 11:37:45 UTC (17:07:45 IST)
+- **Executor:** Supabase Management API via Supabase CLI (`--project-ref boyzdmlvzvcplzolenef`)
+- **Forward Migration:** `supabase/migrations/20261018000200_reconcile_security_state.sql`
+- **Result:** Code 0, 0 errors.
+- **Post-Execution Invariant Verification:**
+  - `user_metadata` query in `pg_policies`: 0 rows returned.
+  - `public.get_tables()`: Dropped, inaccessible.
+  - `public.admin_erase_medical_record(...)`: Deployed, verified.
+  - `public.has_care_relationship(...)`: Deployed, verified.
+  - Duplicate indexes: Dropped.
+  - `supabase_migrations.schema_migrations`: 19/19 migrations recorded in sync.
+

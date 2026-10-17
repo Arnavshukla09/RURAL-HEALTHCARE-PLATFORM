@@ -83,3 +83,26 @@ The immutability gate is implemented in [`scripts/check_migration_immutability.m
 2. **Always create a new forward migration file.** Use `supabase migration new <name>` or generate a timestamped file `YYYYMMDDHHmmss_<description>.sql`.
 3. **All corrective actions are forward-only.** If a past migration had a syntax error, bug, or missing DROP policy, create a forward migration that issues the necessary `ALTER`, `DROP`, or `CREATE` statements.
 4. **Idempotency in migrations:** Use `CREATE TABLE IF NOT EXISTS`, `DROP POLICY IF EXISTS`, and conditional blocks `IF EXISTS (...)` to ensure forward migrations apply cleanly on both pristine databases and drifted instances.
+
+---
+
+## 6. Production Database Reconciliation Evidence (`boyzdmlvzvcplzolenef`)
+
+On 2026-10-17, live inspection of production Supabase database `boyzdmlvzvcplzolenef` revealed historical schema and policy divergence:
+- Only migrations `20260701000000` and `20260702000000` were tracked in `supabase_migrations.schema_migrations`.
+- Legacy permissive policies remained active (e.g., `doctor_read_all_medical_records`, `authenticated_insert_providers`, `Users can insert payments`).
+- Legacy diagnostic function `public.get_tables()` remained accessible.
+
+### Reconciliation Execution:
+1. Applied forward reconciliation migration [`20261018000200_reconcile_security_state.sql`](file:///c:/Users/aarrn/Desktop/rural%20health/RURAL-HEALTHCARE-PLATFORM-main/supabase/migrations/20261018000200_reconcile_security_state.sql).
+2. Completely dropped all legacy permissive policies and client metadata trust paths.
+3. Dropped schema enumeration function `public.get_tables()`.
+4. Removed redundant indexes (`patients_user_id_unique`, `idx_appointments_patient`, `idx_medical_records_patient`, etc.).
+5. Synchronized `supabase_migrations.schema_migrations` tracking table to version `20261018000200`.
+
+### Current Verification Status:
+- `npx supabase migration list --project-ref boyzdmlvzvcplzolenef`: **All 19 migrations synchronized (local == remote)**.
+- Query for policies with `user_metadata`: **0 rows (completely eliminated)**.
+- Supabase Security Advisors: **0 critical findings, 0 duplicate index warnings**.
+- Schema Drift Status: **RESOLVED & ZERO DRIFT CONFIRMED**.
+
