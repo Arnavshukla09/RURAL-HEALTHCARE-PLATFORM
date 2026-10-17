@@ -29,8 +29,16 @@
 -- ============================================================================
 
 -- Ensure healthcare_providers has user_id foreign key
-ALTER TABLE IF EXISTS public.healthcare_providers 
-  ADD COLUMN IF NOT EXISTS user_id uuid UNIQUE REFERENCES auth.users(id) ON DELETE SET NULL;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_schema = 'public' AND table_name = 'healthcare_providers' AND column_name = 'user_id'
+  ) THEN
+    ALTER TABLE public.healthcare_providers 
+      ADD COLUMN user_id uuid UNIQUE REFERENCES auth.users(id) ON DELETE SET NULL;
+  END IF;
+END $$;
 
 REVOKE INSERT (user_id), UPDATE (user_id) ON public.healthcare_providers FROM PUBLIC, anon, authenticated;
 
