@@ -16,8 +16,20 @@
 ALTER FUNCTION public.get_user_role()
   SET search_path = public;
 
-ALTER FUNCTION public.audit_medical_records()
-  SET search_path = public;
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM pg_proc p
+    JOIN pg_namespace n ON n.oid = p.pronamespace
+    WHERE n.nspname = 'public'
+      AND p.proname = 'audit_medical_records'
+      AND pg_get_function_identity_arguments(p.oid) = ''
+  ) THEN
+    ALTER FUNCTION public.audit_medical_records()
+      SET search_path = public;
+  END IF;
+END $$;
 
 ALTER FUNCTION public.update_facility_timestamp()
   SET search_path = public;
@@ -51,8 +63,20 @@ DROP POLICY IF EXISTS "patients_service_insert" ON public.patients;
 -- ================================================================
 
 -- Our internal helper functions
-REVOKE EXECUTE ON FUNCTION public.audit_medical_records()
-  FROM anon, authenticated;
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM pg_proc p
+    JOIN pg_namespace n ON n.oid = p.pronamespace
+    WHERE n.nspname = 'public'
+      AND p.proname = 'audit_medical_records'
+      AND pg_get_function_identity_arguments(p.oid) = ''
+  ) THEN
+    REVOKE EXECUTE ON FUNCTION public.audit_medical_records()
+      FROM anon, authenticated;
+  END IF;
+END $$;
 
 -- get_current_user_role and get_user_role must remain executable by authenticated to evaluate RLS
 REVOKE EXECUTE ON FUNCTION public.get_current_user_role()
