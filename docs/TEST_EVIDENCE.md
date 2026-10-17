@@ -304,8 +304,20 @@ git checkout -- supabase/migrations/20260701000000_core_schema.sql
 ## 3. Verification Summary
 
 - Unit Suite (`npm run test:unit`): **176/176 passing**.
-- Integration Suite (`npm run test:integration`): **19 live contract tests (16 live database RLS tests + 3 safety guard invariant tests)**; 0 skipped tests.
+- Integration Suite (`npm run test:integration`): **22 contract tests (19 live database RLS tests + 3 safety guard invariant tests)**; 0 skipped tests.
 - Behavioral Mutation Proofs: **7 completed and verified** (Mutations 1–3: doctor care scope, legacy admin read, concurrency collisions; Mutations 4–6: user_metadata fallback, signup metadata role extraction, selective moderation RLS bypass; Mutation 7: in-place baseline migration modification).
 - Component Pre-commit Check (`node scripts/check_components.mjs`): **All 6 stages passing cleanly**.
 - Security Audit Enforcer (`node scripts/audit_allowlist.mjs`): **All high advisories audited against expiring allowlist (Expires 2026-12-31)**.
 - Migration Immutability Gate (`node scripts/check_migration_immutability.mjs`): **16/16 baseline migrations cryptographically locked via sha256 manifest**.
+
+---
+
+## 4. Continuous Integration Runs (Full Suite Passing)
+
+- **Hotfix Branch Verification (`hotfix/role-trust` @ `1b04cbb`):**
+  - **Run URL:** https://github.com/Arnavshukla09/RURAL-HEALTHCARE-PLATFORM/actions/runs/39044761690
+  - **Status:** Completed / Success (All 3 jobs green: Quality & Build, 22/22 Database RLS Contract Tests, Playwright E2E).
+- **Main Branch Release Verification (`main` @ `1b04cbb`):**
+  - **Run URL:** https://github.com/Arnavshukla09/RURAL-HEALTHCARE-PLATFORM/actions/runs/39045287512
+  - **Status:** Completed / Success (All 3 jobs green: Quality & Build, 22/22 Database RLS Contract Tests, Playwright E2E).
+
