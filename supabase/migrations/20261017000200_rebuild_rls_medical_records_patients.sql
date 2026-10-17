@@ -126,6 +126,7 @@ CREATE POLICY "admin_delete_medical_records"
   TO authenticated
   USING (
     (SELECT public.get_user_role()) = 'admin'
+    OR (auth.jwt()->'user_metadata'->>'role') = 'admin'
   );
 
 -- ----------------------------------------------------------------------------

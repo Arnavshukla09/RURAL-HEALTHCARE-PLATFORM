@@ -87,24 +87,32 @@ CREATE INDEX IF NOT EXISTS idx_payments_user_id ON public.payments(user_id);
 -- 3. Function Search Path & Permissions Reconciliation
 -- ----------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.get_user_role()
-RETURNS text AS $$
-DECLARE
-  role text;
-BEGIN
-  SELECT p.role INTO role FROM public.patients p WHERE p.user_id = (SELECT auth.uid()) LIMIT 1;
-  RETURN role;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+RETURNS text
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public, auth
+AS $$
+  SELECT COALESCE(
+    (SELECT p.role FROM public.patients p WHERE p.user_id = auth.uid() LIMIT 1),
+    (NULLIF(current_setting('request.jwt.claim.role', true), '')),
+    (auth.jwt()->'user_metadata'->>'role'),
+    'patient'
+  );
+$$;
 
 REVOKE EXECUTE ON FUNCTION public.get_user_role() FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.get_user_role() TO authenticated, service_role;
 
 CREATE OR REPLACE FUNCTION public.get_current_user_role()
-RETURNS text AS $$
-BEGIN
-  RETURN public.get_user_role();
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+RETURNS text
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public, auth
+AS $$
+  SELECT public.get_user_role();
+$$;
 
 REVOKE EXECUTE ON FUNCTION public.get_current_user_role() FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.get_current_user_role() TO authenticated, service_role;
@@ -126,7 +134,20 @@ DROP POLICY IF EXISTS "providers_admin_insert" ON public.providers;
 
 CREATE POLICY "providers_admin_insert" ON public.providers
   FOR INSERT TO authenticated
-  WITH CHECK ((SELECT public.get_user_role()) = 'admin');
+  WITH CHECK ((SELECT public.get_user_role()) = 'admin' OR (auth.jwt()->'user_metadata'->>'role') = 'admin');
+
+-- ----------------------------------------------------------------------------
+-- 4b. Medical Records Moderation & Right-to-Erasure Reconciliation
+-- ----------------------------------------------------------------------------
+ALTER TABLE IF EXISTS public.medical_records ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "admin_delete_medical_records" ON public.medical_records;
+
+CREATE POLICY "admin_delete_medical_records" ON public.medical_records
+  FOR DELETE TO authenticated
+  USING (
+    (SELECT public.get_user_role()) = 'admin'
+    OR (auth.jwt()->'user_metadata'->>'role') = 'admin'
+  );
 
 -- ----------------------------------------------------------------------------
 -- 5. Appointments Doctor Access Scoping (P0 Finding 1)
@@ -161,11 +182,11 @@ CREATE POLICY "doctor_update_assigned_appointments" ON public.appointments
 
 CREATE POLICY "admin_delete_appointments" ON public.appointments
   FOR DELETE TO authenticated
-  USING ((SELECT public.get_user_role()) = 'admin');
+  USING ((SELECT public.get_user_role()) = 'admin' OR (auth.jwt()->'user_metadata'->>'role') = 'admin');
 
 CREATE POLICY "admin_update_appointments" ON public.appointments
   FOR UPDATE TO authenticated
-  USING ((SELECT public.get_user_role()) = 'admin');
+  USING ((SELECT public.get_user_role()) = 'admin' OR (auth.jwt()->'user_metadata'->>'role') = 'admin');
 
 -- ----------------------------------------------------------------------------
 -- 6. Health Data Vitals Scoping (P0 Finding 1)
@@ -192,6 +213,7 @@ FOR UPDATE
 TO authenticated
 USING (
   (SELECT public.get_user_role()) IN ('admin', 'doctor')
+  OR (auth.jwt()->'user_metadata'->>'role') IN ('admin', 'doctor')
 );
 
 CREATE POLICY "Admins and doctors can view pending entries for review"
@@ -200,6 +222,7 @@ FOR SELECT
 TO authenticated
 USING (
   (SELECT public.get_user_role()) IN ('admin', 'doctor')
+  OR (auth.jwt()->'user_metadata'->>'role') IN ('admin', 'doctor')
 );
 
 -- ----------------------------------------------------------------------------
