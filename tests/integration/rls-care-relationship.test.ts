@@ -130,6 +130,7 @@ describe.skipIf(!isDbAvailable)("Live RLS & Care Relationship Integration Suite 
         },
       },
     });
+    await client.auth.setSession(session).catch(() => {});
 
     return { user: user!, patientId: profile.id, client };
   }
