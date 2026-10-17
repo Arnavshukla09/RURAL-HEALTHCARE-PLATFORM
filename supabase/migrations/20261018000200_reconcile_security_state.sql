@@ -334,7 +334,7 @@ BEGIN
   ) VALUES (
     caller_uid,
     'admin',
-    'admin_erase_medical_record',
+    'ERASE_MEDICAL_RECORD',
     'medical_records',
     p_record_id,
     rec_patient_id,
@@ -352,7 +352,7 @@ $$;
 REVOKE ALL ON FUNCTION public.admin_erase_medical_record(uuid, text) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.admin_erase_medical_record(uuid, text) TO authenticated, service_role;
 
--- 2.7 Utility Function Lockdown
+-- 2.7 Utility Function Lockdown & Safety Guards
 DROP FUNCTION IF EXISTS public.get_tables() CASCADE;
 
 DO $$
@@ -366,6 +366,65 @@ BEGIN
     EXECUTE 'REVOKE EXECUTE ON FUNCTION public.audit_medical_records() FROM PUBLIC, anon, authenticated';
   END IF;
 END $$;
+
+-- 2.8 Demo Admin Safety Guard (Strictly restricts admin@ruralhealth.demo)
+CREATE OR REPLACE FUNCTION public.guard_demo_admin_safety()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, auth, pg_temp
+AS $$
+DECLARE
+  v_user_email text;
+  v_role text;
+BEGIN
+  -- Obtain caller email via auth.users, public.patients, or JWT
+  SELECT email INTO v_user_email FROM auth.users WHERE id = auth.uid();
+  IF v_user_email IS NULL THEN
+    SELECT email INTO v_user_email FROM public.patients WHERE user_id = auth.uid();
+  END IF;
+  IF v_user_email IS NULL THEN
+    v_user_email := auth.jwt()->>'email';
+  END IF;
+
+  v_role := public.get_user_role();
+  
+  -- Strictly check for exact demo admin account (never generic substring match)
+  IF LOWER(TRIM(COALESCE(v_user_email, ''))) = 'admin@ruralhealth.demo' THEN
+    RAISE EXCEPTION 'Demo admin mode restricted: Modifying or destructive operations are prohibited for preview accounts.';
+  END IF;
+
+  IF TG_OP = 'DELETE' THEN
+    RETURN OLD;
+  ELSE
+    RETURN NEW;
+  END IF;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.guard_demo_admin_safety() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.guard_demo_admin_safety() TO authenticated, service_role;
+
+DROP TRIGGER IF EXISTS trg_appointments_demo_admin_safety ON public.appointments;
+CREATE TRIGGER trg_appointments_demo_admin_safety
+  BEFORE DELETE OR UPDATE
+  ON public.appointments
+  FOR EACH ROW
+  EXECUTE FUNCTION public.guard_demo_admin_safety();
+
+DROP TRIGGER IF EXISTS trg_patients_demo_admin_safety ON public.patients;
+CREATE TRIGGER trg_patients_demo_admin_safety
+  BEFORE DELETE OR UPDATE OF role
+  ON public.patients
+  FOR EACH ROW
+  EXECUTE FUNCTION public.guard_demo_admin_safety();
+
+DROP TRIGGER IF EXISTS trg_medical_records_demo_admin_safety ON public.medical_records;
+CREATE TRIGGER trg_medical_records_demo_admin_safety
+  BEFORE DELETE OR UPDATE
+  ON public.medical_records
+  FOR EACH ROW
+  EXECUTE FUNCTION public.guard_demo_admin_safety();
 
 
 -- ============================================================================
