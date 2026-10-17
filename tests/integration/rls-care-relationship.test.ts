@@ -59,7 +59,6 @@ describe.skipIf(!isDbAvailable)("Live RLS & Care Relationship Integration Suite 
     // Try signing in or create user
     const { data: signData } = await anonClient.auth.signInWithPassword({ email, password }).catch(() => ({ data: { user: null, session: null } }));
     let user = signData?.user;
-    let session = signData?.session;
 
     if (!user) {
       const { data: createData, error: createErr } = await adminClient.auth.admin.createUser({
@@ -73,31 +72,30 @@ describe.skipIf(!isDbAvailable)("Live RLS & Care Relationship Integration Suite 
         const { data: listData } = await adminClient.auth.admin.listUsers();
         const existing = listData.users.find((u) => u.email?.toLowerCase() === email.toLowerCase());
         if (!existing) throw new Error(`Could not find pre-existing user for ${email}`);
-        await adminClient.auth.admin.updateUserById(existing.id, { password });
+        await adminClient.auth.admin.updateUserById(existing.id, {
+          password,
+          user_metadata: { role, full_name: name },
+        });
         user = existing;
       } else if (createErr) {
         throw new Error(`Failed to create test user ${email}: ${createErr.message}`);
       } else {
         user = createData.user;
       }
-
-      const { data: freshSession, error: sErr } = await anonClient.auth.signInWithPassword({ email, password });
-      if (sErr || !freshSession.session) throw new Error(`Failed to sign in fresh test user ${email}: ${sErr?.message}`);
-      session = freshSession.session;
     }
 
     // Provision or verify patient profile
     let { data: profile } = await adminClient
       .from("patients")
       .select("id, user_id, role")
-      .eq("user_id", user.id)
+      .eq("user_id", user!.id)
       .maybeSingle();
 
     if (!profile) {
       const { data: newProfile, error: pErr } = await adminClient
         .from("patients")
         .insert({
-          user_id: user.id,
+          user_id: user!.id,
           first_name: name,
           email: email,
           role: role,
@@ -108,16 +106,27 @@ describe.skipIf(!isDbAvailable)("Live RLS & Care Relationship Integration Suite 
       if (pErr) throw new Error(`Failed to insert patient profile for ${email}: ${pErr.message}`);
       profile = newProfile;
     } else if (profile.role !== role) {
-      await adminClient.from("patients").update({ role }).eq("id", profile.id);
-      profile.role = role;
+      const { data: updProfile, error: uErr } = await adminClient
+        .from("patients")
+        .update({ role })
+        .eq("id", profile.id)
+        .select("id, user_id, role")
+        .single();
+      if (uErr) throw new Error(`Failed to update patient profile role for ${email}: ${uErr.message}`);
+      profile = updProfile;
     }
+
+    // Sign in after profile and role are confirmed in the database to obtain fresh session
+    const { data: authSession, error: sErr } = await anonClient.auth.signInWithPassword({ email, password });
+    if (sErr || !authSession.session) throw new Error(`Failed to sign in test user ${email}: ${sErr?.message}`);
+    const session = authSession.session;
 
     // Create authenticated client carrying this actor's real JWT
     const client = createClient(targetUrl, anonKey, {
       auth: { persistSession: false, autoRefreshToken: false },
       global: {
         headers: {
-          Authorization: `Bearer ${session!.access_token}`,
+          Authorization: `Bearer ${session.access_token}`,
         },
       },
     });
@@ -310,8 +319,12 @@ describe.skipIf(!isDbAvailable)("Live RLS & Care Relationship Integration Suite 
     expect(adminSelErr).toBeNull();
     expect(adminSelect).toEqual([]);
 
+    // Verify admin role is active via security definer RPC
+    const { data: roleCheck } = await adminUser.client.rpc("get_user_role");
+    expect(roleCheck).toBe("admin");
+
     // Create temporary disposable record to verify admin DELETE
-    const { data: disposable } = await adminClient
+    const { data: disposable, error: dispErr } = await adminClient
       .from("medical_records")
       .insert({
         patient_id: patientA.patientId,
@@ -321,6 +334,8 @@ describe.skipIf(!isDbAvailable)("Live RLS & Care Relationship Integration Suite 
       })
       .select("id")
       .single();
+    expect(dispErr).toBeNull();
+    expect(disposable).toBeDefined();
 
     // Admin DELETE succeeds
     const { error: adminDelErr } = await adminUser.client.from("medical_records").delete().eq("id", disposable!.id);
@@ -523,7 +538,9 @@ describe.skipIf(!isDbAvailable)("Live RLS & Care Relationship Integration Suite 
 describe("Database Safety & Allowlist Guard Unit Invariants", () => {
   it("rejects non-allowlisted remote database targets", () => {
     const originalUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const originalRequireDb = process.env.REQUIRE_DB;
     try {
+      delete process.env.REQUIRE_DB;
       process.env.NEXT_PUBLIC_SUPABASE_URL = "https://unauthorized-cloud-target.supabase.co";
       const result = verifyIntegrationDatabaseTarget();
       expect(result.isSafeToExecute).toBe(false);
@@ -531,6 +548,8 @@ describe("Database Safety & Allowlist Guard Unit Invariants", () => {
     } finally {
       if (originalUrl !== undefined) process.env.NEXT_PUBLIC_SUPABASE_URL = originalUrl;
       else delete process.env.NEXT_PUBLIC_SUPABASE_URL;
+      if (originalRequireDb !== undefined) process.env.REQUIRE_DB = originalRequireDb;
+      else delete process.env.REQUIRE_DB;
     }
   });
 

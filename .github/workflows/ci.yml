@@ -112,7 +112,9 @@ jobs:
               for (const tr of r.testResults) {
                 for (const a of tr.assertionResults) {
                   if (a.status === 'failed') {
-                    console.error('::error::FAILED TEST: ' + a.title + '\n' + (a.failureMessages || []).join('\n'));
+                    console.log('--- FAILED TEST: ' + a.title + ' ---');
+                    console.log((a.failureMessages || []).join('\n'));
+                    console.error('::error::' + a.title.replace(/\r?\n/g, ' '));
                   }
                 }
               }
