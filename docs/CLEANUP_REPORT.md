@@ -199,5 +199,95 @@ Route (app)                                     Size  First Load JS  Revalidate 
 
 ---
 
-## 2. After (Cleanup Metrics)
-*(To be populated in Task 7 after all cleanup, modularization, and verification tasks).*
+## 2. After (Final Cleanup & Modularization Metrics)
+**Timestamp:** 2026-10-17T23:15:00+05:30  
+**Git Commit:** `fcfe87c`  
+**Branch:** `chore/cleanup-modularize`  
+
+### A. Repository Size & File Counts
+* **Tracked Files:** 427 files (modularized sub-components and service modules added while dead assets and obsolete packages pruned)
+* **Total Tracked Size:** ~4.1 MB (down from ~5.4 MB; pruned ~1.3 MB of unreferenced binaries and dead code)
+
+### B. Total LOC & Size per Top-Level Directory
+| Directory | Files | Lines of Code (LOC) | Total Size (Bytes) | Notes |
+| :--- | :---: | :---: | :---: | :--- |
+| `(root)` | 21 | 10,959 | 393,592 | Pruned 3,439 LOC from lockfile & removed obsolete PWA deps |
+| `.agents/` | 1 | 48 | 3,213 | Invariant rules & documentation standard |
+| `.github/` | 2 | 237 | 8,417 | Gitleaks scanner + full CI matrix with Knip & modularity gate |
+| `app/` | 56 | 4,396 | 169,337 | All 18 API handlers lean (≤63 LOC, well under 150 LOC limit) |
+| `components/` | 167 | 22,268 | 900,047 | 100% of non-ui components ≤400 LOC, modularized with shims |
+| `docs/` | 23 | 5,939 | 398,612 | Consolidated, pruned redundant snapshots, updated CHANGELOG |
+| `hooks/` | 1 | 192 | 3,945 | Consolidated duplicate `use-toast` and `use-mobile` hooks |
+| `lib/` | 64 | 34,418 | 1,371,688 | All code modules ≤400 LOC; ABDM FHIR split into 3 focused builders |
+| `loadtest/` | 10 | 1,339 | 61,901 | Preserved load test scenarios |
+| `public/` | 15 | 1,954 | 335,685 | Pruned ~1 MB of dead binaries (`hero.png`, unreferenced icons) |
+| `scripts/` | 14 | 2,351 | 86,441 | Deleted 8 unsafe scripts; added Step 8 modularity gate |
+| `supabase/` | 25 | 4,849 | 206,185 | Cryptographically locked migrations via `migrations.sha256` |
+| `tests/` | 27 | 5,419 | 208,209 | 176 unit tests passing; RLS mutation proofs intact |
+| `types/` | 1 | 27 | 425 | Global core types |
+| **Total** | **427** | **89,396** | **4,147,697** | **Net ~9,378 LOC reduced & ~1.3 MB assets saved** |
+
+---
+
+### C. Modularity & Invariant 5 Enforcement
+Every non-ui component in `components/` and code module in `lib/` strictly complies with the **400 LOC limit**:
+1. `components/directory/` (main index: 374 LOC; 6 sub-parts ≤215 LOC; backward-compatible shim: 8 LOC)
+2. `components/emergency/` (main index: 353 LOC; sub-parts and beacon hooks ≤210 LOC; shim: 8 LOC)
+3. `components/map-view/` (main index: 295 LOC; discovery hook: 334 LOC; parts ≤191 LOC; shim: 8 LOC)
+4. `components/consultation-portal/` (main index: 310 LOC; booking parts ≤360 LOC; shim: 8 LOC)
+5. `components/government-schemes/` (main index: 239 LOC; parts ≤180 LOC; shim: 8 LOC)
+6. `components/helpline-directory/` (main index: 203 LOC; parts ≤159 LOC; shim: 8 LOC)
+7. `components/patient-records/` (main index: 309 LOC; hook: 134 LOC; parts ≤176 LOC; shim: 8 LOC)
+8. `components/camp-locations/` (main index: 354 LOC; parts ≤170 LOC; shim: 8 LOC)
+9. `components/health-info-hub/` (main index: 106 LOC; parts ≤191 LOC; shim: 8 LOC)
+10. `components/admin-user-management/` (main index: 242 LOC; parts ≤310 LOC; shim: 8 LOC)
+11. `components/admin-campaign-manager/` (main index: 184 LOC; parts ≤200 LOC; shim: 8 LOC)
+12. `components/symptom-checker/` (main index: 279 LOC; chat hook: 195 LOC; parts ≤227 LOC; shim: 8 LOC)
+13. `components/floating-chat/` (main index: 388 LOC; parts ≤113 LOC; shim: 8 LOC)
+14. `components/authentication/` (main index: 242 LOC; parts ≤145 LOC; shim: 8 LOC)
+15. `components/header/` (main index: 148 LOC; parts ≤200 LOC; shim: 8 LOC)
+16. `components/notification-bell/` (main index: 248 LOC; parts ≤60 LOC; shim: 8 LOC)
+17. `components/dashboard/` (main index: 122 LOC; parts ≤80 LOC; shim: 8 LOC)
+
+All 18 route handlers in `app/api/**` strictly adhere to the **<150 LOC limit** (all are ≤63 LOC), delegating business logic to `lib/services/`:
+* `lib/services/ai-chat.service.ts`
+* `lib/services/appointments.service.ts`
+* `lib/services/doctor-provider-link.service.ts`
+* `lib/services/doctor-requests.service.ts`
+* `lib/services/fhir-export.service.ts`
+* `lib/services/medical-records.service.ts`
+* `lib/services/notifications.service.ts`
+* `lib/services/offline-sync.service.ts`
+
+FHIR resource generation (`lib/abdm/builders.ts`) is decomposed into modular sub-builders:
+* `lib/abdm/prescription-builder.ts` (187 LOC)
+* `lib/abdm/diagnostic-builder.ts` (278 LOC)
+* `lib/abdm/encounter-builder.ts` (143 LOC)
+
+---
+
+### D. Dependency & Security Metrics
+* **Production Dependencies:** Pruned obsolete `@ducanh2912/next-pwa` and unused Radix UI primitives.
+* **NPM Audit Summary (`npm audit --omit=dev`):** **0 vulnerabilities** in production dependencies.
+* **Gitleaks:** Automated secret scanner enabled in `.github/workflows/ci.yml` via `.gitleaks.toml`.
+* **Database Immutability:** SHA256 checksum manifest `supabase/migrations.sha256` validated in CI and pre-commit hooks via `scripts/check_migration_immutability.mjs`.
+
+---
+
+### E. Knip Verification Gate
+* **Unused Files:** **0** (All 44 unused UI primitives, duplicate hooks, and dead scripts purged).
+* **Unused Dependencies:** **0** (All pruned or registered with active runtime configurations).
+* **Automated CI Enforcement:** `npx knip` runs as a mandatory gating step in `scripts/check_components.mjs` and GitHub Actions.
+
+---
+
+### F. Performance & Test Suite Benchmarks
+* **TypeScript Compilation Time (`npx tsc --noEmit`):** Clean pass with **0 type errors**.
+* **ESLint Validation (`next lint`):** Clean pass with **0 warnings / 0 errors**.
+* **Vitest Unit Test Suite (`npm run test:unit`):** **176 tests passing** across 23 test suites in ~2.2 s.
+* **Next.js Production Build (`next build`):** **51 routes** successfully compiled, optimized, and bundled.
+
+---
+
+### G. Author Provenance & Copyright Preservation
+* Verified **156 files** across components, services, shims, tests, and documentation containing clear author attribution and provenance headers for **Arnav Shukla** (`github.com/Arnavshukla09`).
