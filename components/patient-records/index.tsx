@@ -4,15 +4,16 @@
  * components/patient-records/index.tsx
  *
  * Modular Patient Medical Records Manager.
+ * Features tag filtering, user-scoped privacy isolation, and manual/file uploads.
  * Author & Engineering Provenance: Arnav Shukla (github.com/Arnavshukla09)
  * Rural Healthcare Platform — Clinical Records Subsystem
  */
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import {
-  FileText, Upload, Plus, Loader2, AlertCircle, CheckCircle
+  FileText, Upload, Plus, Loader2, AlertCircle, CheckCircle, Lock
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
@@ -20,11 +21,17 @@ import { MedicalProfileCard } from './parts/MedicalProfileCard'
 import { VitalsCard } from './parts/VitalsCard'
 import { AddRecordCard } from './parts/AddRecordCard'
 import { RecordItem } from './parts/RecordItem'
+import { RecordFilterRow } from './parts/RecordFilterRow'
 import { usePatientRecords } from './hooks/usePatientRecords'
-import type { PatientRecordsProps } from './types'
+import {
+  getRecordTag,
+  type RecordFilterTag,
+  type PatientRecordsProps
+} from './types'
 
 export function PatientRecords({ language, user }: PatientRecordsProps) {
   const en = language === 'en'
+  const isGuestOrUnauth = !user || user.id === 'guest'
 
   const {
     records,
@@ -41,6 +48,7 @@ export function PatientRecords({ language, user }: PatientRecordsProps) {
     handleDeleteRecord,
   } = usePatientRecords(user?.id)
 
+  const [selectedTag, setSelectedTag] = useState<RecordFilterTag>('all')
   const [showAdd, setShowAdd] = useState(false)
   const [addMode, setAddMode] = useState<'manual' | 'upload' | null>(null)
   const [saving, setSaving] = useState(false)
@@ -59,14 +67,32 @@ export function PatientRecords({ language, user }: PatientRecordsProps) {
     addManual: en ? 'Add Manually' : 'मैन्युअल रूप से जोड़ें',
     uploadFile: en ? 'Upload Report / Prescription' : 'रिपोर्ट / प्रिस्क्रिप्शन अपलोड करें',
     records: en ? 'Medical Records' : 'चिकित्सा रिकॉर्ड',
-    loginRequired: en ? 'Please login to view records' : 'रिकॉर्ड देखने के लिए लॉगिन करें',
+    loginRequired: en ? 'Sign in to access your Medical Records' : 'अपने चिकित्सा रिकॉर्ड देखने के लिए लॉगिन करें',
+    guestNotice: en
+      ? 'Medical records are private, confidential, and encrypted. Guest users cannot access clinical files.'
+      : 'चिकित्सा रिकॉर्ड गोपनीय और सुरक्षित हैं। अतिथि उपयोगकर्ताओं के लिए रिकॉर्ड उपलब्ध नहीं हैं।',
     savedOk: en ? 'Record saved successfully!' : 'रिकॉर्ड सफलतापूर्वक सेव हुआ!',
     deleteConfirm: en ? 'Are you sure you want to delete this record?' : 'क्या आप वाकई इस रिकॉर्ड को हटाना चाहते हैं?',
+    noMatchingRecords: en ? 'No records found under this category.' : 'इस श्रेणी में कोई रिकॉर्ड नहीं मिला।',
   }
+
+  const tagCounts = useMemo(() => {
+    const counts: Record<string, number> = { all: records.length }
+    for (const rec of records) {
+      const tag = getRecordTag(rec)
+      counts[tag] = (counts[tag] || 0) + 1
+    }
+    return counts
+  }, [records])
+
+  const displayedRecords = useMemo(() => {
+    if (selectedTag === 'all') return records
+    return records.filter((r) => getRecordTag(r) === selectedTag)
+  }, [records, selectedTag])
 
   // Save manual record
   const handleSaveManual = async () => {
-    if (!formData.content.trim()) return
+    if (!formData.content.trim() || isGuestOrUnauth) return
     setSaving(true)
     setSaveSuccess('')
     try {
@@ -96,7 +122,7 @@ export function PatientRecords({ language, user }: PatientRecordsProps) {
 
   // Upload file + save record
   const handleUploadAndSave = async () => {
-    if (!selectedFile) return
+    if (!selectedFile || isGuestOrUnauth) return
     setUploading(true)
     setSaveSuccess('')
     try {
@@ -174,6 +200,20 @@ export function PatientRecords({ language, user }: PatientRecordsProps) {
     } catch {
       return d
     }
+  }
+
+  if (isGuestOrUnauth) {
+    return (
+      <div className="min-h-[50vh] flex items-center justify-center p-6">
+        <div className="text-center max-w-sm space-y-3 bg-white p-6 rounded-2xl border border-gray-200 shadow-xs">
+          <div className="h-12 w-12 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 flex items-center justify-center mx-auto">
+            <Lock className="h-6 w-6" />
+          </div>
+          <h2 className="text-lg font-bold text-gray-900">{t.loginRequired}</h2>
+          <p className="text-xs text-gray-500 leading-relaxed">{t.guestNotice}</p>
+        </div>
+      </div>
+    )
   }
 
   if (loading) {
@@ -294,24 +334,43 @@ export function PatientRecords({ language, user }: PatientRecordsProps) {
         {/* Records list */}
         {records.length > 0 && (
           <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <FileText className="h-5 w-5 text-teal-600" />
-                {t.records}
-              </CardTitle>
+            <CardHeader className="pb-3 space-y-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-teal-600" />
+                  {t.records}
+                </CardTitle>
+                <span className="text-xs text-muted-foreground font-medium">
+                  {records.length} {en ? 'Total' : 'कुल'}
+                </span>
+              </div>
+
+              {/* Tag separation filter bar */}
+              <RecordFilterRow
+                en={en}
+                selectedTag={selectedTag}
+                tagCounts={tagCounts}
+                onSelectTag={setSelectedTag}
+              />
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                {records.map((rec, i) => (
-                  <RecordItem
-                    key={rec.id || i}
-                    rec={rec}
-                    en={en}
-                    formatDate={formatDate}
-                    onDelete={(id) => handleDeleteRecord(id, t.deleteConfirm)}
-                  />
-                ))}
-              </div>
+              {displayedRecords.length === 0 ? (
+                <div className="p-8 text-center bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                  <p className="text-sm text-gray-500">{t.noMatchingRecords}</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {displayedRecords.map((rec, i) => (
+                    <RecordItem
+                      key={rec.id || i}
+                      rec={rec}
+                      en={en}
+                      formatDate={formatDate}
+                      onDelete={(id) => handleDeleteRecord(id, t.deleteConfirm)}
+                    />
+                  ))}
+                </div>
+              )}
               {nextCursor && (
                 <Button
                   variant="outline"

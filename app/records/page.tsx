@@ -19,7 +19,7 @@ export default function Page() {
     )
   }
 
-  if (!user) {
+  if (!user || user.id === "guest") {
     return (
       <div className="py-8 px-4 max-w-md mx-auto space-y-4 animate-fade-in">
         <div className="text-center space-y-2">
@@ -31,8 +31,8 @@ export default function Page() {
           </h1>
           <p className="text-xs text-gray-500">
             {en
-              ? "Your digital prescriptions, lab test reports, and vaccination history are encrypted and private to your account."
-              : "आपके डिजिटल नुस्खे, लैब रिपोर्ट और टीकाकरण इतिहास सुरक्षित और केवल आपके खाते में उपलब्ध हैं।"}
+              ? "Your digital prescriptions, lab test reports, and vaccination history are encrypted and private to your account. Guest users cannot access clinical records."
+              : "आपके डिजिटल नुस्खे, लैब रिपोर्ट और टीकाकरण इतिहास सुरक्षित और केवल आपके खाते में उपलब्ध हैं। अतिथि उपयोगकर्ताओं के लिए रिकॉर्ड उपलब्ध नहीं हैं।"}
           </p>
         </div>
         <Authentication
