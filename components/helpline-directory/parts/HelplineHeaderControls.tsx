@@ -13,6 +13,7 @@ import { CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { LGD_STATES } from "@/lib/geo/lgd-iphs"
+import { ScrollableFilterRow } from "@/components/ui/scrollable-filter-row"
 import { CATEGORY_THEMES } from "../types"
 import type { HelplineCategory } from "@/lib/emergency/helplines"
 
@@ -142,7 +143,7 @@ export function HelplineHeaderControls({
       </div>
 
       {/* Category Filter Pills */}
-      <div className="mt-3 flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+      <ScrollableFilterRow className="mt-3" contentClassName="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
         {(Object.keys(CATEGORY_THEMES) as HelplineCategory[]).map((cat) => {
           const theme = CATEGORY_THEMES[cat]
           const Icon = theme.icon
@@ -162,7 +163,7 @@ export function HelplineHeaderControls({
             </button>
           )
         })}
-      </div>
+      </ScrollableFilterRow>
     </CardHeader>
   )
 }

@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import { ScrollableFilterRow } from "@/components/ui/scrollable-filter-row"
 import {
   Search,
   RotateCcw,
@@ -317,7 +318,7 @@ export function Directory({ language }: DirectoryProps) {
             )}
 
             {/* Specialty Filter Chips */}
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none pt-1">
+            <ScrollableFilterRow contentClassName="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none pt-1">
               {specialties.map((specialty) => (
                 <button
                   key={specialty.key}
@@ -331,7 +332,7 @@ export function Directory({ language }: DirectoryProps) {
                   <span>{specialty.label}</span>
                 </button>
               ))}
-            </div>
+            </ScrollableFilterRow>
           </CardContent>
         </Card>
 

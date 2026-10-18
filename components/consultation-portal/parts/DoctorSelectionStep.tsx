@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Search, Building2, Stethoscope, MapPin, Star, ChevronLeft, ChevronRight } from "lucide-react"
+import { ScrollableFilterRow } from "@/components/ui/scrollable-filter-row"
 import type { RealDoctor } from "@/lib/data/real-doctors"
 import { SPECIALTY_OPTIONS, getInitials } from "../types"
 
@@ -108,7 +109,7 @@ export function DoctorSelectionStep({
         </div>
 
         {/* Specialty Filter Chips */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+        <ScrollableFilterRow contentClassName="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
           {SPECIALTY_OPTIONS.map((sp) => {
             const isSelected = specialtyFilter === sp.key
             return (
@@ -128,7 +129,7 @@ export function DoctorSelectionStep({
               </button>
             )
           })}
-        </div>
+        </ScrollableFilterRow>
 
         {/* Doctor Cards (10 per page) */}
         <div className="space-y-2.5 max-h-[380px] overflow-y-auto pr-1">

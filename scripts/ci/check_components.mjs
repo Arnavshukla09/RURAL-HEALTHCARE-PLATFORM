@@ -271,6 +271,7 @@ async function run() {
   logStep(8, 'Enforcing File Length & Modularity Limits (≤400 LOC / <150 LOC API)')
   const EXEMPT_DATA_CATALOGS = [
     'lib/data/real-doctors.ts',
+    'lib/data/annual-campaigns.ts',
     'lib/schemes/health-schemes.ts',
     'lib/emergency/helplines.ts',
     'lib/i18n/translations.ts',

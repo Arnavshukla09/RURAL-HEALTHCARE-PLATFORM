@@ -51,10 +51,10 @@ export function EmergencyPrimaryActions({
         <div className="space-y-1">
           <Button
             onClick={onTriggerDistressSos}
-            className="w-full min-h-[3.75rem] py-3 px-4 text-sm sm:text-base bg-red-950 hover:bg-black font-extrabold text-white rounded-xl shadow-md flex items-center justify-center text-center gap-2"
+            className="w-full min-h-[3.75rem] h-auto py-3 px-4 text-sm sm:text-base bg-red-950 hover:bg-black font-extrabold text-white rounded-xl shadow-md flex items-center justify-center text-center gap-2 whitespace-normal break-words leading-snug"
           >
             <ShieldAlert className="h-5 w-5 text-red-400 flex-shrink-0" />
-            <span>{t.distressBtn}</span>
+            <span className="break-words">{t.distressBtn}</span>
           </Button>
           <p className="text-[11px] text-gray-500 text-center leading-tight">{t.distressBtnSub}</p>
         </div>
@@ -62,10 +62,10 @@ export function EmergencyPrimaryActions({
         <div className="space-y-1">
           <Button
             onClick={onOpenContactAlert}
-            className="w-full min-h-[3.75rem] py-3 px-4 text-sm sm:text-base bg-amber-600 hover:bg-amber-700 font-extrabold text-white rounded-xl shadow-md flex items-center justify-center text-center gap-2"
+            className="w-full min-h-[3.75rem] h-auto py-3 px-4 text-sm sm:text-base bg-amber-600 hover:bg-amber-700 font-extrabold text-white rounded-xl shadow-md flex items-center justify-center text-center gap-2 whitespace-normal break-words leading-snug"
           >
             <Users className="h-5 w-5 flex-shrink-0" />
-            <span>{t.contactBtn}</span>
+            <span className="break-words">{t.contactBtn}</span>
           </Button>
           <p className="text-[11px] text-gray-500 text-center leading-tight">{t.contactBtnSub}</p>
         </div>

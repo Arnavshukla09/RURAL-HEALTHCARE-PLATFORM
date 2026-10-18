@@ -3,7 +3,8 @@
 /**
  * components/camp-locations/parts/CampCard.tsx
  *
- * Card component for individual healthcare camps & outreach events.
+ * Rich Card Component for verified Pan-India Annual Health Campaigns & Outreach Camps.
+ * Displays scope (National/State), timing, venue, 100% Free NHM cost, organizer, and services.
  * Author & Engineering Provenance: Arnav Shukla (github.com/Arnavshukla09)
  * Rural Healthcare Platform — Outreach & Camps Subsystem
  */
@@ -13,14 +14,18 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   MapPin,
-  Navigation,
   Calendar,
-  Users,
   Phone,
   Heart,
   Activity,
   Stethoscope,
-  Map,
+  Eye,
+  ShieldAlert,
+  Baby,
+  CheckCircle2,
+  Share2,
+  Clock,
+  Sparkles,
 } from "lucide-react"
 import type { CampLocation } from "../types"
 
@@ -31,9 +36,8 @@ interface CampCardProps {
   registering: number | string | null
   registeredCamps: Set<number | string>
   onRegister: (camp: CampLocation) => void
-  onDirections: (camp: CampLocation) => void
   onCall: (camp: CampLocation) => void
-  onViewOnMap: () => void
+  onShare: (camp: CampLocation) => void
 }
 
 export function CampCard({
@@ -43,139 +47,181 @@ export function CampCard({
   registering,
   registeredCamps,
   onRegister,
-  onDirections,
   onCall,
-  onViewOnMap,
+  onShare,
 }: CampCardProps) {
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "active":
-        return "bg-green-500"
-      case "upcoming":
-        return "bg-blue-500"
-      case "completed":
-        return "bg-gray-500"
-      default:
-        return "bg-gray-500"
-    }
-  }
+  const isRegistered = registeredCamps.has(camp.id)
+  const isNational = camp.scope === "national"
 
   const getTypeIcon = (type: string) => {
     switch (type) {
+      case "maternal":
+        return <Baby className="h-5 w-5 text-pink-600" />
       case "blood-donation":
-        return <Heart className="h-5 w-5 text-red-500" />
+        return <Heart className="h-5 w-5 text-red-600" />
       case "checkup":
-        return <Activity className="h-5 w-5 text-blue-500" />
+        return <Activity className="h-5 w-5 text-blue-600" />
       case "vaccination":
-        return <Stethoscope className="h-5 w-5 text-green-500" />
+        return <Stethoscope className="h-5 w-5 text-emerald-600" />
+      case "eye-care":
+        return <Eye className="h-5 w-5 text-amber-600" />
+      case "communicable-disease":
+        return <ShieldAlert className="h-5 w-5 text-purple-600" />
       default:
-        return <Activity className="h-5 w-5 text-gray-500" />
-    }
-  }
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    const today = new Date()
-    const tomorrow = new Date(today)
-    tomorrow.setDate(tomorrow.getDate() + 1)
-
-    if (date.toDateString() === today.toDateString()) {
-      return t.today
-    } else if (date.toDateString() === tomorrow.toDateString()) {
-      return t.tomorrow
-    } else {
-      return date.toLocaleDateString(language === "en" ? "en-US" : "hi-IN")
+        return <Activity className="h-5 w-5 text-blue-600" />
     }
   }
 
   return (
-    <Card className="hover:shadow-lg transition-shadow">
-      <CardContent className="p-6">
-        <div className="flex flex-col lg:flex-row gap-6">
-          <div className="flex-1 space-y-4">
-            <div className="flex items-start justify-between">
-              <div className="flex items-center space-x-3">
-                {getTypeIcon(camp.type)}
-                <div>
-                  <h3 className="text-xl font-semibold">{camp.name}</h3>
-                  <p className="text-gray-600 text-sm">{camp.description}</p>
-                </div>
-              </div>
-              <Badge className={`${getStatusColor(camp.status)} text-white`}>
-                {camp.status === "active" && t.active}
-                {camp.status === "upcoming" && t.upcoming}
-                {camp.status === "completed" && t.completed}
-              </Badge>
+    <Card className="hover:shadow-md transition-all duration-200 border-gray-200 overflow-hidden">
+      <CardContent className="p-5 sm:p-6 space-y-4">
+        {/* Header Badges & Title */}
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+          <div className="flex items-start gap-3">
+            <div className="p-2.5 rounded-xl bg-gray-50 border border-gray-200 shrink-0 mt-0.5">
+              {getTypeIcon(camp.type)}
             </div>
-
-            <div className="grid md:grid-cols-2 gap-4 text-sm text-gray-600">
-              <div className="space-y-2">
-                <div className="flex items-center">
-                  <MapPin className="h-4 w-4 mr-2" />
-                  <span>{camp.address}</span>
-                </div>
-                <div className="flex items-center">
-                  <Navigation className="h-4 w-4 mr-2" />
-                  <span>{camp.landmark}</span>
-                </div>
+            <div className="space-y-1">
+              <div className="flex flex-wrap items-center gap-1.5 mb-1">
+                {isNational ? (
+                  <Badge className="bg-blue-600 text-white font-bold text-[11px] px-2 py-0.5">
+                    {t.nationalBadge}
+                  </Badge>
+                ) : (
+                  <Badge className="bg-emerald-700 text-white font-bold text-[11px] px-2 py-0.5">
+                    {camp.stateName || t.stateBadge}
+                  </Badge>
+                )}
+                <Badge
+                  variant="outline"
+                  className={
+                    camp.status === "active"
+                      ? "border-emerald-500 text-emerald-700 bg-emerald-50 text-[11px]"
+                      : "border-blue-400 text-blue-700 bg-blue-50 text-[11px]"
+                  }
+                >
+                  {camp.status === "active" ? t.active : t.upcoming}
+                </Badge>
+                <Badge className="bg-amber-100 text-amber-800 border-amber-300 text-[11px] font-semibold">
+                  <CheckCircle2 className="h-3 w-3 mr-1 text-emerald-600 inline" />
+                  {camp.cost || t.costFree}
+                </Badge>
               </div>
 
-              <div className="space-y-2">
-                <div className="flex items-center">
-                  <Calendar className="h-4 w-4 mr-2" />
-                  <span>
-                    {formatDate(camp.date)} at {camp.time}
-                    <span className="text-xs text-amber-600 ml-1">
-                      ({language === "en" ? "Tentative — Annual" : "अस्थायी — वार्षिक"})
-                    </span>
-                  </span>
-                </div>
-                <div className="flex items-center">
-                  <Users className="h-4 w-4 mr-2" />
-                  <span>
-                    {camp.participants} {t.participants}
-                  </span>
-                </div>
+              <h3 className="text-base sm:text-lg font-bold text-gray-900 leading-snug">
+                {camp.name}
+              </h3>
+              {camp.organizer && (
+                <p className="text-xs text-gray-600 font-medium">
+                  <span className="text-gray-500">{t.organizerLabel}</span> {camp.organizer}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Camp Key Details Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs text-gray-700 bg-gray-50/70 p-3.5 rounded-xl border border-gray-100">
+          <div className="space-y-2">
+            <div className="flex items-start gap-2">
+              <Calendar className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-semibold text-gray-900">{t.recurrenceLabel}</span>{" "}
+                <span>{camp.recurrence || camp.date}</span>
+              </div>
+            </div>
+            <div className="flex items-start gap-2">
+              <Clock className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-semibold text-gray-900">{t.timingLabel}</span>{" "}
+                <span>{camp.time}</span>
               </div>
             </div>
           </div>
 
-          <div className="flex-shrink-0 space-y-2">
-            <div className="grid grid-cols-2 lg:grid-cols-1 gap-2">
-              <Button onClick={() => onDirections(camp)} className="flex items-center justify-center">
-                <Navigation className="h-4 w-4 mr-1" />
-                {t.getDirections}
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => onCall(camp)}
-                className="flex items-center justify-center"
-              >
-                <Phone className="h-4 w-4 mr-1" />
-                {t.callCamp}
-              </Button>
+          <div className="space-y-2">
+            <div className="flex items-start gap-2">
+              <MapPin className="h-4 w-4 text-red-600 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-semibold text-gray-900">{t.venueLabel}</span>{" "}
+                <span>{camp.address}</span>
+              </div>
             </div>
-
-            {camp.status !== "completed" && (
-              <Button
-                variant="secondary"
-                onClick={() => onRegister(camp)}
-                className="w-full"
-                disabled={registering === camp.id || registeredCamps.has(camp.id)}
-              >
-                {registering === camp.id
-                  ? (language === "en" ? "Registering..." : "पंजीकरण हो रहा है...")
-                  : registeredCamps.has(camp.id)
-                    ? (language === "en" ? "✓ Registered" : "✓ पंजीकृत")
-                    : t.registerNow}
-              </Button>
+            {camp.targetBeneficiaries && (
+              <div className="flex items-start gap-2">
+                <Sparkles className="h-4 w-4 text-purple-600 shrink-0 mt-0.5" />
+                <div>
+                  <span className="font-semibold text-gray-900">{t.targetLabel}</span>{" "}
+                  <span>{camp.targetBeneficiaries}</span>
+                </div>
+              </div>
             )}
+          </div>
+        </div>
 
-            <Button variant="outline" onClick={onViewOnMap} className="w-full">
-              <Map className="h-4 w-4 mr-1" />
-              {t.viewOnMap}
+        {/* Services & Diagnostic Highlights */}
+        {camp.services && camp.services.length > 0 && (
+          <div className="space-y-1.5 pt-1">
+            <div className="text-[11px] font-bold text-gray-600 uppercase tracking-wider">
+              {t.servicesProvided}
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {camp.services.map((service, idx) => (
+                <span
+                  key={idx}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-blue-50/80 text-blue-800 text-[11px] font-medium border border-blue-100"
+                >
+                  <CheckCircle2 className="h-3 w-3 text-blue-600 shrink-0" />
+                  <span>{service}</span>
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row gap-2 pt-2 border-t border-gray-100 items-stretch sm:items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onCall(camp)}
+              className="text-xs h-9 flex-1 sm:flex-initial text-gray-700 hover:text-blue-600 border-gray-200"
+            >
+              <Phone className="h-3.5 w-3.5 mr-1.5 text-blue-600" />
+              <span>{t.callCamp}</span>
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onShare(camp)}
+              className="text-xs h-9 text-gray-700 hover:text-gray-900 border-gray-200"
+              title="Share campaign info"
+            >
+              <Share2 className="h-3.5 w-3.5 text-gray-600" />
             </Button>
           </div>
+
+          <Button
+            size="sm"
+            onClick={() => onRegister(camp)}
+            disabled={registering === camp.id || isRegistered}
+            className={`text-xs font-semibold h-9 px-4 rounded-lg transition-all ${
+              isRegistered
+                ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                : "bg-blue-600 hover:bg-blue-700 text-white shadow-xs"
+            }`}
+          >
+            {registering === camp.id
+              ? language === "en"
+                ? "Registering..."
+                : "पंजीकरण हो रहा है..."
+              : isRegistered
+              ? language === "en"
+                ? "✓ Saved in Records"
+                : "✓ रिकॉर्ड में सहेजा गया"
+              : t.registerNow}
+          </Button>
         </div>
       </CardContent>
     </Card>

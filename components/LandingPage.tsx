@@ -113,37 +113,37 @@ export function LandingPage({ language }: LandingPageProps) {
                 </p>
               </div>
               
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full">
+              <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 w-full relative z-10">
                 <Button 
                   size="lg" 
                   onClick={() => router.push("/login")}
-                  className="text-sm sm:text-base md:text-lg px-5 sm:px-8 py-2.5 sm:py-3 w-full sm:w-auto justify-center rounded-xl shadow-sm"
+                  className="text-sm sm:text-base md:text-lg px-5 sm:px-8 py-2.5 sm:py-3 w-full sm:w-auto justify-center rounded-xl shadow-sm whitespace-normal break-words h-auto min-h-[44px]"
                 >
-                  <Heart className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
-                  {t.hero.primaryCTA}
+                  <Heart className="mr-2 h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+                  <span>{t.hero.primaryCTA}</span>
                 </Button>
                 <Button 
                   variant="outline" 
                   size="lg"
                   onClick={() => router.push("/consultation")}
-                  className="text-sm sm:text-base md:text-lg px-5 sm:px-8 py-2.5 sm:py-3 w-full sm:w-auto justify-center rounded-xl shadow-sm"
+                  className="text-sm sm:text-base md:text-lg px-5 sm:px-8 py-2.5 sm:py-3 w-full sm:w-auto justify-center rounded-xl shadow-sm whitespace-normal break-words h-auto min-h-[44px]"
                 >
-                  <Phone className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
-                  {t.hero.secondaryCTA}
+                  <Phone className="mr-2 h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+                  <span>{t.hero.secondaryCTA}</span>
                 </Button>
                 <Button 
                   variant="destructive" 
                   size="lg"
                   onClick={() => router.push("/emergency")}
-                  className="text-sm sm:text-base md:text-lg px-5 sm:px-8 py-2.5 sm:py-3 bg-red-600 hover:bg-red-700 font-bold shadow-md text-white w-full sm:w-auto justify-center rounded-xl"
+                  className="text-sm sm:text-base md:text-lg px-5 sm:px-8 py-2.5 sm:py-3 bg-red-600 hover:bg-red-700 font-bold shadow-md text-white w-full sm:w-auto justify-center rounded-xl whitespace-normal break-words h-auto min-h-[44px] shrink-0"
                 >
-                  <AlertTriangle className="mr-2 h-4 w-4 sm:h-5 sm:w-5 animate-pulse" />
-                  {language === 'en' ? 'Emergency SOS' : 'आपातकालीन SOS'}
+                  <AlertTriangle className="mr-2 h-4 w-4 sm:h-5 sm:w-5 animate-pulse shrink-0" />
+                  <span>{language === 'en' ? 'Emergency SOS' : 'आपातकालीन SOS'}</span>
                 </Button>
               </div>
             </div>
             
-            <div className="relative">
+            <div className="relative z-0 mt-6 lg:mt-0">
               <ImageWithFallback
                 src="/hero.webp"
                 alt="Rural healthcare - Doctor examining a child at a Primary Health Centre"
@@ -249,7 +249,7 @@ export function LandingPage({ language }: LandingPageProps) {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push("/camps")}>
               <CardHeader>
                 <Calendar className="h-10 w-10 text-primary mb-2" />
                 <CardTitle>{t.features.campaigns.title}</CardTitle>

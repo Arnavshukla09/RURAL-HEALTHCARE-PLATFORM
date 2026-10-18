@@ -12,6 +12,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Search, X, SlidersHorizontal, RotateCcw } from "lucide-react"
 import { CATEGORY_FILTERS, SchemeCategory } from "@/lib/schemes/health-schemes"
+import { ScrollableFilterRow } from "@/components/ui/scrollable-filter-row"
 import { SearchableStateSelect } from "./SearchableStateSelect"
 import { getCategoryIcon } from "../types"
 
@@ -153,7 +154,7 @@ export function SchemeFilterControls({
             )}
           </div>
 
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+          <ScrollableFilterRow contentClassName="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
             {CATEGORY_FILTERS.map((cat) => {
               const isSelected = selectedCategory === cat.key
               return (
@@ -171,7 +172,7 @@ export function SchemeFilterControls({
                 </button>
               )
             })}
-          </div>
+          </ScrollableFilterRow>
         </div>
       </CardContent>
     </Card>
