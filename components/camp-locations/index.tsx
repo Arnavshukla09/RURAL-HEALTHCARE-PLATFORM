@@ -214,6 +214,21 @@ export function CampLocations({ language }: CampLocationsProps) {
     window.open(`tel:${raw}`, "_self")
   }
 
+  const handleCopyNumber = async (contact: string) => {
+    try {
+      await navigator.clipboard.writeText(contact)
+      toast({
+        title: en ? "Helpline Copied! 📋" : "हेल्पलाइन नंबर कॉपी किया गया! 📋",
+        description: en ? `Helpline ${contact} copied to clipboard.` : `हेल्पलाइन ${contact} क्लिपबोर्ड पर कॉपी हो गया।`,
+      })
+    } catch {
+      toast({
+        title: en ? "Helpline Number" : "हेल्पलाइन नंबर",
+        description: contact,
+      })
+    }
+  }
+
   const handleShare = async (camp: CampLocation) => {
     const text = `🏥 ${camp.name}\n📅 ${camp.recurrence || camp.date} (${camp.time})\n📍 ${camp.address}\n💰 ${camp.cost || "Free under NHM"}\n📞 ${camp.contact}`
     if (navigator.share) {
@@ -322,6 +337,7 @@ export function CampLocations({ language }: CampLocationsProps) {
               registeredCamps={registeredCamps}
               onRegister={handleRegister}
               onCall={handleCall}
+              onCopyNumber={handleCopyNumber}
               onShare={handleShare}
             />
           ))}

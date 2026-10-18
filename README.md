@@ -65,6 +65,7 @@ flowchart TD
 * **Zero Double-Booking Guarantee:** Unique partial index `uq_provider_slot_scheduled` prevents concurrent appointment double-booking, mapping collisions to HTTP 409 Conflict.
 * **Resilient Offline Outbox:** Offline appointments, health data logs, and profile edits are queued in IndexedDB with exponential backoff retry and server-side idempotency verification.
 * **Geospatial Directory:** PostGIS radius queries locate verified PM-JAY hospitals, Community Health Centres (CHCs), and Primary Health Centres (PHCs).
+* **Pan-India Annual Campaigns & Outreach Hub:** Curated directory of verified recurring national public health drives (PMSMA, AAM Wellness Day, Pulse Polio, NDD, TB Nikshay, Eye Camps, Blood Donation) with pan-India LGD State/District hierarchical filters, visible helpline display, and 1-tap medical records saving.
 * **ABDM HL7 FHIR R4 Conformance:** Generates standardized NRCES Document Bundles with LOINC and UCUM coded clinical payloads.
 
 ---

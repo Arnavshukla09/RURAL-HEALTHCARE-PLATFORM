@@ -16,6 +16,7 @@ import {
   MapPin,
   Calendar,
   Phone,
+  Copy,
   Heart,
   Activity,
   Stethoscope,
@@ -37,6 +38,7 @@ interface CampCardProps {
   registeredCamps: Set<number | string>
   onRegister: (camp: CampLocation) => void
   onCall: (camp: CampLocation) => void
+  onCopyNumber: (contact: string) => void
   onShare: (camp: CampLocation) => void
 }
 
@@ -48,6 +50,7 @@ export function CampCard({
   registeredCamps,
   onRegister,
   onCall,
+  onCopyNumber,
   onShare,
 }: CampCardProps) {
   const isRegistered = registeredCamps.has(camp.id)
@@ -180,48 +183,71 @@ export function CampCard({
         )}
 
         {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-2 pt-2 border-t border-gray-100 items-stretch sm:items-center justify-between">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row gap-2.5 pt-2.5 border-t border-gray-100 items-stretch sm:items-center justify-between">
+          <div className="flex flex-wrap items-center gap-1.5">
             <Button
               variant="outline"
               size="sm"
               onClick={() => onCall(camp)}
-              className="text-xs h-9 flex-1 sm:flex-initial text-gray-700 hover:text-blue-600 border-gray-200"
+              className="text-xs h-9 text-gray-800 hover:text-blue-700 hover:border-blue-300 border-gray-200 font-medium"
+              title={language === "en" ? `Call Helpline: ${camp.contact}` : `हेल्पलाइन कॉल करें: ${camp.contact}`}
             >
-              <Phone className="h-3.5 w-3.5 mr-1.5 text-blue-600" />
-              <span>{t.callCamp}</span>
+              <Phone className="h-3.5 w-3.5 mr-1.5 text-blue-600 shrink-0" />
+              <span>{language === "en" ? "Helpline:" : "हेल्पलाइन:"}</span>
+              <span className="font-bold text-blue-700 ml-1 select-all">{camp.contact}</span>
             </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onCopyNumber(camp.contact)}
+              className="text-xs h-9 px-2.5 text-gray-600 hover:text-blue-700 hover:bg-blue-50 border-gray-200"
+              title={language === "en" ? "Copy helpline number" : "हेल्पलाइन नंबर कॉपी करें"}
+            >
+              <Copy className="h-3.5 w-3.5 mr-1 text-gray-500" />
+              <span className="text-[11px] font-medium">{language === "en" ? "Copy" : "कॉपी"}</span>
+            </Button>
+
             <Button
               variant="outline"
               size="sm"
               onClick={() => onShare(camp)}
-              className="text-xs h-9 text-gray-700 hover:text-gray-900 border-gray-200"
-              title="Share campaign info"
+              className="text-xs h-9 px-2.5 text-gray-700 hover:text-gray-900 border-gray-200"
+              title={language === "en" ? "Share campaign details" : "अभियान का विवरण साझा करें"}
             >
               <Share2 className="h-3.5 w-3.5 text-gray-600" />
             </Button>
           </div>
 
-          <Button
-            size="sm"
-            onClick={() => onRegister(camp)}
-            disabled={registering === camp.id || isRegistered}
-            className={`text-xs font-semibold h-9 px-4 rounded-lg transition-all ${
-              isRegistered
-                ? "bg-emerald-600 hover:bg-emerald-700 text-white"
-                : "bg-blue-600 hover:bg-blue-700 text-white shadow-xs"
-            }`}
-          >
-            {registering === camp.id
-              ? language === "en"
-                ? "Registering..."
-                : "पंजीकरण हो रहा है..."
-              : isRegistered
-              ? language === "en"
-                ? "✓ Saved in Records"
-                : "✓ रिकॉर्ड में सहेजा गया"
-              : t.registerNow}
-          </Button>
+          <div className="flex flex-col items-stretch sm:items-end">
+            <Button
+              size="sm"
+              onClick={() => onRegister(camp)}
+              disabled={registering === camp.id || isRegistered}
+              className={`text-xs font-semibold h-9 px-4 rounded-lg transition-all ${
+                isRegistered
+                  ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                  : "bg-blue-600 hover:bg-blue-700 text-white shadow-xs"
+              }`}
+            >
+              {registering === camp.id
+                ? language === "en"
+                  ? "Registering..."
+                  : "पंजीकरण हो रहा है..."
+                : isRegistered
+                ? language === "en"
+                  ? "✓ Saved in Medical Records"
+                  : "✓ मेडिकल रिकॉर्ड में सहेजा गया"
+                : language === "en"
+                ? "Register / Add to Records"
+                : "पंजीकरण / रिकॉर्ड में जोड़ें"}
+            </Button>
+            <span className="text-[10px] text-gray-500 mt-1 text-center sm:text-right">
+              {language === "en"
+                ? "Saves schedule & venue to your Patient Records"
+                : "शिविर का विवरण आपके मरीज रिकॉर्ड में सहेजता है"}
+            </span>
+          </div>
         </div>
       </CardContent>
     </Card>

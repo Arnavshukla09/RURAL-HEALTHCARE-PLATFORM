@@ -49,7 +49,7 @@ architecture-beta
 ## 2. Frontend & Rendering Architecture
 
 ### 2.1 Server Components & Incremental Static Regeneration (ISR)
-All 8 public routes (`/`, `/camps`, `/directory`, `/emergency`, `/health-info`, `/health-info/schemes`, `/locations`, `/symptom-checker`) are **Server Components** configured with:
+All 9 public routes (`/`, `/campaigns`, `/camps`, `/directory`, `/emergency`, `/health-info`, `/health-info/schemes`, `/locations`, `/symptom-checker`) are **Server Components** configured with:
 ```typescript
 export const revalidate = 3600 // Cached at Edge CDN for 1 hour
 ```
@@ -70,6 +70,12 @@ export const revalidate = 3600 // Cached at Edge CDN for 1 hour
   * **Public Cached APIs (`/api/facilities/nearby`, `/api/providers`):** StaleWhileRevalidate.
   * **Private Patient APIs (`/api/appointments`, `/api/medical-records`, `/api/notifications`, `/api/offline-sync`):** `NetworkOnly`. **Never cached** on disk, preventing medical data leakage on shared village smartphones.
 - **Offline Fallback:** Standalone bilingual `/offline` page cached during service worker installation.
+
+### 2.4 Pan-India Annual Health Campaigns & Outreach Hub
+- **Curated Dataset (`lib/data/annual-campaigns.ts`):** Verified, authentic recurring public health programs under MoHFW, NHM, UIP, NTEP, NPCBVI, and Red Cross (PMSMA, AAM Wellness Day, Pulse Polio NID, NDD, Nikshay TB, Eye Screening, Poshan Maah, Blood Donation Month, and state-level outreach drives).
+- **Hierarchical Geographic Filtering:** Matches Doctor Directory with pan-India LGD State & District selectors. National programs remain permanently visible to all citizens; state selections surface state-specific drives.
+- **Scrollable Filter Row:** Reusable component (`components/ui/scrollable-filter-row.tsx`) providing explicit chevron arrow heads and smooth horizontal scrolling across category pills.
+- **Patient Registration & Medical Records:** 1-tap registration stores camp schedule, venue, and helpline into patient medical records for offline tracking.
 
 ---
 

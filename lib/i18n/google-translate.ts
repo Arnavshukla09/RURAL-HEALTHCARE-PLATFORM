@@ -212,12 +212,35 @@ export function triggerGoogleTranslate(langCode: string, allowReload = false) {
   // 2. Suppress any banner frame that might appear
   hideGoogleTranslateBanner()
 
-  // 3. Locate Google Translate select dropdown element (.goog-te-combo)
+  // 3. If reverting to English, remove translation classes and trigger reload if DOM was altered
+  if (langCode === "en") {
+    document.documentElement.classList.remove("translated-ltr", "translated-rtl")
+    document.body?.classList.remove("translated-ltr", "translated-rtl")
+
+    const select = document.querySelector<HTMLSelectElement>(".goog-te-combo")
+    if (select && select.value !== "") {
+      select.value = ""
+      select.dispatchEvent(new Event("change"))
+    }
+
+    try {
+      const banner = document.querySelector<HTMLIFrameElement>(".goog-te-banner-frame")
+      const btn = banner?.contentDocument?.querySelector<HTMLElement>(".goog-te-button button")
+      if (btn) btn.click()
+    } catch {}
+
+    if (allowReload) {
+      window.location.reload()
+      return
+    }
+    return
+  }
+
+  // 4. Locate Google Translate select dropdown element (.goog-te-combo)
   const select = document.querySelector<HTMLSelectElement>(".goog-te-combo")
   if (select) {
-    const targetValue = langCode === "en" ? "" : langCode
-    if (select.value !== targetValue) {
-      select.value = targetValue
+    if (select.value !== langCode) {
+      select.value = langCode
       select.dispatchEvent(new Event("change"))
     }
     setTimeout(hideGoogleTranslateBanner, 50)
@@ -225,7 +248,7 @@ export function triggerGoogleTranslate(langCode: string, allowReload = false) {
     return
   }
 
-  // 4. Retry finding .goog-te-combo if script is still initializing
+  // 5. Retry finding .goog-te-combo if script is still initializing
   let attempts = 0
   const maxAttempts = 6
   const interval = setInterval(() => {
@@ -234,9 +257,8 @@ export function triggerGoogleTranslate(langCode: string, allowReload = false) {
     const retrySelect = document.querySelector<HTMLSelectElement>(".goog-te-combo")
     if (retrySelect) {
       clearInterval(interval)
-      const targetValue = langCode === "en" ? "" : langCode
-      if (retrySelect.value !== targetValue) {
-        retrySelect.value = targetValue
+      if (retrySelect.value !== langCode) {
+        retrySelect.value = langCode
         retrySelect.dispatchEvent(new Event("change"))
       }
       setTimeout(hideGoogleTranslateBanner, 50)
