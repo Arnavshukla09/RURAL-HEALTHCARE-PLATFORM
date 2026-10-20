@@ -12,6 +12,7 @@ import { useState, useMemo, useEffect } from "react"
 import { Sparkles, X } from "lucide-react"
 import { REAL_DOCTORS, RealDoctor } from "@/lib/data/real-doctors"
 import { LGD_STATES } from "@/lib/geo/lgd-iphs"
+import { createClient } from "@/lib/supabase/client"
 import { triggerAppointmentBooked } from "@/lib/notifications/notification-engine"
 import type { ConsultationPortalProps, BookingSuccessData } from "./types"
 import { getSlots, getNext7Days, toISODate } from "./types"
@@ -76,6 +77,29 @@ export function ConsultationPortal({ language, user, symptomResult }: Consultati
   const [loading, setLoading] = useState(false)
   const [successData, setSuccessData] = useState<BookingSuccessData | null>(null)
   const [error, setError] = useState("")
+  const [dbProviders, setDbProviders] = useState<any[]>([])
+
+  useEffect(() => {
+    let active = true
+    const fetchDbProviders = async () => {
+      try {
+        const supabase = createClient()
+        const { data } = await supabase
+          .from("healthcare_providers")
+          .select("id, name, specialization, location, phone, email, is_verified, user_id")
+          .eq("is_verified", true)
+        if (active && data) {
+          setDbProviders(data)
+        }
+      } catch (e) {
+        console.warn("[ConsultationPortal] DB providers fetch error:", e)
+      }
+    }
+    fetchDbProviders()
+    return () => {
+      active = false
+    }
+  }, [])
 
   const stateOptions = useMemo(() => {
     return LGD_STATES.map((s) => ({
@@ -86,7 +110,37 @@ export function ConsultationPortal({ language, user, symptomResult }: Consultati
   }, [])
 
   const filteredDoctors = useMemo(() => {
-    let list = REAL_DOCTORS.filter((d) => d.recordType === "clinician")
+    let list = [...REAL_DOCTORS.filter((d) => d.recordType === "clinician")]
+
+    // Merge any DB healthcare_providers if not already present
+    if (dbProviders.length > 0) {
+      const existingNames = new Set(list.map((d) => d.name.toLowerCase().trim()))
+      const dbClinicians: RealDoctor[] = dbProviders
+        .filter((p) => p.name && !existingNames.has(p.name.toLowerCase().trim()))
+        .map((p) => ({
+          id: p.id,
+          name: p.name,
+          qualifications: "MBBS, MD",
+          specialty: "general" as const,
+          specialtyName: p.specialization || "General Medicine",
+          hospitalAffiliation: p.location || "District Hospital, Bhopal",
+          stateCode: "23",
+          stateName: "Madhya Pradesh",
+          districtName: "Bhopal",
+          location: p.location || "Bhopal, MP",
+          phone: p.phone || "",
+          verified: true,
+          verificationStatus: "independently_verified" as const,
+          recordType: "clinician" as const,
+          sourceName: "Platform Verified Practitioner",
+          available: true,
+          lat: 23.2599,
+          lon: 77.4126,
+          bio: p.bio || `Consultant in ${p.specialization || "General Medicine"}`,
+          providerId: p.id,
+        }))
+      list = [...dbClinicians, ...list]
+    }
 
     if (specialtyFilter !== "all") {
       list = list.filter((d) => d.specialty === specialtyFilter)
@@ -110,7 +164,7 @@ export function ConsultationPortal({ language, user, symptomResult }: Consultati
     }
 
     return list
-  }, [specialtyFilter, stateFilter, doctorSearch])
+  }, [specialtyFilter, stateFilter, doctorSearch, dbProviders])
 
   const totalPages = Math.max(1, Math.ceil(filteredDoctors.length / PAGE_SIZE))
   const paginatedDoctors = useMemo(() => {
@@ -151,11 +205,19 @@ export function ConsultationPortal({ language, user, symptomResult }: Consultati
         .filter(Boolean)
         .join(" | ")
 
+      // Resolve real healthcare_providers provider_id for doctor inbox and care-relationship scoping
+      const matchedProvider = dbProviders.find(
+        (p) =>
+          p.id === selectedDoctor.id ||
+          p.name?.toLowerCase().trim() === selectedDoctor.name?.toLowerCase().trim()
+      )
+      const providerIdToSave = matchedProvider?.id || selectedDoctor.providerId || null
+
       await fetch("/api/appointments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          provider_id: null,
+          provider_id: providerIdToSave,
           appointment_date: appointmentDate,
           consultation_type: consultType,
           notes: fullNotes,

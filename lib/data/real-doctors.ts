@@ -56,6 +56,7 @@ export interface RealDoctor {
   lon: number
   bio: string
   distance?: number // Computed dynamically at runtime based on user GPS or selected district
+  providerId?: string
 }
 
 export const REAL_DOCTORS: RealDoctor[] = [
@@ -86,6 +87,36 @@ export const REAL_DOCTORS: RealDoctor[] = [
     "lat": 23.2081,
     "lon": 77.4587,
     "bio": "Senior Consultant & Professor of Internal Medicine at AIIMS Bhopal with 24 years clinical experience managing infectious diseases, chronic lifestyle disorders, and rural referral cases."
+  },
+  {
+    "id": "doc-mp-demo-arjun",
+    "name": "Dr. Arjun Mehta",
+    "qualifications": "MBBS, MD (General Medicine)",
+    "regNo": "MPMC-29481",
+    "specialty": "general",
+    "specialtyName": "General & Internal Medicine",
+    "experience": 15,
+    "rating": 4.9,
+    "reviewCount": 142,
+    "patientRecommendationPercent": 98,
+    "hospitalAffiliation": "District Hospital, Bhopal",
+    "stateCode": "23",
+    "stateName": "Madhya Pradesh",
+    "districtName": "Bhopal",
+    "location": "District Hospital Campus, Bhopal, MP 462001",
+    "phone": "+91-9179892005",
+    "opdTimings": "Mon - Sat: 09:00 AM - 02:00 PM",
+    "consultationFee": 0,
+    "verified": true,
+    "verificationStatus": "independently_verified",
+    "recordType": "clinician",
+    "sourceName": "Madhya Pradesh Medical Council & Platform Verified Practitioner",
+    "sourceUrl": "https://ruralhealth.demo",
+    "lastVerifiedAt": "2026-10-21T00:00:00Z",
+    "available": true,
+    "lat": 23.2599,
+    "lon": 77.4126,
+    "bio": "Senior Consultant in Internal Medicine & Rural Outreach at District Hospital, Bhopal."
   },
   {
     "id": "doc-mp-02",
