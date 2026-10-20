@@ -66,7 +66,7 @@ for (const line of manifestLines) {
   }
 }
 
-// Check that any new migration strictly respects forward-timestamp append-only rules
+// Check that EVERY SQL migration file in supabase/migrations/ is sealed in the manifest
 if (fs.existsSync(migrationsDir)) {
   const allSqlFiles = fs
     .readdirSync(migrationsDir)
@@ -74,30 +74,19 @@ if (fs.existsSync(migrationsDir)) {
 
   for (const f of allSqlFiles) {
     if (!manifestFiles.has(f)) {
-      const match = f.match(/^(\d{14})/);
-      if (!match) {
-        console.error(`❌ [NAMING VIOLATION] Migration file does not follow standard 14-digit timestamp: ${f}`);
-        violations++;
-      } else {
-        const fileTs = match[1];
-        if (fileTs < highestBaselineTimestamp) {
-          console.error(
-            `❌ [ORDERING VIOLATION] New migration is retroactively timestamped before baseline (${fileTs} < ${highestBaselineTimestamp}): ${f}`
-          );
-          violations++;
-        }
-      }
+      console.error(`❌ [UNSEALED MIGRATION VIOLATION] Migration file is NOT sealed in migrations.sha256: ${f}`);
+      console.error(`    Run 'npm run migrations:seal' to compute and record its SHA256 hash.`);
+      violations++;
     }
   }
 }
 
 if (violations > 0) {
-  console.error(`\n❌ FAILED: ${violations} migration immutability violation(s) detected.`);
-  console.error('All historical migrations are immutable. Any database modifications MUST be created');
-  console.error('as forward-only, append-only migrations with timestamps after the baseline.\n');
+  console.error(`\n❌ FAILED: ${violations} migration immutability/sealing violation(s) detected.`);
+  console.error('All historical migrations are immutable and must be strictly registered in migrations.sha256.\n');
   process.exit(1);
 }
 
-console.log(`✔ PASS: All ${manifestLines.length} baseline migrations verified against sha256 manifest.`);
-console.log(`✔ PASS: Append-only ordering verified (baseline cutoff: ${highestBaselineTimestamp}).\n`);
+console.log(`✔ PASS: All ${manifestLines.length} migrations strictly verified against sha256 manifest.`);
+console.log(`✔ PASS: 100% of migration files are sealed and forward-ordered.\n`);
 process.exit(0);

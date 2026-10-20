@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
+import { NextRequest } from "next/server"
 import { GET as readyGET } from "@/app/api/ready/route"
 
 // Mock Supabase server client
@@ -47,7 +48,8 @@ describe("Readiness, Liveness Probes & Edge Verification (Phase 4)", () => {
 
   describe("GET /api/ready", () => {
     it("returns HTTP 200 with ready=true and service name", async () => {
-      const res = await readyGET()
+      const req = new NextRequest("http://localhost:3000/api/ready")
+      const res = await readyGET(req)
       expect(res.status).toBe(200)
 
       const json = await res.json()
@@ -62,7 +64,8 @@ describe("Readiness, Liveness Probes & Edge Verification (Phase 4)", () => {
   describe("GET /api/health", () => {
     it("returns HTTP 200 and status=ok when database is connected", async () => {
       mockSelectResult = { error: null }
-      const res = await healthGET()
+      const req = new NextRequest("http://localhost:3000/api/health")
+      const res = await healthGET(req)
       expect(res.status).toBe(200)
 
       const json = await res.json()
@@ -76,7 +79,8 @@ describe("Readiness, Liveness Probes & Edge Verification (Phase 4)", () => {
 
     it("returns HTTP 503 and status=degraded when database query returns error", async () => {
       mockSelectResult = { error: { message: "Query timeout" } }
-      const res = await healthGET()
+      const req = new NextRequest("http://localhost:3000/api/health")
+      const res = await healthGET(req)
       expect(res.status).toBe(503)
 
       const json = await res.json()
@@ -86,7 +90,8 @@ describe("Readiness, Liveness Probes & Edge Verification (Phase 4)", () => {
 
     it("returns HTTP 503 and status=degraded when database client throws an exception", async () => {
       shouldThrow = true
-      const res = await healthGET()
+      const req = new NextRequest("http://localhost:3000/api/health")
+      const res = await healthGET(req)
       expect(res.status).toBe(503)
 
       const json = await res.json()

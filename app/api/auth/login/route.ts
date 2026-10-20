@@ -1,13 +1,20 @@
 import { createClient } from "@/lib/supabase/server"
 import { type NextRequest, NextResponse } from "next/server"
+import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit"
 
 /**
  * POST /api/auth/login
  * Server-side authentication route.
  * Bypasses client-side browser Web Locks, CORS, and third-party cookie/ad-blocker blocks.
  * Sets HttpOnly session cookies directly via Next.js response headers.
+ * Protected by sliding-window rate limiting (10 req/min).
  */
 export async function POST(request: NextRequest) {
+  const rl = await checkRateLimit(request, "auth")
+  if (!rl.success) {
+    return rateLimitResponse(rl)
+  }
+
   try {
     const body = await request.json()
     const email = body?.email?.trim()

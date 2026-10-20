@@ -15,7 +15,8 @@
     "report:dataset": "node scripts/data/report_dataset.mjs",
     "benchmark:integration": "node scripts/ci/benchmark_system_integration.mjs",
     "ingest:facilities": "node scripts/data/ingest_pan_india_geojson.mjs",
-    "ingest:doctors": "node scripts/data/ingest_pan_india_doctors.mjs"
+    "ingest:doctors": "node scripts/data/ingest_pan_india_doctors.mjs",
+    "migrations:seal": "node scripts/db/seal_migrations.mjs"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "1.1.3",

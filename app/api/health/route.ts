@@ -1,7 +1,8 @@
-import { NextResponse } from "next/server"
+import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { Redis } from "@upstash/redis"
 import { getAiGatewayStatus } from "@/lib/ai/gateway"
+import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit"
 
 /**
  * GET /api/health
@@ -9,8 +10,16 @@ import { getAiGatewayStatus } from "@/lib/ai/gateway"
  * Comprehensive liveness & dependency health check (Audit M6, Phase 5).
  * Probes database responsiveness and cache connectivity.
  * STRICT PRIVACY: NEVER reveals secrets, connection strings, or error traces.
+ * Protected by rate limiting (60 req/min).
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
+  if (request) {
+    const rl = await checkRateLimit(request, "public")
+    if (!rl.success) {
+      return rateLimitResponse(rl)
+    }
+  }
+
   const start = Date.now()
   let dbStatus = "unknown"
   let cacheStatus = "memory_fallback"
