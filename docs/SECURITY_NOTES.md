@@ -230,3 +230,25 @@ This document records the security audits and remediations applied to the Rural 
 | `npx playwright test` | Passed | 5/5 browser user persona end-to-end tests passing |
 | `npm run build` | Passed | All routes cleanly compiled |
 
+
+
+---
+
+## 4. Known Gaps & Deferred Items (Post-Nov 14)
+
+| Item | Status | Reason |
+|:---|:---:|:---|
+| **A1**: Migrate all browser Supabase queries to API routes | Deferred | 13/18 browser readers are read-only under strict RLS; minimal attack surface for interview phase. |
+| **A2**: Blanket route-level Zod schemas | Deferred | 13/22 routes already have Zod in route or service layer; audit ongoing. |
+| **A3**: Health probe split | Closed | `/api/ready` already acts as instantaneous liveness probe (<10ms); `/api/health` acts as deep readiness probe. |
+| **A4**: Migration squashing | **Rejected** | Violates project cryptographic append-only rule and production migration history. |
+| **A5**: Explicit `requireUser()` in 11 routes | Deferred | Business logic and RLS already enforce auth in domain services. |
+| **M1**: Request-ID end-to-end tracing | Deferred | Lower priority than provider foreign key integrity. |
+| **M2**: PostGIS latency tracking | Deferred | P95 latency is currently well within 800ms SLO. |
+| **M3**: Access audit log admin UI | Deferred | Audit records are securely written to `access_audit_log` via RPC. |
+
+### Direct Browser Writes (RLS-Protected)
+1. `components/AdminNotifications.tsx`: Insert/Delete protected by `notifications_admin_write`.
+2. `components/admin-campaign-manager/index.tsx`: Insert/Update/Delete protected by `camps_admin_write`.
+3. `app/doctor/claim/page.tsx`: Doctor claim requests.
+4. `app/admin/chat-review/page.tsx`: Review status updates protected by `chat_cache_update_verified`.
