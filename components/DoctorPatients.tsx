@@ -21,19 +21,43 @@ export function DoctorPatients({ language }: DoctorPatientsProps) {
   const [expanded, setExpanded] = useState<string | null>(null)
 
   useEffect(() => {
+    let active = true
+    const timeout = setTimeout(() => {
+      if (active) setLoading(false)
+    }, 4000)
+
     const load = async () => {
-      const supabase = createClient()
-      // Load all patients: role = 'patient' OR role is not set yet
-      const { data: allPatients } = await supabase
-        .from("patients")
-        .select("id, user_id, first_name, last_name, email, phone, created_at, role")
-        .or("role.eq.patient,role.is.null")
-        .order("created_at", { ascending: false })
-        .limit(50)
-      setPatients(allPatients ?? [])
-      setLoading(false)
+      try {
+        const supabase = createClient()
+        // Load assigned patients under RLS care relationship
+        const { data: allPatients, error } = await supabase
+          .from("patients")
+          .select("id, user_id, first_name, last_name, email, phone, created_at, role")
+          .or("role.eq.patient,role.is.null")
+          .order("created_at", { ascending: false })
+          .limit(50)
+
+        if (error) {
+          console.warn("[DoctorPatients] Query notice:", error.message)
+        }
+        if (active) {
+          setPatients(allPatients ?? [])
+        }
+      } catch (err) {
+        console.error("[DoctorPatients] Load exception:", err)
+      } finally {
+        if (active) {
+          clearTimeout(timeout)
+          setLoading(false)
+        }
+      }
     }
     load()
+
+    return () => {
+      active = false
+      clearTimeout(timeout)
+    }
   }, [])
 
   const loadRecords = async (patientId: string, userId?: string) => {
@@ -41,19 +65,26 @@ export function DoctorPatients({ language }: DoctorPatientsProps) {
       setExpanded(expanded === patientId ? null : patientId)
       return
     }
-    const supabase = createClient()
-    // Try patient_id first (matches patients.id)
-    const { data: byPatientId } = await supabase
-      .from("medical_records")
-      .select("id, patient_id, record_type, content, file_url, created_at")
-      .eq("patient_id", patientId)
-      .order("created_at", { ascending: false })
-      .limit(20)
+    try {
+      const supabase = createClient()
+      const { data: byPatientId, error } = await supabase
+        .from("medical_records")
+        .select("id, patient_id, record_type, content, file_url, created_at")
+        .eq("patient_id", patientId)
+        .order("created_at", { ascending: false })
+        .limit(20)
 
-    let combined = byPatientId ?? []
-
-    setRecords(prev => ({ ...prev, [patientId]: combined }))
-    setExpanded(patientId)
+      if (error) {
+        console.warn("[DoctorPatients] Records fetch notice:", error.message)
+      }
+      const combined = byPatientId ?? []
+      setRecords(prev => ({ ...prev, [patientId]: combined }))
+    } catch (err) {
+      console.error("[DoctorPatients] Records fetch exception:", err)
+      setRecords(prev => ({ ...prev, [patientId]: [] }))
+    } finally {
+      setExpanded(patientId)
+    }
   }
 
   const filtered = patients.filter(p => {
