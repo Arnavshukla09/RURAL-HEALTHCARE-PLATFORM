@@ -1,0 +1,97 @@
+import { getAdminClient } from "@/lib/supabase/admin"
+import { type NextRequest, NextResponse } from "next/server"
+import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit"
+import { requireUser, authErrorResponse } from "@/lib/auth/guard"
+
+/**
+ * POST /api/auth/ensure-patient
+ * Ensures the current authenticated user has a row in the patients table.
+ * Called on login (especially OAuth) to guarantee the patient record exists
+ * BEFORE any booking or records operations.
+ *
+ * AUDITED SERVICE-ROLE USE: New OAuth users do not yet have a patient row, so
+ * getAdminClient is permitted here to bootstrap their initial patient profile.
+ */
+export async function POST(request: NextRequest) {
+  try {
+    const rl = await checkRateLimit(request, "auth")
+    if (!rl.success) return rateLimitResponse(rl)
+
+    const { user, supabase } = await requireUser()
+
+    // Check if patient row already exists (using user-scoped client first)
+    const { data: existing } = await supabase
+      .from("patients")
+      .select("id, first_name, last_name, phone, role")
+      .eq("user_id", user.id)
+      .single()
+
+    if (existing?.id) {
+      // Already exists — return it
+      return NextResponse.json({
+        patient_id: existing.id,
+        name: existing.first_name,
+        phone: existing.phone || "",
+        role: existing.role || "patient",
+        created: false,
+      })
+    }
+
+    // AUDITED SERVICE-ROLE USE: Bootstrapping new profile
+    const adminSupabase = getAdminClient()
+    const fullName =
+      user.user_metadata?.full_name ||
+      user.user_metadata?.name ||
+      user.email?.split("@")[0] ||
+      "User"
+    const firstName = fullName.split(" ")[0]
+    const lastName = fullName.split(" ").slice(1).join(" ") || ""
+
+    const { data: newPatient, error } = await adminSupabase
+      .from("patients")
+      .insert({
+        user_id: user.id,
+        first_name: firstName,
+        last_name: lastName,
+        email: user.email,
+        role: "patient",
+        phone: user.user_metadata?.phone || "",
+      })
+      .select("id, first_name, last_name, phone, role")
+      .single()
+
+    if (error) {
+      // Might be a unique constraint race condition — try select again
+      const { data: raceCheck } = await adminSupabase
+        .from("patients")
+        .select("id, first_name, last_name, phone, role")
+        .eq("user_id", user.id)
+        .single()
+
+      if (raceCheck?.id) {
+        return NextResponse.json({
+          patient_id: raceCheck.id,
+          name: raceCheck.first_name,
+          phone: raceCheck.phone || "",
+          role: raceCheck.role || "patient",
+          created: false,
+        })
+      }
+
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    return NextResponse.json({
+      patient_id: newPatient.id,
+      name: newPatient.first_name,
+      phone: newPatient.phone || "",
+      role: newPatient.role || "patient",
+      created: true,
+    })
+  } catch (error: any) {
+    if (error?.name === "AuthError" || error?.status) {
+      return authErrorResponse(error)
+    }
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+  }
+}
