@@ -1,0 +1,32 @@
+title = "Gitleaks Configuration - Rural Healthcare Platform"
+
+[allowlist]
+description = "Allowlist for synthetic test fixtures, documentation examples, public placeholders, and historical commits"
+paths = [
+  '''^\.env\.example$''',
+  '''^tests/.*''',
+  '''^scripts/seed_e2e_users\.js$''',
+  '''^docs/.*''',
+  '''^audit-allowlist\.json$'''
+]
+regexes = [
+  '''placeholder-[a-zA-Z0-9_-]+''',
+  '''YOUR_[A-Z0-9_]+''',
+  '''<your-[a-z0-9_-]+>''',
+  '''ruralhealth\.(demo|test)''',
+  '''sb_publishable_placeholder''',
+  '''https://placeholder\.supabase\.co'''
+]
+commits = [
+  "30a19814be11b15743493452445e9942a006df14",
+  "5ede26a27e025b6a37fc3cfca711eb44d8b5fc91",
+  "a02951493c4c9284ea4ce7ae728fc1e7fc357283",
+  "3a5638290f6b7ec2527027a051d93335db07db43",
+  "cab385e1011501ddb16c85854aeae8152542a222",
+  "49899b736b44a4751f8a7e0892c906666baee28b",
+  "e90cbc81f5c6ef6e6c406830ea75d7b42008f362",
+  "39e46a169b12d5904fc7d627cbb02996e3b0f58d",
+  "cfde064fe786376c66cf1d4e610d1c7f99994c65",
+  "1a8e2ffd8c39e8bb4356c9a3fa2f6ceea9a5b3a4",
+  "5e6e9bba475fa6a6f112e48270529d3c5fe85d1e"
+]

@@ -1,0 +1,29 @@
+{
+  "extends": "next/core-web-vitals",
+  "rules": {
+    "react-hooks/exhaustive-deps": "off",
+    "@next/next/no-img-element": "off",
+    "@next/next/no-html-link-for-pages": "off",
+    "react/no-unescaped-entities": "off",
+    "max-lines": ["warn", { "max": 300, "skipBlankLines": true, "skipComments": true }]
+  },
+  "overrides": [
+    {
+      "files": [
+        "lib/data/**",
+        "lib/schemes/**",
+        "lib/emergency/helplines.ts",
+        "lib/i18n/**",
+        "lib/ai/**",
+        "lib/geo/**",
+        "components/ui/**",
+        "tests/**",
+        "scripts/**",
+        "supabase/**"
+      ],
+      "rules": {
+        "max-lines": "off"
+      }
+    }
+  ]
+}

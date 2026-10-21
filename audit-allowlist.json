@@ -1,0 +1,9 @@
+[
+  {
+    "name": "postcss",
+    "advisory": "GHSA-6g55-p6wh-862q, GHSA-r28c-9q8g-f849",
+    "severity": "high",
+    "reason": "CSS sourceMappingURL parsing vulnerability bundled in Next.js build-time pipeline. Build-time compilation only; no arbitrary CSS or source maps from untrusted users are processed at runtime.",
+    "expiry": "2026-12-31"
+  }
+]

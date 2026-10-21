@@ -1,0 +1,72 @@
+name: Cleanup Old GitHub Deployments
+
+# Manual trigger to purge historical Vercel / GitHub deployment records from the repository sidebar
+on:
+  workflow_dispatch:
+    inputs:
+      keep_latest:
+        description: "Number of latest deployments to keep"
+        required: true
+        default: "1"
+        type: string
+
+permissions:
+  deployments: write
+
+jobs:
+  cleanup:
+    name: Purge Historical Deployments
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete Inactive Deployments
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const keepCount = parseInt('${{ inputs.keep_latest }}') || 1;
+            console.log(`Starting deployment cleanup. Preserving latest ${keepCount} deployment(s)...`);
+            
+            let deletedCount = 0;
+            let safetyLimit = 50; // Safety guard: max 50 pages (up to 5,000 deployments)
+            
+            while (safetyLimit > 0) {
+              safetyLimit--;
+              const { data: deployments } = await github.rest.repos.listDeployments({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                per_page: 100,
+                page: 1,
+              });
+              
+              if (!deployments || deployments.length <= keepCount) {
+                console.log(`Remaining deployments (${deployments ? deployments.length : 0}) <= keepCount (${keepCount}). Finished.`);
+                break;
+              }
+              
+              // Deployments to delete on this iteration (everything past keepCount)
+              const toDelete = deployments.slice(keepCount);
+              console.log(`Found ${toDelete.length} deployments to purge on this batch...`);
+              
+              for (const dep of toDelete) {
+                try {
+                  // Mark as inactive first (required by GitHub API before deletion)
+                  await github.rest.repos.createDeploymentStatus({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    deployment_id: dep.id,
+                    state: 'inactive',
+                  });
+                  
+                  // Delete deployment
+                  await github.rest.repos.deleteDeployment({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    deployment_id: dep.id,
+                  });
+                  deletedCount++;
+                } catch (err) {
+                  console.warn(`Skipping deployment ${dep.id}: ${err.message}`);
+                }
+              }
+            }
+            
+            console.log(`✅ Cleanup complete! Purged ${deletedCount} historical deployment records.`);
