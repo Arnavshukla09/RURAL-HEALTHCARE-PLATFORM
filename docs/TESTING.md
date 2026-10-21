@@ -13,7 +13,7 @@ flowchart TD
     subgraph TestingPyramid["Testing Pyramid"]
         E2E["Playwright E2E\n(5 User Journeys: PWA, Teleconsult, Offline Outbox, RBAC)"]
         Integration["Vitest Integration Suite (Live Local Supabase)\n(22 Contract Tests: Care Scoping, Admin Confidentiality, Erasure RPC, Idempotency)"]
-        Unit["Vitest Unit Suite\n(23 Files / 176 Tests: FHIR R4, Clinical Decision, Offline, Rate Limiting)"]
+        Unit["Vitest Unit Suite\n(25 Files / 180 Tests: FHIR R4, Clinical Decision, Offline, Rate Limiting)"]
         Static["Pre-Commit & Immutability Gates\n(Component Checker, Migration SHA-256 Gate, Gitleaks, ESLint, TypeScript)"]
     end
 
@@ -24,7 +24,7 @@ flowchart TD
 
 ### Test Subsystems
 1. **Unit & Isolation Suite (`npm run test:unit`)**:
-   - 23 test files, 176 automated deterministic tests executing in ~1.3s via Vitest.
+   - 25 test files, 180 automated deterministic tests executing in ~1.4s via Vitest.
    - Covers ABDM FHIR R4 document schemas, clinical safety decision tables, offline IndexedDB outbox queue, regional multilingual engine, and PII masking.
 2. **Integration & Behavioral RLS Suite (`npm run test:integration`)**:
    - Guarded by `tests/integration/db-safety-guard.ts` enforcing a strict local test container allowlist (`http://127.0.0.1:54321` or `http://localhost:54321`).
@@ -32,14 +32,14 @@ flowchart TD
    - In CI (`db-tests` job), `REQUIRE_DB=1` is asserted to guarantee that all 22 contract tests execute against a real PostgreSQL/PostgREST instance.
    - Operates with real users and authentic JWTs issued via `signInWithPassword` to exercise PostgreSQL RLS policies directly.
 3. **Migration Immutability Gate (`npm run check:migrations`)**:
-   - Validates all 16 historical baseline migrations against `supabase/migrations.sha256`.
+   - Validates all 22 historical baseline migrations against `supabase/migrations.sha256`.
    - Rejects any in-place historical edit or back-dated migration.
 4. **End-to-End Suite (`npx playwright test`)**:
    - Executes browser user journeys against the full local Next.js + Supabase stack.
 
 ---
 
-## 2. Unit Test Breakdown (176 Tests)
+## 2. Unit Test Breakdown (180 Tests)
 
 | Test File | Subsystem Verified | Tests | Status | Key Assertions & Scenarios |
 | :--- | :--- | :---: | :---: | :--- |
@@ -66,6 +66,8 @@ flowchart TD
 | `symptoms.test.ts` | Symptom Parser | 5 | Pass | Symptom tokenization, body area mapping, severity normalization. |
 | `routing-golden.test.ts` | Route Navigation | 1 | Pass | Public route accessibility, authenticated redirection rules. |
 | `middleware-edge-security.test.ts` | Edge Middleware | 11 | Pass | Request-id attachment, CSP report-only verification, session routing. |
+| `security-followups-ratelimit.test.ts` | Rate-Limit Edge Cases | 2 | Pass | Sliding-window reset boundaries and malicious header payload handling. |
+| `provider-fk-alignment.test.ts` | Schema FK Alignment | 2 | Pass | Referential integrity between appointments, medical records, and healthcare_providers. |
 
 ---
 
