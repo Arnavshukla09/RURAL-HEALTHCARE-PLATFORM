@@ -9,6 +9,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
+## [1.1.0] - 2026-10-21
+
+### Security & Role Scoping
+- **Clinician Medical Record Immutability:** Enforced strict HTTP 403 `ACTION_NOT_PERMITTED` in `PATCH` and `DELETE` on `/api/medical-records` for clinicians. Doctors are granted read-only clinical access under established care relationships and cannot mutate historical patient records.
+- **Role Redirection Guard on `/records`:** Implemented automatic client-side role guards on `app/records/page.tsx` redirecting doctors to `/doctor/patients` and administrators to `/admin/records`, preventing unauthorized exposure of patient self-service portals and deletion controls.
+- **Doctor & Patient Notification Routing Isolation:** Scoped the notification engine (`lib/notifications/notification-engine.ts`) so patient notifications point to `/records` or `/appointments` while clinician notifications route strictly to `/doctor/patients` or `/doctor/appointments`. Filtered patient self-service links from doctor sessions in `getLocalNotifications`.
+- **Self-Healing Clinician Role Synchronization:** Implemented server-side detection in `lib/services/appointments.service.ts` that automatically recognizes verified clinicians registered in `public.healthcare_providers` and synchronizes `public.patients.role = 'doctor'`, ensuring Postgres RLS policies function without manual SQL intervention.
+
+### Clinical & UI Resilience
+- **Elapsed Appointments Expiry State Machine:** Scheduled consultations where $T_{\text{appt}} + \text{duration} < \text{NOW}()$ automatically shift from the Upcoming queue to the **Past** tab with an amber `Expired / Incomplete` (`समय समाप्त / अपूर्ण`) badge. Active "Join" and "Cancel" buttons are disabled on elapsed consultations.
+- **Modularized Doctor Patients Subsystem (`components/doctor-patients/`):** Refactored the doctor patient directory into a modular structure (`index.tsx`, `parts/PatientCard.tsx`, `types.ts`) under the 400 LOC standard. Populated directly from assigned consultations so patients appear with or without uploaded files.
+- **Filter Bar Container Containment:** Constrained `RecordFilterRow`, `ScrollableFilterRow`, and `CardHeader` with `w-full min-w-0 max-w-full overflow-hidden` to eliminate horizontal category badge spillover outside white card boundaries.
+- **Database Maintenance & Operations Plan:** Added comprehensive state machine documentation, periodic vacuuming, re-indexing, and auto-archival cron runbooks to `docs/DATABASE.md`.
+
+---
+
 ## [1.0.0] - 2026-10-18
 
 ### Security & Access Control
