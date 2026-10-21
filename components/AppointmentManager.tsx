@@ -83,8 +83,14 @@ export function AppointmentManager({ user, language, setJitsiRoom }: Appointment
     }
   }, [showBooking])
 
-  const upcoming = appointments.filter(a => a.status === "scheduled")
-  const past = appointments.filter(a => a.status === "completed" || a.status === "cancelled")
+  const isPastTime = (a: any) => {
+    try {
+      return new Date(a.appointment_date).getTime() + (a.duration_minutes || 30) * 60000 < Date.now()
+    } catch { return false }
+  }
+  const isExpired = (a: any) => a.status === "scheduled" && isPastTime(a)
+  const upcoming = appointments.filter(a => a.status === "scheduled" && !isPastTime(a))
+  const past = appointments.filter(a => a.status === "completed" || a.status === "cancelled" || isPastTime(a))
   const display = activeTab === "upcoming" ? upcoming : past
   const statusColors: Record<string, string> = {
     scheduled: "bg-blue-100 text-blue-700",
@@ -100,18 +106,8 @@ export function AppointmentManager({ user, language, setJitsiRoom }: Appointment
     router.push(`/teleconsult/room?id=${roomId}&name=${nameParam}&role=${roleParam}&lang=${language}`)
   }
 
-  const formatDate = (dateStr: string) => {
-    try {
-      const d = new Date(dateStr)
-      return d.toLocaleDateString(en ? "en-IN" : "hi-IN", { day: "numeric", month: "short", year: "numeric" })
-    } catch { return dateStr }
-  }
-  const formatTime = (dateStr: string) => {
-    try {
-      const d = new Date(dateStr)
-      return d.toLocaleTimeString(en ? "en-IN" : "hi-IN", { hour: "2-digit", minute: "2-digit" })
-    } catch { return "" }
-  }
+  const formatDate = (dateStr: string) => { try { return new Date(dateStr).toLocaleDateString(en ? "en-IN" : "hi-IN", { day: "numeric", month: "short", year: "numeric" }) } catch { return dateStr } }
+  const formatTime = (dateStr: string) => { try { return new Date(dateStr).toLocaleTimeString(en ? "en-IN" : "hi-IN", { hour: "2-digit", minute: "2-digit" }) } catch { return "" } }
 
   const handleCancelAppointment = async (id: string) => {
     try {
@@ -235,13 +231,7 @@ export function AppointmentManager({ user, language, setJitsiRoom }: Appointment
     }
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-teal-600" />
-      </div>
-    )
-  }
+  if (loading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-teal-600" /></div>
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-cyan-50/50 to-background p-4 md:p-6">
@@ -294,17 +284,8 @@ export function AppointmentManager({ user, language, setJitsiRoom }: Appointment
                 </div>
               )}
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label>{en ? "Date" : "तारीख"}</Label>
-                  <Input type="date" value={bookingForm.date}
-                    min={new Date().toISOString().split('T')[0]}
-                    onChange={e => setBookingForm(f => ({ ...f, date: e.target.value }))} />
-                </div>
-                <div>
-                  <Label>{en ? "Time" : "समय"}</Label>
-                  <Input type="time" value={bookingForm.time}
-                    onChange={e => setBookingForm(f => ({ ...f, time: e.target.value }))} />
-                </div>
+                <div><Label>{en ? "Date" : "तारीख"}</Label><Input type="date" value={bookingForm.date} min={new Date().toISOString().split('T')[0]} onChange={e => setBookingForm(f => ({ ...f, date: e.target.value }))} /></div>
+                <div><Label>{en ? "Time" : "समय"}</Label><Input type="time" value={bookingForm.time} onChange={e => setBookingForm(f => ({ ...f, time: e.target.value }))} /></div>
               </div>
               <div>
                 <Label>{en ? "Notes (optional)" : "नोट्स (वैकल्पिक)"}</Label>
@@ -347,14 +328,16 @@ export function AppointmentManager({ user, language, setJitsiRoom }: Appointment
                     </div>
                   </div>
                   <div className="flex flex-col items-end gap-2">
-                    <Badge className={`text-xs ${statusColors[a.status] || 'bg-gray-100'}`}>{a.status}</Badge>
+                    <Badge className={`text-xs ${isExpired(a) ? "bg-amber-100 text-amber-800 border-amber-300" : (statusColors[a.status] || 'bg-gray-100')}`}>
+                      {isExpired(a) ? (en ? "Expired / Incomplete" : "समय समाप्त (अपूर्ण)") : a.status}
+                    </Badge>
                     <div className="flex items-center gap-2">
-                      {a.status === "scheduled" && a.teleconsult_room_id && (
+                      {!isPastTime(a) && a.status === "scheduled" && a.teleconsult_room_id && (
                         <Button size="sm" className="h-7 text-xs gradient-primary text-white" onClick={() => joinCall(a.teleconsult_room_id)}>
                           <Video className="h-3 w-3 mr-1" />{en ? "Join" : "जुड़ें"}
                         </Button>
                       )}
-                      {a.status === "scheduled" && (
+                      {!isPastTime(a) && a.status === "scheduled" && (
                         <Button size="sm" variant="outline" className="h-7 text-xs text-red-600 border-red-200 hover:bg-red-50" onClick={() => handleCancelAppointment(a.id)}>
                           <XCircle className="h-3 w-3 mr-1" />{en ? "Cancel" : "रद्द करें"}
                         </Button>

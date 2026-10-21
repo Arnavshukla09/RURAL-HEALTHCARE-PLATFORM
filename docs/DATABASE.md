@@ -381,3 +381,89 @@ AS $$
     LIMIT LEAST(p_limit, 100);
 $$;
 ```
+
+
+---
+
+## 6. Security & Role Source of Truth Invariants
+
+1. **Single Authoritative Role Column:**
+   - Authoritative user roles are derived strictly from `public.patients.role` (or cryptographically signed server claims).
+   - Sign-ups via `public.handle_new_user()` default strictly to `role = 'patient'`.
+   - Doctor verification links an authenticated user ID to `public.healthcare_providers.user_id`.
+   - The platform application layer performs continuous self-healing synchronization: if an authenticated user is confirmed as `is_verified = true` in `public.healthcare_providers`, the backend automatically synchronizes `public.patients.role = 'doctor'`.
+
+2. **Clinician Access Scoping & Record Immutability:**
+   - Clinicians can **view** medical records exclusively for patients with whom an active or past care relationship exists via `public.has_care_relationship(patient_id)`.
+   - Clinicians **cannot** mutate (`PATCH`) or delete (`DELETE`) historical medical records belonging to patients. Clinical records represent immutable patient history.
+   - New clinical notes or prescriptions generated during teleconsultations are appended as forward-only records with clinician attribution.
+
+---
+
+## 7. Appointment State Machine & Expiry Lifecycle
+
+### Lifecycle States
+```mermaid
+stateDiagram-v2
+    [*] --> Scheduled: Patient books slot
+    Scheduled --> Completed: Clinician marks done / Consultation concludes
+    Scheduled --> Cancelled: Patient or Clinician cancels prior to start
+    Scheduled --> Expired: Scheduled time + duration elapsed without consultation
+    Completed --> [*]
+    Cancelled --> [*]
+    Expired --> [*]
+```
+
+### Past / Expired Classification
+- An appointment is classified as **Expired / Incomplete** if:
+  $$\text{status} = \text{'scheduled'} \quad \text{AND} \quad \text{appointment\_date} + \text{duration} < \text{NOW}()$$
+- Expired appointments are shifted automatically from active / upcoming queues into the **Past** consultation history.
+- Teleconsult room join links and cancellation triggers are automatically disabled for expired consultations.
+
+---
+
+## 8. Database Maintenance & Operational Health Runbook
+
+### 1. Automated Expired Appointments Transition Job
+Run periodically (via Supabase pg_cron, scheduled webhook, or background maintenance worker):
+```sql
+-- Transition past scheduled appointments older than 2 hours past their duration
+UPDATE public.appointments
+SET 
+  status = 'completed',
+  notes = COALESCE(notes, '') || ' [Auto-archived: Time elapsed without active teleconsultation]'
+WHERE 
+  status = 'scheduled'
+  AND appointment_date + (COALESCE(duration_minutes, 30) || ' minutes')::interval < NOW() - INTERVAL '2 hours';
+```
+
+### 2. Provider Role & Appointment Attribution Sync
+```sql
+-- Ensure all verified providers have their patients.role set to 'doctor'
+UPDATE public.patients p
+SET role = 'doctor'
+FROM public.healthcare_providers hp
+WHERE hp.user_id = p.user_id
+  AND hp.is_verified = true
+  AND p.role <> 'doctor';
+
+-- Link legacy appointments where provider_id was null or mismatched but clinician name is recorded
+UPDATE public.appointments a
+SET provider_id = hp.id
+FROM public.healthcare_providers hp
+WHERE (a.provider_id IS NULL OR a.provider_id <> hp.id)
+  AND a.notes ILIKE '%' || hp.name || '%'
+  AND hp.is_verified = true;
+```
+
+### 3. Maintenance Vacuum & Index Reindex Schedules
+- **Weekly VACUUM ANALYZE:**
+  ```sql
+  VACUUM ANALYZE public.appointments;
+  VACUUM ANALYZE public.medical_records;
+  VACUUM ANALYZE public.patients;
+  VACUUM ANALYZE public.healthcare_providers;
+  ```
+- **Index Health Verification:**
+  - Verify `uq_provider_slot_scheduled` uniqueness constraint.
+  - Verify `idx_appointments_provider_patient_status` and `idx_appointments_status_date`.

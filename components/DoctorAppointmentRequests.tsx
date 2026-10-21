@@ -89,9 +89,14 @@ export function DoctorAppointmentRequests({ language, setJitsiRoom }: DoctorAppo
   // Supabase returns joined tables as arrays even for 1:1 relations
   const getPatient = (a: any) => Array.isArray(a.patients) ? a.patients[0] : a.patients
 
+  const isPastTime = (a: any) => {
+    try { return new Date(a.appointment_date).getTime() + (a.duration_minutes || 30) * 60000 < Date.now() } catch { return false }
+  }
+  const isExpired = (a: any) => a.status === "scheduled" && isPastTime(a)
+
   const filtered = appointments.filter(a => {
     const p = getPatient(a)
-    const matchTab = tab === "all" ? true : tab === "pending" ? a.status === "scheduled" : a.status === "completed"
+    const matchTab = tab === "all" ? true : tab === "pending" ? (a.status === "scheduled" && !isPastTime(a)) : (a.status === "completed" || isExpired(a))
     const matchSearch = search
       ? [p?.first_name, p?.last_name, p?.email, a.notes].join(" ").toLowerCase().includes(search.toLowerCase())
       : true
@@ -188,8 +193,8 @@ export function DoctorAppointmentRequests({ language, setJitsiRoom }: DoctorAppo
                             <Icon className="h-3 w-3 inline mr-1" />{ct.type}
                           </span>
                           {isToday && <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium">Today</span>}
-                          <Badge className={`text-xs border-0 ${statusColors[appt.status] || "bg-gray-100 text-gray-600"}`}>
-                            {appt.status}
+                          <Badge className={`text-xs border-0 ${isExpired(appt) ? "bg-amber-100 text-amber-800" : (statusColors[appt.status] || "bg-gray-100 text-gray-600")}`}>
+                            {isExpired(appt) ? (en ? "Expired / Incomplete" : "समय समाप्त (अपूर्ण)") : appt.status}
                           </Badge>
                         </div>
                         <p className="text-xs text-gray-500">
@@ -234,7 +239,7 @@ export function DoctorAppointmentRequests({ language, setJitsiRoom }: DoctorAppo
 
                       {/* Action buttons */}
                       <div className="flex flex-wrap gap-2">
-                        {appt.status === "scheduled" && (
+                        {appt.status === "scheduled" && !isExpired(appt) && (
                           <>
                             <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white h-8 text-xs flex-1"
                               disabled={updating === appt.id}
@@ -249,6 +254,12 @@ export function DoctorAppointmentRequests({ language, setJitsiRoom }: DoctorAppo
                               {en ? "Cancel" : "रद्द करें"}
                             </Button>
                           </>
+                        )}
+                        {isExpired(appt) && (
+                          <div className="flex items-center gap-1.5 text-amber-700 text-xs font-medium bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-200 w-full justify-center">
+                            <Clock className="h-3.5 w-3.5" />
+                            <span>{en ? "Scheduled time passed without consultation" : "बिना परामर्श के निर्धारित समय बीत गया"}</span>
+                          </div>
                         )}
                         {appt.status === "cancelled" && (
                           <Button size="sm" className="bg-teal-600 hover:bg-teal-700 text-white h-8 text-xs"

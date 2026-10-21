@@ -38,7 +38,7 @@ export function DoctorDashboard({ user, language, setJitsiRoom }: DoctorDashboar
           const today = new Date().toDateString()
           setStats({
             total: arr.length,
-            today: arr.filter(a => new Date(a.appointment_date).toDateString() === today).length,
+            today: arr.filter(a => new Date(a.appointment_date).toDateString() === today && (new Date(a.appointment_date).getTime() + (a.duration_minutes || 30) * 60000 >= Date.now())).length,
             completed: arr.filter(a => a.status === "completed").length,
           })
         }
@@ -78,8 +78,12 @@ export function DoctorDashboard({ user, language, setJitsiRoom }: DoctorDashboar
     setAppointments(prev => prev.map(a => a.id === id ? { ...a, status: "completed" } : a))
   }
 
-  const upcoming = appointments.filter(a => a.status === "scheduled")
-  const past = appointments.filter(a => a.status === "completed" || a.status === "cancelled")
+  const isPastTime = (a: any) => {
+    try { return new Date(a.appointment_date).getTime() + (a.duration_minutes || 30) * 60000 < Date.now() } catch { return false }
+  }
+  const isExpired = (a: any) => a.status === "scheduled" && isPastTime(a)
+  const upcoming = appointments.filter(a => a.status === "scheduled" && !isPastTime(a))
+  const past = appointments.filter(a => a.status === "completed" || a.status === "cancelled" || isPastTime(a))
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center">
@@ -220,8 +224,8 @@ export function DoctorDashboard({ user, language, setJitsiRoom }: DoctorDashboar
                   const d = new Date(appt.appointment_date)
                   return (
                     <div key={appt.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50">
-                      <div className={`h-7 w-7 rounded-full flex items-center justify-center text-xs ${appt.status === "completed" ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"}`}>
-                        {appt.status === "completed" ? <CheckCircle className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
+                      <div className={`h-7 w-7 rounded-full flex items-center justify-center text-xs ${appt.status === "completed" ? "bg-green-100 text-green-600" : isExpired(appt) ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-600"}`}>
+                        {appt.status === "completed" ? <CheckCircle className="h-3 w-3" /> : isExpired(appt) ? <Clock className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-medium truncate">{d.toLocaleDateString(en ? "en-IN" : "hi-IN", { day: "numeric", month: "short", year: "numeric" })}</p>
@@ -231,8 +235,8 @@ export function DoctorDashboard({ user, language, setJitsiRoom }: DoctorDashboar
   return name ? `${name} · ${appt.notes?.slice(0, 40) || ""}` : (appt.notes?.slice(0, 40) || "—");
 })()}</p>
                       </div>
-                      <Badge variant="outline" className={`text-xs shrink-0 ${appt.status === "completed" ? "text-green-600 border-green-200" : "text-red-600 border-red-200"}`}>
-                        {appt.status}
+                      <Badge variant="outline" className={`text-xs shrink-0 ${appt.status === "completed" ? "text-green-600 border-green-200" : isExpired(appt) ? "text-amber-700 border-amber-300 bg-amber-50" : "text-red-600 border-red-200"}`}>
+                        {isExpired(appt) ? (en ? "Expired" : "समय समाप्त") : appt.status}
                       </Badge>
                     </div>
                   )

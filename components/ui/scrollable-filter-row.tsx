@@ -51,7 +51,7 @@ export function ScrollableFilterRow({
   }
 
   return (
-    <div className={`relative flex items-center group w-full ${className}`}>
+    <div className={`relative flex items-center group w-full min-w-0 max-w-full overflow-hidden ${className}`}>
       {canScrollLeft && (
         <button
           type="button"
@@ -65,7 +65,7 @@ export function ScrollableFilterRow({
 
       <div
         ref={containerRef}
-        className={`w-full ${contentClassName}`}
+        className={`w-full min-w-0 max-w-full ${contentClassName}`}
       >
         {children}
       </div>

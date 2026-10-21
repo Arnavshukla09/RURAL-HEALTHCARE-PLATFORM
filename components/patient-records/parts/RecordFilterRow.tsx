@@ -28,7 +28,8 @@ export function RecordFilterRow({
   onSelectTag,
 }: RecordFilterRowProps) {
   return (
-    <ScrollableFilterRow contentClassName="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+    <div className="w-full min-w-0 max-w-full overflow-hidden">
+      <ScrollableFilterRow className="w-full min-w-0 max-w-full overflow-hidden" contentClassName="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none w-full min-w-0 max-w-full">
       {RECORD_FILTER_TAGS.map((tag) => {
         const count = tagCounts[tag.key] || 0
         if (tag.key !== 'all' && count === 0) return null
@@ -56,6 +57,7 @@ export function RecordFilterRow({
           </button>
         )
       })}
-    </ScrollableFilterRow>
+      </ScrollableFilterRow>
+    </div>
   )
 }

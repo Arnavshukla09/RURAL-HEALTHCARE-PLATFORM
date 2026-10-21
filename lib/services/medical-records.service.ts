@@ -265,6 +265,13 @@ export async function handleDeleteMedicalRecord(supabase: any, user: any, search
     return NextResponse.json({ error: "Missing record ID", code: "MISSING_ID" }, { status: 400 })
   }
 
+  if (patient.role === "doctor") {
+    return NextResponse.json(
+      { error: "Forbidden: Clinicians cannot delete historical patient clinical records.", code: "ACTION_NOT_PERMITTED" },
+      { status: 403 }
+    )
+  }
+
   if (patient.role === "admin") {
     const { error: rpcError } = await supabase.rpc("admin_erase_medical_record", {
       p_record_id: id,
@@ -329,6 +336,13 @@ export async function handleUpdateMedicalRecord(supabase: any, user: any, body: 
   const parsed = MedicalRecordSchema.safeParse(updateData)
   if (!parsed.success) {
     return NextResponse.json({ error: "Validation failed", details: parsed.error.flatten(), code: "VALIDATION_ERROR" }, { status: 400 })
+  }
+
+  if (patient.role === "doctor") {
+    return NextResponse.json(
+      { error: "Forbidden: Clinicians may view but cannot modify historical patient clinical records.", code: "ACTION_NOT_PERMITTED" },
+      { status: 403 }
+    )
   }
 
   if (patient.role === "admin") {

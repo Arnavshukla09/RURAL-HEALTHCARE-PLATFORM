@@ -333,8 +333,8 @@ export function PatientRecords({ language, user }: PatientRecordsProps) {
 
         {/* Records list */}
         {records.length > 0 && (
-          <Card>
-            <CardHeader className="pb-3 space-y-3">
+          <Card className="overflow-hidden">
+            <CardHeader className="pb-3 space-y-3 min-w-0 max-w-full overflow-hidden">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg flex items-center gap-2">
                   <FileText className="h-5 w-5 text-teal-600" />
