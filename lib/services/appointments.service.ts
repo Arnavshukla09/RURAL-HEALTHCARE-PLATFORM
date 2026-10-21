@@ -100,6 +100,23 @@ export async function handleCreateAppointment(supabase: any, user: any, body: an
   }
 
   let finalProviderId = parsed.data.provider_id || null
+  if (!finalProviderId && parsed.data.notes) {
+    const docMatch = parsed.data.notes.match(/—\s*([^,]+)/)
+    if (docMatch && docMatch[1]) {
+      const docName = docMatch[1].trim()
+      const { data: matchedDoc } = await supabase
+        .from("healthcare_providers")
+        .select("id")
+        .ilike("name", `%${docName}%`)
+        .eq("is_verified", true)
+        .limit(1)
+        .maybeSingle()
+      if (matchedDoc) {
+        finalProviderId = matchedDoc.id
+      }
+    }
+  }
+
   if (!finalProviderId) {
     const { data: defaultProvider } = await supabase
       .from("healthcare_providers")

@@ -64,12 +64,33 @@ export function playNotificationChime() {
 /**
  * Read notifications stored in LocalStorage for offline/guest resilience
  */
-export function getLocalNotifications(): AppNotification[] {
+export function getLocalNotifications(userId?: string, userRole?: string): AppNotification[] {
   if (typeof window === "undefined") return []
   try {
     const raw = localStorage.getItem(LOCAL_NOTIFS_KEY)
     if (!raw) return []
-    return JSON.parse(raw)
+    const all: AppNotification[] = JSON.parse(raw)
+    if (!userId && !userRole) return all
+
+    return all.filter((n) => {
+      // Role-specific notifications (e.g. doctor alerts)
+      if (n.recipient_type === "role" && n.recipient_role) {
+        return n.recipient_role === userRole
+      }
+      // Individual notifications (e.g. specific patient confirmations)
+      if (n.recipient_type === "individual" && n.recipient_id) {
+        return n.recipient_id === userId
+      }
+      // System-wide broadcasts
+      if (n.recipient_type === "all") {
+        if (userRole === "doctor" && n.title?.includes("Appointment Confirmed")) {
+          return false
+        }
+        return true
+      }
+      if (n.recipient_id) return n.recipient_id === userId
+      return true
+    })
   } catch {
     return []
   }

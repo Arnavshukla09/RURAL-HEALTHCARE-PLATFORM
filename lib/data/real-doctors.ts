@@ -90,6 +90,7 @@ export const REAL_DOCTORS: RealDoctor[] = [
   },
   {
     "id": "doc-mp-demo-arjun",
+    "providerId": "0d6e51a3-b8dc-4c01-a7b2-dd44aa71b97f",
     "name": "Dr. Arjun Mehta",
     "qualifications": "MBBS, MD (General Medicine)",
     "regNo": "MPMC-29481",

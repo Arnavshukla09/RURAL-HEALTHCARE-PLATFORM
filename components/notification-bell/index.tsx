@@ -40,7 +40,7 @@ export function NotificationBell({ user, language }: NotificationBellProps) {
   const backoffDelayRef = useRef<number>(60000)
 
   const mergeWithLocal = (serverNotifs: any[] = []) => {
-    const local = getLocalNotifications()
+    const local = getLocalNotifications(user?.id, user?.role)
     const map = new Map<string, any>()
     serverNotifs.forEach((n) => map.set(n.id, n))
     local.forEach((n) => {
@@ -55,7 +55,7 @@ export function NotificationBell({ user, language }: NotificationBellProps) {
 
   const fetchNotifications = async (isInitial = false) => {
     if (!user) {
-      setNotifications(getLocalNotifications())
+      setNotifications(getLocalNotifications(user?.id, user?.role))
       return
     }
 
@@ -75,11 +75,11 @@ export function NotificationBell({ user, language }: NotificationBellProps) {
         }
         backoffDelayRef.current = 60000
       } else {
-        setNotifications(getLocalNotifications())
+        setNotifications(getLocalNotifications(user?.id, user?.role))
         backoffDelayRef.current = Math.min(backoffDelayRef.current * 2, 300000)
       }
     } catch {
-      setNotifications(getLocalNotifications())
+      setNotifications(getLocalNotifications(user?.id, user?.role))
       backoffDelayRef.current = Math.min(backoffDelayRef.current * 2, 300000)
     } finally {
       if (isInitial) setLoading(false)
@@ -125,6 +125,7 @@ export function NotificationBell({ user, language }: NotificationBellProps) {
     const handleNewNotification = (e: CustomEvent<AppNotification>) => {
       const notif = e.detail
       if (!notif) return
+      if (user?.role === "doctor" && notif.title?.includes("Appointment Confirmed")) return
       setNotifications((prev) => {
         if (prev.some((n) => n.id === notif.id)) return prev
         return [notif, ...prev]
@@ -335,21 +336,13 @@ export function NotificationBell({ user, language }: NotificationBellProps) {
                   {en ? "Mark all read" : "सभी पढ़े"}
                 </button>
               )}
-              <button
-                onClick={() => setOpen(false)}
-                className="text-gray-400 hover:text-gray-600 p-0.5"
-              >
+              <button onClick={() => setOpen(false)} className="text-gray-400 hover:text-gray-600 p-0.5" aria-label="Close">
                 <X className="h-4 w-4" />
               </button>
             </div>
           </div>
 
-          <NotificationTabs
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-            totalCount={notifications.length}
-            en={en}
-          />
+          <NotificationTabs activeTab={activeTab} setActiveTab={setActiveTab} totalCount={notifications.length} en={en} />
 
           <div className="max-h-[60vh] overflow-y-auto divide-y divide-gray-50">
             {loading ? (

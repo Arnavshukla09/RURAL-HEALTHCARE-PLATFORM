@@ -25,6 +25,7 @@ import {
   ExternalLink,
   Calendar,
   ArrowRight,
+  FileText,
 } from "lucide-react"
 import { generateDoctorClaimToken } from "@/lib/doctor-claims"
 import type { BookingSuccessData } from "../types"
@@ -255,6 +256,16 @@ export function AppointmentConfirmation({
           </div>
 
           <div className="space-y-2 pt-1">
+            <Button
+              variant="outline"
+              className="w-full h-10 border-teal-300 text-teal-800 bg-teal-50 hover:bg-teal-100 font-bold rounded-xl shadow-xs flex items-center justify-center gap-2"
+              onClick={() => router.push(`/records`)}
+            >
+              <FileText className="h-4 w-4 text-teal-700" />
+              <span>{en ? "Go to My Medical Records" : "मेरे मेडिकल रिकॉर्ड पर जाएं"}</span>
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+
             <Button
               variant="outline"
               className="w-full h-10 border-gray-300 text-gray-800 font-bold rounded-xl shadow-xs flex items-center justify-center gap-2"

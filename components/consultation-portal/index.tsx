@@ -206,23 +206,37 @@ export function ConsultationPortal({ language, user, symptomResult }: Consultati
         .join(" | ")
 
       // Resolve real healthcare_providers provider_id for doctor inbox and care-relationship scoping
-      const matchedProvider = dbProviders.find(
-        (p) =>
-          p.id === selectedDoctor.id ||
-          p.name?.toLowerCase().trim() === selectedDoctor.name?.toLowerCase().trim()
-      )
-      const providerIdToSave = matchedProvider?.id || selectedDoctor.providerId || null
+      let providerIdToSave = selectedDoctor.providerId || null
+      if (!providerIdToSave) {
+        const matchedProvider = dbProviders.find(
+          (p) =>
+            p.id === selectedDoctor.id ||
+            p.name?.toLowerCase().trim() === selectedDoctor.name?.toLowerCase().trim()
+        )
+        if (matchedProvider) providerIdToSave = matchedProvider.id
+      }
 
-      await fetch("/api/appointments", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          provider_id: providerIdToSave,
-          appointment_date: appointmentDate,
-          consultation_type: consultType,
-          notes: fullNotes,
-        }),
-      })
+      const controller = new AbortController()
+      const tId = setTimeout(() => controller.abort(), 6000)
+
+      try {
+        await fetch("/api/appointments", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          signal: controller.signal,
+          body: JSON.stringify({
+            provider_id: providerIdToSave,
+            appointment_date: appointmentDate,
+            consultation_type: consultType,
+            notes: fullNotes,
+            teleconsult_room_id: roomId,
+          }),
+        })
+      } catch (fetchErr) {
+        console.warn("[handleBook] Fetch notice:", fetchErr)
+      } finally {
+        clearTimeout(tId)
+      }
 
       const slotKey = `${selectedDoctor.id}_${selectedDate}_${selectedSlot}`
       const newBooked = new Set(bookedSlots)
@@ -232,17 +246,22 @@ export function ConsultationPortal({ language, user, symptomResult }: Consultati
         localStorage.setItem("rural_health_booked_slots", JSON.stringify(Array.from(newBooked)))
       }
 
-      await triggerAppointmentBooked({
-        doctorName: selectedDoctor.name,
-        doctorSpecialty: selectedDoctor.specialtyName,
-        hospitalName: selectedDoctor.hospitalAffiliation,
-        date: selectedDate,
-        time: selectedSlot,
-        consultType: consultType,
-        patientName: patientName || (en ? "Registered Patient" : "पंजीकृत मरीज"),
-        patientUserId: user?.id,
-        roomId: roomId,
-      })
+      try {
+        await triggerAppointmentBooked({
+          appointmentId: roomId,
+          doctorName: selectedDoctor.name,
+          doctorSpecialty: selectedDoctor.specialtyName,
+          hospitalName: selectedDoctor.hospitalAffiliation,
+          date: selectedDate,
+          time: selectedSlot,
+          consultType: consultType,
+          patientName: patientName || (en ? "Registered Patient" : "पंजीकृत मरीज"),
+          patientUserId: user?.id,
+          roomId: roomId,
+        })
+      } catch (notifErr) {
+        console.warn("[handleBook] notification notice:", notifErr)
+      }
 
       const finalPaymentMode = selectedDoctor.consultationFee === 0 ? "free" : paymentMode
 
