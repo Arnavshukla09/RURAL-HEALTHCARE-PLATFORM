@@ -156,7 +156,10 @@ export function DoctorDashboard({ user, language, setJitsiRoom }: DoctorDashboar
                             <User className="h-4 w-4 text-white" />
                           </div>
                           <div>
-                            <p className="font-medium text-sm">{appt.notes?.split("|")?.[0]?.replace(/\[.*?\]/g, "").trim() || "Patient"}</p>
+                            <p className="font-medium text-sm">{(() => {
+  const p = Array.isArray(appt.patients) ? appt.patients[0] : appt.patients;
+  return p ? [p.first_name, p.last_name].filter(Boolean).join(" ") : appt.notes?.match(/Patient:\s*([^|(]+)/)?.[1]?.trim() || (en ? "Patient" : "मरीज़");
+})()}</p>
                             <p className="text-xs text-gray-500">{d.toLocaleDateString(en ? "en-IN" : "hi-IN", { day: "numeric", month: "short" })} · {d.toLocaleTimeString(en ? "en-IN" : "hi-IN", { hour: "2-digit", minute: "2-digit" })}</p>
                           </div>
                         </div>
@@ -222,7 +225,11 @@ export function DoctorDashboard({ user, language, setJitsiRoom }: DoctorDashboar
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-medium truncate">{d.toLocaleDateString(en ? "en-IN" : "hi-IN", { day: "numeric", month: "short", year: "numeric" })}</p>
-                        <p className="text-xs text-gray-400 truncate">{appt.notes?.replace(/\[.*?\]/g, "").trim().slice(0, 50) || "—"}</p>
+                        <p className="text-xs text-gray-400 truncate">{(() => {
+  const p = Array.isArray(appt.patients) ? appt.patients[0] : appt.patients;
+  const name = p ? [p.first_name, p.last_name].filter(Boolean).join(" ") : appt.notes?.match(/Patient:\s*([^|(]+)/)?.[1]?.trim() || "";
+  return name ? `${name} · ${appt.notes?.slice(0, 40) || ""}` : (appt.notes?.slice(0, 40) || "—");
+})()}</p>
                       </div>
                       <Badge variant="outline" className={`text-xs shrink-0 ${appt.status === "completed" ? "text-green-600 border-green-200" : "text-red-600 border-red-200"}`}>
                         {appt.status}
