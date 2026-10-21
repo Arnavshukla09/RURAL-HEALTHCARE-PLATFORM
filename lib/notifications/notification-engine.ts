@@ -81,9 +81,13 @@ export function getLocalNotifications(userId?: string, userRole?: string): AppNo
       if (n.recipient_type === "individual" && n.recipient_id) {
         return n.recipient_id === userId
       }
+      // Never show patient self-service /records links or patient-only alerts to a doctor
+      if (userRole === "doctor" && (n.action_url === "/records" || n.recipient_role === "patient")) {
+        return false
+      }
       // System-wide broadcasts
       if (n.recipient_type === "all") {
-        if (userRole === "doctor" && n.title?.includes("Appointment Confirmed")) {
+        if (userRole === "doctor" && (n.title?.includes("Appointment Confirmed") || n.action_url === "/records")) {
           return false
         }
         return true
@@ -259,22 +263,44 @@ export async function triggerAppointmentStatusUpdated(payload: {
   })
 
   if (payload.newStatus === "completed") {
+    // 1. Notification for Patient
     await dispatchNotification({
       title: "Consultation Completed",
       message: `Your consultation with ${payload.doctorName} is complete. Your medical summary has been recorded.`,
       type: "success",
-      recipient_type: payload.patientUserId ? "individual" : "all",
-      recipient_id: payload.patientUserId,
+      recipient_type: payload.patientUserId ? "individual" : "role",
+      recipient_role: "patient",
+      recipient_id: payload.patientUserId || null,
       action_url: "/records",
     })
+    // 2. Notification for Doctor
+    await dispatchNotification({
+      title: "Consultation Completed",
+      message: `Consultation with ${payload.patientName || "patient"} on ${dateFormatted} has been completed.`,
+      type: "info",
+      recipient_type: "role",
+      recipient_role: "doctor",
+      action_url: "/doctor/patients",
+    })
   } else if (payload.newStatus === "cancelled") {
+    // 1. Notification for Patient
     await dispatchNotification({
       title: "Appointment Cancelled",
       message: `The consultation on ${dateFormatted} with ${payload.doctorName} has been cancelled.`,
       type: "warning",
-      recipient_type: payload.patientUserId ? "individual" : "all",
-      recipient_id: payload.patientUserId,
+      recipient_type: payload.patientUserId ? "individual" : "role",
+      recipient_role: "patient",
+      recipient_id: payload.patientUserId || null,
       action_url: "/appointments",
+    })
+    // 2. Notification for Doctor
+    await dispatchNotification({
+      title: "Appointment Cancelled",
+      message: `Consultation with ${payload.patientName || "patient"} on ${dateFormatted} was cancelled.`,
+      type: "warning",
+      recipient_type: "role",
+      recipient_role: "doctor",
+      action_url: "/doctor/appointments",
     })
   }
 }

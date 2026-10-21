@@ -251,7 +251,8 @@ export function NotificationBell({ user, language }: NotificationBellProps) {
 
     if (notif.action_url) {
       setOpen(false)
-      router.push(notif.action_url)
+      const target = user?.role === "doctor" && notif.action_url === "/records" ? "/doctor/patients" : notif.action_url
+      router.push(target)
     }
   }
 

@@ -128,16 +128,22 @@ export async function handleGetMedicalRecords(supabase: any, user: any, searchPa
   // Doctor Access: Can view records for a specific patient under care
   if (patient.role === "doctor") {
     const targetPatientId = searchParams.get("patient_id")
+    if (!targetPatientId) {
+      return NextResponse.json({
+        data: [],
+        records: [],
+        nextCursor: null,
+        message: "Doctors must specify a patient_id to view clinical records under care.",
+      })
+    }
+
     let doctorQuery = supabase
       .from("medical_records")
       .select("id, patient_id, provider_id, appointment_id, record_type, content, file_url, created_at, updated_at")
+      .eq("patient_id", targetPatientId)
       .order("created_at", { ascending: false })
       .order("id", { ascending: false })
       .limit(limit + 1)
-
-    if (targetPatientId) {
-      doctorQuery = doctorQuery.eq("patient_id", targetPatientId)
-    }
 
     if (cursor) {
       doctorQuery = doctorQuery.lt("created_at", cursor.createdAt)

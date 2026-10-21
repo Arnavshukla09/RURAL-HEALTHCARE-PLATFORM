@@ -75,7 +75,7 @@ export function DoctorAppointmentRequests({ language, setJitsiRoom }: DoctorAppo
           triggerAppointmentStatusUpdated({
             appointmentId: id,
             newStatus: status,
-            doctorName: "Dr. Consultant",
+            doctorName: "Dr. Arjun Mehta",
             patientName: patient ? `${patient.first_name || ""} ${patient.last_name || ""}`.trim() : "Patient",
             date: appt.appointment_date,
             patientUserId: patient?.user_id,

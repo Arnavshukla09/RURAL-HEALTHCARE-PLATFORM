@@ -120,7 +120,7 @@ function TeleconsultRoomContent() {
       setTimeout(() => {
         setRecordSaved(false)
         setShowRxModal(false)
-        router.push("/records")
+        router.push(isDoctor ? "/doctor/patients" : "/records")
       }, 1500)
     } catch (e) {
       // Local fallback
@@ -128,7 +128,7 @@ function TeleconsultRoomContent() {
       setTimeout(() => {
         setRecordSaved(false)
         setShowRxModal(false)
-        router.push("/records")
+        router.push(isDoctor ? "/doctor/patients" : "/records")
       }, 1500)
     } finally {
       setSavingRecord(false)
