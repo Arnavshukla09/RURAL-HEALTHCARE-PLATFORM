@@ -67,9 +67,11 @@ export async function GET(request: NextRequest) {
       return {
         ...provider,
         id: provider.id, // we'll use provider.id for bookings
-        name: patient ? `Dr. ${patient.first_name} ${patient.last_name || ""}`.trim() : "Unknown Doctor",
-        phone: patient?.phone || "",
-        location: provider.clinic_address || "Virtual",
+        name: patient
+          ? `Dr. ${patient.first_name} ${patient.last_name || ""}`.trim()
+          : (provider.name || "Doctor"),
+        phone: patient?.phone || provider.phone || "",
+        location: provider.location || provider.clinic_address || "Virtual",
       }
     })
 
