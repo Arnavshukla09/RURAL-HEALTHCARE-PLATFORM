@@ -1,0 +1,97 @@
+import { NextRequest, NextResponse } from "next/server"
+import { createClient as createSupabaseClient } from "@supabase/supabase-js"
+import { createClient } from "@/lib/supabase/server"
+import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit"
+import { z } from "zod"
+import {
+  buildFacilitiesCacheKey,
+  getCachedFacilities,
+  setCachedFacilities,
+} from "@/lib/cache/response-cache"
+
+const QuerySchema = z.object({
+  lat: z.coerce.number().min(-90).max(90),
+  lon: z.coerce.number().min(-180).max(180),
+  type: z.enum(["hospital", "clinic", "doctors", "pharmacy", "health_post", "lab"]).optional(),
+  radius_km: z.coerce.number().min(1).max(100).optional().default(25),
+})
+
+export async function GET(req: NextRequest) {
+  const rl = await checkRateLimit(req, "public")
+  if (!rl.success) return rateLimitResponse(rl)
+
+  const { searchParams } = new URL(req.url)
+  const parsed = QuerySchema.safeParse({
+    lat: searchParams.get("lat"),
+    lon: searchParams.get("lon"),
+    type: searchParams.get("type") || undefined,
+    radius_km: searchParams.get("radius_km") || undefined,
+  })
+
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "Invalid params — provide lat, lon as numbers", details: parsed.error.flatten() },
+      { status: 400 }
+    )
+  }
+
+  const { lat, lon, type, radius_km } = parsed.data
+
+  // Audit H6: Round lat/lon to 2 decimals (~1.1 km) before querying to collapse cache keys
+  const roundedLat = Math.round(lat * 100) / 100
+  const roundedLon = Math.round(lon * 100) / 100
+
+  // Cache lookup — avoid repeated PostGIS queries for the same area
+  const cacheKey = buildFacilitiesCacheKey(roundedLat, roundedLon, type ?? null, radius_km)
+  const cachedFacilities = await getCachedFacilities(cacheKey)
+  if (cachedFacilities) {
+    return NextResponse.json(
+      { facilities: cachedFacilities, cached: true },
+      {
+        headers: {
+          "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
+        },
+      }
+    )
+  }
+
+  // Strictly use anonymous public client with NEXT_PUBLIC_SUPABASE_ANON_KEY (no service-role key on public routes)
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  if (!supabaseKey || !supabaseUrl) {
+    return NextResponse.json(
+      { error: "Service configuration error. Please try again later." },
+      { status: 503 }
+    )
+  }
+
+  const supabase = createSupabaseClient(supabaseUrl, supabaseKey)
+
+  const { data, error } = await supabase.rpc("nearby_facilities", {
+    p_lat: roundedLat,
+    p_lon: roundedLon,
+    p_type: type ?? null,
+    p_radius_km: radius_km,
+  })
+
+  if (error) {
+    console.error("[/api/facilities/nearby] RPC error:", error.message)
+    return NextResponse.json(
+      { error: "Unable to retrieve nearby facilities. Please try again later." },
+      { status: 500 }
+    )
+  }
+
+  // Cap results to 50 entries and write to cache in background (1h TTL)
+  const facilities = (data ?? []).slice(0, 50)
+  setCachedFacilities(cacheKey, facilities).catch(() => {})
+
+  return NextResponse.json(
+    { facilities },
+    {
+      headers: {
+        "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
+      },
+    }
+  )
+}
