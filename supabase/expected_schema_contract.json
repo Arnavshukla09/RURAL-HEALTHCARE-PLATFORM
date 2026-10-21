@@ -1,0 +1,88 @@
+{
+  "version": "1.0.0",
+  "generated_at": "2026-10-21T03:30:00.000Z",
+  "required_tables": [
+    "patients",
+    "healthcare_providers",
+    "appointments",
+    "medical_records",
+    "notifications",
+    "healthcare_facilities",
+    "health_data",
+    "camps",
+    "chat_cache",
+    "doctor_requests",
+    "access_audit_log",
+    "processed_client_ops",
+    "offline_sync_log"
+  ],
+  "foreign_keys": [
+    {
+      "table_name": "appointments",
+      "column_name": "patient_id",
+      "foreign_table_name": "patients",
+      "foreign_column_name": "id",
+      "delete_rule": "CASCADE"
+    },
+    {
+      "table_name": "appointments",
+      "column_name": "provider_id",
+      "foreign_table_name": "healthcare_providers",
+      "foreign_column_name": "id",
+      "delete_rule": "RESTRICT"
+    },
+    {
+      "table_name": "medical_records",
+      "column_name": "patient_id",
+      "foreign_table_name": "patients",
+      "foreign_column_name": "id",
+      "delete_rule": "CASCADE"
+    },
+    {
+      "table_name": "medical_records",
+      "column_name": "provider_id",
+      "foreign_table_name": "healthcare_providers",
+      "foreign_column_name": "id",
+      "delete_rule": "SET NULL"
+    },
+    {
+      "table_name": "medical_records",
+      "column_name": "appointment_id",
+      "foreign_table_name": "appointments",
+      "foreign_column_name": "id",
+      "delete_rule": "SET NULL"
+    }
+  ],
+  "disallowed_policies": [
+    {
+      "table_name": "chat_cache",
+      "policy_name": "Anyone can read approved chat cache entries"
+    },
+    {
+      "table_name": "chat_cache",
+      "policy_name": "Authenticated users can submit pending chat cache entries"
+    }
+  ],
+  "required_indexes": [
+    {
+      "table_name": "appointments",
+      "index_name": "idx_appointments_patient_date"
+    },
+    {
+      "table_name": "appointments",
+      "index_name": "idx_appointments_provider_date"
+    },
+    {
+      "table_name": "appointments",
+      "index_name": "uq_provider_slot_scheduled"
+    },
+    {
+      "table_name": "medical_records",
+      "index_name": "idx_medical_records_patient_created"
+    },
+    {
+      "table_name": "healthcare_providers",
+      "index_name": "idx_healthcare_providers_user_id"
+    }
+  ]
+}
