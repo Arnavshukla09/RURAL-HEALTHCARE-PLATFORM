@@ -1,0 +1,43 @@
+name: Load Test Smoke (Staging Only)
+
+# Manual staging smoke test runner using Grafana k6.
+# STRICTLY FORBIDDEN AGAINST PRODUCTION.
+on:
+  workflow_dispatch:
+    inputs:
+      target_url:
+        description: "Staging deployment URL (defaults to STAGING_URL secret)"
+        required: false
+        type: string
+
+jobs:
+  smoke-test:
+    name: k6 Smoke Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate staging target URL
+        run: |
+          TARGET="${{ inputs.target_url || secrets.STAGING_URL }}"
+          if [ -z "$TARGET" ]; then
+            echo "❌ ERROR: Staging URL is required (either via input or STAGING_URL secret)."
+            exit 1
+          fi
+          if [[ "$TARGET" =~ "rural-healthcare-platform.vercel.app" ]]; then
+            echo "❌ ERROR: Running load tests against production (rural-healthcare-platform.vercel.app) is strictly prohibited!"
+            exit 1
+          fi
+          echo "Target URL: $TARGET"
+          echo "TARGET_URL=$TARGET" >> $GITHUB_ENV
+
+      - name: Run k6 Smoke Test
+        uses: grafana/k6-action@v0.3.1
+        with:
+          filename: loadtest/k6/rural_health_mixed.js
+          flags: >-
+            -e TEST_TYPE=smoke
+            -e BASE_URL=${{ env.TARGET_URL }}
+            -e SUPABASE_URL=${{ secrets.STAGING_SUPABASE_URL }}
+            -e LOADTEST_KEY=${{ secrets.LOADTEST_KEY }}
