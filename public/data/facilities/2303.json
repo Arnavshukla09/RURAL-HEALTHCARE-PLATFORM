@@ -1,0 +1,60 @@
+[
+  {
+    "id": "fac-indore-01",
+    "nameEn": "Maharaja Yeshwantrao (MY) Hospital",
+    "nameHi": "महाराजा यशवंतराव (एम.वाय.) अस्पताल",
+    "stateCode": "23",
+    "districtCode": "2303",
+    "blockName": "Indore Urban",
+    "tier": "medical_college",
+    "capabilities": {
+      "tier": "medical_college",
+      "tierNameEn": "Tertiary Medical College Hospital (MGM Medical College)",
+      "tierNameHi": "शासकीय मेडिकल कॉलेज अस्पताल",
+      "is24x7": true,
+      "isFRU": true,
+      "hasBloodBankOrStorage": true,
+      "hasICU": true,
+      "hasNICU": true,
+      "hasDialysis": true,
+      "isPmJayEmpaneled": true,
+      "primarySpecialties": ["Emergency & Trauma", "Cardiology", "Burn Unit", "Pediatrics", "Obstetrics & Gynecology"]
+    },
+    "addressEn": "MY Hospital Road, Sanyogitaganj, Indore 452001",
+    "addressHi": "एम.वाय. अस्पताल मार्ग, संयोगितागंज, इंदौर 452001",
+    "phone": "+91 731-2527383",
+    "emergency": true,
+    "beds": 1400,
+    "lat": 22.7164,
+    "lon": 75.8752
+  },
+  {
+    "id": "fac-indore-02",
+    "nameEn": "Civil Hospital Dr. Ambedkar Nagar (Mhow)",
+    "nameHi": "सिविल अस्पताल डॉ. आंबेडकर नगर (महू)",
+    "stateCode": "23",
+    "districtCode": "2303",
+    "blockName": "Mhow",
+    "tier": "sdh",
+    "capabilities": {
+      "tier": "sdh",
+      "tierNameEn": "Sub-District Hospital (FRU)",
+      "tierNameHi": "उप-जिला अस्पताल",
+      "is24x7": true,
+      "isFRU": true,
+      "hasBloodBankOrStorage": true,
+      "hasICU": true,
+      "hasNICU": false,
+      "hasDialysis": false,
+      "isPmJayEmpaneled": true,
+      "primarySpecialties": ["Obstetrics", "General Medicine", "Pediatrics", "Minor Surgery"]
+    },
+    "addressEn": "Mall Road, Mhow Cantt, Indore 453441",
+    "addressHi": "माल रोड, महू छावनी, इंदौर 453441",
+    "phone": "+91 7324-272330",
+    "emergency": true,
+    "beds": 100,
+    "lat": 22.5539,
+    "lon": 75.7602
+  }
+]

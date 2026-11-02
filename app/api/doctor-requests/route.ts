@@ -44,6 +44,9 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
+  const rl = await checkRateLimit(req, "write")
+  if (!rl.success) return rateLimitResponse(rl)
+
   const supabase = await createClient()
   const {
     data: { user },
