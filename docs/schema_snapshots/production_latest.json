@@ -1,0 +1,105 @@
+{
+  "foreign_keys": [
+    {
+      "table_name": "appointments",
+      "column_name": "patient_id",
+      "delete_rule": "CASCADE",
+      "update_rule": "NO ACTION",
+      "constraint_name": "appointments_patient_id_fkey",
+      "foreign_table_name": "patients",
+      "foreign_column_name": "id"
+    },
+    {
+      "table_name": "appointments",
+      "column_name": "provider_id",
+      "delete_rule": "CASCADE",
+      "update_rule": "NO ACTION",
+      "constraint_name": "appointments_provider_id_fkey",
+      "foreign_table_name": "providers",
+      "foreign_column_name": "id"
+    },
+    {
+      "table_name": "consultation_payments",
+      "column_name": "payment_id",
+      "delete_rule": "CASCADE",
+      "update_rule": "NO ACTION",
+      "constraint_name": "consultation_payments_payment_id_fkey",
+      "foreign_table_name": "payments",
+      "foreign_column_name": "id"
+    },
+    {
+      "table_name": "donations",
+      "column_name": "payment_id",
+      "delete_rule": "CASCADE",
+      "update_rule": "NO ACTION",
+      "constraint_name": "donations_payment_id_fkey",
+      "foreign_table_name": "payments",
+      "foreign_column_name": "id"
+    },
+    {
+      "table_name": "medical_records",
+      "column_name": "appointment_id",
+      "delete_rule": "SET NULL",
+      "update_rule": "NO ACTION",
+      "constraint_name": "medical_records_appointment_id_fkey",
+      "foreign_table_name": "appointments",
+      "foreign_column_name": "id"
+    },
+    {
+      "table_name": "medical_records",
+      "column_name": "patient_id",
+      "delete_rule": "CASCADE",
+      "update_rule": "NO ACTION",
+      "constraint_name": "medical_records_patient_id_fkey",
+      "foreign_table_name": "patients",
+      "foreign_column_name": "id"
+    },
+    {
+      "table_name": "medical_records",
+      "column_name": "provider_id",
+      "delete_rule": "CASCADE",
+      "update_rule": "NO ACTION",
+      "constraint_name": "medical_records_provider_id_fkey",
+      "foreign_table_name": "providers",
+      "foreign_column_name": "id"
+    }
+  ],
+  "policies": [
+    {
+      "cmd": "SELECT",
+      "qual": "((status)::text = 'approved'::text)",
+      "roles": ["public"],
+      "tablename": "chat_cache",
+      "policyname": "Anyone can read approved chat cache entries"
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": ["public"],
+      "tablename": "chat_cache",
+      "policyname": "Authenticated users can submit pending chat cache entries"
+    }
+  ],
+  "indexes": [
+    {
+      "tablename": "appointments",
+      "indexname": "idx_appointments_patient_date"
+    },
+    {
+      "tablename": "appointments",
+      "indexname": "idx_appointments_provider_date"
+    },
+    {
+      "tablename": "appointments",
+      "indexname": "uq_provider_slot_scheduled"
+    },
+    {
+      "tablename": "medical_records",
+      "indexname": "idx_medical_records_patient_created"
+    },
+    {
+      "tablename": "healthcare_providers",
+      "indexname": "idx_healthcare_providers_user_id"
+    }
+  ]
+}
