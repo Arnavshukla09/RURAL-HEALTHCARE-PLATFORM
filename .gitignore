@@ -1,0 +1,52 @@
+# env files — never commit secrets
+.env*
+!.env.example
+
+# next.js build output
+.next/
+
+# node modules
+node_modules/
+
+# system
+.DS_Store
+
+# vscode
+.vscode/
+
+# playwright
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# benchmark output files (may contain sensitive data)
+scripts/lighthouse_report.json
+scripts/benchmark_results.json
+benchmark_results.json
+scripts/*_report.json
+scripts/ci/*_report.json
+scripts/ci/benchmark_results.json
+
+# security & temporary scratch files
+scripts/replacements.txt
+scripts/scrub_keys.ps1
+env_search.txt
+supabase/.temp/
+*.tsbuildinfo
+tsconfig.tsbuildinfo
+tokens.json
+loadtest/tokens.json
+
+
+# PWA and Serwist generated service worker outputs
+public/sw.js
+public/sw.js.map
+public/swe-worker-*.js
+public/workbox-*.js
+
+# Raw downloaded datasets
+*.csv
+*.zip
+scratch/
+public/serwist-*.js

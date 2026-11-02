@@ -1,0 +1,54 @@
+name: Keep Supabase Alive
+
+# Ping the Supabase project every 3 days so it never pauses on the free tier.
+on:
+  schedule:
+    - cron: '0 8 */3 * *'   # Every 3 days at 8:00 AM UTC
+  workflow_dispatch:        # Allow manual trigger from GitHub Actions tab
+
+jobs:
+  ping:
+    name: Ping Supabase
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase endpoints
+        run: |
+          if [ -z "$SUPABASE_URL" ]; then
+            echo "::error::SUPABASE_URL is not configured in GitHub repository secrets."
+            echo "Configure NEXT_PUBLIC_SUPABASE_URL in GitHub repo Settings -> Secrets and variables -> Actions."
+            exit 1
+          fi
+
+          echo "Pinging Supabase instance: $SUPABASE_URL"
+
+          # 1. Primary ping: GoTrue Auth Health endpoint (exercises container compute & gateway)
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            --connect-timeout 10 --max-time 15 \
+            "$SUPABASE_URL/auth/v1/health" \
+            -H "apikey: $SUPABASE_ANON_KEY")
+          echo "Auth health check responded with HTTP $STATUS"
+
+          # 2. Secondary ping: PostgREST database query (exercises PostgreSQL instance directly)
+          if [ "$STATUS" -lt 200 ] || [ "$STATUS" -ge 400 ]; then
+            echo "Attempting PostgREST database ping..."
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+              --connect-timeout 10 --max-time 15 \
+              "$SUPABASE_URL/rest/v1/patients?select=count" \
+              -H "apikey: $SUPABASE_ANON_KEY" \
+              -H "Authorization: Bearer $SUPABASE_ANON_KEY")
+            echo "PostgREST query responded with HTTP $STATUS"
+          fi
+
+          if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 400 ]; then
+            echo "✅ Supabase is alive. HTTP status: $STATUS"
+          elif [ "$STATUS" -eq 503 ] || [ "$STATUS" -eq 521 ]; then
+            echo "::error::Supabase project is PAUSED (HTTP $STATUS) due to 7-day inactivity."
+            echo "Please log in to https://supabase.com/dashboard and click 'Resume Project'."
+            exit 1
+          else
+            echo "::error::Supabase ping failed with HTTP $STATUS"
+            exit 1
+          fi
+        env:
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || secrets.SUPABASE_ANON_KEY }}
