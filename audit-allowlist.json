@@ -1,0 +1,37 @@
+[
+  {
+    "name": "postcss",
+    "advisory": "GHSA-6g55-p6wh-862q, GHSA-r28c-9q8g-f849",
+    "severity": "high",
+    "reason": "CSS sourceMappingURL parsing vulnerability bundled in Next.js build-time pipeline. Build-time compilation only; no arbitrary CSS or source maps from untrusted users are processed at runtime.",
+    "expiry": "2026-12-31"
+  },
+  {
+    "name": "zod",
+    "advisory": "GHSA-mrhx-c7xc-m3w5",
+    "severity": "high",
+    "reason": "Memory exhaustion via oversized constrained collections in Zod <4.6.6 bundled transitively by @serwist/build. Used strictly at build time for PWA service worker manifest validation; zero untrusted user payload parsed at runtime.",
+    "expiry": "2026-12-31"
+  },
+  {
+    "name": "@serwist/build",
+    "advisory": "GHSA-mrhx-c7xc-m3w5",
+    "severity": "high",
+    "reason": "Transitive high advisory inherited from bundled zod dependency. Build-time PWA service worker compiler.",
+    "expiry": "2026-12-31"
+  },
+  {
+    "name": "@serwist/next",
+    "advisory": "GHSA-mrhx-c7xc-m3w5",
+    "severity": "high",
+    "reason": "Transitive high advisory inherited from @serwist/build / bundled zod. Build-time Next.js PWA configuration plugin.",
+    "expiry": "2026-12-31"
+  },
+  {
+    "name": "@serwist/webpack-plugin",
+    "advisory": "GHSA-mrhx-c7xc-m3w5",
+    "severity": "high",
+    "reason": "Transitive high advisory inherited from @serwist/build / bundled zod. Build-time Webpack asset manifest plugin.",
+    "expiry": "2026-12-31"
+  }
+]
