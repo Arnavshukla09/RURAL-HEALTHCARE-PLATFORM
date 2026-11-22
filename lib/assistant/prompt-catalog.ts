@@ -18,6 +18,7 @@ const en = {
   book: "Book a doctor", checkSymptoms: "Check symptoms", findFacilities: "Find a hospital",
   appointments: "My appointments", records: "My records", camps: "Health camps", schemes: "Health schemes", healthInfo: "Health information",
   emergency: "Emergency help", cancel: "Cancel", join: "Join consultation", listen: "Speak", replay: "Listen again", textInput: "Type instead", close: "Close",
+  send: "Send",
   chooseLanguage: "Choose your language", settings: "Voice settings", stop: "Stop", repeat: "Repeat",
 }
 
@@ -36,6 +37,7 @@ export const CORE_PROMPTS: Record<AssistantLanguageCode, Record<CorePromptKey, s
     book: "डॉक्टर बुक करें", checkSymptoms: "लक्षण जाँचें", findFacilities: "अस्पताल खोजें", appointments: "मेरे अपॉइंटमेंट", records: "मेरे रिकॉर्ड",
     camps: "स्वास्थ्य शिविर", schemes: "स्वास्थ्य योजनाएँ", healthInfo: "स्वास्थ्य जानकारी", emergency: "आपातकालीन मदद", cancel: "रद्द करें", join: "परामर्श में जुड़ें",
     listen: "बोलें", replay: "फिर सुनें", textInput: "लिखें", close: "बंद करें", chooseLanguage: "अपनी भाषा चुनें", settings: "आवाज़ सेटिंग", stop: "रोकें", repeat: "दोहराएँ",
+    send: "भेजें",
   },
   mr: {
     welcome: "नमस्कार. मी तुमचा आरोग्य साथी आहे. माझ्याशी बोला किंवा चित्राला स्पर्श करा.", askTask: "डॉक्टरांची भेट ठरवायची, लक्षणे तपासायची, की रुग्णालय शोधायचे?",
@@ -49,6 +51,7 @@ export const CORE_PROMPTS: Record<AssistantLanguageCode, Record<CorePromptKey, s
     book: "डॉक्टरांची भेट", checkSymptoms: "लक्षणे तपासा", findFacilities: "रुग्णालय शोधा", appointments: "माझ्या भेटी", records: "माझ्या नोंदी",
     camps: "आरोग्य शिबिरे", schemes: "आरोग्य योजना", healthInfo: "आरोग्य माहिती", emergency: "तातडीची मदत", cancel: "रद्द करा", join: "परामर्शात सामील व्हा",
     listen: "बोला", replay: "पुन्हा ऐका", textInput: "लिहा", close: "बंद करा", chooseLanguage: "तुमची भाषा निवडा", settings: "आवाज सेटिंग", stop: "थांबा", repeat: "पुन्हा सांगा",
+    send: "पाठवा",
   },
   bn: {
     welcome: "নমস্কার। আমি আপনার স্বাস্থ্য সহায়ক। কথা বলুন বা ছবিতে চাপ দিন।", askTask: "ডাক্তারের সময় নেবেন, লক্ষণ পরীক্ষা করবেন, নাকি হাসপাতাল খুঁজবেন?",
@@ -62,6 +65,7 @@ export const CORE_PROMPTS: Record<AssistantLanguageCode, Record<CorePromptKey, s
     book: "ডাক্তার বুক", checkSymptoms: "লক্ষণ পরীক্ষা", findFacilities: "হাসপাতাল খুঁজুন", appointments: "আমার অ্যাপয়েন্টমেন্ট", records: "আমার রেকর্ড",
     camps: "স্বাস্থ্য শিবির", schemes: "স্বাস্থ্য প্রকল্প", healthInfo: "স্বাস্থ্য তথ্য", emergency: "জরুরি সাহায্য", cancel: "বাতিল", join: "পরামর্শে যোগ দিন",
     listen: "বলুন", replay: "আবার শুনুন", textInput: "লিখুন", close: "বন্ধ", chooseLanguage: "ভাষা বাছুন", settings: "কণ্ঠ সেটিং", stop: "থামুন", repeat: "আবার বলুন",
+    send: "পাঠান",
   },
   te: {
     welcome: "నమస్కారం. నేను మీ ఆరోగ్య సహాయకుడిని. నాతో మాట్లాడండి లేదా బొమ్మను తాకండి.", askTask: "డాక్టర్‌ను బుక్ చేయాలా, లక్షణాలు చూడాలా, లేదా ఆసుపత్రి వెతకాలా?",
@@ -75,6 +79,7 @@ export const CORE_PROMPTS: Record<AssistantLanguageCode, Record<CorePromptKey, s
     book: "డాక్టర్ బుక్", checkSymptoms: "లక్షణాలు చూడండి", findFacilities: "ఆసుపత్రి వెతకండి", appointments: "నా అపాయింట్మెంట్లు", records: "నా రికార్డులు",
     camps: "ఆరోగ్య శిబిరాలు", schemes: "ఆరోగ్య పథకాలు", healthInfo: "ఆరోగ్య సమాచారం", emergency: "అత్యవసర సహాయం", cancel: "రద్దు", join: "సంప్రదింపులో చేరండి",
     listen: "మాట్లాడండి", replay: "మళ్లీ వినండి", textInput: "రాయండి", close: "మూసివేయండి", chooseLanguage: "మీ భాష ఎంచుకోండి", settings: "స్వర సెట్టింగ్‌లు", stop: "ఆపండి", repeat: "మళ్లీ చెప్పండి",
+    send: "పంపండి",
   },
   ta: {
     welcome: "வணக்கம். நான் உங்கள் சுகாதார உதவியாளர். என்னிடம் பேசுங்கள் அல்லது படத்தைத் தொடுங்கள்.", askTask: "மருத்துவரை பதிவு செய்யவா, அறிகுறிகளைப் பார்க்கவா, மருத்துவமனையைத் தேடவா?",
@@ -88,6 +93,7 @@ export const CORE_PROMPTS: Record<AssistantLanguageCode, Record<CorePromptKey, s
     book: "மருத்துவர் பதிவு", checkSymptoms: "அறிகுறி சோதனை", findFacilities: "மருத்துவமனை தேடு", appointments: "என் சந்திப்புகள்", records: "என் பதிவுகள்",
     camps: "சுகாதார முகாம்கள்", schemes: "சுகாதார திட்டங்கள்", healthInfo: "சுகாதார தகவல்", emergency: "அவசர உதவி", cancel: "ரத்து", join: "ஆலோசனையில் சேருங்கள்",
     listen: "பேசுங்கள்", replay: "மீண்டும் கேளுங்கள்", textInput: "எழுதுங்கள்", close: "மூடு", chooseLanguage: "மொழியைத் தேர்ந்தெடுங்கள்", settings: "குரல் அமைப்புகள்", stop: "நிறுத்துங்கள்", repeat: "மீண்டும் சொல்லுங்கள்",
+    send: "அனுப்பு",
   },
   gu: {
     welcome: "નમસ્તે. હું તમારો આરોગ્ય સાથી છું. મારી સાથે બોલો અથવા ચિત્રને સ્પર્શ કરો.", askTask: "ડૉક્ટર બુક કરવા, લક્ષણો તપાસવા, કે હોસ્પિટલ શોધવી છે?",
@@ -101,6 +107,7 @@ export const CORE_PROMPTS: Record<AssistantLanguageCode, Record<CorePromptKey, s
     book: "ડૉક્ટર બુક", checkSymptoms: "લક્ષણો તપાસો", findFacilities: "હોસ્પિટલ શોધો", appointments: "મારી મુલાકાતો", records: "મારા રેકોર્ડ",
     camps: "આરોગ્ય શિબિર", schemes: "આરોગ્ય યોજનાઓ", healthInfo: "આરોગ્ય માહિતી", emergency: "તાત્કાલિક મદદ", cancel: "રદ કરો", join: "પરામર્શમાં જોડાઓ",
     listen: "બોલો", replay: "ફરી સાંભળો", textInput: "લખો", close: "બંધ કરો", chooseLanguage: "તમારી ભાષા પસંદ કરો", settings: "અવાજ સેટિંગ", stop: "રોકો", repeat: "ફરી કહો",
+    send: "મોકલો",
   },
   kn: {
     welcome: "ನಮಸ್ಕಾರ. ನಾನು ನಿಮ್ಮ ಆರೋಗ್ಯ ಸಹಾಯಕ. ನನ್ನೊಂದಿಗೆ ಮಾತನಾಡಿ ಅಥವಾ ಚಿತ್ರವನ್ನು ಮುಟ್ಟಿ.", askTask: "ವೈದ್ಯರನ್ನು ಬುಕ್ ಮಾಡಬೇಕೇ, ಲಕ್ಷಣಗಳನ್ನು ನೋಡಬೇಕೇ, ಅಥವಾ ಆಸ್ಪತ್ರೆ ಹುಡುಕಬೇಕೇ?",
@@ -114,6 +121,7 @@ export const CORE_PROMPTS: Record<AssistantLanguageCode, Record<CorePromptKey, s
     book: "ವೈದ್ಯರ ಭೇಟಿ", checkSymptoms: "ಲಕ್ಷಣ ಪರೀಕ್ಷೆ", findFacilities: "ಆಸ್ಪತ್ರೆ ಹುಡುಕಿ", appointments: "ನನ್ನ ಭೇಟಿಗಳು", records: "ನನ್ನ ದಾಖಲೆಗಳು",
     camps: "ಆರೋಗ್ಯ ಶಿಬಿರಗಳು", schemes: "ಆರೋಗ್ಯ ಯೋಜನೆಗಳು", healthInfo: "ಆರೋಗ್ಯ ಮಾಹಿತಿ", emergency: "ತುರ್ತು ಸಹಾಯ", cancel: "ರದ್ದು", join: "ಸಮಾಲೋಚನೆಗೆ ಸೇರಿ",
     listen: "ಮಾತನಾಡಿ", replay: "ಮತ್ತೆ ಕೇಳಿ", textInput: "ಬರೆಯಿರಿ", close: "ಮುಚ್ಚಿ", chooseLanguage: "ನಿಮ್ಮ ಭಾಷೆ ಆಯ್ಕೆ ಮಾಡಿ", settings: "ಧ್ವನಿ ಸೆಟ್ಟಿಂಗ್", stop: "ನಿಲ್ಲಿಸಿ", repeat: "ಮತ್ತೆ ಹೇಳಿ",
+    send: "ಕಳುಹಿಸಿ",
   },
   pa: {
     welcome: "ਸਤਿ ਸ੍ਰੀ ਅਕਾਲ। ਮੈਂ ਤੁਹਾਡਾ ਸਿਹਤ ਸਾਥੀ ਹਾਂ। ਮੇਰੇ ਨਾਲ ਬੋਲੋ ਜਾਂ ਤਸਵੀਰ ਛੂਹੋ।", askTask: "ਡਾਕਟਰ ਬੁੱਕ ਕਰਨਾ, ਲੱਛਣ ਜਾਂਚਣੇ, ਜਾਂ ਹਸਪਤਾਲ ਲੱਭਣਾ ਹੈ?",
@@ -127,6 +135,7 @@ export const CORE_PROMPTS: Record<AssistantLanguageCode, Record<CorePromptKey, s
     book: "ਡਾਕਟਰ ਬੁੱਕ", checkSymptoms: "ਲੱਛਣ ਜਾਂਚ", findFacilities: "ਹਸਪਤਾਲ ਲੱਭੋ", appointments: "ਮੇਰੀਆਂ ਮੁਲਾਕਾਤਾਂ", records: "ਮੇਰੇ ਰਿਕਾਰਡ",
     camps: "ਸਿਹਤ ਕੈਂਪ", schemes: "ਸਿਹਤ ਯੋਜਨਾਵਾਂ", healthInfo: "ਸਿਹਤ ਜਾਣਕਾਰੀ", emergency: "ਤੁਰੰਤ ਮਦਦ", cancel: "ਰੱਦ ਕਰੋ", join: "ਸਲਾਹ ਵਿੱਚ ਜੁੜੋ",
     listen: "ਬੋਲੋ", replay: "ਫਿਰ ਸੁਣੋ", textInput: "ਲਿਖੋ", close: "ਬੰਦ ਕਰੋ", chooseLanguage: "ਆਪਣੀ ਭਾਸ਼ਾ ਚੁਣੋ", settings: "ਆਵਾਜ਼ ਸੈਟਿੰਗ", stop: "ਰੁਕੋ", repeat: "ਫਿਰ ਬੋਲੋ",
+    send: "ਭੇਜੋ",
   },
   or: {
     welcome: "ନମସ୍କାର। ମୁଁ ଆପଣଙ୍କ ସ୍ୱାସ୍ଥ୍ୟ ସହାୟକ। ମୋ ସହ କୁହନ୍ତୁ କିମ୍ବା ଚିତ୍ର ଛୁଅନ୍ତୁ।", askTask: "ଡାକ୍ତର ବୁକ କରିବେ, ଲକ୍ଷଣ ଯାଞ୍ଚ କରିବେ, କିମ୍ବା ଡାକ୍ତରଖାନା ଖୋଜିବେ?",
@@ -140,6 +149,7 @@ export const CORE_PROMPTS: Record<AssistantLanguageCode, Record<CorePromptKey, s
     book: "ଡାକ୍ତର ବୁକ", checkSymptoms: "ଲକ୍ଷଣ ଯାଞ୍ଚ", findFacilities: "ଡାକ୍ତରଖାନା ଖୋଜ", appointments: "ମୋ ଆପଏଣ୍ଟମେଣ୍ଟ", records: "ମୋ ରେକର୍ଡ",
     camps: "ସ୍ୱାସ୍ଥ୍ୟ ଶିବିର", schemes: "ସ୍ୱାସ୍ଥ୍ୟ ଯୋଜନା", healthInfo: "ସ୍ୱାସ୍ଥ୍ୟ ସୂଚନା", emergency: "ଜରୁରୀ ସାହାଯ୍ୟ", cancel: "ବାତିଲ", join: "ପରାମର୍ଶରେ ଯୋଗ ଦିଅନ୍ତୁ",
     listen: "କୁହନ୍ତୁ", replay: "ପୁଣି ଶୁଣନ୍ତୁ", textInput: "ଲେଖନ୍ତୁ", close: "ବନ୍ଦ", chooseLanguage: "ଭାଷା ବାଛନ୍ତୁ", settings: "ସ୍ୱର ସେଟିଂ", stop: "ବନ୍ଦ କରନ୍ତୁ", repeat: "ପୁଣି କୁହନ୍ତୁ",
+    send: "ପଠାନ୍ତୁ",
   },
   ml: {
     welcome: "നമസ്കാരം. ഞാൻ നിങ്ങളുടെ ആരോഗ്യ സഹായി. എന്നോട് സംസാരിക്കൂ അല്ലെങ്കിൽ ചിത്രം തൊടൂ.", askTask: "ഡോക്ടറെ ബുക്ക് ചെയ്യണോ, ലക്ഷണങ്ങൾ പരിശോധിക്കണോ, ആശുപത്രി കണ്ടെത്തണോ?",
@@ -153,6 +163,7 @@ export const CORE_PROMPTS: Record<AssistantLanguageCode, Record<CorePromptKey, s
     book: "ഡോക്ടറെ ബുക്ക്", checkSymptoms: "ലക്ഷണങ്ങൾ പരിശോധിക്കുക", findFacilities: "ആശുപത്രി കണ്ടെത്തുക", appointments: "എന്റെ അപ്പോയിന്റ്മെന്റുകൾ", records: "എന്റെ രേഖകൾ",
     camps: "ആരോഗ്യ ക്യാമ്പുകൾ", schemes: "ആരോഗ്യ പദ്ധതികൾ", healthInfo: "ആരോഗ്യ വിവരങ്ങൾ", emergency: "അടിയന്തര സഹായം", cancel: "റദ്ദാക്കുക", join: "കൺസൾട്ടേഷനിൽ ചേരൂ",
     listen: "സംസാരിക്കൂ", replay: "വീണ്ടും കേൾക്കൂ", textInput: "എഴുതൂ", close: "അടയ്ക്കൂ", chooseLanguage: "ഭാഷ തിരഞ്ഞെടുക്കൂ", settings: "ശബ്ദ ക്രമീകരണം", stop: "നിർത്തൂ", repeat: "വീണ്ടും പറയൂ",
+    send: "അയയ്ക്കുക",
   },
   as: {
     welcome: "নমস্কাৰ। মই আপোনাৰ স্বাস্থ্য সহায়ক। মোৰ সৈতে কথা কওক বা ছবিত স্পৰ্শ কৰক।", askTask: "ডাক্তৰ বুক কৰিব, লক্ষণ পৰীক্ষা কৰিব, নে চিকিৎসালয় বিচাৰিব?",
@@ -166,6 +177,7 @@ export const CORE_PROMPTS: Record<AssistantLanguageCode, Record<CorePromptKey, s
     book: "ডাক্তৰ বুক", checkSymptoms: "লক্ষণ পৰীক্ষা", findFacilities: "চিকিৎসালয় বিচাৰ", appointments: "মোৰ এপইণ্টমেণ্ট", records: "মোৰ ৰেকৰ্ড",
     camps: "স্বাস্থ্য শিবিৰ", schemes: "স্বাস্থ্য আঁচনি", healthInfo: "স্বাস্থ্য তথ্য", emergency: "জৰুৰী সহায়", cancel: "বাতিল", join: "পৰামৰ্শত যোগ দিয়ক",
     listen: "কওক", replay: "আকৌ শুনক", textInput: "লিখক", close: "বন্ধ", chooseLanguage: "ভাষা বাছক", settings: "মাতৰ ছেটিং", stop: "বন্ধ কৰক", repeat: "আকৌ কওক",
+    send: "পঠিয়াওক",
   },
   ur: {
     welcome: "السلام علیکم۔ میں آپ کا صحت ساتھی ہوں۔ مجھ سے بولیں یا تصویر چھوئیں۔", askTask: "ڈاکٹر بک کرنا، علامات دیکھنا، یا ہسپتال تلاش کرنا ہے؟",
@@ -179,5 +191,6 @@ export const CORE_PROMPTS: Record<AssistantLanguageCode, Record<CorePromptKey, s
     book: "ڈاکٹر بک", checkSymptoms: "علامات چیک", findFacilities: "ہسپتال تلاش", appointments: "میری اپائنٹمنٹس", records: "میرا ریکارڈ",
     camps: "صحت کیمپ", schemes: "صحت اسکیمیں", healthInfo: "صحت کی معلومات", emergency: "فوری مدد", cancel: "منسوخ", join: "مشورے میں شامل ہوں",
     listen: "بولیں", replay: "دوبارہ سنیں", textInput: "لکھیں", close: "بند", chooseLanguage: "اپنی زبان چنیں", settings: "آواز ترتیبات", stop: "رکیں", repeat: "دوبارہ بولیں",
+    send: "بھیجیں",
   },
 }

@@ -171,10 +171,15 @@ describe("Multilingual Engine & Dialect Mapping", () => {
     const mockBanner = {
       style: {
         properties: {} as Record<string, string>,
-        setProperty(k: string, v: string) {
+        priorities: {} as Record<string, string>,
+        getPropertyValue(k: string) { return this.properties[k] || "" },
+        getPropertyPriority(k: string) { return this.priorities[k] || "" },
+        setProperty(k: string, v: string, priority = "") {
           this.properties[k] = v
+          this.priorities[k] = priority
         },
       },
+      getAttribute: () => null,
       setAttribute: () => {},
     }
 
@@ -185,7 +190,7 @@ describe("Multilingual Engine & Dialect Mapping", () => {
         position: "relative",
         marginTop: "40px",
         setProperty(k: string, v: string) {
-          (this as any)[k] = v
+          (this as any)[k === "margin-top" ? "marginTop" : k] = v
         },
       },
     }

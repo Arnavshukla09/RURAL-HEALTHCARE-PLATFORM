@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Next.js 15](https://img.shields.io/badge/Next.js-15.5-black?logo=next.js)](https://nextjs.org/)
 [![Local PostgreSQL 15](https://img.shields.io/badge/Local_PostgreSQL-15_PostGIS-336791?logo=postgresql)](https://www.postgresql.org/)
-[![Tests Passing](https://img.shields.io/badge/Tests-300%20Passing-brightgreen)](docs/VOICE_ASSISTANT_SETUP.md)
+[![Tests Passing](https://img.shields.io/badge/Tests-303%20Passing-brightgreen)](docs/VOICE_ASSISTANT_SETUP.md)
 
 An offline-first, mobile Progressive Web Application (PWA) engineered for rural and resource-constrained healthcare environments in India. Built with a serverless Backend-For-Frontend (BFF) architecture, the platform provides atomic appointment scheduling, WebRTC teleconsultations, pan-India PostGIS facility lookups, emergency visual first-aid triage, offline mutation queuing with exponential backoff, and ABDM/HL7 FHIR R4 clinical document export.
 
@@ -221,7 +221,7 @@ Open `http://localhost:3000` in your browser.
 The repository maintains an automated, multi-tiered verification pipeline. Live database and authenticated browser checks require a disposable local stack; skipped smoke-mode checks do not establish their behavior.
 
 ```bash
-# Run unit & isolation tests (300 tests)
+# Run unit & isolation tests (303 tests)
 npm run test:unit
 
 # Run database integration & RLS tests (29 cases; REQUIRE_DB=1 with local test keys)
@@ -248,9 +248,9 @@ npm run build
 
 | Test Tier | Scope | Total Tests | Status |
 | :--- | :--- | :---: | :---: |
-| **Unit Tests (`npm run test:unit`)** | Existing subsystems plus assistant parsing/actions, audio races, account isolation and CI report checks | **300** | **PASS locally** |
-| **Integration Tests (`npm run test:integration`)** | Live PostgreSQL RLS, care-relationship scoping, slot locking and atomic replay | **29** | **3 safety checks pass; 26 DB cases await local stack** |
-| **Assistant Browser Journeys** | Guided intake, offline emergency, language selection and denied room entry; speech mocked | **5** | **PASS locally; real speech remains unverified** |
+| **Unit Tests (`npm run test:unit`)** | Existing subsystems plus assistant parsing/actions, audio races, account isolation, report gates and DOM lifecycle | **303** | **PASS locally** |
+| **Integration Tests (`npm run test:integration`)** | Live PostgreSQL RLS, care-relationship scoping, slot locking and atomic replay | **29** | **PASS in GitHub's disposable local Supabase job** |
+| **Assistant Browser Journeys** | Guided intake, offline emergency, language selection, denied rooms and explicit offline voice activation; speech mocked | **6** | **PASS locally; real speech remains unverified** |
 | **Optional Voice Contracts** | Pinned install/repair, offline flags and local/token access | **11** | **PASS; no model inference performed** |
 | **Algorithmic Benchmarks (`npm run benchmark:integration`)** | PostGIS coordinates, AI safety prompt neutralization, backoff dynamics, ABHA format | **21** | **PASS** |
 | **Component Quality Gate (`npm run check:components`)** | Imports, export signatures, TypeScript typecheck, ESLint, LOC standards ($\le 400$) | **8 / 8 Gates** | **PASS** |

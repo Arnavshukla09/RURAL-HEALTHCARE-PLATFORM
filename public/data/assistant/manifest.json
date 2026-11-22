@@ -3,55 +3,55 @@
   "packs": {
     "en": {
       "url": "/data/assistant/en.json",
-      "sha256": "478ebd48daeede6ba0fb03ee861228ec99fc1dc815f7ea37dc1e5b6d24a9c9e3"
+      "sha256": "56071350f8981c1008e1f47e814d507e3d66f368d5aeb192a9bd6eecf0499e8c"
     },
     "hi": {
       "url": "/data/assistant/hi.json",
-      "sha256": "028136515e430a0bd44c17c1b7fc0a203998b83ddfd2972beab13f8112d4d030"
+      "sha256": "efd1f24e49fda2fc816084ddd89f7b4c0a0851662c30ada17a445f1533e9c6d1"
     },
     "mr": {
       "url": "/data/assistant/mr.json",
-      "sha256": "cb8f1ea4046b6a9c0d09e915a314f27692a8bb55bac243975fd7ab4b612380b4"
+      "sha256": "f1accff28cc6bd76b19fef004682dc29ac8cfb65ff291a3f779d8624b1ecb352"
     },
     "bn": {
       "url": "/data/assistant/bn.json",
-      "sha256": "58424d38e4bb3f5f8eab4cdc52d03e05eca76b8fef7681d45c7bd6564503106d"
+      "sha256": "a051046adeea58abebd2bfd5ba87546e1cd33dc06b9a955b0deb26b919c64fe3"
     },
     "te": {
       "url": "/data/assistant/te.json",
-      "sha256": "9c23bf3e14bbf79d328d4009060c6cfa5727a18da220d28553d1e655402f7ac0"
+      "sha256": "46a7f5bd3dff60c27a151103e0cf3933d0461ad35c32b0a07a25aeb5ee9e164d"
     },
     "ta": {
       "url": "/data/assistant/ta.json",
-      "sha256": "0946d7f131cfeb9511af393f15546b02a941fbf8b628ef999c7eef3c8962b22e"
+      "sha256": "ff3e24a0212dee098549f99c290c307afbb4880ace2b91ccf0b53538120e4204"
     },
     "gu": {
       "url": "/data/assistant/gu.json",
-      "sha256": "b1fad90dcd9a051cd9eb55c55d615c529a5bc004916a3fc0fbb7398bd9473d12"
+      "sha256": "20b8201e52cdd3cca018b300581b5906a70ddc329c53329c62b299d428b60d02"
     },
     "kn": {
       "url": "/data/assistant/kn.json",
-      "sha256": "9573b95c40173e5533adafa7bf90137636d6754f24ab81e10da19be10298ec40"
+      "sha256": "a5c2ec07896e135b2cd7fb7a807f19de8be2e092e2164af29197d98079efff8d"
     },
     "pa": {
       "url": "/data/assistant/pa.json",
-      "sha256": "9285915d15a83a8d4de777c94031153d6c530d883f5b2d50ddb0da294bebf039"
+      "sha256": "fc3c277186e17a0ca8dc4e060c11117f99e98237f0ac4f0c60bfccb4dbb06579"
     },
     "or": {
       "url": "/data/assistant/or.json",
-      "sha256": "47eebee1a324d69eeac7fa135c18505ec3e3b098544500b82c3c4b1d13d37690"
+      "sha256": "e9fab0fe05ea028017bc2df233a093bef444f2b5e2bf2be57020c620f61fe297"
     },
     "ml": {
       "url": "/data/assistant/ml.json",
-      "sha256": "7322fc68cbb4ecf6f7863b95c0b553688448b93380e275e384cc8239cd3d811f"
+      "sha256": "ec9cb112bf4ff1a0af6abfba3a911ff5f93ad0b88d0153e0e2db88239bd109d1"
     },
     "as": {
       "url": "/data/assistant/as.json",
-      "sha256": "279f9c81a8b7acebe471b2963015de1e0072988d93606871f0fcc13425f42e6d"
+      "sha256": "138fdf84f111fc67b9eaeb926704f7d722922958d0eea93becadeb26e3816e8c"
     },
     "ur": {
       "url": "/data/assistant/ur.json",
-      "sha256": "85d5aee86ee9a0e6ed6100ae613b8c1e2a829aaa22c5780e8e3ad5259b40d7a5"
+      "sha256": "dc8ed945cda7234730c59cfe7677b9264d2d4a3ff234619e1f95f08c9513ecee"
     }
   }
 }

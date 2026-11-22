@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
 // Roles and their test credentials (read from env vars)
 const ROLES = {
@@ -17,13 +17,15 @@ const ROLES = {
 };
 
 // Helper function to log in
-async function login(page: any, email: string, password: string) {
-  page.on('console', (msg: any) => console.log('PAGE LOG:', msg.text()));
+async function login(page: Page, email: string, password: string) {
   await page.goto('/login');
-  
-  await page.fill('input[type="email"]', email);
-  await page.fill('input[type="password"]', password);
-  await page.click('button[type="submit"]');
+  await page.getByRole('tab', { name: 'Login', exact: true }).click();
+  await page.locator('#login-email').fill(email);
+  const passwordField = page.locator('#login-password');
+  await expect(passwordField).toBeVisible();
+  await expect(passwordField).toBeEditable();
+  await passwordField.fill(password);
+  await page.getByRole('button', { name: 'Sign In', exact: true }).click();
   try {
     await page.waitForURL('**/dashboard**', { timeout: 25000 });
   } catch (e) {
@@ -34,6 +36,17 @@ async function login(page: any, email: string, password: string) {
 }
 
 test.describe('End-to-End Tests for Rural Healthcare Platform', () => {
+
+  test('Login fields remain editable after email entry', async ({ page }) => {
+    await page.goto('/login');
+    await page.getByRole('tab', { name: 'Login', exact: true }).click();
+    await page.locator('#login-email').fill('local-input-check@example.test');
+    const passwordField = page.locator('#login-password');
+    await expect(passwordField).toBeVisible();
+    await expect(passwordField).toBeEditable();
+    await passwordField.fill('local-input-check');
+    await expect(passwordField).toHaveValue('local-input-check');
+  });
 
   test('Public Pages Load Successfully', async ({ page }) => {
     await page.goto('/');

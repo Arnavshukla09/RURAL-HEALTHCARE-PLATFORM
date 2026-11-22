@@ -10,13 +10,14 @@ test.beforeEach(async ({ page }) => {
       cancel: () => {}, addEventListener: () => {}, removeEventListener: () => {},
     } })
     class Recognition {
-      static available() { return Promise.resolve("available") }
+      static available() { (window as any).__localRecognitionChecks = ((window as any).__localRecognitionChecks || 0) + 1; return Promise.resolve("available") }
       onstart?: () => void
       start() { this.onstart?.() }
       abort() {}
       stop() {}
     }
     Object.defineProperty(window, "SpeechRecognition", { configurable: true, value: Recognition })
+    ;(window as any).__localRecognitionChecks = 0
   })
   await page.route("https://translate.google.com/**", route => route.abort())
   await page.route("https://translate.googleapis.com/**", route => route.abort())
@@ -80,4 +81,13 @@ test("denied appointment authorization cannot initialize a conference", async ({
   await page.goto("/teleconsult/room?appointmentId=55555555-5555-4555-8555-555555555555&role=doctor&name=Fake")
   await expect(page.getByRole("alert").filter({ hasText: "Consultation access denied" })).toBeVisible()
   await expect(page.locator("iframe")).toHaveCount(0)
+})
+
+test("probes offline recognition only after the user activates offline voice", async ({ page, context }) => {
+  const guide = await openGuide(page)
+  expect(await page.evaluate(() => (window as any).__localRecognitionChecks)).toBe(0)
+  await guide.getByRole("button", { name: "Stop", exact: true }).click()
+  await context.setOffline(true)
+  await guide.getByRole("button", { name: "Speak", exact: true }).click()
+  await expect.poll(() => page.evaluate(() => (window as any).__localRecognitionChecks)).toBeGreaterThan(0)
 })

@@ -47,6 +47,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script
           dangerouslySetInnerHTML={{
             __html: `
+              (function() {
               try {
                 var l = localStorage.getItem("rhcp_language");
                 if (l) {
@@ -61,7 +62,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 }
               } catch(e) {}
               try {
-                if (typeof Node !== 'undefined' && Node.prototype) {
+                if (typeof Node !== 'undefined' && Node.prototype && !window.__rhcpTranslateCrashGuardInstalled) {
                   var origRemoveChild = Node.prototype.removeChild;
                   Node.prototype.removeChild = function(c) {
                     if (c.parentNode !== this) {
@@ -77,6 +78,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     }
                     return origInsertBefore.call(this, n, r);
                   };
+                  window.__rhcpTranslateCrashGuardInstalled = true;
                 }
               } catch(e) {}
               // Continuous early suppression of Google Translate banner to ensure navbar is never covered
@@ -84,10 +86,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 var cleanBanner = function() {
                   var frames = document.querySelectorAll('iframe.skiptranslate, .goog-te-banner-frame, iframe[id*=":1.container"], iframe[id*=":2.container"], [class*="VIpgJd-ZVi9od"]');
                   for (var i = 0; i < frames.length; i++) {
-                    frames[i].style.setProperty('display', 'none', 'important');
-                    frames[i].style.setProperty('visibility', 'hidden', 'important');
-                    frames[i].style.setProperty('height', '0px', 'important');
-                    frames[i].style.setProperty('top', '-9999px', 'important');
+                    var styles = { display: 'none', visibility: 'hidden', height: '0px', top: '-9999px' };
+                    for (var property in styles) {
+                      if (frames[i].style.getPropertyValue(property) !== styles[property] || frames[i].style.getPropertyPriority(property) !== 'important') {
+                        frames[i].style.setProperty(property, styles[property], 'important');
+                      }
+                    }
                   }
                   if (document.body) {
                     if (document.body.style.top && document.body.style.top !== '0px') {
@@ -101,7 +105,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     }
                   }
                 };
-                if (typeof MutationObserver !== 'undefined') {
+                if (typeof MutationObserver !== 'undefined' && !window.__rhcpTranslateBannerObserver) {
                   var obs = new MutationObserver(cleanBanner);
                   obs.observe(document.documentElement, {
                     childList: true,
@@ -109,6 +113,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     attributes: true,
                     attributeFilter: ['style', 'class']
                   });
+                  window.__rhcpTranslateBannerObserver = obs;
                 }
               } catch(e) {}
               // Next.js client navigation preserves the avatar/session in every language.
@@ -124,6 +129,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   }
                 } catch(e) {}
               };
+              })();
             `,
           }}
         />

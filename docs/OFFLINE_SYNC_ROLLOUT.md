@@ -15,7 +15,7 @@ For the remaining database mutation proof, use a **separate disposable local dat
 
 ## Deployment by the owner
 
-After local verification, the owner applies both forward migrations in order through the deployment database's migration process, refreshes the PostgREST schema cache if required, and checks that authenticated RPC calls are available. No remote SQL, reset, seed or test command was run as part of authoring this change. Database behavior remains unverified until the local integration suite actually runs.
+After local verification, the owner applies both forward migrations in order through the deployment database's migration process, refreshes the PostgREST schema cache if required, and checks that authenticated RPC calls are available. No SQL, reset, seed or test command was run against production or a real Supabase project. After publishing commit `9b0490f`, GitHub's disposable local Supabase job passed all 29 required integration/safety cases with the strict JSON report gate. The new database mutation proof specified above remains a separate unexecuted audit step.
 
 Private queue data is tagged with the originating authentication user ID. Unowned legacy operations stay quarantined and must be recreated after sign-in; they are never assigned to a later account. Queue retries store a jittered next-attempt timestamp, obey `Retry-After`, stop after five failed attempts, and are available to both page and bounded service-worker executors. Background Sync remains browser-dependent; the page schedules retries when Background Sync is unavailable.
 

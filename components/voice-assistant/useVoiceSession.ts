@@ -23,7 +23,8 @@ export function useVoiceSession(language: string, onTranscript: (text: string) =
   useEffect(() => {
     fetch("/api/assistant/voice").then(response => response.json()).then(setService).catch(() => {})
   }, [])
-  useEffect(() => { checkLocalRecognition(getSpeechLangFromCode(language)).catch(() => {}) }, [language])
+  // Experimental recognition probes may terminate unsupported browser renderers.
+  // Probe only during explicit offline preparation or an activated offline voice session.
   const stop = useCallback(() => {
     turn.current++
     enabledRef.current = false; setEnabled(false); setStatus("idle")
@@ -39,7 +40,7 @@ export function useVoiceSession(language: string, onTranscript: (text: string) =
     const currentTurn = ++turn.current
     if (retry.current) clearTimeout(retry.current)
     stopSpeaking(); playback.current?.pause(); setStatus("listening")
-    if (service.available && service.asrLanguages.includes(language)) {
+    if (service.available && service.asrLanguages.includes(language) && navigator.onLine) {
       const startup = new AbortController(); requests.current.add(startup)
       try {
         const recording = await startAudioRecording(async audio => {
@@ -63,6 +64,10 @@ export function useVoiceSession(language: string, onTranscript: (text: string) =
       } catch { if (currentTurn === turn.current) { stop(); onErrorRef.current("micDenied") } }
       finally { requests.current.delete(startup) }
       return
+    }
+    if (!navigator.onLine) {
+      await checkLocalRecognition(getSpeechLangFromCode(language))
+      if (!enabledRef.current || currentTurn !== turn.current) return
     }
     const available = startSpeechRecognition({
       lang: getSpeechLangFromCode(language), interimResults: false,

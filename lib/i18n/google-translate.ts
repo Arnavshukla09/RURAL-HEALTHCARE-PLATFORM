@@ -11,6 +11,8 @@ declare global {
   interface Window {
     google?: any
     googleTranslateElementInit?: () => void
+    __rhcpTranslateCrashGuardInstalled?: boolean
+    __rhcpTranslateBannerObserver?: MutationObserver
   }
 }
 
@@ -20,7 +22,7 @@ declare global {
  * when Google Translate mutates DOM text nodes into <font> tags.
  */
 export function installTranslateCrashGuard() {
-  if (typeof window === "undefined" || typeof Node === "undefined") return
+  if (typeof window === "undefined" || typeof Node === "undefined" || window.__rhcpTranslateCrashGuardInstalled) return
 
   try {
     const originalRemoveChild = Node.prototype.removeChild
@@ -41,6 +43,7 @@ export function installTranslateCrashGuard() {
       }
       return originalInsertBefore.call(this, newNode, referenceNode) as T
     }
+    window.__rhcpTranslateCrashGuardInstalled = true
   } catch (err) {
     console.warn("[i18n] Translate crash guard init warning:", err)
   }
@@ -59,16 +62,12 @@ export function hideGoogleTranslateBanner() {
       'iframe.skiptranslate, .goog-te-banner-frame, iframe[id*=":1.container"], iframe[id*=":2.container"], iframe[src*="translate.google"], [class*="VIpgJd-ZVi9od-ORHb-Oxf5td"], [class*="VIpgJd-ZVi9od-aZ2wEe-wOHMyf"], [class*="VIpgJd-ZVi9od-ORHb-OEVmcd"], [class*="VIpgJd-ZVi9od-l4eHX"]'
     )
     banners.forEach((el) => {
-      el.style.setProperty("display", "none", "important")
-      el.style.setProperty("visibility", "hidden", "important")
-      el.style.setProperty("height", "0", "important")
-      el.style.setProperty("width", "0", "important")
-      el.style.setProperty("opacity", "0", "important")
-      el.style.setProperty("pointer-events", "none", "important")
-      el.style.setProperty("position", "absolute", "important")
-      el.style.setProperty("top", "-9999px", "important")
-      el.style.setProperty("left", "-9999px", "important")
-      el.setAttribute("aria-hidden", "true")
+      // The observer watches style: writing the same value again causes an endless callback loop.
+      const styles: Record<string, string> = { display: "none", visibility: "hidden", height: "0px", width: "0px", opacity: "0", "pointer-events": "none", position: "absolute", top: "-9999px", left: "-9999px" }
+      for (const [property, value] of Object.entries(styles)) {
+        if (el.style.getPropertyValue(property) !== value || el.style.getPropertyPriority(property) !== "important") el.style.setProperty(property, value, "important")
+      }
+      if (el.getAttribute("aria-hidden") !== "true") el.setAttribute("aria-hidden", "true")
     })
 
     if (document.body) {
@@ -95,7 +94,7 @@ export function startGoogleTranslateBannerSuppression() {
 
   hideGoogleTranslateBanner()
 
-  if (typeof MutationObserver !== "undefined") {
+  if (typeof MutationObserver !== "undefined" && !window.__rhcpTranslateBannerObserver) {
     const observer = new MutationObserver(() => {
       hideGoogleTranslateBanner()
     })
@@ -107,6 +106,7 @@ export function startGoogleTranslateBannerSuppression() {
         attributes: true,
         attributeFilter: ["style", "class"],
       })
+      window.__rhcpTranslateBannerObserver = observer
     } catch {}
   }
 }
