@@ -288,9 +288,11 @@ describe("Multilingual Engine & Dialect Mapping", () => {
       const { installNavigationTranslationPreserver } = await import("@/lib/i18n/google-translate")
       installNavigationTranslationPreserver()
 
-      // When regional language (Telugu) is active, route navigation to /directory triggers full page load
+      // Regional navigation must preserve the persistent assistant through client routing.
       mockHistory.pushState({}, "", "/directory")
-      expect(navigatedHref).toBe("https://ruralhealth.in/directory")
+      expect(pushStateCalled).toBe(true)
+      expect(navigatedHref).toBe("https://ruralhealth.in/dashboard")
+      expect(mockStorage.rhcp_language).toBe("te")
 
       // When language is English, normal SPA navigation (pushState) proceeds
       mockStorage.rhcp_language = "en"

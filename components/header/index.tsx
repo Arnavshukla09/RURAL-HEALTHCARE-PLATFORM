@@ -64,7 +64,7 @@ export function Header() {
       } catch {}
     }
 
-    wipeClientCachesOnSignOut().catch((err) =>
+    await wipeClientCachesOnSignOut().catch((err) =>
       console.warn("[Header] Cache clear warning:", err)
     )
 
@@ -82,10 +82,6 @@ export function Header() {
     setMobileMenuOpen(false)
     setCareDropOpen(false)
     setUserDropOpen(false)
-    if (language !== "en") {
-      window.location.href = page
-      return
-    }
     router.push(page)
   }
 

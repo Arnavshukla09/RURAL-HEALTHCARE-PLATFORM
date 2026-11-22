@@ -164,7 +164,7 @@ export function DoctorSelectionStep({
                     <div className="flex flex-wrap items-center gap-1.5">
                       <h4 className="font-bold text-xs sm:text-sm text-gray-900 truncate">{doc.name}</h4>
                       <Badge className="bg-emerald-50 text-emerald-800 border-emerald-200 text-[10px] font-semibold py-0 h-4">
-                        ✓ Verified
+                        {en ? "✓ Registered" : "✓ पंजीकृत"}
                       </Badge>
                     </div>
 
@@ -178,21 +178,15 @@ export function DoctorSelectionStep({
                     </div>
 
                     <div className="flex items-center gap-2 mt-1 text-[11px] text-gray-500">
-                      <span className="flex items-center gap-0.5 text-amber-500 font-bold">
+                      {typeof doc.rating === "number" && <span className="flex items-center gap-0.5 text-amber-500 font-bold">
                         <Star className="h-3 w-3 fill-amber-400" />
                         <span>{doc.rating}</span>
-                      </span>
-                      <span>•</span>
-                      <span>
+                      </span>}
+                      {typeof doc.experience === "number" && <span>
                         {doc.experience} {en ? "yrs exp" : "वर्ष अनुभव"}
-                      </span>
-                      <span>•</span>
+                      </span>}
                       <span className="font-semibold text-emerald-700">
-                        {doc.consultationFee && doc.consultationFee > 0
-                          ? `₹${doc.consultationFee}`
-                          : en
-                          ? "Free Govt OPD"
-                          : "मुफ्त सरकारी"}
+                        {doc.consultationFee === undefined ? (en ? "Confirm fees with provider" : "शुल्क डॉक्टर से पूछें") : `₹${doc.consultationFee}`}
                       </span>
                     </div>
                   </div>

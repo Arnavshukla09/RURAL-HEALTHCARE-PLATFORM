@@ -316,7 +316,7 @@ Processes a batch of offline-queued operations generated while disconnected. Str
   }
   ```
   *If an operation with the same `client_op_id` was already processed, status is returned as `"duplicate"` with HTTP 200.*
-  *If an operation with the same `client_op_id` was already processed, status is returned as `"already_processed"` with HTTP 200.*
+  *Each operation is atomic through the authenticated `apply_offline_operation` RPC. The whole batch is not one transaction. Changed payloads under committed keys are rejected. Without the RPC, the API returns 503 `MIGRATION_REQUIRED` and clients retain queued requests. Both new migrations and local verification are required; see [OFFLINE_SYNC_ROLLOUT.md](OFFLINE_SYNC_ROLLOUT.md).*
 
 ---
 
@@ -472,3 +472,31 @@ Administrative review endpoint to approve or reject clinician submissions.
   }
   ```
 - **State Transition:** On approval, the caller automatically links the user to `public.healthcare_providers` and elevates `public.patients.role = 'doctor'`.
+
+## 10. Persistent assistant
+
+### 10.1 `POST /api/assistant/actions`
+
+Requires an authenticated session and the `write` rate-limit tier. Responses use `Cache-Control: private, no-store`. The request contains one strictly allowlisted `action`; arbitrary roles, SQL, URLs and extra fields are rejected.
+
+| Action | Request fields | Result |
+|---|---|---|
+| `providers.list` | Optional `specialization` | Up to 30 verified providers |
+| `appointments.slots` | `providerId`, calendar `date` | Future half-hour slots between 09:00 and 17:00 India time; no patient details |
+| `appointments.prepare` | `providerId`, `appointmentDate`, optional `consultationType` and `notes` | Canonical draft, five-minute signed `confirmationToken`, `expiresAt` |
+| `appointments.book` | `confirmationToken`, `confirmed: true` | Acknowledged appointment using the signed operation UUID; replay returns the original scheduled appointment |
+| `appointments.list` | Optional `limit`, `cursor` | Existing role-scoped appointment listing |
+| `appointments.cancel.prepare` | `appointmentId` | Owner-scoped signed appointment/provider/date cancellation draft |
+| `appointments.cancel` | `confirmationToken`, `confirmed: true` | Acknowledged cancellation of the prepared appointment |
+
+Booking and cancellation tokens bind the authenticated user, action and canonical draft. The server verifies signatures and expiry; the avatar separately validates returned IDs, provider, date, mode where relevant, status and booking room before announcing success. An offline request is pending until the server accepts it. The atomic replay and expiry-guard migrations described in [OFFLINE_SYNC_ROLLOUT.md](OFFLINE_SYNC_ROLLOUT.md) must be installed before offline replay is released.
+
+### 10.2 `GET/POST /api/assistant/voice`
+
+This public, rate-limited same-origin proxy connects only to the configured owned voice service. No Hugging Face hosted inference endpoint or paid API is enabled. GET reports service capabilities or an unavailable/configuration reason. POST accepts one of:
+
+- JSON `{ "task": "speak", "language": "hi", "text": "..." }`: up to 1,200 characters, returns WAV audio.
+- JSON `{ "task": "chat", "language": "hi", "text": "..." }`: up to 800 characters, returns an optional local-model reply; it cannot execute app actions.
+- Multipart `task=transcribe`, `language`, `audio`: bounded WAV upload, returns a transcript. The owned service checks 16 kHz mono audio lasting 0.3–20 seconds.
+
+All 13 canonical language codes are accepted; metadata alone does not certify speech or conversational quality. Request bodies are bounded, upstream calls have timeouts, and successful outputs are not stored in shared caches. A remote service requires HTTPS and a server-only `VOICE_SERVICE_TOKEN`; its absence fails closed. The stable default is port 8765 with `/v1/health`, `/v1/transcribe`, `/v1/speak` and `/v1/chat`. See [VOICE_ASSISTANT_SETUP.md](VOICE_ASSISTANT_SETUP.md) for installation and verification limits.

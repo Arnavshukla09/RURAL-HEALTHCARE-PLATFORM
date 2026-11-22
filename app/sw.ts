@@ -1,6 +1,11 @@
 /// <reference lib="webworker" />
 
 import type { PrecacheEntry, SerwistGlobalConfig } from "serwist"
+import { executeOfflineSync } from "@/lib/offline/executor"
+import { closeOutboxStore } from "@/lib/offline/store"
+import { PRIVATE_DATABASES, erasePrivateDatabase } from "@/lib/offline/private-storage"
+import { beginOfflineCleanup, finishOfflineCleanup } from "@/lib/offline/runtime"
+import { PUBLIC_PACK_CACHE_PREFIX } from "@/lib/assistant/offline-packs"
 import {
   Serwist,
   NetworkOnly,
@@ -51,10 +56,26 @@ const serwist = new Serwist({
           path.startsWith("/api/auth") ||
           path.startsWith("/api/teleconsult") ||
           path.startsWith("/api/admin") ||
+          path.startsWith("/api/assistant") ||
+          path.startsWith("/api/abdm") ||
           path.startsWith("/auth/")
         )
       },
       handler: new NetworkOnly(),
+    },
+
+    {
+      matcher: ({ request, url }) => request.method === "GET" && /^\/api\/facilities\/district\/\d{4}$/.test(url.pathname),
+      handler: async ({ request, url }) => {
+        try { return await fetch(request) }
+        catch {
+          const district = url.pathname.split("/").pop()!
+          const pack = await caches.match(`/data/facilities/${district}.json`)
+          if (!pack) return new Response(JSON.stringify({ facilities: [], source: "offline-pack-unavailable" }), { status: 503, headers: { "Content-Type": "application/json" } })
+          const facilities = await pack.json()
+          return new Response(JSON.stringify({ districtCode: district, count: facilities.length, facilities, source: "offline-public-pack" }), { headers: { "Content-Type": "application/json" } })
+        }
+      },
     },
 
     // 2. Public JSON APIs (providers, camps, facilities locator, health check): StaleWhileRevalidate
@@ -87,6 +108,7 @@ const serwist = new Serwist({
       handler: new CacheFirst({
         cacheName: "images-cache",
         plugins: [
+          { handlerDidError: async ({ request }) => caches.match(request) },
           new ExpirationPlugin({
             maxEntries: 60,
             maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
@@ -104,6 +126,7 @@ const serwist = new Serwist({
       handler: new CacheFirst({
         cacheName: "fonts-cache",
         plugins: [
+          { handlerDidError: async ({ request }) => caches.match(request) },
           new ExpirationPlugin({
             maxEntries: 20,
             maxAgeSeconds: 365 * 24 * 60 * 60, // 1 year
@@ -121,6 +144,7 @@ const serwist = new Serwist({
       handler: new StaleWhileRevalidate({
         cacheName: "static-assets-cache",
         plugins: [
+          { handlerDidError: async ({ request }) => caches.match(request) },
           new ExpirationPlugin({
             maxEntries: 100,
             maxAgeSeconds: 24 * 60 * 60,
@@ -148,6 +172,21 @@ const serwist = new Serwist({
         cacheName: "pages-cache",
         networkTimeoutSeconds: 3,
         plugins: [
+          {
+            handlerDidError: async ({ request }) => {
+              // RSC fetches require RSC data; HTML fallback would corrupt the client router.
+              if (request.mode !== "navigate") return caches.match(request)
+              const url = new URL(request.url)
+              const publicPage = ["/", "/offline", "/emergency", "/symptom-checker"].includes(url.pathname)
+              const names = (await caches.keys()).filter(name => name.startsWith(PUBLIC_PACK_CACHE_PREFIX))
+              for (const name of names) {
+                const cache = await caches.open(name)
+                const fallback = await cache.match(publicPage ? url.pathname : "/offline")
+                if (fallback) return fallback
+              }
+              return undefined
+            },
+          },
           new ExpirationPlugin({
             maxEntries: 60,
             maxAgeSeconds: 7 * 24 * 60 * 60, // 7 days
@@ -178,6 +217,20 @@ self.addEventListener("install", (event: any) => {
   )
 })
 
+
+let privateCleanupPromise: Promise<void> | null = null
+function clearWorkerPrivateData(): Promise<void> {
+  if (privateCleanupPromise) return privateCleanupPromise
+  beginOfflineCleanup()
+  privateCleanupPromise = closeOutboxStore().then(async () => {
+    await Promise.all(PRIVATE_DATABASES.map(erasePrivateDatabase))
+    const keys = await caches.keys()
+    await Promise.all(keys.filter(key => !key.startsWith(PUBLIC_PACK_CACHE_PREFIX)).map(key => caches.delete(key)))
+    finishOfflineCleanup()
+  }).finally(() => { privateCleanupPromise = null })
+  return privateCleanupPromise
+}
+
 // Custom message listener for PWA lifecycle events
 self.addEventListener("message", (event: any) => {
   if (!event.data) return
@@ -190,13 +243,10 @@ self.addEventListener("message", (event: any) => {
   // User signed out -> wipe all runtime caches to protect privacy on shared rural devices
   if (event.data.type === "CLEAR_CACHES") {
     event.waitUntil(
-      caches.keys().then((keys) => {
-        return Promise.all(
-          keys.map((key) => {
-            console.log("[Serwist] Wiping runtime cache on sign-out:", key)
-            return caches.delete(key)
-          })
-        )
+      clearWorkerPrivateData().then(() => {
+        event.ports?.[0]?.postMessage({ type: "PRIVATE_CACHES_CLEARED", requestId: event.data.requestId, success: true })
+      }).catch(() => {
+        event.ports?.[0]?.postMessage({ type: "PRIVATE_CACHES_CLEARED", requestId: event.data.requestId, success: false })
       })
     )
   }
@@ -206,10 +256,14 @@ self.addEventListener("message", (event: any) => {
 self.addEventListener("sync", (event: any) => {
   if (event.tag === "offline-outbox-sync") {
     event.waitUntil(
-      self.clients.matchAll({ type: "window" }).then((clients) => {
+      executeOfflineSync({ source: "background", maxBatches: 3 }).then(async (report) => {
+        const clients = await self.clients.matchAll({ type: "window" })
         for (const client of clients) {
-          client.postMessage({ type: "SYNC_OUTBOX" })
+          client.postMessage({ type: "SYNC_OUTBOX", report })
         }
+        // Reject for the browser's retry policy instead of depending on a live window.
+        const sessionUnavailable = /sign in|OWNER_MISMATCH|UNAUTHORIZED|FORBIDDEN|cleanup/i.test(report.error || "")
+        if (!sessionUnavailable && (!report.success || report.nextRetryAt != null)) throw new Error(report.error || "Offline queue has pending retries")
       })
     )
   }

@@ -3,10 +3,12 @@
 [![Continuous Integration (CI)](https://github.com/Arnavshukla09/RURAL-HEALTHCARE-PLATFORM/actions/workflows/ci.yml/badge.svg)](https://github.com/Arnavshukla09/RURAL-HEALTHCARE-PLATFORM/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Next.js 15](https://img.shields.io/badge/Next.js-15.5-black?logo=next.js)](https://nextjs.org/)
-[![PostgreSQL 17](https://img.shields.io/badge/PostgreSQL-17_PostGIS-336791?logo=postgresql)](https://www.postgresql.org/)
-[![Tests Passing](https://img.shields.io/badge/Tests-210%20Passing-brightgreen)](docs/TESTING.md)
+[![Local PostgreSQL 15](https://img.shields.io/badge/Local_PostgreSQL-15_PostGIS-336791?logo=postgresql)](https://www.postgresql.org/)
+[![Tests Passing](https://img.shields.io/badge/Tests-300%20Passing-brightgreen)](docs/VOICE_ASSISTANT_SETUP.md)
 
 An offline-first, mobile Progressive Web Application (PWA) engineered for rural and resource-constrained healthcare environments in India. Built with a serverless Backend-For-Frontend (BFF) architecture, the platform provides atomic appointment scheduling, WebRTC teleconsultations, pan-India PostGIS facility lookups, emergency visual first-aid triage, offline mutation queuing with exponential backoff, and ABDM/HL7 FHIR R4 clinical document export.
+
+The persistent voice avatar now provides native guided workflows in all 13 selected languages, emergency-first local guidance, pictorial controls, and server-confirmed appointment actions. Speech depends on available device engines or the optional owned inference service. Model snapshots are pinned once; that service uses port **8765** and makes no runtime model downloads. See [one-time setup and verification limits](docs/VOICE_ASSISTANT_SETUP.md). Offline replay requires both new forward migrations described there; no unlimited hosted-service or background-microphone entitlement is implied.
 
 **Author & Lead Engineer:** Arnav Shukla ([@Arnavshukla09](https://github.com/Arnavshukla09))  
 **Repository:** [github.com/Arnavshukla09/RURAL-HEALTHCARE-PLATFORM](https://github.com/Arnavshukla09/RURAL-HEALTHCARE-PLATFORM)  
@@ -170,7 +172,7 @@ All access control is governed at the PostgreSQL database layer via Row Level Se
 | **Pan-India Facility Lookup** | **Implemented** | PostGIS spatial queries across 42,000+ PM-JAY facilities and 725 LGD districts. |
 | **National Campaigns Hub** | **Implemented** | Curated directory of recurring drives (PMSMA, Polio, NDD) with LGD filters. |
 | **Teleconsultation Rooms** | **Implemented** | Jitsi Meet WebRTC integrated with dynamic meeting credentials and room routing. |
-| **13-Language Pan-India Multilingual Engine** | **Implemented** | Full client-side translation across 13 Indian languages (English, Hindi, Marathi, Bengali, Telugu, Tamil, Gujarati, Kannada, Punjabi, Odia, Malayalam, Assamese, Urdu) via Google Translate DOM engine with GPS/LGD auto-detection, regional dialect mapping, and zero-cost \$0 Free Tier posture. |
+| **13-Language Assistant Workflows** | **Implemented; speech device-dependent** | Native command/prompt catalogs and offline packs for English, Hindi, Marathi, Bengali, Telugu, Tamil, Gujarati, Kannada, Punjabi, Odia, Malayalam, Assamese and Urdu. Browser/owned speech-model availability and quality require device testing; general page translation also uses the existing Google DOM integration. |
 | **ABDM / FHIR R4 Export** | **Partially Implemented** | Fully validated NRCES DocumentBundle generator; operates in deterministic local mode pending live NHA production sandbox gateway keys. |
 | **Content Security Policy** | **Partially Implemented** | Running in `Report-Only` mode in `next.config.mjs` to monitor WebRTC and map tile connections without breaking client connectivity. |
 | **WebPush Notifications** | **Planned** | Native browser push notifications for appointment reminders and emergency broadcasts. |
@@ -216,13 +218,13 @@ Open `http://localhost:3000` in your browser.
 
 ## 8. Verification & Testing Strategy
 
-The repository maintains an automated, multi-tiered testing and verification pipeline with zero skipped assertions:
+The repository maintains an automated, multi-tiered verification pipeline. Live database and authenticated browser checks require a disposable local stack; skipped smoke-mode checks do not establish their behavior.
 
 ```bash
-# Run unit & isolation tests (210 tests across 29 suites)
+# Run unit & isolation tests (300 tests)
 npm run test:unit
 
-# Run live database integration & RLS contract tests (23 tests against local Supabase)
+# Run database integration & RLS tests (29 cases; REQUIRE_DB=1 with local test keys)
 npm run test:integration
 
 # Run pre-commit component validation & migration immutability gate
@@ -246,11 +248,13 @@ npm run build
 
 | Test Tier | Scope | Total Tests | Status |
 | :--- | :--- | :---: | :---: |
-| **Unit Tests (`npm run test:unit`)** | FHIR R4 schema, clinical triage, offline outbox, rate limiting, encryption, PII, patient pretext, media compressor | **210** | **PASS** |
-| **Integration Tests (`npm run test:integration`)** | Live PostgreSQL RLS, care-relationship scoping, concurrency slot locking, idempotency, clinical encounters | **23** | **PASS** |
+| **Unit Tests (`npm run test:unit`)** | Existing subsystems plus assistant parsing/actions, audio races, account isolation and CI report checks | **300** | **PASS locally** |
+| **Integration Tests (`npm run test:integration`)** | Live PostgreSQL RLS, care-relationship scoping, slot locking and atomic replay | **29** | **3 safety checks pass; 26 DB cases await local stack** |
+| **Assistant Browser Journeys** | Guided intake, offline emergency, language selection and denied room entry; speech mocked | **5** | **PASS locally; real speech remains unverified** |
+| **Optional Voice Contracts** | Pinned install/repair, offline flags and local/token access | **11** | **PASS; no model inference performed** |
 | **Algorithmic Benchmarks (`npm run benchmark:integration`)** | PostGIS coordinates, AI safety prompt neutralization, backoff dynamics, ABHA format | **21** | **PASS** |
 | **Component Quality Gate (`npm run check:components`)** | Imports, export signatures, TypeScript typecheck, ESLint, LOC standards ($\le 400$) | **8 / 8 Gates** | **PASS** |
-| **Migration Immutability (`npm run check:migrations`)** | Cryptographic SHA-256 seal verification on all 23 migration files | **23 / 23 Files** | **PASS** |
+| **Migration Immutability (`npm run check:migrations`)** | Cryptographic SHA-256 seal verification on all 25 migration files | **25 / 25 Files** | **PASS** |
 
 For comprehensive test logs, mutation test traces, and failure analysis, see [`docs/TESTING.md`](docs/TESTING.md).
 
@@ -271,6 +275,8 @@ For in-depth operational considerations, refer to [`docs/LIMITATIONS.md`](docs/L
 
 Detailed engineering documentation is maintained in the [`docs/`](docs/) directory:
 
+* **[Project Structure](docs/PROJECT_STRUCTURE.md):** Current folder tree and assistant integration points.
+* **[Assistant Setup & Release Checklist](docs/ASSISTANT_RELEASE_CHECKLIST.md):** Simple operation steps, deployment prerequisites and device/clinical/security audits.
 * **[Architecture Guide](docs/ARCHITECTURE.md):** Detailed system architecture, BFF design, and subsystem blueprints.
 * **[Database Reference](docs/DATABASE.md):** ER diagrams, table schemas, RLS policies, and periodic maintenance runbook.
 * **[Testing & Mutation Proofs](docs/TESTING.md):** QA test matrix, integration contract proofs, and behavioral mutation verifications.

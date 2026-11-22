@@ -50,3 +50,8 @@ public/workbox-*.js
 *.zip
 scratch/
 public/serwist-*.js
+
+# Optional owned voice service: snapshots are pinned locally, never committed.
+services/voice/.models/
+.voice-venv/
+**/__pycache__/

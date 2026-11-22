@@ -7,11 +7,13 @@
  */
 
 import type { EmergencyProfile } from "@/lib/emergency/vault"
+import { getAssistantPrompt } from "@/lib/assistant/prompts"
 
 export function getVoiceAlertMessage(profile: EmergencyProfile, language: string): string {
   if (profile.customVoiceAlert && profile.customVoiceAlert.trim()) {
     return profile.customVoiceAlert.trim()
   }
+  if (language !== "en" && language !== "hi") return getAssistantPrompt(language, "triageEmergency")
   if (language === "hi") {
     const namePart = profile.fullName ? `मरीज ${profile.fullName}। ` : ""
     const conditionPart = profile.chronicConditions ? `बीमारी: ${profile.chronicConditions}। ` : ""

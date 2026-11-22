@@ -15,7 +15,9 @@ import { LGD_STATES } from "@/lib/geo/lgd-iphs"
 import { createClient } from "@/lib/supabase/client"
 import { triggerAppointmentBooked } from "@/lib/notifications/notification-engine"
 import type { ConsultationPortalProps, BookingSuccessData } from "./types"
-import { getSlots, getNext7Days, toISODate } from "./types"
+import { getNext7Days, toISODate } from "./types"
+import { bookVerifiedConsultation } from "./booking-client"
+import { assistantAction, type AssistantSlot } from "@/lib/assistant/client-actions"
 import { ConsultationModeStep } from "./parts/ConsultationModeStep"
 import { DoctorSelectionStep } from "./parts/DoctorSelectionStep"
 import { BookingFormStep } from "./parts/BookingFormStep"
@@ -62,17 +64,8 @@ export function ConsultationPortal({ language, user, symptomResult }: Consultati
 
   // Payment & Conflict Protection
   const [paymentMode, setPaymentMode] = useState<"upi" | "counter" | "free">("upi")
-  const [bookedSlots, setBookedSlots] = useState<Set<string>>(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const stored = JSON.parse(localStorage.getItem("rural_health_booked_slots") || "[]")
-        return new Set(stored)
-      } catch {
-        return new Set()
-      }
-    }
-    return new Set()
-  })
+  const [bookedSlots, setBookedSlots] = useState<Set<string>>(new Set())
+  const [serverSlots, setServerSlots] = useState<AssistantSlot[]>([])
 
   const [loading, setLoading] = useState(false)
   const [successData, setSuccessData] = useState<BookingSuccessData | null>(null)
@@ -110,37 +103,19 @@ export function ConsultationPortal({ language, user, symptomResult }: Consultati
   }, [])
 
   const filteredDoctors = useMemo(() => {
-    let list = [...REAL_DOCTORS.filter((d) => d.recordType === "clinician")]
-
-    // Merge any DB healthcare_providers if not already present
-    if (dbProviders.length > 0) {
-      const existingNames = new Set(list.map((d) => d.name.toLowerCase().trim()))
-      const dbClinicians: RealDoctor[] = dbProviders
-        .filter((p) => p.name && !existingNames.has(p.name.toLowerCase().trim()))
-        .map((p) => ({
-          id: p.id,
-          name: p.name,
-          qualifications: "MBBS, MD",
-          specialty: "general" as const,
-          specialtyName: p.specialization || "General Medicine",
-          hospitalAffiliation: p.location || "District Hospital, Bhopal",
-          stateCode: "23",
-          stateName: "Madhya Pradesh",
-          districtName: "Bhopal",
-          location: p.location || "Bhopal, MP",
-          phone: p.phone || "",
-          verified: true,
-          verificationStatus: "independently_verified" as const,
-          recordType: "clinician" as const,
-          sourceName: "Platform Verified Practitioner",
-          available: true,
-          lat: 23.2599,
-          lon: 77.4126,
-          bio: p.bio || `Consultant in ${p.specialization || "General Medicine"}`,
-          providerId: p.id,
-        }))
-      list = [...dbClinicians, ...list]
-    }
+    let list: RealDoctor[] = dbProviders.filter((provider) => provider.id && provider.name).map((provider) => {
+      const registry = REAL_DOCTORS.find((doctor) => doctor.providerId === provider.id)
+      return {
+        ...registry, id: provider.id, providerId: provider.id, name: provider.name,
+        specialty: registry?.specialty || "general", specialtyName: provider.specialization || "",
+        hospitalAffiliation: provider.location || registry?.hospitalAffiliation || "",
+        stateCode: registry?.stateCode || "", stateName: registry?.stateName || "",
+        districtName: registry?.districtName || "", location: provider.location || "",
+        phone: provider.phone || "", verified: true, verificationStatus: "source_confirmed",
+        recordType: "clinician", sourceName: "Registered platform provider",
+        lat: registry?.lat || 0, lon: registry?.lon || 0, available: true, bio: registry?.bio || "",
+      }
+    })
 
     if (specialtyFilter !== "all") {
       list = list.filter((d) => d.specialty === specialtyFilter)
@@ -176,10 +151,26 @@ export function ConsultationPortal({ language, user, symptomResult }: Consultati
     setCurrentPage(1)
   }, [doctorSearch, specialtyFilter, stateFilter])
 
+  useEffect(() => {
+    let active = true
+    setServerSlots([])
+    setSelectedSlot("")
+    if (selectedDoctor?.providerId) {
+      assistantAction<{ slots: AssistantSlot[] }>("appointments.slots", { providerId: selectedDoctor.providerId, date: selectedDate })
+        .then((result) => { if (active) setServerSlots(result.slots) })
+        .catch(() => { if (active) setError(en ? "Unable to check appointment slots. Try again when connected." : "समय उपलब्धता जांच नहीं हो सकी। कनेक्शन मिलने पर फिर प्रयास करें।") })
+    }
+    return () => { active = false }
+  }, [selectedDoctor?.providerId, selectedDate, en])
+
   const slots = useMemo(() => {
     if (!selectedDoctor) return null
-    return getSlots(selectedDoctor.id, selectedDate)
-  }, [selectedDoctor, selectedDate])
+    const mapped = serverSlots.map((slot) => {
+      const india = new Date(Date.parse(slot.appointmentDate) + 330 * 60000)
+      return { time: `${String(india.getUTCHours()).padStart(2, "0")}:${String(india.getUTCMinutes()).padStart(2, "0")}`, available: slot.available }
+    })
+    return { morning: mapped.filter((slot) => slot.time < "12:00"), afternoon: mapped.filter((slot) => slot.time >= "12:00"), evening: [] }
+  }, [selectedDoctor, serverSlots])
 
   const handleBook = async () => {
     if (!selectedDoctor) {
@@ -195,93 +186,23 @@ export function ConsultationPortal({ language, user, symptomResult }: Consultati
     setError("")
 
     try {
-      const appointmentDate = new Date(`${selectedDate}T${selectedSlot}:00`).toISOString()
-      const roomId = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `room-${Date.now()}`
-      const fullNotes = [
-        `[${consultType.toUpperCase()} — ${selectedDoctor.name}, ${selectedDoctor.specialtyName}, ${selectedDoctor.hospitalAffiliation}]`,
-        patientName ? `Patient: ${patientName} (${patientPhone || "No phone"})` : "",
-        notes.trim(),
-      ]
-        .filter(Boolean)
-        .join(" | ")
-
-      // Resolve real healthcare_providers provider_id for doctor inbox and care-relationship scoping
-      let providerIdToSave = selectedDoctor.providerId || null
-      if (!providerIdToSave) {
-        const matchedProvider = dbProviders.find(
-          (p) =>
-            p.id === selectedDoctor.id ||
-            p.name?.toLowerCase().trim() === selectedDoctor.name?.toLowerCase().trim()
-        )
-        if (matchedProvider) providerIdToSave = matchedProvider.id
+      if (!selectedDoctor.providerId || !dbProviders.some((provider) => provider.id === selectedDoctor.providerId)) {
+        throw new Error(en ? "This clinician is not registered for platform booking. Choose a registered provider." : "यह डॉक्टर मंच पर बुकिंग के लिए पंजीकृत नहीं है। पंजीकृत डॉक्टर चुनें।")
       }
-
-      const controller = new AbortController()
-      const tId = setTimeout(() => controller.abort(), 6000)
-
-      try {
-        await fetch("/api/appointments", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          signal: controller.signal,
-          body: JSON.stringify({
-            provider_id: providerIdToSave,
-            appointment_date: appointmentDate,
-            consultation_type: consultType,
-            notes: fullNotes,
-            teleconsult_room_id: roomId,
-          }),
-        })
-      } catch (fetchErr) {
-        console.warn("[handleBook] Fetch notice:", fetchErr)
-      } finally {
-        clearTimeout(tId)
-      }
-
+      const appointmentDate = new Date(`${selectedDate}T${selectedSlot}:00+05:30`).toISOString()
+      const fullNotes = [patientName ? `Patient: ${patientName}` : "", patientPhone ? `Contact: ${patientPhone}` : "", notes.trim()].filter(Boolean).join(" | ")
+      const appointment = await bookVerifiedConsultation({ provider_id: selectedDoctor.providerId, appointment_date: appointmentDate, consultation_type: consultType, notes: fullNotes })
       const slotKey = `${selectedDoctor.id}_${selectedDate}_${selectedSlot}`
-      const newBooked = new Set(bookedSlots)
-      newBooked.add(slotKey)
-      setBookedSlots(newBooked)
-      if (typeof window !== "undefined") {
-        localStorage.setItem("rural_health_booked_slots", JSON.stringify(Array.from(newBooked)))
-      }
-
-      try {
-        await triggerAppointmentBooked({
-          appointmentId: roomId,
-          doctorName: selectedDoctor.name,
-          doctorSpecialty: selectedDoctor.specialtyName,
-          hospitalName: selectedDoctor.hospitalAffiliation,
-          date: selectedDate,
-          time: selectedSlot,
-          consultType: consultType,
-          patientName: patientName || (en ? "Registered Patient" : "पंजीकृत मरीज"),
-          patientUserId: user?.id,
-          roomId: roomId,
-        })
-      } catch (notifErr) {
-        console.warn("[handleBook] notification notice:", notifErr)
-      }
-
-      const finalPaymentMode = selectedDoctor.consultationFee === 0 ? "free" : paymentMode
-
-      setSuccessData({
-        doctor: selectedDoctor,
-        date: selectedDate,
-        slot: selectedSlot,
-        consultType,
-        roomId,
-        paymentMode: finalPaymentMode,
-      })
-    } catch {
-      setSuccessData({
-        doctor: selectedDoctor,
-        date: selectedDate,
-        slot: selectedSlot,
-        consultType,
-        roomId: `room-${Date.now()}`,
-        paymentMode: selectedDoctor.consultationFee === 0 ? "free" : paymentMode,
-      })
+      setBookedSlots((previous) => new Set([...previous, slotKey]))
+      triggerAppointmentBooked({
+        appointmentId: appointment.id, doctorName: selectedDoctor.name,
+        doctorSpecialty: selectedDoctor.specialtyName, hospitalName: selectedDoctor.hospitalAffiliation,
+        date: selectedDate, time: selectedSlot, consultType, patientName: patientName || user?.name || "",
+        patientUserId: user?.id, roomId: appointment.teleconsult_room_id,
+      }).catch(() => {})
+      setSuccessData({ doctor: selectedDoctor, date: selectedDate, slot: selectedSlot, consultType: appointment.consultation_type, appointmentId: appointment.id, roomId: appointment.teleconsult_room_id, paymentMode: selectedDoctor.consultationFee === 0 ? "free" : paymentMode })
+    } catch (failure) {
+      setError(failure instanceof Error ? failure.message : en ? "Booking was not confirmed. Check My Appointments before retrying." : "बुकिंग की पुष्टि नहीं हुई। फिर प्रयास से पहले मेरी अपॉइंटमेंट देखें।")
     } finally {
       setLoading(false)
     }
@@ -311,8 +232,8 @@ export function ConsultationPortal({ language, user, symptomResult }: Consultati
           <Sparkles className="h-3.5 w-3.5 text-blue-600" />
           <span>
             {en
-              ? "913 Verified Specialists Pan-India • Free Govt OPD & Teleconsult"
-              : "913 सत्यापित विशेषज्ञ अखिल भारतीय • मुफ्त सरकारी ओपीडी"}
+              ? `${dbProviders.length} Registered Providers • Consultation Requests`
+              : `${dbProviders.length} पंजीकृत डॉक्टर • परामर्श अनुरोध`}
           </span>
         </div>
         <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
@@ -320,8 +241,8 @@ export function ConsultationPortal({ language, user, symptomResult }: Consultati
         </h1>
         <p className="text-xs sm:text-sm text-gray-600">
           {en
-            ? "Connect with verified clinicians for video, audio, or OPD consultations with instant confirmation."
-            : "सत्यापित डॉक्टरों के साथ वीडियो, फोन या ओपीडी परामर्श तुरंत बुक करें।"}
+            ? "Choose a registered clinician and an available platform slot. Clinic schedules and fees should be confirmed with the provider."
+            : "पंजीकृत डॉक्टर और मंच पर उपलब्ध समय चुनें। क्लिनिक का समय और शुल्क डॉक्टर से पुष्टि करें।"}
         </p>
       </div>
 

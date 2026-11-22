@@ -6,7 +6,7 @@
  * Rural Healthcare Platform — Emergency Subsystem
  */
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { useToast } from "@/hooks/use-toast"
 import {
   toggleHardwareTorch,
@@ -32,16 +32,33 @@ export function useBeacon({ language }: UseBeaconOptions) {
   const [sirenActive, setSirenActive] = useState(false)
   const [torchActive, setTorchActive] = useState(false)
   const [voiceLoopActiveState, setVoiceLoopActiveState] = useState(false)
+  const mounted = useRef(true)
+  const generation = useRef(0)
+  const torchGeneration = useRef(0)
+  const releaseResources = useCallback(() => {
+    generation.current++
+    torchGeneration.current++
+    stopAudioSiren()
+    stopEmergencyVoiceLoop()
+    toggleHardwareTorch(false).catch(() => {})
+    releaseScreenWakeLock()
+  }, [])
+  useEffect(() => {
+    mounted.current = true
+    return () => { mounted.current = false; releaseResources() }
+  }, [releaseResources])
+  useEffect(() => {
+    const handler = (event: Event) => { if (mounted.current) setVoiceLoopActiveState(Boolean((event as CustomEvent).detail?.active)) }
+    window.addEventListener("rhcp:emergency-beacon", handler)
+    return () => window.removeEventListener("rhcp:emergency-beacon", handler)
+  }, [])
 
   useEffect(() => {
     if (!strobeActive) {
-      stopAudioSiren()
+      releaseResources()
       setSirenActive(false)
-      stopEmergencyVoiceLoop()
       setVoiceLoopActiveState(false)
-      toggleHardwareTorch(false)
       setTorchActive(false)
-      releaseScreenWakeLock()
       return
     }
 
@@ -49,25 +66,27 @@ export function useBeacon({ language }: UseBeaconOptions) {
       setStrobeLightOn((prev) => !prev)
     }, 200)
 
-    return () => clearInterval(interval)
-  }, [strobeActive])
+    return () => { clearInterval(interval); releaseResources() }
+  }, [strobeActive, releaseResources])
 
   const handleToggleSiren = () => {
     if (sirenActive) {
       stopAudioSiren()
       setSirenActive(false)
     } else {
-      startAudioSiren()
-      setSirenActive(true)
+      setSirenActive(startAudioSiren())
     }
   }
 
   const handleToggleTorch = async () => {
+    const currentGeneration = generation.current
+    const currentTorchGeneration = ++torchGeneration.current
     if (torchActive) {
       await toggleHardwareTorch(false)
-      setTorchActive(false)
+      if (mounted.current && currentGeneration === generation.current && currentTorchGeneration === torchGeneration.current) setTorchActive(false)
     } else {
       const enabled = await toggleHardwareTorch(true)
+      if (!mounted.current || currentGeneration !== generation.current || currentTorchGeneration !== torchGeneration.current) return
       if (enabled) {
         setTorchActive(true)
         toast({ title: language === "en" ? "Camera LED Flashlight Active" : "कैमरा एलईडी फ्लैशलाइट सक्रिय" })
@@ -81,27 +100,28 @@ export function useBeacon({ language }: UseBeaconOptions) {
   }
 
   const handleStopAllAlarms = useCallback(() => {
+    releaseResources()
     setStrobeActive(false)
-    stopAudioSiren()
+    setStrobeLightOn(false)
     setSirenActive(false)
-    stopEmergencyVoiceLoop()
     setVoiceLoopActiveState(false)
-    toggleHardwareTorch(false)
     setTorchActive(false)
-    releaseScreenWakeLock()
-  }, [])
+  }, [releaseResources])
+
+  useEffect(() => { handleStopAllAlarms() }, [language, handleStopAllAlarms])
 
   const startBeacon = useCallback((voiceMsg: string) => {
+    if (!mounted.current) return
+    releaseResources()
+    const currentGeneration = generation.current
     setStrobeActive(true)
-    startAudioSiren()
-    setSirenActive(true)
+    setSirenActive(startAudioSiren())
     toggleHardwareTorch(true).then((ok) => {
-      if (ok) setTorchActive(true)
-    })
-    requestScreenWakeLock()
-    startEmergencyVoiceLoop(voiceMsg, language === "hi" ? "hi" : "en")
-    setVoiceLoopActiveState(true)
-  }, [language])
+      if (ok && mounted.current && currentGeneration === generation.current) setTorchActive(true)
+    }).catch(() => {})
+    requestScreenWakeLock().catch(() => {})
+    startEmergencyVoiceLoop(voiceMsg, language)
+  }, [language, releaseResources])
 
   return {
     strobeActive,

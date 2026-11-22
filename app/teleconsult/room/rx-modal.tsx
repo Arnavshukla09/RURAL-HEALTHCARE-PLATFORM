@@ -30,6 +30,8 @@ interface RxModalProps {
   rxData: RxData
   setRxData: React.Dispatch<React.SetStateAction<RxData>>
   en: boolean
+  clinician: boolean
+  recordError: string
   recordSaved: boolean
   savingRecord: boolean
   onSaveRecord: () => void
@@ -43,6 +45,8 @@ export function RxModal({
   rxData,
   setRxData,
   en,
+  clinician,
+  recordError,
   recordSaved,
   savingRecord,
   onSaveRecord,
@@ -61,10 +65,10 @@ export function RxModal({
             </div>
             <div>
               <h3 className="text-base sm:text-lg font-black">
-                {en ? "Official Consultation Summary & e-Prescription" : "डिजिटल परामर्श सारांश एवं प्रिस्क्रिप्शन"}
+                {clinician ? (en ? "Clinician Consultation Record" : "चिकित्सक परामर्श रिकॉर्ड") : (en ? "Patient-provided Consultation Notes" : "मरीज के परामर्श नोट")}
               </h3>
               <p className="text-xs text-teal-100">
-                {en ? "Auto-generates verified medical record & printable PDF" : "सत्यापित मेडिकल रिकॉर्ड और पीडीएफ तैयार करता है"}
+                {en ? "Enter findings from this consultation. Saving requires server confirmation." : "इस परामर्श के निष्कर्ष दर्ज करें। सेव होने की सर्वर पुष्टि आवश्यक है।"}
               </p>
             </div>
           </div>
@@ -77,12 +81,13 @@ export function RxModal({
         </div>
 
         <CardContent className="p-4 sm:p-6 overflow-y-auto space-y-4 text-xs sm:text-sm">
+          {recordError && <p role="alert" className="text-red-700 bg-red-50 p-3 rounded-xl">{recordError}</p>}
           {recordSaved && (
             <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 flex items-center gap-2 font-bold text-xs">
               <CheckCircle2 className="h-4 w-4 text-emerald-600" />
               <span>
                 {en
-                  ? "Prescription successfully saved to Patient Medical Records!"
+                  ? "Consultation record saved to the patient's medical records."
                   : "प्रिस्क्रिप्शन मरीज के मेडिकल रिकॉर्ड में सेव हो गया!"}
               </span>
             </div>
@@ -93,7 +98,7 @@ export function RxModal({
               <label className="font-bold text-slate-600 block">{en ? "Consulting Doctor:" : "डॉक्टर:"}</label>
               <Input
                 value={rxData.doctorName}
-                onChange={(e) => setRxData({ ...rxData, doctorName: e.target.value })}
+                readOnly
                 className="h-8 text-xs bg-white mt-1"
               />
             </div>
@@ -101,7 +106,8 @@ export function RxModal({
               <label className="font-bold text-slate-600 block">{en ? "NMC Registration No:" : "पंजीकरण संख्या:"}</label>
               <Input
                 value={rxData.nmcRegNo}
-                onChange={(e) => setRxData({ ...rxData, nmcRegNo: e.target.value })}
+                readOnly
+                placeholder={en ? "Not supplied by the registry" : "पंजीकरण विवरण उपलब्ध नहीं"}
                 className="h-8 text-xs bg-white mt-1"
               />
             </div>
@@ -109,7 +115,7 @@ export function RxModal({
               <label className="font-bold text-slate-600 block">{en ? "Patient Name:" : "मरीज का नाम:"}</label>
               <Input
                 value={rxData.patientName}
-                onChange={(e) => setRxData({ ...rxData, patientName: e.target.value })}
+                readOnly
                 className="h-8 text-xs bg-white mt-1"
               />
             </div>
@@ -125,7 +131,7 @@ export function RxModal({
 
           <div>
             <label className="font-bold text-slate-700 block mb-1">
-              {en ? "Prescribed Medicines (Rx) & Dosage:" : "दवाइयाँ (Rx) और खुराक:"}
+              {clinician ? (en ? "Prescribed medicines and dosage:" : "दवाइयाँ और खुराक:") : (en ? "Medication notes from the consultation:" : "परामर्श की दवा संबंधी जानकारी:")}
             </label>
             <Textarea
               value={rxData.medicines}

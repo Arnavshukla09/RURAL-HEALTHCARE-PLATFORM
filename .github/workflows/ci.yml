@@ -72,6 +72,15 @@ jobs:
       - name: Run Unit Tests (Vitest)
         run: npm run test:unit
 
+      - name: Setup Python for optional voice service contracts
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Verify pinned voice installation and local access contracts
+        # Standard library only: CI does not download model weights or inference packages.
+        run: python -m unittest discover -s services/voice/tests -v
+
       - name: Run Integration Tests & Safety Guards (No-DB Smoke)
         # Note: In test-and-build without a live database, live RLS tests skip safely.
         # The authoritative live database test run is executed in the `db-tests` job with REQUIRE_DB=1.
@@ -127,7 +136,7 @@ jobs:
           npm run test:integration -- --reporter=default --reporter=json --outputFile=vitest-integration-report.json
 
       - name: Verify Live Database Tests Executed (Fail on 0 or Skipped)
-        run: node scripts/ci/verify_integration_tests.mjs vitest-integration-report.json 23
+        run: node scripts/ci/verify_integration_tests.mjs vitest-integration-report.json 29
 
       - name: Dump Vitest Failures If Failed
         if: failure()

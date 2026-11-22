@@ -11,11 +11,17 @@ import { z } from "zod"
 import { getAdminClient } from "@/lib/supabase/admin"
 import { logAuditEvent } from "@/lib/audit"
 import { parsePaginationParams, paginateResults } from "@/lib/pagination"
+import { ClinicalMetadataSchema, bindAppointmentRecord } from "./appointment-records.service"
 
 export const MedicalRecordSchema = z.object({
   record_type: z.enum(["diagnosis", "prescription", "lab_result", "vaccination", "other"]),
   content: z.string().min(1),
   file_url: z.string().url().optional(),
+})
+const CreateMedicalRecordSchema = MedicalRecordSchema.extend({
+  content: z.string().min(1).max(10000),
+  patient_id: z.string().uuid().optional(), provider_id: z.string().uuid().optional(),
+  appointment_id: z.string().uuid().optional(), metadata: ClinicalMetadataSchema.optional(),
 })
 
 export interface PatientUser {
@@ -201,7 +207,7 @@ export async function handleGetMedicalRecords(supabase: any, user: any, searchPa
  * Handles POST /api/medical-records
  */
 export async function handleCreateMedicalRecord(supabase: any, user: any, body: any) {
-  const parsed = MedicalRecordSchema.safeParse(body)
+  const parsed = CreateMedicalRecordSchema.safeParse(body)
   if (!parsed.success) {
     return NextResponse.json(
       { error: "Validation failed", details: parsed.error.flatten(), code: "VALIDATION_ERROR" },
@@ -214,14 +220,13 @@ export async function handleCreateMedicalRecord(supabase: any, user: any, body: 
     return NextResponse.json({ error: "Could not resolve patient profile", code: "NOT_FOUND" }, { status: 404 })
   }
 
-  let targetPatientId = patient.id
-  if (patient.role === "doctor" && body.patient_id) {
-    targetPatientId = body.patient_id
-  }
+  const payload = await bindAppointmentRecord(supabase, user, patient, parsed.data)
+  if (payload instanceof NextResponse) return payload
+  const targetPatientId = payload.patient_id
 
   const { data, error } = await supabase
     .from("medical_records")
-    .insert([{ patient_id: targetPatientId, ...parsed.data }])
+    .insert([payload])
     .select()
     .single()
 

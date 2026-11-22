@@ -9,11 +9,14 @@
  */
 
 let activeTorchTrack: MediaStreamTrack | null = null
+let activeTorchStream: MediaStream | null = null
+let torchGeneration = 0
 let activeAudioCtx: AudioContext | null = null
 let activeOscillator: OscillatorNode | null = null
 let activeGainNode: GainNode | null = null
 let sirenInterval: any = null
 let activeWakeLock: any = null
+let wakeLockGeneration = 0
 
 /**
  * Toggle physical rear camera LED torch (flashlight).
@@ -21,51 +24,43 @@ let activeWakeLock: any = null
  * Fails gracefully if permission is denied or device has no camera flash.
  */
 export async function toggleHardwareTorch(turnOn: boolean): Promise<boolean> {
+  const generation = ++torchGeneration
+  if (!turnOn) {
+    const track = activeTorchTrack
+    const stream = activeTorchStream
+    activeTorchTrack = null
+    activeTorchStream = null
+    if (track) try { Promise.resolve(track.applyConstraints({ advanced: [{ torch: false } as MediaTrackConstraintSet] })).catch(() => {}) } catch {}
+    stream?.getTracks().forEach((item) => item.stop())
+    if (!stream) track?.stop()
+    return false
+  }
   if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
     return false
   }
 
+  let acquired: MediaStream | null = null
   try {
-    if (turnOn) {
-      if (!activeTorchTrack) {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "environment" }
-        })
-        activeTorchTrack = stream.getVideoTracks()[0] || null
-      }
-
-      if (activeTorchTrack) {
-        // Apply torch constraint
-        const capabilities = (activeTorchTrack as any).getCapabilities?.() || {}
-        if ("torch" in capabilities || (activeTorchTrack as any).applyConstraints) {
-          await (activeTorchTrack as any).applyConstraints({
-            advanced: [{ torch: true }]
-          })
-          return true
-        }
-      }
-    } else {
-      if (activeTorchTrack) {
-        try {
-          await (activeTorchTrack as any).applyConstraints({
-            advanced: [{ torch: false }]
-          })
-        } catch {}
-        activeTorchTrack.stop()
-        activeTorchTrack = null
-      }
-      return false
+    if (!activeTorchTrack) {
+      acquired = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+      if (generation !== torchGeneration) { acquired.getTracks().forEach((track) => track.stop()); return false }
+      activeTorchStream = acquired
+      activeTorchTrack = acquired.getVideoTracks()[0] || null
     }
+    const track = activeTorchTrack
+    if (!track) { acquired?.getTracks().forEach((item) => item.stop()); activeTorchStream = null; return false }
+    await track.applyConstraints({ advanced: [{ torch: true } as MediaTrackConstraintSet] })
+    return generation === torchGeneration && activeTorchTrack === track
   } catch (err) {
     console.warn("[HardwareTorch] Torch not supported or permission denied:", err)
-    if (activeTorchTrack) {
-      activeTorchTrack.stop()
+    if (generation === torchGeneration) {
+      activeTorchStream?.getTracks().forEach((track) => track.stop())
+      if (!activeTorchStream) activeTorchTrack?.stop()
       activeTorchTrack = null
-    }
+      activeTorchStream = null
+    } else if (acquired && acquired !== activeTorchStream) acquired.getTracks().forEach((track) => track.stop())
     return false
   }
-
-  return false
 }
 
 /**
@@ -143,7 +138,7 @@ export function stopAudioSiren(): void {
     activeGainNode = null
   }
   if (activeAudioCtx) {
-    try { activeAudioCtx.close() } catch {}
+    try { activeAudioCtx.close().catch(() => {}) } catch {}
     activeAudioCtx = null
   }
 }
@@ -152,10 +147,14 @@ export function stopAudioSiren(): void {
  * Request Screen Wake Lock so phone screen doesn't dim or turn off during emergency
  */
 export async function requestScreenWakeLock(): Promise<boolean> {
+  releaseScreenWakeLock()
+  const generation = ++wakeLockGeneration
   if (typeof navigator === "undefined" || !("wakeLock" in navigator)) return false
 
   try {
-    activeWakeLock = await (navigator as any).wakeLock.request("screen")
+    const lock = await (navigator as any).wakeLock.request("screen")
+    if (generation !== wakeLockGeneration) { await lock.release(); return false }
+    activeWakeLock = lock
     return true
   } catch {
     return false
@@ -166,9 +165,10 @@ export async function requestScreenWakeLock(): Promise<boolean> {
  * Release active screen wake lock
  */
 export function releaseScreenWakeLock(): void {
+  wakeLockGeneration++
   if (activeWakeLock) {
     try {
-      activeWakeLock.release()
+      Promise.resolve(activeWakeLock.release()).catch(() => {})
     } catch {}
     activeWakeLock = null
   }

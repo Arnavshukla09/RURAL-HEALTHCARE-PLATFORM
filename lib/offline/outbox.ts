@@ -1,4 +1,5 @@
-import { openDB, type DBSchema, type IDBPDatabase } from "idb"
+import { getOutboxDB as getDB } from "./store"
+import { calculateBackoff, getOfflineSyncOwner, notifyOutboxUpdated, isOfflineCleanupInProgress, getOfflineCleanupEpoch } from "./runtime"
 
 export type OutboxTable =
   | "appointments"
@@ -13,6 +14,8 @@ export type OutboxStatus = "pending" | "sent" | "failed"
 export interface OutboxOperation {
   client_op_id: string // UUID v4
   entity_id?: string // Client-preassigned target entity UUID (Intelehealth edge pattern)
+  owner_user_id?: string | null // Unowned v1 records are quarantined and never sent.
+  next_attempt_at?: number
   table: OutboxTable
   type: OutboxOpType
   payload: Record<string, any>
@@ -22,41 +25,8 @@ export interface OutboxOperation {
   last_error?: string
 }
 
-interface OutboxDBSchema extends DBSchema {
-  outbox: {
-    key: string
-    value: OutboxOperation
-    indexes: {
-      "by-status": OutboxStatus
-      "by-created": string
-    }
-  }
-}
-
-const DB_NAME = "rhcp_offline_db"
-const DB_VERSION = 1
 const MAX_QUEUE_LENGTH = 500
 const MAX_ATTEMPTS = 5
-
-let dbPromise: Promise<IDBPDatabase<OutboxDBSchema>> | null = null
-
-function getDB(): Promise<IDBPDatabase<OutboxDBSchema>> {
-  if (typeof window === "undefined") {
-    return Promise.reject(new Error("IndexedDB is only available in browser"))
-  }
-  if (!dbPromise) {
-    dbPromise = openDB<OutboxDBSchema>(DB_NAME, DB_VERSION, {
-      upgrade(db) {
-        if (!db.objectStoreNames.contains("outbox")) {
-          const store = db.createObjectStore("outbox", { keyPath: "client_op_id" })
-          store.createIndex("by-status", "status")
-          store.createIndex("by-created", "created_at")
-        }
-      },
-    })
-  }
-  return dbPromise
-}
 
 /**
  * Storage quota helper with 80% threshold warning (Audit §2.4)
@@ -95,11 +65,12 @@ export function createClientEntityId(): string {
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
     return crypto.randomUUID()
   }
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0
-    const v = c === "x" ? r : (r & 0x3) | 0x8
-    return v.toString(16)
-  })
+  if (typeof crypto === "undefined" || !crypto.getRandomValues) throw new Error("Secure UUID generation is unavailable")
+  const bytes = crypto.getRandomValues(new Uint8Array(16))
+  bytes[6] = (bytes[6] & 15) | 64
+  bytes[8] = (bytes[8] & 63) | 128
+  const hex = Array.from(bytes, n => n.toString(16).padStart(2, "0")).join("")
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`
 }
 
 /**
@@ -111,21 +82,35 @@ export async function enqueue(op: {
   payload: Record<string, any>
   client_op_id?: string
   entity_id?: string
+  owner_user_id?: string | null
 }): Promise<OutboxOperation> {
+  if (isOfflineCleanupInProgress()) throw new Error("Private storage cleanup is in progress; wait before creating another request")
+  const epoch = getOfflineCleanupEpoch()
+  const client_op_id = op.client_op_id || createClientEntityId()
+  const owner_user_id = op.owner_user_id === undefined ? getOfflineSyncOwner() : op.owner_user_id
   const db = await getDB()
-
-  // Cap check
-  const count = await db.count("outbox")
+  if (isOfflineCleanupInProgress() || epoch !== getOfflineCleanupEpoch()) throw new Error("Private storage cleanup interrupted this request")
+  const tx = db.transaction("outbox", "readwrite")
+  const existing = await tx.store.get(client_op_id)
+  if (isOfflineCleanupInProgress() || epoch !== getOfflineCleanupEpoch()) throw new Error("Private storage cleanup interrupted this request")
+  if (existing) {
+    if ((existing.owner_user_id ?? null) !== owner_user_id || existing.table !== op.table || existing.type !== op.type || JSON.stringify(existing.payload) !== JSON.stringify(op.payload)) throw new Error("Operation ID is associated with a different request")
+    await tx.done
+    return existing
+  }
+  const count = await tx.store.count()
   if (count >= MAX_QUEUE_LENGTH) {
     throw new Error(`Outbox queue limit reached (max ${MAX_QUEUE_LENGTH} operations)`)
   }
 
-  const client_op_id = op.client_op_id || createClientEntityId()
-  const entity_id = op.entity_id || (op.payload?.id as string) || undefined
+  const entity_id = op.entity_id || (op.payload?.id as string) || (op.type === "INSERT" ? client_op_id : undefined)
+  if (isOfflineCleanupInProgress() || epoch !== getOfflineCleanupEpoch()) throw new Error("Private storage cleanup interrupted this request")
 
   const operation: OutboxOperation = {
     client_op_id,
     entity_id,
+    owner_user_id: owner_user_id || null,
+    next_attempt_at: 0,
     table: op.table,
     type: op.type,
     payload: op.payload,
@@ -134,37 +119,52 @@ export async function enqueue(op: {
     status: "pending",
   }
 
-  await db.put("outbox", operation)
+  if (!owner_user_id) operation.last_error = "UNOWNED_LEGACY: recreate this request after signing in; it will not be sent automatically"
+  await tx.store.put(operation)
+  await tx.done
+  notifyOutboxUpdated()
   return operation
 }
 
 /**
  * List all operations pending synchronization
  */
-export async function listPending(): Promise<OutboxOperation[]> {
+export async function listPending(owner: string | null = getOfflineSyncOwner(), dueOnly = false, now = Date.now()): Promise<OutboxOperation[]> {
   const db = await getDB()
   const all = await db.getAllFromIndex("outbox", "by-status", "pending")
-  return all.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+  return all.filter(op => (op.owner_user_id ?? null) === owner && (!dueOnly || (op.next_attempt_at ?? 0) <= now)).sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
 }
 
 /**
  * List all operations (pending, sent, failed) for UI inspection
  */
-export async function listAll(): Promise<OutboxOperation[]> {
+export async function listAll(owner: string | null = getOfflineSyncOwner()): Promise<OutboxOperation[]> {
   const db = await getDB()
   const all = await db.getAll("outbox")
-  return all.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+  return all.filter(op => (op.owner_user_id ?? null) === owner).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+}
+
+export async function getQuarantinedCount(): Promise<number> { return (await listAll(null)).length }
+
+export async function hasOwnedPendingOperations(): Promise<boolean> {
+  const db = await getDB()
+  return (await db.getAllFromIndex("outbox", "by-status", "pending")).some(op => !!op.owner_user_id)
+}
+
+export async function getNextRetryAt(owner: string): Promise<number | null> {
+  const pending = await listPending(owner)
+  return pending.length ? Math.min(...pending.map(op => op.next_attempt_at ?? 0)) : null
 }
 
 /**
  * Mark operations as successfully sent
  */
-export async function markSent(client_op_ids: string[]): Promise<void> {
+export async function markSent(client_op_ids: string[], owner: string | null = getOfflineSyncOwner()): Promise<void> {
   const db = await getDB()
   const tx = db.transaction("outbox", "readwrite")
   for (const id of client_op_ids) {
     const item = await tx.store.get(id)
-    if (item) {
+    if (item && (item.owner_user_id ?? null) === owner) {
       item.status = "sent"
       await tx.store.put(item)
     }
@@ -176,11 +176,12 @@ export async function markSent(client_op_ids: string[]): Promise<void> {
  * Permanently delete operations that were successfully accepted or recognized as duplicate by the server
  * (Audit C4: Client deletes only ok/duplicate ops)
  */
-export async function deleteOps(client_op_ids: string[]): Promise<void> {
+export async function deleteOps(client_op_ids: string[], owner: string | null = getOfflineSyncOwner()): Promise<void> {
   const db = await getDB()
   const tx = db.transaction("outbox", "readwrite")
   for (const id of client_op_ids) {
-    await tx.store.delete(id)
+    const item = await tx.store.get(id)
+    if (item && (item.owner_user_id ?? null) === owner) await tx.store.delete(id)
   }
   await tx.done
 }
@@ -190,8 +191,7 @@ export async function deleteOps(client_op_ids: string[]): Promise<void> {
  */
 export async function getOutboxStats(): Promise<{ pending: number; failed: number; total: number }> {
   try {
-    const db = await getDB()
-    const all = await db.getAll("outbox")
+    const all = await listAll()
     const pending = all.filter((op) => op.status === "pending").length
     const failed = all.filter((op) => op.status === "failed").length
     return { pending, failed, total: all.length }
@@ -203,11 +203,12 @@ export async function getOutboxStats(): Promise<{ pending: number; failed: numbe
 /**
  * Record an attempt failure, marking as failed if max attempts reached
  */
-export async function markFailed(client_op_id: string, error: string): Promise<void> {
+export async function markFailed(client_op_id: string, error: string, owner: string | null = getOfflineSyncOwner(), minimumDelayMs = 0): Promise<void> {
   const db = await getDB()
   const item = await db.get("outbox", client_op_id)
-  if (!item) return
+  if (!item || (item.owner_user_id ?? null) !== owner) return
 
+  item.next_attempt_at = Date.now() + Math.max(minimumDelayMs, calculateBackoff(item.attempts))
   item.attempts += 1
   item.last_error = error
   if (item.attempts >= MAX_ATTEMPTS) {
@@ -222,10 +223,11 @@ export async function markFailed(client_op_id: string, error: string): Promise<v
 export async function retryOp(client_op_id: string): Promise<void> {
   const db = await getDB()
   const item = await db.get("outbox", client_op_id)
-  if (!item) return
+  if (!item || (item.owner_user_id ?? null) !== getOfflineSyncOwner()) return
 
   item.status = "pending"
   item.attempts = 0
+  item.next_attempt_at = 0
   item.last_error = undefined
   await db.put("outbox", item)
 }
@@ -234,8 +236,7 @@ export async function retryOp(client_op_id: string): Promise<void> {
  * User-initiated discard for a failed operation
  */
 export async function discardOp(client_op_id: string): Promise<void> {
-  const db = await getDB()
-  await db.delete("outbox", client_op_id)
+  await deleteOps([client_op_id])
 }
 
 /**
@@ -243,7 +244,7 @@ export async function discardOp(client_op_id: string): Promise<void> {
  */
 export async function purgeSent(): Promise<number> {
   const db = await getDB()
-  const sentItems = await db.getAllFromIndex("outbox", "by-status", "sent")
+  const sentItems = (await listAll()).filter(op => op.status === "sent")
   const tx = db.transaction("outbox", "readwrite")
   for (const item of sentItems) {
     await tx.store.delete(item.client_op_id)
@@ -289,6 +290,7 @@ export async function migrateLegacyLocalStorage(): Promise<number> {
         type: validOpType,
         payload: legacy.data || {},
         client_op_id: crypto.randomUUID(),
+        owner_user_id: null,
       })
       migrated++
     }

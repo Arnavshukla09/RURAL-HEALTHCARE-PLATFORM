@@ -1,95 +1,31 @@
 #!/usr/bin/env node
-/**
- * scripts/verify_integration_tests.mjs
- *
- * Verifies that the live database integration suite actually executed
- * real tests against the database and did not skip tests silently.
- *
- * Exits with code 1 if:
- * - The test report does not exist or cannot be parsed.
- * - numPassedTests < minExpected (default: 12).
- * - numSkippedTests > 0.
- * - numFailedTests > 0.
- */
+/** Fail closed unless both local database suites execute with no skipped or failed tests. */
+import fs from "node:fs"
 
-import fs from "node:fs";
-import path from "node:path";
+const reportPath = process.argv[2] || "vitest-integration-report.json"
+const minExpectedTests = Number(process.argv[3] || "29")
+const requiredSuites = new Map([
+  ["rls-care-relationship.test.ts", 23],
+  ["offline-atomic-replay.test.ts", 6],
+])
 
-const reportPath = process.argv[2] || "vitest-integration-report.json";
-const minExpectedTests = parseInt(process.argv[3] || "23", 10);
+function fail(message) { console.error("Integration verification failed: " + message); process.exit(1) }
+if (!Number.isInteger(minExpectedTests) || minExpectedTests < 29) fail("Minimum must include all 29 database and safety cases")
+if (!fs.existsSync(reportPath)) fail("JSON report is missing")
+let report
+try { report = JSON.parse(fs.readFileSync(reportPath, "utf8")) }
+catch { fail("JSON report cannot be parsed") }
+if (report.numFailedTests !== 0 || report.numPendingTests !== 0) fail("Failed or skipped tests were reported")
+if (!Array.isArray(report.testResults)) fail("Test results are missing")
 
-console.log(`\n============================================================`);
-console.log(`  🛡️  INTEGRATION TEST VERIFICATION GATE                     `);
-console.log(`============================================================`);
-console.log(`Report target: ${reportPath}`);
-console.log(`Minimum expected passed tests: ${minExpectedTests}`);
-
-if (!fs.existsSync(reportPath)) {
-  console.error(`\n❌ ERROR: Test report file not found at: ${reportPath}`);
-  console.error(`Vitest did not produce the expected JSON output.\n`);
-  process.exit(1);
+let passed = 0
+for (const [filename, minimum] of requiredSuites) {
+  const suite = report.testResults.find(item => typeof item.name === "string" && item.name.replace(/\\/g, "/").endsWith("/tests/integration/" + filename))
+  if (!suite || !Array.isArray(suite.assertionResults)) fail("Required suite " + filename + " is missing")
+  if (suite.assertionResults.some(assertion => assertion.status !== "passed")) fail(filename + " includes failed, skipped or incomplete assertions")
+  if (suite.assertionResults.length < minimum) fail(filename + " ran fewer than " + minimum + " required cases")
+  passed += suite.assertionResults.length
+  console.log(filename + ": " + suite.assertionResults.length + " passed, zero skipped")
 }
-
-let report;
-try {
-  const content = fs.readFileSync(reportPath, "utf8");
-  report = JSON.parse(content);
-} catch (err) {
-  console.error(`\n❌ ERROR: Failed to parse test report JSON:`, err.message);
-  process.exit(1);
-}
-
-const numTotal = report.numTotalTests ?? 0;
-const numPassed = report.numPassedTests ?? 0;
-const numFailed = report.numFailedTests ?? 0;
-const numPending = report.numPendingTests ?? 0; // pending / skipped in jest/vitest JSON format
-
-console.log(`Summary: Total: ${numTotal} | Passed: ${numPassed} | Failed: ${numFailed} | Skipped/Pending: ${numPending}`);
-
-// Search specifically for integration test files
-const testResults = report.testResults || [];
-let liveSuiteFound = false;
-let liveSkipped = 0;
-let livePassed = 0;
-let liveFailed = 0;
-
-for (const suite of testResults) {
-  const normalizedPath = suite.name.replace(/\\/g, "/");
-  if (normalizedPath.includes("tests/integration/rls-care-relationship.test")) {
-    liveSuiteFound = true;
-    for (const assertion of suite.assertionResults || []) {
-      if (assertion.status === "passed") livePassed++;
-      else if (assertion.status === "failed") liveFailed++;
-      else if (assertion.status === "skipped" || assertion.status === "pending" || assertion.status === "todo") {
-        liveSkipped++;
-        console.warn(`  ⚠️ Skipped test: "${assertion.title}"`);
-      }
-    }
-  }
-}
-
-if (!liveSuiteFound) {
-  console.error(`\n❌ ERROR: Live RLS integration test suite ('tests/integration/rls-care-relationship.test.ts') was not found in results!`);
-  process.exit(1);
-}
-
-console.log(`Live Suite Details: ${livePassed} passed, ${liveSkipped} skipped, ${liveFailed} failed.`);
-
-if (liveFailed > 0 || numFailed > 0) {
-  console.error(`\n❌ ERROR: Integration tests failed (${liveFailed} live failed, ${numFailed} total failed).`);
-  process.exit(1);
-}
-
-if (liveSkipped > 0) {
-  console.error(`\n❌ ERROR: Live database tests were skipped (${liveSkipped} skipped tests detected)!`);
-  console.error(`In live CI mode (REQUIRE_DB=1), skipping tests is strictly prohibited.`);
-  process.exit(1);
-}
-
-if (livePassed < minExpectedTests) {
-  console.error(`\n❌ ERROR: Insufficient tests executed. Expected at least ${minExpectedTests}, but only ${livePassed} passed.`);
-  process.exit(1);
-}
-
-console.log(`\n✔ PASS: All ${livePassed} live integration tests executed cleanly against database (0 skipped).\n`);
-process.exit(0);
+if (passed < minExpectedTests || report.numPassedTests < minExpectedTests) fail("Fewer than " + minExpectedTests + " cases passed")
+console.log("All " + passed + " required integration cases passed against the disposable local database")

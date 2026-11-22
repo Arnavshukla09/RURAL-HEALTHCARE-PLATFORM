@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "packs": {
+    "en": {
+      "url": "/data/assistant/en.json",
+      "sha256": "478ebd48daeede6ba0fb03ee861228ec99fc1dc815f7ea37dc1e5b6d24a9c9e3"
+    },
+    "hi": {
+      "url": "/data/assistant/hi.json",
+      "sha256": "028136515e430a0bd44c17c1b7fc0a203998b83ddfd2972beab13f8112d4d030"
+    },
+    "mr": {
+      "url": "/data/assistant/mr.json",
+      "sha256": "cb8f1ea4046b6a9c0d09e915a314f27692a8bb55bac243975fd7ab4b612380b4"
+    },
+    "bn": {
+      "url": "/data/assistant/bn.json",
+      "sha256": "58424d38e4bb3f5f8eab4cdc52d03e05eca76b8fef7681d45c7bd6564503106d"
+    },
+    "te": {
+      "url": "/data/assistant/te.json",
+      "sha256": "9c23bf3e14bbf79d328d4009060c6cfa5727a18da220d28553d1e655402f7ac0"
+    },
+    "ta": {
+      "url": "/data/assistant/ta.json",
+      "sha256": "0946d7f131cfeb9511af393f15546b02a941fbf8b628ef999c7eef3c8962b22e"
+    },
+    "gu": {
+      "url": "/data/assistant/gu.json",
+      "sha256": "b1fad90dcd9a051cd9eb55c55d615c529a5bc004916a3fc0fbb7398bd9473d12"
+    },
+    "kn": {
+      "url": "/data/assistant/kn.json",
+      "sha256": "9573b95c40173e5533adafa7bf90137636d6754f24ab81e10da19be10298ec40"
+    },
+    "pa": {
+      "url": "/data/assistant/pa.json",
+      "sha256": "9285915d15a83a8d4de777c94031153d6c530d883f5b2d50ddb0da294bebf039"
+    },
+    "or": {
+      "url": "/data/assistant/or.json",
+      "sha256": "47eebee1a324d69eeac7fa135c18505ec3e3b098544500b82c3c4b1d13d37690"
+    },
+    "ml": {
+      "url": "/data/assistant/ml.json",
+      "sha256": "7322fc68cbb4ecf6f7863b95c0b553688448b93380e275e384cc8239cd3d811f"
+    },
+    "as": {
+      "url": "/data/assistant/as.json",
+      "sha256": "279f9c81a8b7acebe471b2963015de1e0072988d93606871f0fcc13425f42e6d"
+    },
+    "ur": {
+      "url": "/data/assistant/ur.json",
+      "sha256": "85d5aee86ee9a0e6ed6100ae613b8c1e2a829aaa22c5780e8e3ad5259b40d7a5"
+    }
+  }
+}

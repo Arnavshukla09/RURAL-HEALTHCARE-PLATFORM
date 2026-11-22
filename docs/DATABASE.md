@@ -303,10 +303,11 @@ Idempotency table for offline sync queue replay.
 - `user_id` (UUID, NOT NULL)
 - `client_op_id` (UUID, NOT NULL)
 - `table_name` (TEXT, NOT NULL)
+- `operation_hash` (TEXT, nullable for legacy rows; set by the transactional replay RPC)
 - `processed_at` (TIMESTAMPTZ, DEFAULT NOW())
 - **Primary Key:** `(user_id, client_op_id)`
 
-When the client flushes its IndexedDB offline outbox, each operation sends its client-generated UUID. If the server already contains that `(user_id, client_op_id)` tuple, the operation is skipped without error, guaranteeing atomic at-most-once execution across network retries.
+The new `apply_offline_operation` RPC claims `(user_id, client_op_id)`, applies a validated mutation and writes its audit entry in one transaction under authenticated RLS. A failure rolls back the ledger claim. A committed duplicate returns `duplicate`; a different table/payload hash under that key is rejected. The forward expiry guard checks finite future timestamps for new bookings after duplicate detection, so already committed replay still acknowledges after the appointment time passes. Both migrations must be applied and verified on a disposable local stack as described in [OFFLINE_SYNC_ROLLOUT.md](OFFLINE_SYNC_ROLLOUT.md).
 
 ### 2.6 `healthcare_facilities`
 National geospatial directory of healthcare facilities, hospitals, clinics, and individual registered doctors across India.

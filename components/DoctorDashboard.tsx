@@ -24,6 +24,7 @@ export function DoctorDashboard({ user, language, setJitsiRoom }: DoctorDashboar
   const [nextCursor, setNextCursor] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
+  const [actionError, setActionError] = useState("")
   const [stats, setStats] = useState({ total: 0, today: 0, completed: 0 })
 
   useEffect(() => {
@@ -63,19 +64,23 @@ export function DoctorDashboard({ user, language, setJitsiRoom }: DoctorDashboar
     finally { setLoadingMore(false) }
   }
 
-  const joinCall = (roomId: string) => {
-    if (setJitsiRoom) setJitsiRoom(roomId)
-    const nameParam = encodeURIComponent(user?.name || "Doctor")
-    router.push(`/teleconsult/room?id=${roomId}&name=${nameParam}&role=doctor&lang=${language}`)
+  const joinCall = (appointmentId: string) => {
+    router.push(`/teleconsult/room?appointmentId=${encodeURIComponent(appointmentId)}&lang=${encodeURIComponent(language)}`)
   }
 
   const markDone = async (id: string) => {
-    await fetch("/api/appointments", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, status: "completed" }),
-    })
-    setAppointments(prev => prev.map(a => a.id === id ? { ...a, status: "completed" } : a))
+    setActionError("")
+    try {
+      const response = await fetch("/api/appointments", {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status: "completed" }),
+      })
+      const result = await response.json()
+      if (!response.ok || result.appointment?.id !== id || result.appointment?.status !== "completed") throw new Error(result.error || "Appointment update was not acknowledged")
+      setAppointments(prev => prev.map(a => a.id === id ? result.appointment : a))
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : "Unable to update appointment")
+    }
   }
 
   const isPastTime = (a: any) => {
@@ -94,6 +99,7 @@ export function DoctorDashboard({ user, language, setJitsiRoom }: DoctorDashboar
   return (
     <div className="min-h-screen bg-gradient-to-br from-teal-50 to-cyan-50 p-4 md:p-6">
       <div className="max-w-5xl mx-auto space-y-6">
+        {actionError && <p role="alert" className="rounded-xl bg-red-50 p-3 text-red-700">{actionError}</p>}
 
         {/* Header */}
         <div className="bg-gradient-to-r from-teal-700 to-cyan-700 rounded-2xl p-6 text-white shadow-lg">
@@ -177,7 +183,7 @@ export function DoctorDashboard({ user, language, setJitsiRoom }: DoctorDashboar
                           const btnLabel = isChat ? (en ? "Chat" : "चैट") : isAudio ? (en ? "Join Call" : "कॉल जॉइन") : (en ? "Join Video" : "वीडियो जॉइन")
                           const BtnIcon = isChat ? MessageSquare : isAudio ? Phone : Video
                           return (
-                            <Button size="sm" className="flex-1 gradient-primary text-white h-7 text-xs" onClick={() => joinCall(appt.teleconsult_room_id)}>
+                            <Button size="sm" className="flex-1 gradient-primary text-white h-7 text-xs" onClick={() => joinCall(appt.id)}>
                               <BtnIcon className="h-3 w-3 mr-1" />{btnLabel}
                             </Button>
                           )

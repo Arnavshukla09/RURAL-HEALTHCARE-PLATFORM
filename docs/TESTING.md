@@ -11,9 +11,9 @@ The platform employs a multi-tiered testing strategy spanning unit tests, live i
 ```mermaid
 flowchart TD
     subgraph TestingPyramid["Testing Pyramid"]
-        E2E["Playwright E2E\n(5 User Journeys: PWA, Teleconsult, Offline Outbox, RBAC)"]
-        Integration["Vitest Integration Suite (Live Local Supabase)\n(23 Contract Tests: Care Scoping, Admin Confidentiality, Erasure RPC, Idempotency, Clinical Encounters)"]
-        Unit["Vitest Unit Suite\n(29 Files / 210 Tests: FHIR R4, Clinical Decision, Pretext Extraction, Rate Limiting)"]
+        E2E["Playwright E2E\n(5 Assistant Journeys + 5 Existing Public/Login Journeys)"]
+        Integration["Vitest Integration Suite (Live Local Supabase)\n(29 Cases: RLS, Care Scoping, Erasure, Atomic Replay, Expired Booking)"]
+        Unit["Vitest Unit Suite\n(300 Tests: Existing Subsystems, Assistant Actions, Speech Races, Offline Isolation)"]
         Static["Pre-Commit & Immutability Gates\n(Component Checker, Migration SHA-256 Gate, Gitleaks, ESLint, TypeScript)"]
     end
 
@@ -24,22 +24,27 @@ flowchart TD
 
 ### Test Subsystems
 1. **Unit & Isolation Suite (`npm run test:unit`)**:
-   - 29 test files, 210 automated deterministic tests executing in ~1.9s via Vitest.
+   - 300 automated deterministic tests via Vitest. See [VOICE_ASSISTANT_SETUP.md](VOICE_ASSISTANT_SETUP.md) for current local evidence and limits.
    - Covers ABDM FHIR R4 document schemas, clinical safety decision tables, offline IndexedDB relational queue, frontline decision support, clinical image compressor, patient clinical pretext extraction & sanitization, regional multilingual engine, and PII masking.
 2. **Integration & Behavioral RLS Suite (`npm run test:integration`)**:
    - Guarded by `tests/integration/db-safety-guard.ts` enforcing a strict local test container allowlist (`http://127.0.0.1:54321` or `http://localhost:54321`).
    - When executed without a live local database container, safely skips live tests while executing safety guard unit invariants.
-   - In CI (`db-tests` job), `REQUIRE_DB=1` is asserted to guarantee that all 23 contract tests execute against a real PostgreSQL/PostgREST instance.
+   - In CI (`db-tests` job), `REQUIRE_DB=1` and a JSON report gate require all 29 cases across the original RLS/safety suite and atomic replay suite to pass with zero skipped assertions. A missing atomic suite fails verification.
    - Operates with real users and authentic JWTs issued via `signInWithPassword` to exercise PostgreSQL RLS policies directly.
 3. **Migration Immutability Gate (`npm run check:migrations`)**:
-   - Validates all 23 sealed forward-chronological migrations against `supabase/migrations.sha256`.
+   - Validates all 25 sealed forward-chronological migrations against `supabase/migrations.sha256`.
    - Rejects any in-place historical edit or back-dated migration.
 4. **End-to-End Suite (`npx playwright test`)**:
    - Executes browser user journeys against the full local Next.js + Supabase stack.
+   - Five assistant journeys passed locally with mocked speech/service responses. Actual all-language microphones/models and real conferences remain manual release checks. The three existing role-login journeys require ephemeral local test accounts.
+5. **Owned Voice Contract Suite**:
+   - `python -m unittest discover -s services/voice/tests -v` runs 11 dependency-free installation/repair/offline/access tests. CI uses Python 3.11 and does not download model weights.
 
 ---
 
-## 2. Unit Test Breakdown (210 Tests)
+## 2. Historical baseline breakdown (210 tests, before assistant implementation)
+
+The table below preserves the 14 November baseline. It is not the current suite inventory. Added assistant, privacy, receipt, race and report-gate tests are documented in the [current setup evidence](VOICE_ASSISTANT_SETUP.md), [backend evidence](ASSISTANT_BACKEND_TEST_EVIDENCE.md) and [consultation evidence](CONSULTATION_CLIENT_TEST_EVIDENCE.md).
 
 | Test File | Subsystem Verified | Tests | Status | Key Assertions & Scenarios |
 | :--- | :--- | :---: | :---: | :--- |

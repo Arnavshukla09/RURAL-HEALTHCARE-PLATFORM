@@ -80,7 +80,7 @@ export function BookingFormStep({
             </span>
           </div>
           <Badge className="bg-emerald-600 text-white text-[10px]">
-            {(selectedDoctor.consultationFee ?? 0) > 0 ? `₹${selectedDoctor.consultationFee}` : "100% Free OPD"}
+            {selectedDoctor.consultationFee === undefined ? (en ? "Ask provider about fees" : "शुल्क डॉक्टर से पूछें") : `₹${selectedDoctor.consultationFee}`}
           </Badge>
         </CardTitle>
       </CardHeader>
@@ -169,7 +169,7 @@ export function BookingFormStep({
               <div>
                 <span className="text-[11px] font-semibold text-gray-600 flex items-center gap-1 mb-1.5">
                   <Clock className="h-3 w-3 text-blue-500" />
-                  <span>{en ? "Afternoon Slots (13:00 - 16:00)" : "दोपहर (13:00 - 16:00)"}</span>
+                  <span>{en ? "Afternoon Slots (12:00 - 16:30)" : "दोपहर (13:00 - 16:00)"}</span>
                 </span>
                 <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
                   {slots.afternoon.map((s) => {
@@ -241,97 +241,8 @@ export function BookingFormStep({
             />
           </div>
 
-          {/* Consultation Fee & Payment Mode Selector */}
-          <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2.5">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-slate-700 flex items-center gap-1.5">
-                <CreditCard className="h-3.5 w-3.5 text-teal-600" />
-                <span>{en ? "Consultation Fee & Payment Mode:" : "परामर्श शुल्क एवं भुगतान माध्यम:"}</span>
-              </span>
-              <Badge
-                className={
-                  selectedDoctor.consultationFee === 0
-                    ? "bg-emerald-600 text-white text-[11px]"
-                    : "bg-purple-600 text-white text-[11px]"
-                }
-              >
-                {selectedDoctor.consultationFee === 0
-                  ? en
-                    ? "₹0 (Free OPD)"
-                    : "₹0 (मुफ्त ओपीडी)"
-                  : `₹${selectedDoctor.consultationFee}`}
-              </Badge>
-            </div>
-
-            {selectedDoctor.consultationFee === 0 ? (
-              <p className="text-[11px] text-emerald-800 bg-emerald-50 p-2 rounded-xl border border-emerald-200">
-                {en
-                  ? "✓ 100% Free Consultation under National Health Mission & Ayushman Bharat at Apex/Government Hospital."
-                  : "✓ राष्ट्रीय स्वास्थ्य मिशन एवं आयुष्मान भारत के तहत पूर्णतः निःशुल्क सरकारी ओपीडी परामर्श।"}
-              </p>
-            ) : (
-              <div className="space-y-2 pt-1 text-xs">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMode("upi")}
-                    className={`p-2 rounded-xl text-left border transition ${
-                      paymentMode === "upi"
-                        ? "border-teal-600 bg-teal-50/80 text-teal-900 font-bold"
-                        : "border-slate-200 bg-white text-slate-700"
-                    }`}
-                  >
-                    <span className="block text-[11px] font-bold">🟢 Pay Now (UPI)</span>
-                    <span className="text-[10px] text-slate-500">GPay, PhonePe, Paytm</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMode("counter")}
-                    className={`p-2 rounded-xl text-left border transition ${
-                      paymentMode === "counter"
-                        ? "border-amber-600 bg-amber-50/80 text-amber-900 font-bold"
-                        : "border-slate-200 bg-white text-slate-700"
-                    }`}
-                  >
-                    <span className="block text-[11px] font-bold">🟠 Pay at OPD</span>
-                    <span className="text-[10px] text-slate-500">Cash / Desk at Clinic</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMode("free")}
-                    className={`p-2 rounded-xl text-left border transition ${
-                      paymentMode === "free"
-                        ? "border-blue-600 bg-blue-50/80 text-blue-900 font-bold"
-                        : "border-slate-200 bg-white text-slate-700"
-                    }`}
-                  >
-                    <span className="block text-[11px] font-bold">🔵 PM-JAY / BPL</span>
-                    <span className="text-[10px] text-slate-500">100% Fee Waiver</span>
-                  </button>
-                </div>
-
-                {paymentMode === "upi" && (
-                  <div className="p-2.5 bg-white rounded-xl border border-teal-200 flex items-center justify-between gap-2">
-                    <div className="text-[11px]">
-                      <span className="text-slate-500 block">
-                        UPI VPA: <strong className="text-slate-800">ruralhealth.care@upi</strong>
-                      </span>
-                      <span className="text-[10px] text-emerald-700">Instant verification with 0% gateway fee</span>
-                    </div>
-                    <a
-                      href={`upi://pay?pa=ruralhealth.care@upi&pn=${encodeURIComponent(
-                        selectedDoctor.name
-                      )}&am=${selectedDoctor.consultationFee}&cu=INR&tn=Consultation+Fee`}
-                      className="px-2.5 py-1 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-[11px] font-bold shrink-0"
-                    >
-                      1-Tap UPI Pay
-                    </a>
-                  </div>
-                )}
-              </div>
-            )}
+          <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-700">
+            {en ? "This platform does not collect consultation payments. Confirm the clinic's fee and payment details directly with the provider." : "यह मंच परामर्श भुगतान नहीं लेता। क्लिनिक का शुल्क और भुगतान विवरण डॉक्टर से पुष्टि करें।"}
           </div>
         </div>
 

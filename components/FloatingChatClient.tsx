@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic"
 
 const FloatingChat = dynamic(
-  () => import("@/components/FloatingChat").then((m) => m.FloatingChat),
+  () => import("@/components/voice-assistant").then((m) => m.VoiceAssistant),
   { ssr: false }
 )
 

@@ -112,36 +112,13 @@ export function startGoogleTranslateBannerSuppression() {
 }
 
 /**
- * Patch window.history.pushState so that when a non-English regional language
- * (Telugu, Marathi, Bengali, etc.) is active, SPA route transitions perform a full
- * document load. This guarantees Google Translate parses and translates 100% of the
- * destination route's DOM without leaving untranslated English/Hindi elements.
+ * Preserve Next.js client routing and the mounted assistant in every language.
+ * Online DOM translation is refreshed by TranslationRouteObserver after navigation.
  */
 export function installNavigationTranslationPreserver() {
   if (typeof window === "undefined" || typeof window.history === "undefined") return
 
-  const history = window.history
-  if ((history as any).__rhcp_translate_patched) return
-  ;(history as any).__rhcp_translate_patched = true
-
-  const originalPushState = history.pushState
-  history.pushState = function (state: any, title: string, url?: string | URL | null) {
-    if (url) {
-      try {
-        const currentLang =
-          (typeof window !== "undefined" && window.localStorage ? window.localStorage.getItem("rhcp_language") : null) ||
-          (typeof localStorage !== "undefined" ? localStorage.getItem("rhcp_language") : null)
-        if (currentLang && currentLang !== "en") {
-          const targetUrl = new URL(url.toString(), window.location.origin)
-          if (targetUrl.origin === window.location.origin && targetUrl.pathname !== window.location.pathname) {
-            window.location.href = targetUrl.href
-            return
-          }
-        }
-      } catch {}
-    }
-    return originalPushState.apply(this, [state, title, url] as any)
-  }
+  // Compatibility entry point: intentionally do not override history.pushState.
 }
 
 // Ensure crash guard, banner suppression, and route translation preserver are initialized on client

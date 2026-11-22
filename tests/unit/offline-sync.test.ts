@@ -41,6 +41,12 @@ describe("Offline Sync Rewrite (Audit C4, §2.4)", () => {
     insertedRecords = []
 
     mockSupabase = {
+      rpc: vi.fn(async (_name: string, params: any) => {
+        if (processedOpsStore.has(params.p_client_op_id)) return { data: { status: "duplicate" }, error: null }
+        if (params.p_operation === "INSERT") insertedRecords.push({ table: params.p_table, data: [params.p_payload] })
+        processedOpsStore.add(params.p_client_op_id)
+        return { data: { status: "ok" }, error: null }
+      }),
       from: vi.fn((table: string) => {
         return {
           select: vi.fn((cols: string) => ({
@@ -253,14 +259,8 @@ describe("Offline Sync Rewrite (Audit C4, §2.4)", () => {
     expect(json.results[0].error).toContain("Patients are not authorized to mark appointments as completed")
   })
 
-  it("7. Aborts batch with 500 when idempotency database check fails", async () => {
-    mockSupabase.from = vi.fn((table: string) => ({
-      select: vi.fn(() => ({
-        eq: vi.fn(() => ({
-          in: vi.fn(async () => ({ data: null, error: { message: "Database connection failed" } })),
-        })),
-      })),
-    }))
+  it("7. Rejects an operation without acknowledging it when the atomic transaction fails", async () => {
+    mockSupabase.rpc.mockResolvedValueOnce({ data: null, error: { message: "Database connection failed" } })
 
     const req = new NextRequest("http://localhost:3000/api/offline-sync", {
       method: "POST",
@@ -277,9 +277,11 @@ describe("Offline Sync Rewrite (Audit C4, §2.4)", () => {
     })
 
     const res = await POST(req)
-    expect(res.status).toBe(500)
+    expect(res.status).toBe(200)
     const json = await res.json()
-    expect(json.code).toBe("IDEMPOTENCY_CHECK_FAILED")
+    expect(json.results[0]).toMatchObject({ status: "rejected", error: "Database connection failed" })
+    expect(insertedRecords).toHaveLength(0)
+    expect(processedOpsStore.size).toBe(0)
   })
 
   it("8. Successfully processes EAV-formatted vitals data (data_type, value, unit, notes)", async () => {
@@ -305,5 +307,28 @@ describe("Offline Sync Rewrite (Audit C4, §2.4)", () => {
     expect(insertedRecords).toHaveLength(1)
     expect(insertedRecords[0].data[0].data_type).toBe("heart_rate")
     expect(insertedRecords[0].data[0].value).toBe(72)
+  })
+
+  it("deduplicates repeated operation IDs within one batch through a single atomic RPC", async () => {
+    const op = { client_op_id: "dddddddd-dddd-4ddd-8ddd-dddddddddddd", table: "health_data", type: "INSERT", data: { value: 72 } }
+    const res = await POST(new NextRequest("http://localhost/api/offline-sync", { method: "POST", body: JSON.stringify({ operations: [op, op] }) }))
+    expect((await res.json()).results.map((row: any) => row.status)).toEqual(["ok", "duplicate"])
+    expect(mockSupabase.rpc).toHaveBeenCalledTimes(1)
+    expect(insertedRecords).toHaveLength(1)
+  })
+
+  it("rejects a batch captured under another account before any database mutation", async () => {
+    const res = await POST(new NextRequest("http://localhost/api/offline-sync", { method: "POST", body: JSON.stringify({ owner_user_id: "ffffffff-ffff-4fff-8fff-ffffffffffff", operations: [{ client_op_id: "dddddddd-dddd-4ddd-8ddd-dddddddddddd", table: "health_data", type: "INSERT", data: { value: 72 } }] }) }))
+    expect(res.status).toBe(403)
+    expect((await res.json()).code).toBe("OWNER_MISMATCH")
+    expect(mockSupabase.rpc).not.toHaveBeenCalled()
+  })
+
+  it("fails closed when the transactional migration is missing instead of falling back to direct writes", async () => {
+    mockSupabase.rpc.mockResolvedValueOnce({ data: null, error: { code: "PGRST202", message: "Function not found" } })
+    const res = await POST(new NextRequest("http://localhost/api/offline-sync", { method: "POST", body: JSON.stringify({ operations: [{ client_op_id: "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee", table: "health_data", type: "INSERT", data: { value: 72 } }] }) }))
+    expect(res.status).toBe(503)
+    expect((await res.json()).code).toBe("MIGRATION_REQUIRED")
+    expect(insertedRecords).toHaveLength(0)
   })
 })

@@ -15,6 +15,9 @@ import { getCachedResponse, setCachedResponse, getSemanticCachedResponse } from 
 import { isLoadTest, stubDelay } from "@/lib/loadtest"
 import { executeWithAiGateway } from "@/lib/ai/gateway"
 import { sanitizeClinicalPretext } from "@/lib/clinical/patient-context"
+import { getAssistantTriageReply } from "@/lib/assistant/prompts"
+import { ASSISTANT_PHRASES } from "@/lib/assistant/phrase-catalog"
+import { resolveAssistantLanguage } from "@/lib/assistant/languages"
 
 export const BASE_RULES = `You are a helpful, culturally sensitive AI health assistant for rural communities in India.
 Follow these clinical safety rules strictly:
@@ -70,6 +73,9 @@ Do NOT wrap in any extra markdown or conversational commentary outside the JSON.
 }
 
 export const FALLBACK_MESSAGES: Record<string, string> = {
+  ml: getAssistantTriageReply("ml", "unknown"),
+  as: getAssistantTriageReply("as", "unknown"),
+  ur: getAssistantTriageReply("ur", "unknown"),
   hi: "नमस्ते! आपकी सुरक्षा के लिए: यदि आपको तेज बुखार, सीने में दर्द या सांस लेने में तकलीफ जैसे गंभीर लक्षण हैं, तो तुरंत नजदीकी स्वास्थ्य केंद्र (PHC) या 108 पर संपर्क करें। सामान्य लक्षणों के लिए पर्याप्त आराम करें, ओआरएस या हल्का भोजन लें।",
   mr: "नमस्ते! तुमच्या सुरक्षिततेसाठी: तीव्र ताप, छातीत दुखणे किंवा श्वास घेण्यास त्रास यासारखी गंभीर लक्षणे असल्यास त्वरित 108 रुग्णवाहिकेला कॉल करा किंवा जवळच्या प्राथमिक आरोग्य केंद्रास (PHC) भेट द्या. साध्या लक्षणांसाठी पुरेशी विश्रांती आणि ओआरएस घ्या.",
   bn: "নমস্কার! আপনার সুরক্ষার জন্য: তীব্র জ্বর, বুকে ব্যথা বা শ্বাসকষ্টের মতো গুরুতর লক্ষণ থাকলে অবিলম্বে ১০৮ নম্বরে কল করুন বা নিকটস্থ প্রাথমিক স্বাস্থ্য কেন্দ্রে যান। সাধারণ উপসর্গের জন্য পর্যাপ্ত বিশ্রাম ও ওআরএস নিন।",
@@ -99,14 +105,16 @@ export async function executeAiChat(request: NextRequest, body: any) {
 
   // 1. Server-side Tier 0 Emergency Gate
   const emergencyMatch = detectTier0Emergency(sanitizedMessage, lang)
-  if (emergencyMatch) {
+  const explicitEmergency = ASSISTANT_PHRASES[resolveAssistantLanguage(lang)].emergency.some((phrase) => sanitizedMessage.toLowerCase().includes(phrase.toLowerCase()))
+  if (emergencyMatch || explicitEmergency) {
+    const safetyReply = emergencyMatch?.reply || getAssistantTriageReply(lang, "emergency")
     return NextResponse.json({
-      reply: emergencyMatch.reply,
-      replyHi: emergencyMatch.replyHi,
-      replyEn: emergencyMatch.replyEn,
+      reply: safetyReply,
+      replyHi: emergencyMatch?.replyHi || getAssistantTriageReply("hi", "emergency"),
+      replyEn: emergencyMatch?.replyEn || getAssistantTriageReply("en", "emergency"),
       tier: 0,
       emergency: true,
-      hotline: emergencyMatch.hotline,
+      hotline: emergencyMatch?.hotline || "108",
       fallback: false,
       source: "tier0-emergency-gate",
     })
@@ -154,7 +162,7 @@ export async function executeAiChat(request: NextRequest, body: any) {
   }
 
   // 4. Response caching check (Tier 2.5) — skip when personalized clinical pretext is active
-  if (safeHistory.length === 0 && !cleanPretext) {
+  if (safeHistory.length === 0 && !cleanPretext && (lang === "en" || lang === "hi")) {
     const cached = await getCachedResponse(sanitizedMessage)
     if (cached) {
       const selectedReply =
@@ -242,7 +250,7 @@ export async function executeAiChat(request: NextRequest, body: any) {
         ? replyEn || replyTarget || replyHi
         : replyTarget || replyHi || replyEn
 
-    if (replyEn && replyHi && safeHistory.length === 0) {
+    if (replyEn && replyHi && safeHistory.length === 0 && !cleanPretext && (lang === "en" || lang === "hi")) {
       setCachedResponse(sanitizedMessage, {
         replyEn,
         replyHi,

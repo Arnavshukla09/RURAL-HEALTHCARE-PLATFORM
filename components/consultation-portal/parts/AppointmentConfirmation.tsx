@@ -27,7 +27,7 @@ import {
   ArrowRight,
   FileText,
 } from "lucide-react"
-import { generateDoctorClaimToken } from "@/lib/doctor-claims"
+import { consultationJoinPath } from "../booking-client"
 import type { BookingSuccessData } from "../types"
 import { getInitials } from "../types"
 
@@ -59,32 +59,15 @@ export function AppointmentConfirmation({
   })
 
   const origin = typeof window !== "undefined" ? window.location.origin : ""
-  const doctorJoinUrl = `${origin}/teleconsult/room?id=${successData.roomId}&name=${encodeURIComponent(
-    successData.doctor.name
-  )}&role=doctor&lang=${language}`
-  const patientJoinUrl = `/teleconsult/room?id=${successData.roomId}&name=${encodeURIComponent(
-    patientName || (en ? "Patient" : "मरीज")
-  )}&role=patient&lang=${language}`
-  const doctorAcceptUrl = `${origin}/teleconsult/confirm?id=${successData.roomId}&action=accept&doc=${encodeURIComponent(
-    successData.doctor.name
-  )}&patient=${encodeURIComponent(patientName || "Patient")}&date=${successData.date}&time=${successData.slot}&fee=${
-    successData.doctor.consultationFee
-  }&mode=${successData.consultType}&lang=${language}`
-  const doctorRescheduleUrl = `${origin}/teleconsult/confirm?id=${
-    successData.roomId
-  }&action=reschedule&doc=${encodeURIComponent(successData.doctor.name)}&patient=${encodeURIComponent(
-    patientName || "Patient"
-  )}&date=${successData.date}&time=${successData.slot}&fee=${successData.doctor.consultationFee}&lang=${language}`
-  const claimToken = generateDoctorClaimToken(successData.doctor.id)
-  const doctorClaimUrl = `${origin}/doctor/claim?id=${successData.doctor.id}&token=${claimToken}`
+  const patientJoinUrl = consultationJoinPath(successData.appointmentId, language)
+  const doctorJoinUrl = `${origin}${patientJoinUrl}`
+  const doctorAcceptUrl = `${origin}/doctor/requests`
+  const doctorRescheduleUrl = doctorAcceptUrl
   const cleanPhone = (successData.doctor.phone || "").replace(/[^\d+]/g, "")
 
-  const paymentStatusStr =
-    successData.doctor.consultationFee === 0
-      ? "Free Government OPD (Ayushman PM-JAY)"
-      : successData.paymentMode === "upi"
-      ? `₹${successData.doctor.consultationFee} (Paid via UPI)`
-      : `₹${successData.doctor.consultationFee} (To Collect at OPD Desk)`
+  const paymentStatusStr = successData.doctor.consultationFee === undefined
+    ? "Confirm consultation fees directly with the provider"
+    : successData.doctor.consultationFee === 0 ? "No consultation fee listed" : `Listed fee ₹${successData.doctor.consultationFee}; payment not verified`
 
   const invitationText = en
     ? `🏥 *RURAL HEALTHCARE TELEMEDICINE — NEW APPOINTMENT*\n\nRespected ${
@@ -95,7 +78,7 @@ export function AppointmentConfirmation({
         successData.slot
       }\n🩺 *Mode:* ${successData.consultType.toUpperCase()} Call\n💳 *Fee:* ${paymentStatusStr}\n${
         notes ? `📝 *Symptoms:* ${notes}\n` : ""
-      }✅ *1-Tap Accept Appointment:*\n${doctorAcceptUrl}\n\n👉 *Join Video Clinic Room:*\n${doctorJoinUrl}\n\n🔄 *Propose New Time:*\n${doctorRescheduleUrl}\n\n🔐 *Private Doctor Profile Claim Link:*\n${doctorClaimUrl}\n\nRural Healthcare Platform`
+      }📋 *Review the appointment after signing in:*\n${doctorAcceptUrl}\n\n👉 *Join Video Clinic Room:*\n${doctorJoinUrl}\n\n🔄 *Propose New Time:*\n${doctorRescheduleUrl}\n\nRural Healthcare Platform`
     : `🏥 *ग्रामीण स्वास्थ्य सेवा — नया परामर्श अनुरोध*\n\nआदरणीय ${
         successData.doctor.name
       },\n\nएक मरीज ने आपके साथ परामर्श शेड्यूल किया है:\n👤 *मरीज:* ${
@@ -104,7 +87,7 @@ export function AppointmentConfirmation({
         successData.slot
       }\n🩺 *माध्यम:* ${successData.consultType.toUpperCase()} वीडियो\n💳 *शुल्क:* ${paymentStatusStr}\n${
         notes ? `📝 *लक्षण:* ${notes}\n` : ""
-      }✅ *अपॉइंटमेंट स्वीकार करें (1-क्लिक):*\n${doctorAcceptUrl}\n\n👉 *वीडियो रूम लिंक:*\n${doctorJoinUrl}\n\n🔄 *समय बदलना चाहते हैं? लिंक:*\n${doctorRescheduleUrl}\n\n🔐 *निजी डॉक्टर प्रोफ़ाइल क्लेम लिंक:*\n${doctorClaimUrl}\n\nग्रामीण स्वास्थ्य सेवा मंच`
+      }📋 *लॉगिन करके अपॉइंटमेंट की समीक्षा करें:*\n${doctorAcceptUrl}\n\n👉 *वीडियो रूम लिंक:*\n${doctorJoinUrl}\n\n🔄 *समय बदलना चाहते हैं? लिंक:*\n${doctorRescheduleUrl}\n\nग्रामीण स्वास्थ्य सेवा मंच`
 
   return (
     <div className="p-4 sm:p-6 md:p-8 max-w-2xl mx-auto space-y-6 animate-in fade-in duration-200">
@@ -113,11 +96,11 @@ export function AppointmentConfirmation({
           <div className="h-16 w-16 bg-white/20 backdrop-blur-xs rounded-full flex items-center justify-center mx-auto mb-3 border-2 border-white/40 shadow-xs">
             <CheckCircle2 className="h-9 w-9 text-white" />
           </div>
-          <h2 className="text-2xl font-black">{en ? "Appointment Confirmed!" : "अपॉइंटमेंट कन्फर्म हो गया!"}</h2>
+          <h2 className="text-2xl font-black">{en ? "Appointment Scheduled!" : "अपॉइंटमेंट शेड्यूल हो गया!"}</h2>
           <p className="text-xs sm:text-sm text-emerald-100 mt-1">
             {en
-              ? "Your consultation has been successfully scheduled. Notification alert sent."
-              : "आपका परामर्श सफलतापूर्वक शेड्यूल हो गया है। सूचना भेज दी गई है।"}
+              ? "Your appointment was saved. Sign in to join during its scheduled consultation window."
+              : "आपकी अपॉइंटमेंट सेव हो गई है। निर्धारित समय पर लॉगिन करके जुड़ें।"}
           </p>
         </div>
 
@@ -155,7 +138,7 @@ export function AppointmentConfirmation({
                   {en ? "Consultation Mode:" : "परामर्श माध्यम:"}
                 </span>
                 <span className="font-bold text-gray-800 capitalize">
-                  {successData.consultType} Call (Free OPD)
+                  {successData.consultType} Call
                 </span>
               </div>
             </div>
@@ -173,14 +156,14 @@ export function AppointmentConfirmation({
                   {en
                     ? `Dr. ${successData.doctor.name.replace(/^Dr\.\s*/i, "")} is affiliated with ${
                         successData.doctor.hospitalAffiliation
-                      }. Deliver their 1-tap room link via WhatsApp, SMS, or Phone:`
+                      }. Share the appointment link; the assigned doctor must sign in to join:`
                     : `डॉक्टर ${successData.doctor.name.replace(/^Dr\.\s*/i, "")} (${
                         successData.doctor.hospitalAffiliation
-                      }) को नीचे दिए गए माध्यमों से 1-क्लिक वीडियो लिंक भेजें:`}
+                      }) को अपॉइंटमेंट लिंक भेजें; जुड़ने के लिए डॉक्टर को लॉगिन करना होगा:`}
                 </p>
               </div>
               <Badge className="bg-purple-600 text-white text-[10px] shrink-0 font-bold">
-                {en ? "1-Tap Direct Join" : "बिना लॉगिन"}
+                {en ? "Sign-in Required" : "लॉगिन आवश्यक"}
               </Badge>
             </div>
 

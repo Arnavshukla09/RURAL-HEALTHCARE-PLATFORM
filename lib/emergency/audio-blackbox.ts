@@ -7,6 +7,8 @@
  * - Provides SpeechSynthesis vocalizer for patients who cannot speak.
  */
 
+import { getSpeechLangFromCode, speak, stopSpeaking } from "@/lib/ai/speech"
+
 export interface IncidentRecording {
   id: string
   timestamp: number
@@ -143,48 +145,43 @@ export async function stopIncidentRecording(coords?: { lat: number; lng: number 
 }
 
 let voiceLoopActive = false
-let voiceLoopTimeout: any = null
+let voiceLoopTimeout: ReturnType<typeof setTimeout> | null = null
+let voiceLoopGeneration = 0
 
 /**
  * Starts speaking a custom emergency message in a continuous loop alongside the siren
  */
-export function startEmergencyVoiceLoop(text: string, lang: "en" | "hi" = "hi"): void {
+export function startEmergencyVoiceLoop(text: string, lang: string = "hi"): void {
+  stopEmergencyVoiceLoop()
   if (typeof window === "undefined" || !("speechSynthesis" in window) || !text || !text.trim()) return
 
+  const generation = voiceLoopGeneration
   voiceLoopActive = true
+  try { window.dispatchEvent(new CustomEvent("rhcp:emergency-beacon", { detail: { active: true } })) } catch {}
   if (voiceLoopTimeout) {
     clearTimeout(voiceLoopTimeout)
     voiceLoopTimeout = null
   }
 
+  const current = () => voiceLoopActive && generation === voiceLoopGeneration
+  const schedule = (delay: number) => {
+    if (!current()) return
+    if (voiceLoopTimeout) clearTimeout(voiceLoopTimeout)
+    voiceLoopTimeout = setTimeout(() => {
+      voiceLoopTimeout = null
+      speakIteration()
+    }, delay)
+  }
   const speakIteration = () => {
-    if (!voiceLoopActive) return
+    if (!current()) return
 
     try {
-      window.speechSynthesis.cancel()
-      const utterance = new SpeechSynthesisUtterance(text.trim())
-      utterance.lang = lang === "hi" ? "hi-IN" : "en-IN"
-      utterance.rate = 0.95
-      utterance.pitch = 1.05
-      utterance.volume = 1.0
-
-      utterance.onend = () => {
-        if (voiceLoopActive) {
-          voiceLoopTimeout = setTimeout(speakIteration, 1200)
-        }
-      }
-
-      utterance.onerror = () => {
-        if (voiceLoopActive) {
-          voiceLoopTimeout = setTimeout(speakIteration, 2000)
-        }
-      }
-
-      window.speechSynthesis.speak(utterance)
+      speak(text.trim(), { lang: getSpeechLangFromCode(lang), localOnly: !navigator.onLine, rate: 0.95,
+        onEnd: () => schedule(1200),
+        onError: () => { if (current()) stopEmergencyVoiceLoop() },
+      })
     } catch {
-      if (voiceLoopActive) {
-        voiceLoopTimeout = setTimeout(speakIteration, 2500)
-      }
+      schedule(2500)
     }
   }
 
@@ -195,32 +192,26 @@ export function startEmergencyVoiceLoop(text: string, lang: "en" | "hi" = "hi"):
  * Stops continuous emergency voice loop
  */
 export function stopEmergencyVoiceLoop(): void {
+  voiceLoopGeneration++
   voiceLoopActive = false
+  if (typeof window !== "undefined") try { window.dispatchEvent(new CustomEvent("rhcp:emergency-beacon", { detail: { active: false } })) } catch {}
   if (voiceLoopTimeout) {
     clearTimeout(voiceLoopTimeout)
     voiceLoopTimeout = null
   }
-  if (typeof window !== "undefined" && "speechSynthesis" in window) {
-    try {
-      window.speechSynthesis.cancel()
-    } catch {}
-  }
+  // Cancels the speech helper's delayed voice discovery as well as its active utterance.
+  stopSpeaking()
 }
 
 /**
  * Speak aloud an urgent message once
  */
-export function vocalizeEmergencyMessage(text: string, lang: "en" | "hi" = "hi"): void {
+export function vocalizeEmergencyMessage(text: string, lang: string = "hi"): void {
   if (typeof window === "undefined" || !("speechSynthesis" in window)) return
 
   try {
-    window.speechSynthesis.cancel()
-    const utterance = new SpeechSynthesisUtterance(text)
-    utterance.lang = lang === "hi" ? "hi-IN" : "en-IN"
-    utterance.rate = 0.95
-    utterance.pitch = 1.05
-    utterance.volume = 1.0
-    window.speechSynthesis.speak(utterance)
+    stopEmergencyVoiceLoop()
+    speak(text, { lang: getSpeechLangFromCode(lang), localOnly: !navigator.onLine, rate: 0.95 })
   } catch (err) {
     console.warn("[Vocalizer] Speech synthesis failed:", err)
   }

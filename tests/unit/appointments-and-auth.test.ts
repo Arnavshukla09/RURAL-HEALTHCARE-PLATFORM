@@ -71,6 +71,7 @@ describe("Appointments & Auth Matrix (Phase 10, C1, C2, H2, H8)", () => {
       eq: vi.fn().mockReturnThis(),
       order: vi.fn().mockReturnThis(),
       limit: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn().mockResolvedValue({ data: { id: "44444444-4444-4444-8444-444444444444" }, error: null }),
       single: vi.fn(),
       then: vi.fn((resolve: any) => resolve({ data: null, error: null })),
     }
@@ -140,7 +141,7 @@ describe("Appointments & Auth Matrix (Phase 10, C1, C2, H2, H8)", () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           provider_id: providerId,
-          appointment_date: "2026-11-01T10:00:00.000Z",
+          appointment_date: "2030-11-01T10:00:00.000Z",
           consultation_type: "video",
         }),
       })
@@ -153,7 +154,7 @@ describe("Appointments & Auth Matrix (Phase 10, C1, C2, H2, H8)", () => {
 
     it("resolves simultaneous concurrent booking requests so exactly one succeeds and the other receives 409 SLOT_TAKEN", async () => {
       const providerId = "44444444-4444-4444-8444-444444444444"
-      const slotTime = "2026-11-01T10:00:00.000Z"
+      const slotTime = "2030-11-01T10:00:00.000Z"
 
       // First caller succeeds, second collides on unique constraint uq_provider_slot_scheduled
       let callCount = 0

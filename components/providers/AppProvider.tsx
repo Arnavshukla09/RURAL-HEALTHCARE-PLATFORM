@@ -1,6 +1,8 @@
 "use client"
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react"
+import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from "react"
+import { setOfflineSyncOwner } from "@/lib/offline/sync"
+import { isClientCleanupPending, wipeClientCachesOnSignOut } from "@/lib/offline/cache-cleaner"
 import { createClient } from "@/lib/supabase/client"
 import { UserProfile, SymptomResult } from "@/types"
 import { useRouter } from "next/navigation"
@@ -35,6 +37,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Loading starts true until initial session validation finishes
   const [loading, setLoading] = useState(true)
   const router = useRouter()
+  const previousOwner = useRef<string | null>(null)
+  const ownerGeneration = useRef(0)
+  const pendingCleanup = useRef<Promise<void> | null>(null)
+  useEffect(() => {
+    const nextOwner = user?.id || null
+    const generation = ++ownerGeneration.current
+    setOfflineSyncOwner(null)
+    if ((previousOwner.current && previousOwner.current !== nextOwner) || pendingCleanup.current || isClientCleanupPending()) {
+      const cleanup = pendingCleanup.current || wipeClientCachesOnSignOut()
+      pendingCleanup.current = cleanup
+      cleanup.then(() => {
+        if (generation === ownerGeneration.current) {
+          setOfflineSyncOwner(nextOwner)
+          if (user) localStorage.setItem("rhcp_user_profile", JSON.stringify(user))
+        }
+        if (pendingCleanup.current === cleanup) pendingCleanup.current = null
+      }).catch(() => { if (pendingCleanup.current === cleanup) pendingCleanup.current = null })
+    } else {
+      setOfflineSyncOwner(nextOwner)
+    }
+    previousOwner.current = nextOwner
+  }, [user?.id])
 
   // Sync user state with localStorage
   const setUser: React.Dispatch<React.SetStateAction<UserProfile | null>> = (action) => {
@@ -73,7 +97,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         localStorage.setItem("rhcp_language", next)
         document.documentElement.lang = next
         window.dispatchEvent(new CustomEvent("rhcp-language-change", { detail: { language: next } }))
-        triggerGoogleTranslate(next, true)
+        triggerGoogleTranslate(next, false)
       } catch {}
       return next
     })

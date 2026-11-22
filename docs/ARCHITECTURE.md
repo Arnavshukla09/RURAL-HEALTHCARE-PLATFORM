@@ -6,7 +6,7 @@ This document details the software architecture, design patterns, security contr
 
 ## 1. High-Level System Architecture
 
-The platform employs a **Backend-For-Frontend (BFF)** Serverless architecture designed specifically for low-bandwidth, spotty-connectivity rural environments while operating strictly within **100% Free-Tier quotas ($0 spend)** across all infrastructure providers.
+The platform employs a **Backend-For-Frontend (BFF)** serverless architecture for low-bandwidth, intermittent connectivity. Existing hosted services have quota-limited free tiers whose terms may change. The guided avatar has no required paid inference or avatar API; owned model computation still needs hardware, electricity and maintenance.
 
 ```mermaid
 architecture-beta
@@ -99,23 +99,22 @@ stateDiagram-v2
     state Online {
         [*] --> CheckOutbox
         CheckOutbox --> BatchPostOfflineSync : Operations Exist
-        BatchPostOfflineSync --> CheckServerIdempotency
-        CheckServerIdempotency --> MarkProcessedClientOps
-        MarkProcessedClientOps --> ClearLocalOutbox
+        BatchPostOfflineSync --> ApplyTransactionalRPC
+        ApplyTransactionalRPC --> ClearLocalOutbox : Acknowledged ok or duplicate
     }
 ```
 
 ### 3.1 Idempotent Outbox Mechanics
-1. **Client Generation:** Operations created offline (prescriptions, camp registrations, vitals) are assigned a cryptographically random UUID (`client_op_id`) and persisted to IndexedDB (`rhcp_offline_db`).
-2. **Server Verification:** `POST /api/offline-sync` checks the incoming batch against table `processed_client_ops`.
-3. **At-Most-Once Execution:** If an operation was already recorded, the server returns status `"already_processed"` with HTTP 200 without executing duplicate insertions.
-4. **Column Sanitization:** Client payloads are filtered against strict whitelists, discarding client-assigned IDs or privileged fields.
+1. **Client Generation:** Offline requests receive a random `client_op_id`, optional preassigned entity UUID and authenticated owner ID, then enter IndexedDB (`rhcp_offline_db`). Unowned legacy requests are quarantined.
+2. **Server Verification:** `POST /api/offline-sync` validates ownership and strict table/column schemas, then calls the authenticated `apply_offline_operation` RPC. Patient identity comes from the server profile.
+3. **At-Most-Once Execution:** Each operation's claim, mutation and audit commit in one database transaction. Committed replay returns `"duplicate"`; a failed mutation rolls back its claim. A different payload under a committed key is rejected. A batch contains individually atomic operations, not one transaction covering the entire batch.
+4. **Replay/Expiry:** Both new sealed migrations are required. New expired bookings are rejected; successful duplicates remain acknowledged after their appointment time passes. The page and worker use bounded retries, and only acknowledged requests leave the queue. See `docs/OFFLINE_SYNC_ROLLOUT.md` for deployment and unexecuted local-database gates.
 
 ### 3.2 Edge-Preassigned Relational UUIDs (Intelehealth Edge Architecture)
 To eliminate foreign key dependency deadlocks during offline data capture:
 - **Client-Preassigned Primary Keys:** The edge client generates an RFC4122 v4 UUID (`createClientEntityId()`) for parent entities (e.g., `clinical_encounters`, `appointments`).
 - **Relational Graph Preserved Offline:** Child records created while offline (e.g., vital sign observations, e-prescriptions) reference the parent's pre-assigned `entity_id` directly in their local payload.
-- **Atomic Replay:** When flushed via `POST /api/offline-sync`, the server inserts the parent encounter and child observations with preserved relational integrity, preventing orphan records or duplicate insertion races.
+- **Atomic Replay:** Each operation commits through the RPC; child observations must reference an encounter owned by the patient. Dependent operations are replayed in order. The entire parent/child batch is not one database transaction.
 
 ### 3.3 Client-Side Clinical Media Compression Pipeline (`lib/media/compressor.ts`)
 To overcome 2G/3G mobile uplink bottlenecks when uploading clinical photographs (dermatology rashes, wounds, eye exams):
@@ -132,7 +131,7 @@ Implemented via `@upstash/ratelimit` with Redis and an in-memory sliding-window 
 - **Public Read (60 req/min):** Spatial directory and provider endpoints.
 - **Auth Read (120 req/min):** Patient records and appointments.
 - **Mutations (30 req/min):** Booking, medical record creation, outbox sync.
-- **AI & Heavy Compute (15 req/min, 200 daily quota):** Symptom checker and chat triage.
+- **AI & Heavy Compute (10 req/min, 30/day per client key):** Existing Gemini symptom/chat enrichment. The new assistant's local workflows and owned voice service are separate.
 - **Notifications Polling (120 req/min):** Periodic notification updates.
 
 ### 4.2 AI Circuit Breaker (`lib/rate-limit.ts`)
@@ -181,7 +180,7 @@ The platform provides full client-side UI translation across **13 Indian languag
 |:---|:---|
 | `lib/i18n/detect-language.ts` | `SUPPORTED_LANGUAGES` array (13 entries), `getLanguageFromCoordinates()` GPS → LGD State → Regional Language mapping, full dialect metadata for all 36 States & UTs (Bhojpuri, Maithili, Marwari, Chhattisgarhi, Ahirani, Sambalpuri, etc.) |
 | `lib/i18n/google-translate.ts` | Zero-cost client-side DOM translation engine, `installTranslateCrashGuard()` (React crash guard), `hideGoogleTranslateBanner()`, `triggerGoogleTranslate(lang, forceReload)` |
-| `lib/i18n/translations.ts` | Static Phase-1 en/hi key-value dictionary (~40 KB) for hardcoded labels — supplemented by Google Translate for all other 11 languages |
+| `lib/i18n/translations.ts` | Eight native dictionaries (en, hi, te, mr, bn, ta, gu, kn); the other five fall back to English. Google DOM translation supplements the wider UI online. Assistant/offline-page prompts have their own native all-13 catalogs. |
 | `lib/services/ai-chat.service.ts` | `buildMultilingualSystemPrompt(lang, dialect?, clinicalPretext?)` — parameterized Gemini system prompt dynamically assembled for the user's active language and optional dialect |
 | `components/providers/AppProvider.tsx` | Language state persistence to `localStorage` (`rhcp_language`), auto-trigger of Google Translate on page load/hydration |
 | `components/header/parts/UserMenu.tsx` | Desktop 13-language selector dropdown rendering `SUPPORTED_LANGUAGES` from `detect-language.ts` |
@@ -213,7 +212,7 @@ Configured via `next.config.mjs` with `Content-Security-Policy-Report-Only`:
 
 ## 8. 100% Free-Tier Posture & Quota Management
 
-The entire architecture is designed to remain permanently within free tiers ($0 operating cost):
+The hosted deployment uses quota-limited free tiers whose terms and limits may change; permanent zero operating cost is not guaranteed. The new assistant's guided core has no required paid inference/avatar API. Owned model computation still requires hardware, electricity and connectivity. See `docs/VOICE_ASSISTANT_SETUP.md` for the stable service protocol, pinned snapshots and deployment requirements:
 
 | Service | Free Tier Boundary | Architectural Defense |
 |---|---|---|

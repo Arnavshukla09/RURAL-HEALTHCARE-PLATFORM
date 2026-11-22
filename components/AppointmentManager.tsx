@@ -9,6 +9,7 @@ import { Label } from "./ui/label"
 import { Calendar, Clock, Video, CheckCircle, XCircle, User, Stethoscope, Plus, Loader2 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { triggerAppointmentBooked, triggerAppointmentStatusUpdated } from "@/lib/notifications/notification-engine"
+import { bookVerifiedConsultation } from "@/components/consultation-portal/booking-client"
 
 interface AppointmentManagerProps { user: any; language: string; setJitsiRoom?: (r: string | null) => void }
 
@@ -99,11 +100,8 @@ export function AppointmentManager({ user, language, setJitsiRoom }: Appointment
     cancelled: "bg-red-100 text-red-700"
   }
 
-  const joinCall = (roomId: string) => {
-    if (setJitsiRoom) setJitsiRoom(roomId)
-    const roleParam = isDoctor ? "doctor" : "patient"
-    const nameParam = encodeURIComponent(user?.name || (isDoctor ? "Doctor" : "Patient"))
-    router.push(`/teleconsult/room?id=${roomId}&name=${nameParam}&role=${roleParam}&lang=${language}`)
+  const joinCall = (appointmentId: string) => {
+    router.push(`/teleconsult/room?appointmentId=${encodeURIComponent(appointmentId)}&lang=${encodeURIComponent(language)}`)
   }
 
   const formatDate = (dateStr: string) => { try { return new Date(dateStr).toLocaleDateString(en ? "en-IN" : "hi-IN", { day: "numeric", month: "short", year: "numeric" }) } catch { return dateStr } }
@@ -137,95 +135,29 @@ export function AppointmentManager({ user, language, setJitsiRoom }: Appointment
   const handleBookAppointment = async () => {
     setBookingError("")
     setBookingSuccess("")
-
-    if (!bookingForm.date || !bookingForm.time) {
-      setBookingError(en ? "Please select date and time" : "कृपया तारीख और समय चुनें")
+    if (!bookingForm.provider_id || !bookingForm.date || !bookingForm.time) {
+      setBookingError(en ? "Select a registered provider, date and time" : "पंजीकृत डॉक्टर, तारीख और समय चुनें")
       return
     }
-
     setBookingLoading(true)
     try {
-      const supabase = createClient()
-      const { data: { user: authUser } } = await supabase.auth.getUser()
-      if (!authUser) {
-        setBookingError(en ? "Please login to book" : "बुक करने के लिए लॉगिन करें")
-        setBookingLoading(false)
-        return
-      }
-
-      // Ensure patient row exists via server API (bypasses RLS)
-      let patientId: string | null = null
-      try {
-        const ensureRes = await fetch("/api/auth/ensure-patient", { method: "POST" })
-        if (ensureRes.ok) {
-          const ensureData = await ensureRes.json()
-          patientId = ensureData.patient_id
-        }
-      } catch {}
-
-      // Fallback: try direct DB read
-      if (!patientId) {
-        const { data: p } = await supabase.from('patients').select('id').eq('user_id', authUser.id).single()
-        patientId = p?.id
-      }
-
-      // Get provider (seeded data is in healthcare_providers table)
-      let provId = bookingForm.provider_id
-      if (!provId) {
-        const { data: providerList } = await supabase
-          .from('healthcare_providers')
-          .select('id')
-          .eq('is_verified', true)
-          .limit(1)
-        provId = providerList?.[0]?.id
-      }
-
-      if (!patientId || !provId) {
-        setBookingError(en ? "Unable to complete booking. Please try again." : "बुकिंग पूरी नहीं हो सकी। कृपया पुनः प्रयास करें।")
-        setBookingLoading(false)
-        return
-      }
-
-      const appointmentDate = new Date(`${bookingForm.date}T${bookingForm.time}:00`).toISOString()
-      const roomId = `ruralhealth-${authUser.id.slice(0, 8)}-${Date.now()}`
-
-      const res = await fetch('/api/appointments', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          appointment_date: appointmentDate,
-          provider_id: provId,
-          notes: bookingForm.notes || null,
-          consultation_type: 'General',
-          teleconsult_room_id: roomId
-        })
-      });
-      
-      const data = await res.json();
-      if (!res.ok || data.error) {
-        throw new Error(data.error || 'Failed to book appointment');
-      } else {
-        const prov = providers.find(p => p.id === provId)
-        triggerAppointmentBooked({
-          appointmentId: data?.id || roomId,
-          doctorName: prov?.name || "Consultant Doctor",
-          doctorSpecialty: prov?.specialization || "General Medicine",
-          hospitalName: prov?.location || "Rural Clinic",
-          date: bookingForm.date,
-          time: bookingForm.time,
-          consultType: "video",
-          patientName: user?.name || "Patient",
-          patientUserId: authUser.id,
-          roomId: roomId,
-        })
-        setBookingSuccess(en ? "Appointment booked successfully!" : "अपॉइंटमेंट सफलतापूर्वक बुक हुई!")
-        setBookingForm({ provider_id: "", date: "", time: "", notes: "" })
-        setShowBooking(false)
-      }
-    } catch (err: any) {
-      setBookingError(err?.message || "Failed to book")
+      const appointmentDate = new Date(`${bookingForm.date}T${bookingForm.time}:00+05:30`).toISOString()
+      const appointment = await bookVerifiedConsultation({
+        provider_id: bookingForm.provider_id, appointment_date: appointmentDate,
+        consultation_type: "video", notes: bookingForm.notes || undefined,
+      })
+      const provider = providers.find((item) => item.id === appointment.provider_id)
+      triggerAppointmentBooked({
+        appointmentId: appointment.id, doctorName: provider?.name || "",
+        doctorSpecialty: provider?.specialization || "", hospitalName: provider?.location || "",
+        date: bookingForm.date, time: bookingForm.time, consultType: "video",
+        patientName: user?.name || "", patientUserId: user?.id, roomId: appointment.teleconsult_room_id,
+      }).catch(() => {})
+      setBookingSuccess(en ? "Appointment saved successfully!" : "अपॉइंटमेंट सफलतापूर्वक सेव हुई!")
+      setBookingForm({ provider_id: "", date: "", time: "", notes: "" })
+      setShowBooking(false)
+    } catch (failure) {
+      setBookingError(failure instanceof Error ? failure.message : "Booking was not confirmed")
     } finally {
       setBookingLoading(false)
     }
@@ -333,7 +265,7 @@ export function AppointmentManager({ user, language, setJitsiRoom }: Appointment
                     </Badge>
                     <div className="flex items-center gap-2">
                       {!isPastTime(a) && a.status === "scheduled" && a.teleconsult_room_id && (
-                        <Button size="sm" className="h-7 text-xs gradient-primary text-white" onClick={() => joinCall(a.teleconsult_room_id)}>
+                        <Button size="sm" className="h-7 text-xs gradient-primary text-white" onClick={() => joinCall(a.id)}>
                           <Video className="h-3 w-3 mr-1" />{en ? "Join" : "जुड़ें"}
                         </Button>
                       )}

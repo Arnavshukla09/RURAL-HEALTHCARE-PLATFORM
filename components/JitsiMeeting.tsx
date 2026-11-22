@@ -28,6 +28,8 @@ export function JitsiMeeting({
   const containerRef = useRef<HTMLDivElement>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const onLeaveRef = useRef(onLeave)
+  onLeaveRef.current = onLeave
 
   const effectiveDomain = domain || process.env.NEXT_PUBLIC_JITSI_DOMAIN || "meet.jit.si"
 
@@ -51,6 +53,8 @@ export function JitsiMeeting({
   const t = content[language as keyof typeof content] || content.en
 
   useEffect(() => {
+    let disposed = false
+    let conference: { dispose: () => void } | null = null
     const initJitsi = async () => {
       try {
         setLoading(true)
@@ -79,7 +83,7 @@ export function JitsiMeeting({
           })
         }
 
-        if (!containerRef.current) return
+        if (!containerRef.current || disposed) return
 
         const JitsiMeetExternalAPI = (window as any).JitsiMeetExternalAPI
 
@@ -120,6 +124,8 @@ export function JitsiMeeting({
         }
 
         const api = new JitsiMeetExternalAPI(effectiveDomain, options)
+        conference = api
+        api.addEventListener("videoConferenceLeft", () => onLeaveRef.current?.())
 
         // Handle ready event
         api.addEventListener("videoConferenceJoined", () => {
@@ -137,15 +143,8 @@ export function JitsiMeeting({
           console.log("[v0] Participant left:", data)
         })
 
-        // Cleanup on unmount
-        return () => {
-          try {
-            api.dispose()
-          } catch (e) {
-            console.error("Error disposing Jitsi API:", e)
-          }
-        }
       } catch (err) {
+        if (disposed) return
         console.error("Error initializing Jitsi:", err)
         setError(language === "en" ? "Failed to load video conference" : "वीडियो कॉन्फ्रेंस लोड करने में विफल")
         setLoading(false)
@@ -153,7 +152,8 @@ export function JitsiMeeting({
     }
 
     initJitsi()
-  }, [roomName, displayName, language, jwt, domain])
+    return () => { disposed = true; conference?.dispose() }
+  }, [roomName, displayName, language, jwt, domain, audioOnly])
 
   if (error) {
     return (

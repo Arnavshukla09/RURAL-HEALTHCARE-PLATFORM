@@ -9,6 +9,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
+## [Unreleased] - 2026-11-22
+
+### Persistent multilingual assistant
+- Replaced the text widget with a globally mounted lightweight avatar, native guided prompts/commands in all 13 selected languages, finalized voice turns and pictorial controls.
+- Added guided symptoms, confirmed appointment creation/cancellation and authorized consultation entry. Runtime receipt checks prevent failed or mismatched writes from being announced as success.
+- Added account-owned offline queues, worker/page replay, private-cache cleanup, checksum-verified language packs and emergency/audio resource lifecycle guards.
+- Added two append-only sealed migrations for transactional replay and expiry rejection. Database rollout and live-local verification remain required before release.
+- Added an optional owned voice service at port 8765, immutable snapshot locks, offline runtime loading and explicit repair at locked commits. Model assets and heavyweight dependencies are not part of the repository.
+- Extended CI to require both local database suites and dependency-free Python contracts. Added setup, repository structure and release-audit guidance with explicit model/device/cost limitations.
+
 ## [1.3.0] - 2026-11-14
 
 ### Clinical & Resilience Enhancements (Intelehealth Patterns)

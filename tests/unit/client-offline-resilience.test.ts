@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
 import { calculateBackoff, isOnline } from "@/lib/offline/sync"
+import { setOfflineSyncOwner } from "@/lib/offline/runtime"
 import {
   checkStorageQuota,
   enqueue,
@@ -45,6 +46,7 @@ vi.mock("idb", () => {
         transaction: vi.fn((_storeName: string, _mode: string) => {
           return {
             store: {
+              count: vi.fn(async () => mockStore.size),
               get: vi.fn(async (key: string) => {
                 const item = mockStore.get(key)
                 return item ? { ...item } : undefined
@@ -67,6 +69,7 @@ vi.mock("idb", () => {
 describe("Client Offline Resilience & Outbox Lifecycle (Phase 3)", () => {
   beforeEach(() => {
     mockStore = new Map()
+    setOfflineSyncOwner(null)
     mockIndexByStatus = (status: string) =>
       Array.from(mockStore.values())
         .filter((v) => v.status === status)

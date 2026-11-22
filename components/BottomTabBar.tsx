@@ -25,10 +25,6 @@ export function BottomTabBar() {
         
         return (
           <button key={tab.key} onClick={() => {
-            if (language !== "en") {
-              window.location.href = tab.key
-              return
-            }
             router.push(tab.key)
           }}
             className={`flex-1 flex flex-col items-center py-2 text-xs transition-colors ${
