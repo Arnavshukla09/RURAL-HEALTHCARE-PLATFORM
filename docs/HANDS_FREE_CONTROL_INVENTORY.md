@@ -1,10 +1,10 @@
 # Hands-free control inventory
 
-Source commit: `c45aa0cf2953300c4f02f3861bb7ff1502d3b735`. Generated 22 November 2026.
+Source commit: `548baeecd99cb9946708bb59f320fc43c8fdc3c3`. Generated 22 November 2026.
 
 **Implemented source registration inventory, not device or end-to-end coverage certification.** These are static JSX templates; one facility-card template may render many buttons. A reachable template can be hidden or disabled at runtime. Dispositions include executable controls, containers, avatar-owned controls and explicit handoffs. Role permissions must be evaluated by the server and active UI state.
 
-Scanned 28 page entries, 497 reachable control templates in 99 source files, including 102 shared/global templates.
+Scanned 28 page entries, 499 reachable control templates in 100 source files, including 104 shared/global templates.
 
 The inventory excludes input values, credentials and conversation data. Handler names and label expressions are source references. Native dialogs and third-party widget controls need separate adapters/exclusions. File/line/column IDs identify audit candidates, not future stable runtime action IDs. The JSON companion preserves these IDs and route associations.
 
@@ -15,26 +15,28 @@ The inventory excludes input values, credentials and conversation data. Handler 
 | components/LanguageSuggestionBanner.tsx:110 | button | Switch to {meta.nativeName} | handleAccept | ui.acab67c248fc4ab4 / confirm |
 | components/LanguageSuggestionBanner.tsx:117 | button | Keep {language === "hi" ? "हिन्दी" : "English"} | handleDismiss | ui.45c346c083948b8a / confirm |
 | components/LanguageSuggestionBanner.tsx:123 | button | Dismiss language suggestion | handleDismiss | ui.a34b98fc0dab5184 / confirm |
-| components/voice-assistant/index.tsx:171 | button | {t("welcome")} | openAssistant | ui.a22bf1e71c1028f5 / assistant |
-| components/voice-assistant/index.tsx:179 | button | {t("close")} | voice.stop, setOpen | ui.875c6f9018451edf / assistant |
-| components/voice-assistant/index.tsx:182 | select | {t("chooseLanguage")} | setLanguage | ui.8c1225679761d77a / assistant |
-| components/voice-assistant/index.tsx:185 | button | {t("downloadOffline")} | prepareOffline | ui.367aacd43b129d3a / assistant |
-| components/voice-assistant/index.tsx:191 | button | {option.label} | pageController.select | ui.009f9da4962734e9 / assistant |
-| components/voice-assistant/index.tsx:196 | a | {t("emergencyCall")} | link navigation | ui.fc3709f1cbe48590 / assistant |
-| components/voice-assistant/index.tsx:197 | button | {choice.label} {choice.detail && <span className="block text-xs font-normal text-gray-500">{choice.detail}</span>} | workflow.select, workflow.say, t | ui.2b0512a9f2abe764 / assistant |
-| components/voice-assistant/index.tsx:201 | button | {t("yesNo")} | workflow.confirm | ui.f7088da9ed7768c5 / assistant |
-| components/voice-assistant/index.tsx:202 | button | {t("cancel")} | workflow.confirm | ui.1c8b5e2b641ebb38 / assistant |
-| components/voice-assistant/index.tsx:204 | button | {t(key)} | run | ui.9662031c9ee75b8b / assistant |
-| components/voice-assistant/index.tsx:208 | button | {pageController.prompt("options")} | voice.interrupt, workflow.cancelTask, pageController.list | ui.a9d2952bd43bcd52 / assistant |
-| components/voice-assistant/index.tsx:209 | button | {pageController.prompt("cancelTask")} | voice.interrupt, pageController.clear, workflow.cancelTask, workflow.say, pageController.prompt | ui.c2cdd0bbcb439bef / assistant |
-| components/voice-assistant/index.tsx:210 | button | {pageController.prompt("accessibility")} | submit, pageController.prompt | ui.15790bb13f64bd3a / assistant |
-| components/voice-assistant/index.tsx:213 | button | {t("listen")} | no direct handler: inspect wiring | ui.5199be8da8573ff9 / assistant |
-| components/voice-assistant/index.tsx:214 | button | {t("replay")} | voice.enable, voice.speakReply | ui.527f49828819bf82 / assistant |
-| components/voice-assistant/index.tsx:215 | button | {t("stop")} | no direct handler: inspect wiring | ui.995a1817c05cf852 / assistant |
-| components/voice-assistant/index.tsx:217 | form | → | event.preventDefault, send | ui.7c7a39c1b8cd1bf3 / assistant |
-| components/voice-assistant/index.tsx:217 | input | {t("textInput")} | setInput | ui.72a5158aff026c14 / assistant |
-| components/voice-assistant/index.tsx:217 | button | {t("send")} | parent form submission | ui.747b6194f748cf68 / assistant |
-| components/voice-assistant/index.tsx:218 | button | {t("emergency")} | run | ui.60ad7f69a7a154c2 / assistant |
+| components/voice-assistant/index.tsx:160 | button | {t("welcome")} | openAssistant | ui.a22bf1e71c1028f5 / assistant |
+| components/voice-assistant/AssistantPanel.tsx:46 | button | {controller.prompt("accessibility")} | no direct handler: inspect wiring | ui.69cdcd9ecaa9d407 / assistant |
+| components/voice-assistant/AssistantPanel.tsx:47 | button | {labels.settings} | setSettingsOpen | ui.8325c9a5a93fd6d8 / assistant |
+| components/voice-assistant/AssistantPanel.tsx:48 | button | {t("close")} | no direct handler: inspect wiring | ui.990a6c99cc1af3ff / assistant |
+| components/voice-assistant/AssistantPanel.tsx:51 | select | {t("chooseLanguage")} | props.setLanguage | ui.8b80606d3332eb6d / assistant |
+| components/voice-assistant/AssistantPanel.tsx:54 | button | {t("downloadOffline")} | no direct handler: inspect wiring | ui.2780b6939ae9ab96 / assistant |
+| components/voice-assistant/AssistantPanel.tsx:57 | button | {labels[value]} {value === "actions" && hasActions && <span className="ms-2 inline-block h-2 w-2 rounded-full bg-teal-600"/>} | setPane | ui.6e797b6f58a9e21e / assistant |
+| components/voice-assistant/AssistantPanel.tsx:68 | button | {option.label} | controller.select | ui.88bc1f0893e2717b / assistant |
+| components/voice-assistant/AssistantPanel.tsx:69 | button | {choice.label} {choice.detail && <span className="block text-xs font-normal text-gray-500">{choice.detail}</span>} | workflow.select, workflow.say, t | ui.58626b9cb2ade380 / assistant |
+| components/voice-assistant/AssistantPanel.tsx:70 | button | {t("yesNo")} | workflow.confirm | ui.658a6b18f7f0c944 / assistant |
+| components/voice-assistant/AssistantPanel.tsx:70 | button | {t("cancel")} | workflow.confirm | ui.361a4716ee08ea42 / assistant |
+| components/voice-assistant/AssistantPanel.tsx:71 | button | {t(key)} | setPane, props.onRun | ui.942e30c956f9b2f3 / assistant |
+| components/voice-assistant/AssistantPanel.tsx:72 | button | {controller.prompt(controller.menu.length > 0 ? "more" : "options")} | voice.interrupt, workflow.cancelTask, controller.list | ui.3aff41b469e06540 / assistant |
+| components/voice-assistant/AssistantPanel.tsx:75 | a | {t("emergencyCall")} | link navigation | ui.fb8d78ae84c95c3f / assistant |
+| components/voice-assistant/AssistantPanel.tsx:76 | form | → | event.preventDefault, props.onSend | ui.9d1aaab16b8150af / assistant |
+| components/voice-assistant/AssistantPanel.tsx:76 | input | {t("textInput")} | props.setInput | ui.33b2694ab5005c31 / assistant |
+| components/voice-assistant/AssistantPanel.tsx:76 | button | {t("send")} | parent form submission | ui.41d797e82355b2ef / assistant |
+| components/voice-assistant/AssistantPanel.tsx:77 | button | {t("listen")} | no direct handler: inspect wiring | ui.43d3b9d44db0c9b7 / assistant |
+| components/voice-assistant/AssistantPanel.tsx:77 | button | {t("replay")} | voice.enable, voice.speakReply | ui.18cbf23cb6405eaf / assistant |
+| components/voice-assistant/AssistantPanel.tsx:77 | button | {t("stop")} | no direct handler: inspect wiring | ui.f88049b789a89920 / assistant |
+| components/voice-assistant/AssistantPanel.tsx:78 | button | {controller.prompt("cancelTask")} | cancel | ui.6bf10c81f8905fba / assistant |
+| components/voice-assistant/AssistantPanel.tsx:78 | button | {t("emergency")} | props.onRun | ui.41f7f8e77eec6464 / assistant |
 | components/PwaUpdaterAndInstaller.tsx:149 | Button | {en ? "Reload" : "रीलोड"} | handleApplyUpdate | ui.34a17ca82a3edff6 / confirm |
 | components/PwaUpdaterAndInstaller.tsx:176 | Button | {en ? "Install" : "इंस्टॉल"} | handleInstallClick | ui.f163facae17b696d / confirm |
 | components/PwaUpdaterAndInstaller.tsx:183 | button | Dismiss | handleDismissBanner | ui.742887fa1b993e93 / confirm |
@@ -602,18 +604,18 @@ Entry: `app/locations/page.tsx`. Local reachable templates: 29. Shared controls 
 
 | Source / line | Control | Label or expression | Existing handler(s) | Registered target / disposition |
 |---|---|---|---|---|
-| components/map-view/index.tsx:132 | Button | {getAssistantPrompt(language, "nearest")} | facilityVoice.nearest | ui.460c306d2393970b / confirm |
-| components/map-view/index.tsx:152 | a | {en ? "Open Navigation App" : "मानचित्र ऐप में खोलें"} | link navigation | ui.5a670490cba71047 / link |
-| components/map-view/index.tsx:181 | Button | {en ? "Clear Route" : "मार्ग हटाएं"} | setRouteData | ui.6a00842567934279 / local |
+| components/map-view/index.tsx:227 | a | {en ? "Open Navigation App" : "मानचित्र ऐप में खोलें"} | link navigation | ui.5a670490cba71047 / link |
+| components/map-view/index.tsx:256 | Button | {en ? "Clear Route" : "मार्ग हटाएं"} | setRouteData | ui.6a00842567934279 / local |
 | components/map-view/parts/FacilityListPagination.tsx:35 | Button | {en ? "Previous" : "पिछला"} | onPageChange, Math.max | ui.419103d716d45697 / local |
 | components/map-view/parts/FacilityListPagination.tsx:52 | Button | {en ? "Next" : "अगला"} | onPageChange, Math.min | ui.fec27ae58fc72b13 / local |
-| components/map-view/parts/FacilityMapControls.tsx:78 | SearchableDropdown | {en ? "State (LGD)" : "राज्य (LGD)"} | onStateChange | ui.c409f2cc5d0d8184 / container |
-| components/map-view/parts/FacilityMapControls.tsx:90 | SearchableDropdown | {en ? "District (LGD)" : "जिला (LGD)"} | onDistrictChange | ui.078e0bff4c22ae48 / container |
-| components/map-view/parts/FacilityMapControls.tsx:108 | Input | {[en ? "Search Facility" : "सुविधा खोजें"].join(' ')} | setSearchQuery | ui.aacb7b5278886778 / field |
-| components/map-view/parts/FacilityMapControls.tsx:121 | Button | {locating ? <Loader2 className="h-4 w-4 animate-spin" /> : <LocateFixed className="h-4 w-4" />} {en ? "Use My Location" : "मेरा स्थान"} | onUseMyLocation | ui.32ff11f9a954ab08 / confirm |
-| components/map-view/parts/FacilityMapControls.tsx:133 | button | [dynamic content] | onFilterChange | ui.0032e5c70cf0d313 / local |
-| components/map-view/parts/FacilityMapControls.tsx:150 | select | [dynamic content] | onRadiusChange, Number | ui.d000cf7f1414a10b / field |
-| components/map-view/parts/FacilityMapControls.tsx:173 | Button | {isMapExpanded ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />} {isMapExpanded ? en ? "Compact Map (260px)" : "छोटा नक | setIsMapExpanded | ui.b5e235754a451f6e / local |
+| components/map-view/parts/FacilityMapControls.tsx:87 | SearchableDropdown | {en ? "State" : "राज्य"} | onStateChange | ui.c409f2cc5d0d8184 / container |
+| components/map-view/parts/FacilityMapControls.tsx:99 | SearchableDropdown | {en ? "District" : "जिला"} | onDistrictChange | ui.078e0bff4c22ae48 / container |
+| components/map-view/parts/FacilityMapControls.tsx:117 | Input | {[en ? "Search Facility" : "सुविधा खोजें"].join(' ')} | setSearchQuery | ui.aacb7b5278886778 / field |
+| components/map-view/parts/FacilityMapControls.tsx:131 | button | [dynamic content] | onFilterChange | ui.0032e5c70cf0d313 / local |
+| components/map-view/parts/FacilityMapControls.tsx:152 | Button | {locating ? <Loader2 className="h-4 w-4 animate-spin"/> : <LocateFixed className="h-4 w-4"/>} {en ? "Use My Location" : "मेरा स्थान"} | onUseMyLocation | ui.32ff11f9a954ab08 / confirm |
+| components/map-view/parts/FacilityMapControls.tsx:156 | select | {[en ? "Search radius" : "खोज का दायरा"].join(' ')} | onRadiusChange, Number | ui.d000cf7f1414a10b / field |
+| components/map-view/parts/FacilityMapControls.tsx:168 | Button | {nearestLabel} | onNearest | ui.460c306d2393970b / local |
+| components/map-view/parts/FacilityMapControls.tsx:182 | Button | {isMapExpanded ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />} {isMapExpanded ? en ? "Compact map" : "छोटा नक्शा" : e | setIsMapExpanded | ui.b5e235754a451f6e / local |
 | components/map-view/parts/SearchableDropdown.tsx:87 | button | {`${label}: ${displayName}`} | setIsOpen | ui.acc86de0a84026ee / local |
 | components/map-view/parts/SearchableDropdown.tsx:106 | input | {[label].join(' ')} | setSearchTerm | ui.26b62ad39de50d91 / field |
 | components/map-view/parts/SearchableDropdown.tsx:125 | button | {en ? item.nameEn : item.nameHi \|\| item.nameEn} {isSelected && ( <Check className="h-3.5 w-3.5 text-blue-600 shrink-0 ml-1.5" /> )} | onSelect, setIsOpen | ui.202dc0f234e1e46e / local |
@@ -624,13 +626,13 @@ Entry: `app/locations/page.tsx`. Local reachable templates: 29. Shared controls 
 | components/map-view/parts/FacilityCard.tsx:220 | a | {en ? "Call" : "कॉल"} | link navigation | ui.3f3ede1b01d49393 / link |
 | components/map-view/parts/FacilityCard.tsx:235 | a | {en ? "Book" : "बुक"} | link navigation | ui.7fc4b88bf7982c43 / link |
 | components/map-view/parts/FacilityCard.tsx:245 | Button | {routingLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Navigation className="h-3 w-3" />} {en ? "Route" : "मार्ग"} | onShowRoute | ui.0a16e5d6b15178d5 / local |
-| components/map-view/parts/MapVoiceControls.tsx:15 | Button | {labels[8]} | map.zoomIn | ui.50cea3883c320ca8 / local |
-| components/map-view/parts/MapVoiceControls.tsx:16 | Button | {labels[9]} | map.zoomOut | ui.c638d6dfc806ae51 / local |
-| components/map-view/parts/MapVoiceControls.tsx:17 | Button | {getAssistantPrompt(language, "gps")} | map.panTo | ui.97b4f5295aa0efcb / local |
-| components/map-view/parts/MapVoiceControls.tsx:18 | Button | {getAssistantPrompt(language, "scrollUp")} | map.panBy | ui.40f28443773b41e8 / local |
-| components/map-view/parts/MapVoiceControls.tsx:19 | Button | {getAssistantPrompt(language, "scrollDown")} | map.panBy | ui.4c159d49da03fc98 / local |
-| components/map-view/parts/MapVoiceControls.tsx:20 | Button | {labels[10]} | map.panBy | ui.697afaffef7df3d7 / local |
-| components/map-view/parts/MapVoiceControls.tsx:21 | Button | {labels[11]} | map.panBy | ui.ad00eabeb8adf6fe / local |
+| components/map-view/parts/MapVoiceControls.tsx:22 | Button | {labels[8]} | event.stopPropagation, map.zoomIn | ui.50cea3883c320ca8 / local |
+| components/map-view/parts/MapVoiceControls.tsx:23 | Button | {labels[9]} | event.stopPropagation, map.zoomOut | ui.c638d6dfc806ae51 / local |
+| components/map-view/parts/MapVoiceControls.tsx:26 | Button | {mapLabels[1]} | event.stopPropagation, map.panBy | ui.40f28443773b41e8 / local |
+| components/map-view/parts/MapVoiceControls.tsx:27 | Button | {labels[10]} | event.stopPropagation, map.panBy | ui.697afaffef7df3d7 / local |
+| components/map-view/parts/MapVoiceControls.tsx:28 | Button | {mapLabels[3]} | event.stopPropagation, map.panTo | ui.97b4f5295aa0efcb / local |
+| components/map-view/parts/MapVoiceControls.tsx:29 | Button | {labels[11]} | event.stopPropagation, map.panBy | ui.ad00eabeb8adf6fe / local |
+| components/map-view/parts/MapVoiceControls.tsx:30 | Button | {mapLabels[2]} | event.stopPropagation, map.panBy | ui.4c159d49da03fc98 / local |
 
 ## /login
 

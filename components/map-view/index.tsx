@@ -126,63 +126,17 @@ export function MapView({ language }: MapViewProps) {
         facilitiesCount={sorted.length}
         isMapExpanded={isMapExpanded}
         setIsMapExpanded={setIsMapExpanded}
+        onNearest={() => facilityVoice.nearest(filter === "all" ? "" : filter)}
+        nearestLabel={getAssistantPrompt(language, "nearest")}
+        nearestDisabled={loading || sorted.length === 0}
+        nearestName={sorted.find(item => item.id === facilityVoice.selectedId)?.name}
       />
 
       {/* Map with isolated stacking context */}
-      <Button data-voice-control="ui.460c306d2393970b" type="button" disabled={loading} onClick={() => facilityVoice.nearest()}>{getAssistantPrompt(language, "nearest")}</Button>
-      {facilityVoice.selectedId && <p role="status" className="text-sm font-semibold">{getAssistantPrompt(language, "nearest")}: {sorted.find(item => item.id === facilityVoice.selectedId)?.name}</p>}
       <div
         className="rounded-xl overflow-hidden border shadow-xs relative z-0 isolate transition-all duration-300"
         style={{ height: isMapExpanded ? 460 : 260 }}
       >
-        {routeData && (
-          <div className="absolute top-4 right-4 bg-white p-3 rounded-lg shadow-lg z-[1000] border text-sm max-w-[260px]">
-            {routeData.isNoRoute ? (
-              <>
-                <p className="font-bold text-amber-700 flex items-center gap-1">
-                  <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600" />
-                  <span>{en ? "No Direct Road Route" : "सीधा सड़क मार्ग नहीं"}</span>
-                </p>
-                <p className="text-[11px] text-gray-600 mt-1 leading-tight">
-                  {en
-                    ? "Terrain barrier (river/mountain) or unpaved foot trail. Motorable road not found."
-                    : "प्राकृतिक बाधा (नदी/पहाड़) या कच्चा पैदल मार्ग। नेविगेशन में सड़क मार्ग उपलब्ध नहीं है।"}
-                </p>
-                {routeData.destLat && routeData.destLon && (
-                  <a data-voice-control="ui.5a670490cba71047"
-                    href={`https://www.google.com/maps/dir/?api=1&destination=${routeData.destLat},${routeData.destLon}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-2 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded p-1.5 flex items-center justify-center gap-1"
-                  >
-                    <Navigation className="h-3 w-3" />
-                    <span>{en ? "Open Navigation App" : "मानचित्र ऐप में खोलें"}</span>
-                  </a>
-                )}
-              </>
-            ) : (
-              <>
-                <p className="font-bold text-blue-700">{en ? "Route Info" : "मार्ग की जानकारी"}</p>
-                <p className="mt-1">
-                  <strong>{en ? "Road Distance:" : "सड़क दूरी:"}</strong> {(routeData.distance / 1000).toFixed(1)} km
-                </p>
-                {routeData.isDetour && routeData.detourRatio && (
-                  <p className="text-[11px] text-amber-800 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5 mt-1 font-medium flex items-center gap-1">
-                    <span>⚠️</span>
-                    <span>{en ? `Terrain Detour: ${routeData.detourRatio}x straight-line` : `पहाड़/नदी चक्कर: ${routeData.detourRatio}x सीधी दूरी`}</span>
-                  </p>
-                )}
-                <p className="mt-0.5">
-                  <strong>{en ? "ETA:" : "अनुमानित समय:"}</strong> {Math.ceil(routeData.duration / 60)}{" "}
-                  {en ? "mins" : "मिनट"}
-                </p>
-              </>
-            )}
-            <Button data-voice-control="ui.6a00842567934279" size="sm" variant="outline" className="mt-2 h-7 text-xs w-full" onClick={() => setRouteData(null)}>
-              {en ? "Clear Route" : "मार्ग हटाएं"}
-            </Button>
-          </div>
-        )}
         {leafletReady && (
           <LeafletMap center={[center.lat, center.lng]} zoom={userCoords ? 13 : 11}>
             <TileLayer
@@ -255,6 +209,55 @@ export function MapView({ language }: MapViewProps) {
           </LeafletMap>
         )}
       </div>
+
+        {routeData && (
+          <div className="rounded-xl border border-blue-100 bg-blue-50 p-3 text-sm">
+            {routeData.isNoRoute ? (
+              <>
+                <p className="font-bold text-amber-700 flex items-center gap-1">
+                  <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600" />
+                  <span>{en ? "No Direct Road Route" : "सीधा सड़क मार्ग नहीं"}</span>
+                </p>
+                <p className="text-[11px] text-gray-600 mt-1 leading-tight">
+                  {en
+                    ? "Terrain barrier (river/mountain) or unpaved foot trail. Motorable road not found."
+                    : "प्राकृतिक बाधा (नदी/पहाड़) या कच्चा पैदल मार्ग। नेविगेशन में सड़क मार्ग उपलब्ध नहीं है।"}
+                </p>
+                {routeData.destLat && routeData.destLon && (
+                  <a data-voice-control="ui.5a670490cba71047"
+                    href={`https://www.google.com/maps/dir/?api=1&destination=${routeData.destLat},${routeData.destLon}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-2 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded p-1.5 flex items-center justify-center gap-1"
+                  >
+                    <Navigation className="h-3 w-3" />
+                    <span>{en ? "Open Navigation App" : "मानचित्र ऐप में खोलें"}</span>
+                  </a>
+                )}
+              </>
+            ) : (
+              <>
+                <p className="font-bold text-blue-700">{en ? "Route Info" : "मार्ग की जानकारी"}</p>
+                <p className="mt-1">
+                  <strong>{en ? "Road Distance:" : "सड़क दूरी:"}</strong> {(routeData.distance / 1000).toFixed(1)} km
+                </p>
+                {routeData.isDetour && routeData.detourRatio && (
+                  <p className="text-[11px] text-amber-800 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5 mt-1 font-medium flex items-center gap-1">
+                    <span>⚠️</span>
+                    <span>{en ? `Terrain Detour: ${routeData.detourRatio}x straight-line` : `पहाड़/नदी चक्कर: ${routeData.detourRatio}x सीधी दूरी`}</span>
+                  </p>
+                )}
+                <p className="mt-0.5">
+                  <strong>{en ? "ETA:" : "अनुमानित समय:"}</strong> {Math.ceil(routeData.duration / 60)}{" "}
+                  {en ? "mins" : "मिनट"}
+                </p>
+              </>
+            )}
+            <Button data-voice-control="ui.6a00842567934279" size="sm" variant="outline" className="mt-2 h-7 text-xs w-full" onClick={() => setRouteData(null)}>
+              {en ? "Clear Route" : "मार्ग हटाएं"}
+            </Button>
+          </div>
+        )}
 
       {loading && (
         <div className="flex items-center justify-center gap-2 text-gray-400 text-sm py-1">

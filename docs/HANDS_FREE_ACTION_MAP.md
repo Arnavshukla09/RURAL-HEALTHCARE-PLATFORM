@@ -2,7 +2,7 @@
 
 Date: 22 November 2026. Source: `c45aa0cf2953300c4f02f3861bb7ff1502d3b735`. Status: **source control bindings implemented with explicit handoffs; live/device certification remains open**.
 
-The updated source inventory contains 28 page entries and 497 interactive-control candidates across 99 source files, including 102 shared/global candidates. The wider registration gate covers 507 templates including error/loading surfaces. Forms, interactive containers, buttons, links, inputs and repeated-card templates are included. These are not 476 simultaneously visible buttons. Shared components appear on multiple routes, conditional authentication forms may be hidden, and a single result-card template can produce many controls. Native browser dialogs and Leaflet/Jitsi internals are outside this static count.
+The updated source inventory contains 28 page entries and 499 interactive-control candidates across 100 source files, including 104 shared/global candidates. The wider registration gate covers 509 templates including error/loading surfaces. Forms, interactive containers, buttons, links, inputs and repeated-card templates are included. These are not 476 simultaneously visible buttons. Shared components appear on multiple routes, conditional authentication forms may be hidden, and a single result-card template can produce many controls. Native browser dialogs and Leaflet/Jitsi internals are outside this static count.
 
 See [the per-control inventory](HANDS_FREE_CONTROL_INVENTORY.md) and [machine-readable source references](HANDS_FREE_CONTROL_INVENTORY.json). Audit IDs use file/line/column. Future runtime action IDs must be semantic and stable, rather than line numbers, translated captions or CSS selectors.
 

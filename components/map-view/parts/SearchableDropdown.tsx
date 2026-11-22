@@ -89,7 +89,7 @@ export function SearchableDropdown({
         aria-expanded={isOpen}
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
-        className="w-full text-xs font-medium border border-blue-200 rounded-lg p-2 bg-white text-gray-800 flex items-center justify-between hover:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-500 shadow-sm"
+        className="min-h-11 w-full text-sm font-medium border border-gray-200 rounded-xl p-2 bg-white text-gray-800 flex items-center justify-between hover:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-500 shadow-sm"
       >
         <span className="truncate pr-1 text-left">{displayName}</span>
         <ChevronDown

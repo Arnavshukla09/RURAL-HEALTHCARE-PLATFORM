@@ -4,9 +4,13 @@ Updated 22 November 2026. This update implements a controller across the existin
 
 ## What is implemented
 
+The floating panel separates **Chat** (conversation only) from **Actions** (tasks and current selections). Current choices open Actions automatically; language/offline settings collapse behind the settings icon. Speak, replay, Stop, Cancel and emergency help remain in the footer, and accessibility stays available in the header. The panel grows with conversation content rather than reserving an empty full-height window.
+
+The facility toolbar orders location/search, service filters, then GPS/radius/Nearest. Nearest respects the chosen service. Map zoom controls sit at the upper left, with a directional/recenter pad at the lower right; route details sit below the map. The native map is created and removed in the same effect through the existing map-core provider, so filter and size changes do not initialize its container twice. The accessibility launcher sits in the lower-left corner instead of covering page headings.
+
 | Capability | Current behavior |
 |---|---|
-| Website mapping | 507 stamped first-party JSX templates, including error/loading surfaces; 497 candidates reachable from the 28 page entries and global layout, across 99 files. Counts include forms, wrappers and explicit handoffs, not 507 independently executable actions. |
+| Website mapping | 509 stamped first-party JSX templates, including error/loading surfaces; 499 candidates reachable from the 28 page entries and global layout, across 100 files. Counts include forms, wrappers and explicit handoffs, not 509 independently executable actions. |
 | Active options | “Page options” advertises five controls at a time from the current page or active modal. “More options” advances through the snapshot. Hidden/inert controls are excluded; disabled controls are explained and cannot execute. |
 | Selection | “Select three” resolves an advertised number to its stored element, stable source registration and current fingerprint. A unique accessible name can also select a control. Ambiguous names require numbered selection. |
 | Navigation and filters | Registered links, navigation, tabs, filter choices, pagination and local state controls reuse their existing handlers. A Radix tab uses its supported Enter-key handler. |
@@ -69,7 +73,7 @@ Visibility changes, conference entry and emergency-beacon ownership continue to 
 
 Local checks cover type/lint/imports, component/API size limits, the source registry, native command catalogs/checksums, task ownership, spoken-interruption grammar and existing action/audio/account security contracts. Playwright uses mocked recognition/synthesis/service responses to test actual root font/contrast changes, toolbar synchronization, guided corrections, slow-request replacement, wake-prefixed interruption, navigation, fields, secret exclusion, disabled/stale targets and emergency-page accessibility. Real role login and database cases run against CI's disposable Supabase stack, not production.
 
-Local evidence for this update: **310 unit cases and 15 Python contracts passed**; type/lint/component/Knip/migration/source-map checks passed; production build passed. The full local browser run passed **17 journeys**, with the three role-login journeys skipped because disposable credentials were not available locally. CI seeds those accounts and must pass the full 20-journey suite and 29 real-database cases before release. Browser audio is simulated, not an inference or disability-usability certification.
+Local evidence for this update: **310 unit cases and 15 Python contracts passed**; type/lint/component/Knip/migration/source-map checks passed; production build passed. The full local browser run passed **19 journeys**, with the three role-login journeys skipped because disposable credentials were not available locally. CI seeds those accounts and must pass the full 22-journey suite and 29 real-database cases before release. Browser audio is simulated, not an inference or disability-usability certification.
 
 Before calling this fully hands-free for a target population, audit:
 
@@ -83,6 +87,6 @@ Before calling this fully hands-free for a target population, audit:
 | Clinical/disability | Qualified clinical review and sessions with users with the actual access needs, including non-readers, screen-reader/switch users and Urdu layouts. |
 | Offline/operations | Cache eviction, saved-region coverage, queued-write receipts, lost connectivity, service uptime and battery. PWA closure/suspension cannot guarantee continued listening. |
 
-The code adds no required paid inference or automation API and no dependency package. Hosting, hardware, electricity, bandwidth, native recordings and review effort still cost money. Free hosted quotas cannot be guaranteed forever. Native recordings for devices without a dynamic voice remain planned; no recordings or model weights were fabricated or installed as part of this update.
+The code adds no required paid inference or automation API. The UI refresh explicitly declares the already installed map-core dependency; it adds no inference packages. Hosting, hardware, electricity, bandwidth, native recordings and review effort still cost money. Free hosted quotas cannot be guaranteed forever. Native recordings for devices without a dynamic voice remain planned; no recordings or model weights were fabricated or installed as part of this update.
 
 Use [the complete route option map](HANDS_FREE_ACTION_MAP.md), [per-control inventory](HANDS_FREE_CONTROL_INVENTORY.md), [original design/release plan](HANDS_FREE_WEBSITE_PLAN.md) and [setup checklist](ASSISTANT_RELEASE_CHECKLIST.md) together. The inventory records source registrations/dispositions; this file defines what those registrations do and what they cannot certify.

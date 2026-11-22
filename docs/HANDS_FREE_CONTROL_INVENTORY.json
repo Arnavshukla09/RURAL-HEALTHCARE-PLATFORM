@@ -21,7 +21,7 @@
     "components/LanguageSuggestionBanner.tsx": "b8c6d5e7a0ad48aaf3572a013aeb37f22c9bb7fa9b7249ba81c2b8fb3462f569",
     "lib/i18n/detect-language.ts": "a578ea3cb24a5c3e08d97e54df86efc5597bfc27cb5c6571b10400b9b16b5314",
     "components/FloatingChatClient.tsx": "10888bc6892bd7804dad91776dea9aac5ed6b6579bb6ea61e94cc9370df0d3e5",
-    "components/voice-assistant/index.tsx": "222ed5819dd31223141931fcf53a1589bdcdbb4ef8a8ad3fd36ae6802199365f",
+    "components/voice-assistant/index.tsx": "4a96bc19111b330d38eb50bcffc34b828037d8db7a61e95d06b3885a31db5d98",
     "lib/assistant/text.ts": "6a2b87e60d60566e68b086891a0afb5a8a2f205d446cc8cd6684ab63ee09b304",
     "lib/assistant/control-commands.ts": "5ffa72966e0d6882f559b8cebd1b2002b03d824e89e9efc2119ebe3c2ddce889",
     "components/voice-assistant/usePageController.ts": "b5a7fe612901a677396ab0ae65fd875781e4b9e56a72c4118ecc64dbcf5cfcaf",
@@ -39,11 +39,11 @@
     "lib/assistant/privacy-prompt-catalog.ts": "96637e2696f066b435c9c9e9a786cd6aa1c8c8fedbf0ad1cbd6e8141d28d753f",
     "lib/assistant/prompt-catalog.ts": "df8df85fcea6bdc1265847fbe6536210c7a85ce362a34c19fe97d827eb8e71ea",
     "lib/assistant/config.ts": "be394329382195c6dc296919c6c37b9ddde89a0510c21f3d86e86deadf00819c",
-    "components/voice-assistant/AvatarFace.tsx": "ec50e422f3618d39e2297ef2f5e3323a49453cea5914017a8cda86dd0ddb7044",
-    "components/voice-assistant/types.ts": "a79b5c6146ad4c13f5bc1417ee278a4d7824f4ff2651d84dec3c5378c63776c6",
-    "lib/assistant/client-actions.ts": "f6b78103cd4fb17e23a698fe8d453afa5d1b141c9d3dd4273a82a9abb69c064c",
+    "components/voice-assistant/AssistantPanel.tsx": "f01c94eb0247212d8de6fa1236f69a2136744885d33cfe379f4b025bead6a062",
     "components/voice-assistant/useVoiceSession.ts": "7903cfe75c6ccfcaaea5189884cf0d5b678bac4f8a084b0f7061b4d8005d9c3b",
     "lib/assistant/interruption.ts": "4b0e033788fb518027b579a270f22935808b9f2306b95f35dac314f2900de625",
+    "components/voice-assistant/types.ts": "a79b5c6146ad4c13f5bc1417ee278a4d7824f4ff2651d84dec3c5378c63776c6",
+    "lib/assistant/client-actions.ts": "f6b78103cd4fb17e23a698fe8d453afa5d1b141c9d3dd4273a82a9abb69c064c",
     "lib/voice/audio-recording.ts": "5afb8eb4889aaaed89ba91be9211eb1e383cd1e8468c88e96e7034edbc2bdc17",
     "components/voice-assistant/useAssistantWorkflow.ts": "c006353af37a286a7eb27fbda35ffe226be4fd69605237b61fce42b5cb1c0274",
     "components/voice-assistant/action-receipts.ts": "bfd6b8c2834568960d71372a8055b8e7a22f91b163f42ffb9fa5745b7724238e",
@@ -53,6 +53,8 @@
     "lib/symptoms/responses.ts": "a889f47fba96a7e9def36113590919fd580e13f991bd289494136329400ac52e",
     "lib/symptoms/rules.ts": "79eadf977413e0ee32df8e6107ee1b659f500c11062a9bd14348f64c74254092",
     "lib/assistant/task-lifetime.ts": "f61c6ce3876a7c1325235e1058a9ec63f68174144975c3fad675f1fadd1112f0",
+    "components/voice-assistant/AvatarFace.tsx": "ec50e422f3618d39e2297ef2f5e3323a49453cea5914017a8cda86dd0ddb7044",
+    "lib/assistant/panel-labels.ts": "f7a788eed12d6a3e641422f7ea14a62c4b6bf41194b844997ea4ea461b73c708",
     "components/PwaUpdaterAndInstaller.tsx": "8cf09a89e85d137f9e1a34d36fc115c3018c45b48794378c48e0034d8b1546c7",
     "components/ui/button.tsx": "577936340e816ace37b76009b27583d26a9374562543a4b485f8bbd8fa36387d",
     "components/ui/utils.ts": "c0adf27efbfa148d5abcf99e860f8e3e6c8fc77a1f99e023c08ef4f12e6ece29",
@@ -61,7 +63,7 @@
     "lib/utils.ts": "76db4720b8835194b5bb3c6e4f1049914e39a24121dee582eca62039c8c16dfb",
     "hooks/use-toast.ts": "b48129a98629560e496308f0125bb8a153c1665b6d25d76773311961ce44154b",
     "components/BottomTabBar.tsx": "8b306d447d89361b91a4b9462af12fa94b33e377e5ea0f29d041c3648ef1cad2",
-    "components/AccessibilityBar.tsx": "b24f278ae8a9081ced2e268f3958ef18835ee9becf58816dcc2b4e509288d52c",
+    "components/AccessibilityBar.tsx": "8809f6e0d16575581c2a815480a8b46b6b132014efc8c9e98f6e9fc7efba6115",
     "components/ui/card.tsx": "ad9cf10701d7e02796eaad6ea943a808351f7710d7557fa3b5b54a6db870cb3a",
     "components/Footer.tsx": "37ba69a48055c441e1dee590b601ccaafc4cb4d3b477c8c3398928d44cd13b9c",
     "components/Header.tsx": "98be6d98accedfe913880116c9d174dfba14670438fcc3c3ef81e744c5f5e73f",
@@ -221,18 +223,19 @@
     "components/public-pages/LocationsClient.tsx": "dc69b7d41f21b45770b62e8a45315154a8006d1aa38e6b1e9ad81c2c27f959f6",
     "components/MapView.tsx": "6f4cb0716af2e603636468c6c0c47b01d6048589c58bc3f857055161fe6f198e",
     "components/map-view/types.ts": "a7e4ba2abc297de133ce0e7c9705c2632e14f68d84c8594c1a19a6fefc639b0e",
-    "components/map-view/index.tsx": "64984474c26d10a6e3bbac7f06ee2b597c465f4b985f6936528f561508a30e86",
+    "components/map-view/index.tsx": "1d60db130ff22cf0770e932b35e916fbf731efe01e21be9820165e2d9fbea555",
     "components/map-view/hooks/use-facility-voice.ts": "dbbc02c60fd2a3d15e1909e22244210618747e04f8832ad60da39f360490d563",
     "lib/assistant/facility-control-catalog.ts": "a93d4daf5b316ae67a1a2b7e79e68f25efd7591efbeacd4e8c41da6a12d01d96",
     "components/map-view/hooks/use-facility-discovery.ts": "5a37aad6585baa0127d6d883f5061c9d247710573a4a3aa5fe4b9cb4327d7aef",
     "components/map-view/parts/FacilityListPagination.tsx": "ad29c3b1111017921e777888eadd3e9463fbf9e91096364562b391e90bdbd878",
-    "components/map-view/parts/FacilityMapControls.tsx": "ccf58acfe86e8705d607eb46dd5db4f20a28d58d85215a495f7f728e1c2a5caf",
-    "components/map-view/parts/SearchableDropdown.tsx": "57c7ddaedc6139c9b43f05531d51124606c2c1c2d6087e24e93553e6f21eb055",
+    "components/map-view/parts/FacilityMapControls.tsx": "905aa50a40a7c3346e4a0eebfef5a01fd91b34591d859e82572d7b801f8bd14d",
+    "components/map-view/parts/SearchableDropdown.tsx": "e270845eb526cb89e2d5981b81fac6797c9b2e2b60ec6e61431e65f425ffe8b1",
     "components/map-view/parts/FacilityPopupContent.tsx": "526f4ae7f721dd1994340aff953b01403ab1f5b5be1a6e939a5c5cbc82836587",
     "components/map-view/parts/FacilityCard.tsx": "7f7bba9085107aa015b313d5e295b5c4ef40d267c7bc1b6ede660f19953ff375",
-    "components/map-view/parts/LeafletMap.tsx": "2075ffc2f0758ae5968c0ad7a1ab65e7054c58a5880bfd6728d195d50c657405",
-    "components/map-view/parts/MapVoiceControls.tsx": "69995fd9d0129ec3210d3ba7eb281dc7f1d2dfe4fee1dbfd4c102657b7a4ad44",
+    "components/map-view/parts/LeafletMap.tsx": "6193cc55a922167ede829286de84acfbf8c2545fe6b79693a15f4dedad13c2d5",
+    "components/map-view/parts/MapVoiceControls.tsx": "bd0819eb55bf2a25080bb51d32b5b7ac3447dec1aae68f68d530a6cf8546069f",
     "lib/assistant/media-control-catalog.ts": "c742cfcc3b5d321df00bbafd70c32cef54743ee7a5eb8915f3c87fc70c5481ce",
+    "lib/assistant/map-labels.ts": "9fda865ae3dba7f9097356c7727e7ad392ce7443578715747f249eae0c6c5a2c",
     "app/login/page.tsx": "dfcf95c09bfea5077cd4ebc4ba6b18c88e7efa4e935bc58e8a34f8e0c01f6665",
     "app/offline/page.tsx": "18e0ac5115fead15013a5cb6ce1c81e37482b26c4308aa0f77857e2b41f03f43",
     "app/page.tsx": "ab7da039a2c9717f29c54a50174a64a31c1beed2081be804f075cf05989c7de1",
@@ -275,7 +278,7 @@
     "components/JitsiMeeting.tsx": "9c98750c33e700196a2556630542744af4843294add5ec5261cf289196687fc9",
     "components/voice-assistant/MeetingControls.tsx": "13648194302c43b3b5f9963006ec80f474429847d63a4e968a5aaea0c31cbdee"
   },
-  "generatedFromCommit": "c45aa0cf2953300c4f02f3861bb7ff1502d3b735",
+  "generatedFromCommit": "548baeecd99cb9946708bb59f320fc43c8fdc3c3",
   "generatedAt": "2026-11-22",
   "scope": "Static first-party JSX interactive-control candidates, including forms/containers and local import reachability; no live DOM, authorization or runtime multiplicity certification",
   "exclusions": [
@@ -286,9 +289,9 @@
   ],
   "counts": {
     "routes": 28,
-    "controls": 497,
-    "globalControls": 102,
-    "filesWithControls": 99,
+    "controls": 499,
+    "globalControls": 104,
+    "filesWithControls": 100,
     "unreachableTemplates": 0
   },
   "routes": [
@@ -518,9 +521,9 @@
     {
       "runtimeId": "ui.a22bf1e71c1028f5",
       "voicePolicy": "assistant",
-      "id": "components/voice-assistant/index.tsx:171:15",
+      "id": "components/voice-assistant/index.tsx:160:15",
       "file": "components/voice-assistant/index.tsx",
-      "line": 171,
+      "line": 160,
       "column": 15,
       "owner": "VoiceAssistant",
       "tag": "button",
@@ -543,15 +546,40 @@
       "routes": []
     },
     {
-      "runtimeId": "ui.875c6f9018451edf",
+      "runtimeId": "ui.69cdcd9ecaa9d407",
       "voicePolicy": "assistant",
-      "id": "components/voice-assistant/index.tsx:179:9",
-      "file": "components/voice-assistant/index.tsx",
-      "line": 179,
-      "column": 9,
-      "owner": "VoiceAssistant",
+      "id": "components/voice-assistant/AssistantPanel.tsx:46:7",
+      "file": "components/voice-assistant/AssistantPanel.tsx",
+      "line": 46,
+      "column": 7,
+      "owner": "AssistantPanel",
       "tag": "button",
-      "label": "{t(\"close\")}",
+      "label": "{controller.prompt(\"accessibility\")}",
+      "fieldId": null,
+      "fieldType": "button",
+      "secureField": false,
+      "events": [
+        {
+          "event": "onClick",
+          "handlers": []
+        }
+      ],
+      "href": null,
+      "disabled": null,
+      "hasDirectHandler": true,
+      "global": true,
+      "routes": []
+    },
+    {
+      "runtimeId": "ui.8325c9a5a93fd6d8",
+      "voicePolicy": "assistant",
+      "id": "components/voice-assistant/AssistantPanel.tsx:47:7",
+      "file": "components/voice-assistant/AssistantPanel.tsx",
+      "line": 47,
+      "column": 7,
+      "owner": "AssistantPanel",
+      "tag": "button",
+      "label": "{labels.settings}",
       "fieldId": null,
       "fieldType": "button",
       "secureField": false,
@@ -559,8 +587,7 @@
         {
           "event": "onClick",
           "handlers": [
-            "voice.stop",
-            "setOpen"
+            "setSettingsOpen"
           ]
         }
       ],
@@ -571,13 +598,38 @@
       "routes": []
     },
     {
-      "runtimeId": "ui.8c1225679761d77a",
+      "runtimeId": "ui.990a6c99cc1af3ff",
       "voicePolicy": "assistant",
-      "id": "components/voice-assistant/index.tsx:182:9",
-      "file": "components/voice-assistant/index.tsx",
-      "line": 182,
-      "column": 9,
-      "owner": "VoiceAssistant",
+      "id": "components/voice-assistant/AssistantPanel.tsx:48:7",
+      "file": "components/voice-assistant/AssistantPanel.tsx",
+      "line": 48,
+      "column": 7,
+      "owner": "AssistantPanel",
+      "tag": "button",
+      "label": "{t(\"close\")}",
+      "fieldId": null,
+      "fieldType": "button",
+      "secureField": false,
+      "events": [
+        {
+          "event": "onClick",
+          "handlers": []
+        }
+      ],
+      "href": null,
+      "disabled": null,
+      "hasDirectHandler": true,
+      "global": true,
+      "routes": []
+    },
+    {
+      "runtimeId": "ui.8b80606d3332eb6d",
+      "voicePolicy": "assistant",
+      "id": "components/voice-assistant/AssistantPanel.tsx:51:7",
+      "file": "components/voice-assistant/AssistantPanel.tsx",
+      "line": 51,
+      "column": 7,
+      "owner": "AssistantPanel",
       "tag": "select",
       "label": "{t(\"chooseLanguage\")}",
       "fieldId": null,
@@ -587,7 +639,7 @@
         {
           "event": "onChange",
           "handlers": [
-            "setLanguage"
+            "props.setLanguage"
           ]
         }
       ],
@@ -598,13 +650,13 @@
       "routes": []
     },
     {
-      "runtimeId": "ui.367aacd43b129d3a",
+      "runtimeId": "ui.2780b6939ae9ab96",
       "voicePolicy": "assistant",
-      "id": "components/voice-assistant/index.tsx:185:9",
-      "file": "components/voice-assistant/index.tsx",
-      "line": 185,
-      "column": 9,
-      "owner": "VoiceAssistant",
+      "id": "components/voice-assistant/AssistantPanel.tsx:54:7",
+      "file": "components/voice-assistant/AssistantPanel.tsx",
+      "line": 54,
+      "column": 7,
+      "owner": "AssistantPanel",
       "tag": "button",
       "label": "{t(\"downloadOffline\")}",
       "fieldId": null,
@@ -613,25 +665,50 @@
       "events": [
         {
           "event": "onClick",
-          "handlers": [
-            "prepareOffline"
-          ]
+          "handlers": []
         }
       ],
       "href": null,
-      "disabled": "{installing || !online}",
+      "disabled": "{props.installing || !props.online}",
       "hasDirectHandler": true,
       "global": true,
       "routes": []
     },
     {
-      "runtimeId": "ui.009f9da4962734e9",
+      "runtimeId": "ui.6e797b6f58a9e21e",
       "voicePolicy": "assistant",
-      "id": "components/voice-assistant/index.tsx:191:140",
-      "file": "components/voice-assistant/index.tsx",
-      "line": 191,
-      "column": 140,
-      "owner": "VoiceAssistant",
+      "id": "components/voice-assistant/AssistantPanel.tsx:57:52",
+      "file": "components/voice-assistant/AssistantPanel.tsx",
+      "line": 57,
+      "column": 52,
+      "owner": "AssistantPanel",
+      "tag": "button",
+      "label": "{labels[value]} {value === \"actions\" && hasActions && <span className=\"ms-2 inline-block h-2 w-2 rounded-full bg-teal-600\"/>}",
+      "fieldId": "{`assistant-${value}-tab`}",
+      "fieldType": "button",
+      "secureField": false,
+      "events": [
+        {
+          "event": "onClick",
+          "handlers": [
+            "setPane"
+          ]
+        }
+      ],
+      "href": null,
+      "disabled": null,
+      "hasDirectHandler": true,
+      "global": true,
+      "routes": []
+    },
+    {
+      "runtimeId": "ui.88bc1f0893e2717b",
+      "voicePolicy": "assistant",
+      "id": "components/voice-assistant/AssistantPanel.tsx:68:130",
+      "file": "components/voice-assistant/AssistantPanel.tsx",
+      "line": 68,
+      "column": 130,
+      "owner": "AssistantPanel",
       "tag": "button",
       "label": "{option.label}",
       "fieldId": null,
@@ -641,7 +718,7 @@
         {
           "event": "onClick",
           "handlers": [
-            "pageController.select"
+            "controller.select"
           ]
         }
       ],
@@ -652,33 +729,13 @@
       "routes": []
     },
     {
-      "runtimeId": "ui.fc3709f1cbe48590",
+      "runtimeId": "ui.58626b9cb2ade380",
       "voicePolicy": "assistant",
-      "id": "components/voice-assistant/index.tsx:196:32",
-      "file": "components/voice-assistant/index.tsx",
-      "line": 196,
-      "column": 32,
-      "owner": "VoiceAssistant",
-      "tag": "a",
-      "label": "{t(\"emergencyCall\")}",
-      "fieldId": null,
-      "fieldType": null,
-      "secureField": false,
-      "events": [],
-      "href": "tel:108",
-      "disabled": null,
-      "hasDirectHandler": true,
-      "global": true,
-      "routes": []
-    },
-    {
-      "runtimeId": "ui.2b0512a9f2abe764",
-      "voicePolicy": "assistant",
-      "id": "components/voice-assistant/index.tsx:197:145",
-      "file": "components/voice-assistant/index.tsx",
-      "line": 197,
-      "column": 145,
-      "owner": "VoiceAssistant",
+      "id": "components/voice-assistant/AssistantPanel.tsx:69:131",
+      "file": "components/voice-assistant/AssistantPanel.tsx",
+      "line": 69,
+      "column": 131,
+      "owner": "AssistantPanel",
       "tag": "button",
       "label": "{choice.label} {choice.detail && <span className=\"block text-xs font-normal text-gray-500\">{choice.detail}</span>}",
       "fieldId": null,
@@ -701,13 +758,13 @@
       "routes": []
     },
     {
-      "runtimeId": "ui.f7088da9ed7768c5",
+      "runtimeId": "ui.658a6b18f7f0c944",
       "voicePolicy": "assistant",
-      "id": "components/voice-assistant/index.tsx:201:11",
-      "file": "components/voice-assistant/index.tsx",
-      "line": 201,
-      "column": 11,
-      "owner": "VoiceAssistant",
+      "id": "components/voice-assistant/AssistantPanel.tsx:70:62",
+      "file": "components/voice-assistant/AssistantPanel.tsx",
+      "line": 70,
+      "column": 62,
+      "owner": "AssistantPanel",
       "tag": "button",
       "label": "{t(\"yesNo\")}",
       "fieldId": null,
@@ -728,13 +785,13 @@
       "routes": []
     },
     {
-      "runtimeId": "ui.1c8b5e2b641ebb38",
+      "runtimeId": "ui.361a4716ee08ea42",
       "voicePolicy": "assistant",
-      "id": "components/voice-assistant/index.tsx:202:11",
-      "file": "components/voice-assistant/index.tsx",
-      "line": 202,
-      "column": 11,
-      "owner": "VoiceAssistant",
+      "id": "components/voice-assistant/AssistantPanel.tsx:70:278",
+      "file": "components/voice-assistant/AssistantPanel.tsx",
+      "line": 70,
+      "column": 278,
+      "owner": "AssistantPanel",
       "tag": "button",
       "label": "{t(\"cancel\")}",
       "fieldId": null,
@@ -755,13 +812,13 @@
       "routes": []
     },
     {
-      "runtimeId": "ui.9662031c9ee75b8b",
+      "runtimeId": "ui.942e30c956f9b2f3",
       "voicePolicy": "assistant",
-      "id": "components/voice-assistant/index.tsx:204:117",
-      "file": "components/voice-assistant/index.tsx",
-      "line": 204,
-      "column": 117,
-      "owner": "VoiceAssistant",
+      "id": "components/voice-assistant/AssistantPanel.tsx:71:101",
+      "file": "components/voice-assistant/AssistantPanel.tsx",
+      "line": 71,
+      "column": 101,
+      "owner": "AssistantPanel",
       "tag": "button",
       "label": "{t(key)}",
       "fieldId": null,
@@ -771,7 +828,8 @@
         {
           "event": "onClick",
           "handlers": [
-            "run"
+            "setPane",
+            "props.onRun"
           ]
         }
       ],
@@ -782,15 +840,15 @@
       "routes": []
     },
     {
-      "runtimeId": "ui.a9d2952bd43bcd52",
+      "runtimeId": "ui.3aff41b469e06540",
       "voicePolicy": "assistant",
-      "id": "components/voice-assistant/index.tsx:208:11",
-      "file": "components/voice-assistant/index.tsx",
-      "line": 208,
-      "column": 11,
-      "owner": "VoiceAssistant",
+      "id": "components/voice-assistant/AssistantPanel.tsx:72:43",
+      "file": "components/voice-assistant/AssistantPanel.tsx",
+      "line": 72,
+      "column": 43,
+      "owner": "AssistantPanel",
       "tag": "button",
-      "label": "{pageController.prompt(\"options\")}",
+      "label": "{controller.prompt(controller.menu.length > 0 ? \"more\" : \"options\")}",
       "fieldId": null,
       "fieldType": "button",
       "secureField": false,
@@ -800,7 +858,7 @@
           "handlers": [
             "voice.interrupt",
             "workflow.cancelTask",
-            "pageController.list"
+            "controller.list"
           ]
         }
       ],
@@ -811,27 +869,44 @@
       "routes": []
     },
     {
-      "runtimeId": "ui.c2cdd0bbcb439bef",
+      "runtimeId": "ui.fb8d78ae84c95c3f",
       "voicePolicy": "assistant",
-      "id": "components/voice-assistant/index.tsx:209:11",
-      "file": "components/voice-assistant/index.tsx",
-      "line": 209,
-      "column": 11,
-      "owner": "VoiceAssistant",
-      "tag": "button",
-      "label": "{pageController.prompt(\"cancelTask\")}",
+      "id": "components/voice-assistant/AssistantPanel.tsx:75:30",
+      "file": "components/voice-assistant/AssistantPanel.tsx",
+      "line": 75,
+      "column": 30,
+      "owner": "AssistantPanel",
+      "tag": "a",
+      "label": "{t(\"emergencyCall\")}",
       "fieldId": null,
-      "fieldType": "button",
+      "fieldType": null,
+      "secureField": false,
+      "events": [],
+      "href": "tel:108",
+      "disabled": null,
+      "hasDirectHandler": true,
+      "global": true,
+      "routes": []
+    },
+    {
+      "runtimeId": "ui.9d1aaab16b8150af",
+      "voicePolicy": "assistant",
+      "id": "components/voice-assistant/AssistantPanel.tsx:76:7",
+      "file": "components/voice-assistant/AssistantPanel.tsx",
+      "line": 76,
+      "column": 7,
+      "owner": "AssistantPanel",
+      "tag": "form",
+      "label": "→",
+      "fieldId": null,
+      "fieldType": null,
       "secureField": false,
       "events": [
         {
-          "event": "onClick",
+          "event": "onSubmit",
           "handlers": [
-            "voice.interrupt",
-            "pageController.clear",
-            "workflow.cancelTask",
-            "workflow.say",
-            "pageController.prompt"
+            "event.preventDefault",
+            "props.onSend"
           ]
         }
       ],
@@ -842,24 +917,23 @@
       "routes": []
     },
     {
-      "runtimeId": "ui.15790bb13f64bd3a",
+      "runtimeId": "ui.33b2694ab5005c31",
       "voicePolicy": "assistant",
-      "id": "components/voice-assistant/index.tsx:210:11",
-      "file": "components/voice-assistant/index.tsx",
-      "line": 210,
-      "column": 11,
-      "owner": "VoiceAssistant",
-      "tag": "button",
-      "label": "{pageController.prompt(\"accessibility\")}",
+      "id": "components/voice-assistant/AssistantPanel.tsx:76:140",
+      "file": "components/voice-assistant/AssistantPanel.tsx",
+      "line": 76,
+      "column": 140,
+      "owner": "AssistantPanel",
+      "tag": "input",
+      "label": "{t(\"textInput\")}",
       "fieldId": null,
-      "fieldType": "button",
+      "fieldType": null,
       "secureField": false,
       "events": [
         {
-          "event": "onClick",
+          "event": "onChange",
           "handlers": [
-            "submit",
-            "pageController.prompt"
+            "props.setInput"
           ]
         }
       ],
@@ -870,13 +944,33 @@
       "routes": []
     },
     {
-      "runtimeId": "ui.5199be8da8573ff9",
+      "runtimeId": "ui.41d797e82355b2ef",
       "voicePolicy": "assistant",
-      "id": "components/voice-assistant/index.tsx:213:11",
-      "file": "components/voice-assistant/index.tsx",
-      "line": 213,
-      "column": 11,
-      "owner": "VoiceAssistant",
+      "id": "components/voice-assistant/AssistantPanel.tsx:76:400",
+      "file": "components/voice-assistant/AssistantPanel.tsx",
+      "line": 76,
+      "column": 400,
+      "owner": "AssistantPanel",
+      "tag": "button",
+      "label": "{t(\"send\")}",
+      "fieldId": null,
+      "fieldType": "submit",
+      "secureField": false,
+      "events": [],
+      "href": null,
+      "disabled": "{!props.input.trim()}",
+      "hasDirectHandler": true,
+      "global": true,
+      "routes": []
+    },
+    {
+      "runtimeId": "ui.43d3b9d44db0c9b7",
+      "voicePolicy": "assistant",
+      "id": "components/voice-assistant/AssistantPanel.tsx:77:35",
+      "file": "components/voice-assistant/AssistantPanel.tsx",
+      "line": 77,
+      "column": 35,
+      "owner": "AssistantPanel",
       "tag": "button",
       "label": "{t(\"listen\")}",
       "fieldId": null,
@@ -889,19 +983,19 @@
         }
       ],
       "href": null,
-      "disabled": "{beaconActive || pathname.startsWith(\"/teleconsult/room\")}",
+      "disabled": "{props.mediaBlocked}",
       "hasDirectHandler": true,
       "global": true,
       "routes": []
     },
     {
-      "runtimeId": "ui.527f49828819bf82",
+      "runtimeId": "ui.18cbf23cb6405eaf",
       "voicePolicy": "assistant",
-      "id": "components/voice-assistant/index.tsx:214:11",
-      "file": "components/voice-assistant/index.tsx",
-      "line": 214,
-      "column": 11,
-      "owner": "VoiceAssistant",
+      "id": "components/voice-assistant/AssistantPanel.tsx:77:422",
+      "file": "components/voice-assistant/AssistantPanel.tsx",
+      "line": 77,
+      "column": 422,
+      "owner": "AssistantPanel",
       "tag": "button",
       "label": "{t(\"replay\")}",
       "fieldId": null,
@@ -917,19 +1011,19 @@
         }
       ],
       "href": null,
-      "disabled": "{beaconActive || pathname.startsWith(\"/teleconsult/room\")}",
+      "disabled": "{props.mediaBlocked}",
       "hasDirectHandler": true,
       "global": true,
       "routes": []
     },
     {
-      "runtimeId": "ui.995a1817c05cf852",
+      "runtimeId": "ui.f88049b789a89920",
       "voicePolicy": "assistant",
-      "id": "components/voice-assistant/index.tsx:215:11",
-      "file": "components/voice-assistant/index.tsx",
-      "line": 215,
-      "column": 11,
-      "owner": "VoiceAssistant",
+      "id": "components/voice-assistant/AssistantPanel.tsx:77:776",
+      "file": "components/voice-assistant/AssistantPanel.tsx",
+      "line": 77,
+      "column": 776,
+      "owner": "AssistantPanel",
       "tag": "button",
       "label": "{t(\"stop\")}",
       "fieldId": null,
@@ -948,88 +1042,40 @@
       "routes": []
     },
     {
-      "runtimeId": "ui.7c7a39c1b8cd1bf3",
+      "runtimeId": "ui.6bf10c81f8905fba",
       "voicePolicy": "assistant",
-      "id": "components/voice-assistant/index.tsx:217:9",
-      "file": "components/voice-assistant/index.tsx",
-      "line": 217,
-      "column": 9,
-      "owner": "VoiceAssistant",
-      "tag": "form",
-      "label": "→",
-      "fieldId": null,
-      "fieldType": null,
-      "secureField": false,
-      "events": [
-        {
-          "event": "onSubmit",
-          "handlers": [
-            "event.preventDefault",
-            "send"
-          ]
-        }
-      ],
-      "href": null,
-      "disabled": null,
-      "hasDirectHandler": true,
-      "global": true,
-      "routes": []
-    },
-    {
-      "runtimeId": "ui.72a5158aff026c14",
-      "voicePolicy": "assistant",
-      "id": "components/voice-assistant/index.tsx:217:134",
-      "file": "components/voice-assistant/index.tsx",
-      "line": 217,
-      "column": 134,
-      "owner": "VoiceAssistant",
-      "tag": "input",
-      "label": "{t(\"textInput\")}",
-      "fieldId": null,
-      "fieldType": null,
-      "secureField": false,
-      "events": [
-        {
-          "event": "onChange",
-          "handlers": [
-            "setInput"
-          ]
-        }
-      ],
-      "href": null,
-      "disabled": null,
-      "hasDirectHandler": true,
-      "global": true,
-      "routes": []
-    },
-    {
-      "runtimeId": "ui.747b6194f748cf68",
-      "voicePolicy": "assistant",
-      "id": "components/voice-assistant/index.tsx:217:396",
-      "file": "components/voice-assistant/index.tsx",
-      "line": 217,
-      "column": 396,
-      "owner": "VoiceAssistant",
+      "id": "components/voice-assistant/AssistantPanel.tsx:78:51",
+      "file": "components/voice-assistant/AssistantPanel.tsx",
+      "line": 78,
+      "column": 51,
+      "owner": "AssistantPanel",
       "tag": "button",
-      "label": "{t(\"send\")}",
+      "label": "{controller.prompt(\"cancelTask\")}",
       "fieldId": null,
-      "fieldType": "submit",
+      "fieldType": "button",
       "secureField": false,
-      "events": [],
+      "events": [
+        {
+          "event": "onClick",
+          "handlers": [
+            "cancel"
+          ]
+        }
+      ],
       "href": null,
-      "disabled": "{!input.trim()}",
+      "disabled": null,
       "hasDirectHandler": true,
       "global": true,
       "routes": []
     },
     {
-      "runtimeId": "ui.60ad7f69a7a154c2",
+      "runtimeId": "ui.41f7f8e77eec6464",
       "voicePolicy": "assistant",
-      "id": "components/voice-assistant/index.tsx:218:9",
-      "file": "components/voice-assistant/index.tsx",
-      "line": 218,
-      "column": 9,
-      "owner": "VoiceAssistant",
+      "id": "components/voice-assistant/AssistantPanel.tsx:78:246",
+      "file": "components/voice-assistant/AssistantPanel.tsx",
+      "line": 78,
+      "column": 246,
+      "owner": "AssistantPanel",
       "tag": "button",
       "label": "{t(\"emergency\")}",
       "fieldId": null,
@@ -1039,7 +1085,7 @@
         {
           "event": "onClick",
           "handlers": [
-            "run"
+            "props.onRun"
           ]
         }
       ],
@@ -11284,40 +11330,11 @@
       ]
     },
     {
-      "runtimeId": "ui.460c306d2393970b",
-      "voicePolicy": "confirm",
-      "id": "components/map-view/index.tsx:132:7",
-      "file": "components/map-view/index.tsx",
-      "line": 132,
-      "column": 7,
-      "owner": "MapView",
-      "tag": "Button",
-      "label": "{getAssistantPrompt(language, \"nearest\")}",
-      "fieldId": null,
-      "fieldType": "button",
-      "secureField": false,
-      "events": [
-        {
-          "event": "onClick",
-          "handlers": [
-            "facilityVoice.nearest"
-          ]
-        }
-      ],
-      "href": null,
-      "disabled": "{loading}",
-      "hasDirectHandler": true,
-      "global": false,
-      "routes": [
-        "/locations"
-      ]
-    },
-    {
       "runtimeId": "ui.5a670490cba71047",
       "voicePolicy": "link",
-      "id": "components/map-view/index.tsx:152:19",
+      "id": "components/map-view/index.tsx:227:19",
       "file": "components/map-view/index.tsx",
-      "line": 152,
+      "line": 227,
       "column": 19,
       "owner": "MapView",
       "tag": "a",
@@ -11337,9 +11354,9 @@
     {
       "runtimeId": "ui.6a00842567934279",
       "voicePolicy": "local",
-      "id": "components/map-view/index.tsx:181:13",
+      "id": "components/map-view/index.tsx:256:13",
       "file": "components/map-view/index.tsx",
-      "line": 181,
+      "line": 256,
       "column": 13,
       "owner": "MapView",
       "tag": "Button",
@@ -11426,13 +11443,13 @@
     {
       "runtimeId": "ui.c409f2cc5d0d8184",
       "voicePolicy": "container",
-      "id": "components/map-view/parts/FacilityMapControls.tsx:78:13",
+      "id": "components/map-view/parts/FacilityMapControls.tsx:87:13",
       "file": "components/map-view/parts/FacilityMapControls.tsx",
-      "line": 78,
+      "line": 87,
       "column": 13,
       "owner": "FacilityMapControls",
       "tag": "SearchableDropdown",
-      "label": "{en ? \"State (LGD)\" : \"राज्य (LGD)\"}",
+      "label": "{en ? \"State\" : \"राज्य\"}",
       "fieldId": null,
       "fieldType": null,
       "secureField": false,
@@ -11455,13 +11472,13 @@
     {
       "runtimeId": "ui.078e0bff4c22ae48",
       "voicePolicy": "container",
-      "id": "components/map-view/parts/FacilityMapControls.tsx:90:13",
+      "id": "components/map-view/parts/FacilityMapControls.tsx:99:13",
       "file": "components/map-view/parts/FacilityMapControls.tsx",
-      "line": 90,
+      "line": 99,
       "column": 13,
       "owner": "FacilityMapControls",
       "tag": "SearchableDropdown",
-      "label": "{en ? \"District (LGD)\" : \"जिला (LGD)\"}",
+      "label": "{en ? \"District\" : \"जिला\"}",
       "fieldId": null,
       "fieldType": null,
       "secureField": false,
@@ -11484,9 +11501,9 @@
     {
       "runtimeId": "ui.aacb7b5278886778",
       "voicePolicy": "field",
-      "id": "components/map-view/parts/FacilityMapControls.tsx:108:13",
+      "id": "components/map-view/parts/FacilityMapControls.tsx:117:13",
       "file": "components/map-view/parts/FacilityMapControls.tsx",
-      "line": 108,
+      "line": 117,
       "column": 13,
       "owner": "FacilityMapControls",
       "tag": "Input",
@@ -11511,46 +11528,17 @@
       ]
     },
     {
-      "runtimeId": "ui.32ff11f9a954ab08",
-      "voicePolicy": "confirm",
-      "id": "components/map-view/parts/FacilityMapControls.tsx:121:11",
-      "file": "components/map-view/parts/FacilityMapControls.tsx",
-      "line": 121,
-      "column": 11,
-      "owner": "FacilityMapControls",
-      "tag": "Button",
-      "label": "{locating ? <Loader2 className=\"h-4 w-4 animate-spin\" /> : <LocateFixed className=\"h-4 w-4\" />} {en ? \"Use My Location\" : \"मेरा स्थान\"}",
-      "fieldId": null,
-      "fieldType": null,
-      "secureField": false,
-      "events": [
-        {
-          "event": "onClick",
-          "handlers": [
-            "onUseMyLocation"
-          ]
-        }
-      ],
-      "href": null,
-      "disabled": "{locating}",
-      "hasDirectHandler": true,
-      "global": false,
-      "routes": [
-        "/locations"
-      ]
-    },
-    {
       "runtimeId": "ui.0032e5c70cf0d313",
       "voicePolicy": "local",
-      "id": "components/map-view/parts/FacilityMapControls.tsx:133:13",
+      "id": "components/map-view/parts/FacilityMapControls.tsx:131:13",
       "file": "components/map-view/parts/FacilityMapControls.tsx",
-      "line": 133,
+      "line": 131,
       "column": 13,
       "owner": "FacilityMapControls",
       "tag": "button",
       "label": "[dynamic content]",
       "fieldId": null,
-      "fieldType": null,
+      "fieldType": "button",
       "secureField": false,
       "events": [
         {
@@ -11569,15 +11557,44 @@
       ]
     },
     {
+      "runtimeId": "ui.32ff11f9a954ab08",
+      "voicePolicy": "confirm",
+      "id": "components/map-view/parts/FacilityMapControls.tsx:152:11",
+      "file": "components/map-view/parts/FacilityMapControls.tsx",
+      "line": 152,
+      "column": 11,
+      "owner": "FacilityMapControls",
+      "tag": "Button",
+      "label": "{locating ? <Loader2 className=\"h-4 w-4 animate-spin\"/> : <LocateFixed className=\"h-4 w-4\"/>} {en ? \"Use My Location\" : \"मेरा स्थान\"}",
+      "fieldId": null,
+      "fieldType": "button",
+      "secureField": false,
+      "events": [
+        {
+          "event": "onClick",
+          "handlers": [
+            "onUseMyLocation"
+          ]
+        }
+      ],
+      "href": null,
+      "disabled": "{locating}",
+      "hasDirectHandler": true,
+      "global": false,
+      "routes": [
+        "/locations"
+      ]
+    },
+    {
       "runtimeId": "ui.d000cf7f1414a10b",
       "voicePolicy": "field",
-      "id": "components/map-view/parts/FacilityMapControls.tsx:150:11",
+      "id": "components/map-view/parts/FacilityMapControls.tsx:156:11",
       "file": "components/map-view/parts/FacilityMapControls.tsx",
-      "line": 150,
+      "line": 156,
       "column": 11,
       "owner": "FacilityMapControls",
       "tag": "select",
-      "label": "[dynamic content]",
+      "label": "{[en ? \"Search radius\" : \"खोज का दायरा\"].join(' ')}",
       "fieldId": null,
       "fieldType": null,
       "secureField": false,
@@ -11599,15 +11616,44 @@
       ]
     },
     {
-      "runtimeId": "ui.b5e235754a451f6e",
+      "runtimeId": "ui.460c306d2393970b",
       "voicePolicy": "local",
-      "id": "components/map-view/parts/FacilityMapControls.tsx:173:9",
+      "id": "components/map-view/parts/FacilityMapControls.tsx:168:9",
       "file": "components/map-view/parts/FacilityMapControls.tsx",
-      "line": 173,
+      "line": 168,
       "column": 9,
       "owner": "FacilityMapControls",
       "tag": "Button",
-      "label": "{isMapExpanded ? <Minimize2 className=\"h-3.5 w-3.5\" /> : <Maximize2 className=\"h-3.5 w-3.5\" />} {isMapExpanded ? en ? \"Compact Map (260px)\" : \"छोटा नक",
+      "label": "{nearestLabel}",
+      "fieldId": null,
+      "fieldType": "button",
+      "secureField": false,
+      "events": [
+        {
+          "event": "onClick",
+          "handlers": [
+            "onNearest"
+          ]
+        }
+      ],
+      "href": null,
+      "disabled": "{nearestDisabled}",
+      "hasDirectHandler": true,
+      "global": false,
+      "routes": [
+        "/locations"
+      ]
+    },
+    {
+      "runtimeId": "ui.b5e235754a451f6e",
+      "voicePolicy": "local",
+      "id": "components/map-view/parts/FacilityMapControls.tsx:182:9",
+      "file": "components/map-view/parts/FacilityMapControls.tsx",
+      "line": 182,
+      "column": 9,
+      "owner": "FacilityMapControls",
+      "tag": "Button",
+      "label": "{isMapExpanded ? <Minimize2 className=\"h-3.5 w-3.5\" /> : <Maximize2 className=\"h-3.5 w-3.5\" />} {isMapExpanded ? en ? \"Compact map\" : \"छोटा नक्शा\" : e",
       "fieldId": null,
       "fieldType": "button",
       "secureField": false,
@@ -11886,10 +11932,10 @@
     {
       "runtimeId": "ui.50cea3883c320ca8",
       "voicePolicy": "local",
-      "id": "components/map-view/parts/MapVoiceControls.tsx:15:5",
+      "id": "components/map-view/parts/MapVoiceControls.tsx:22:7",
       "file": "components/map-view/parts/MapVoiceControls.tsx",
-      "line": 15,
-      "column": 5,
+      "line": 22,
+      "column": 7,
       "owner": "MapVoiceControls",
       "tag": "Button",
       "label": "{labels[8]}",
@@ -11900,6 +11946,7 @@
         {
           "event": "onClick",
           "handlers": [
+            "event.stopPropagation",
             "map.zoomIn"
           ]
         }
@@ -11915,10 +11962,10 @@
     {
       "runtimeId": "ui.c638d6dfc806ae51",
       "voicePolicy": "local",
-      "id": "components/map-view/parts/MapVoiceControls.tsx:16:5",
+      "id": "components/map-view/parts/MapVoiceControls.tsx:23:7",
       "file": "components/map-view/parts/MapVoiceControls.tsx",
-      "line": 16,
-      "column": 5,
+      "line": 23,
+      "column": 7,
       "owner": "MapVoiceControls",
       "tag": "Button",
       "label": "{labels[9]}",
@@ -11929,36 +11976,8 @@
         {
           "event": "onClick",
           "handlers": [
+            "event.stopPropagation",
             "map.zoomOut"
-          ]
-        }
-      ],
-      "href": null,
-      "disabled": null,
-      "hasDirectHandler": true,
-      "global": false,
-      "routes": [
-        "/locations"
-      ]
-    },
-    {
-      "runtimeId": "ui.97b4f5295aa0efcb",
-      "voicePolicy": "local",
-      "id": "components/map-view/parts/MapVoiceControls.tsx:17:5",
-      "file": "components/map-view/parts/MapVoiceControls.tsx",
-      "line": 17,
-      "column": 5,
-      "owner": "MapVoiceControls",
-      "tag": "Button",
-      "label": "{getAssistantPrompt(language, \"gps\")}",
-      "fieldId": null,
-      "fieldType": "button",
-      "secureField": false,
-      "events": [
-        {
-          "event": "onClick",
-          "handlers": [
-            "map.panTo"
           ]
         }
       ],
@@ -11973,13 +11992,13 @@
     {
       "runtimeId": "ui.40f28443773b41e8",
       "voicePolicy": "local",
-      "id": "components/map-view/parts/MapVoiceControls.tsx:18:5",
+      "id": "components/map-view/parts/MapVoiceControls.tsx:26:7",
       "file": "components/map-view/parts/MapVoiceControls.tsx",
-      "line": 18,
-      "column": 5,
+      "line": 26,
+      "column": 7,
       "owner": "MapVoiceControls",
       "tag": "Button",
-      "label": "{getAssistantPrompt(language, \"scrollUp\")}",
+      "label": "{mapLabels[1]}",
       "fieldId": null,
       "fieldType": "button",
       "secureField": false,
@@ -11987,35 +12006,7 @@
         {
           "event": "onClick",
           "handlers": [
-            "map.panBy"
-          ]
-        }
-      ],
-      "href": null,
-      "disabled": null,
-      "hasDirectHandler": true,
-      "global": false,
-      "routes": [
-        "/locations"
-      ]
-    },
-    {
-      "runtimeId": "ui.4c159d49da03fc98",
-      "voicePolicy": "local",
-      "id": "components/map-view/parts/MapVoiceControls.tsx:19:5",
-      "file": "components/map-view/parts/MapVoiceControls.tsx",
-      "line": 19,
-      "column": 5,
-      "owner": "MapVoiceControls",
-      "tag": "Button",
-      "label": "{getAssistantPrompt(language, \"scrollDown\")}",
-      "fieldId": null,
-      "fieldType": "button",
-      "secureField": false,
-      "events": [
-        {
-          "event": "onClick",
-          "handlers": [
+            "event.stopPropagation",
             "map.panBy"
           ]
         }
@@ -12031,10 +12022,10 @@
     {
       "runtimeId": "ui.697afaffef7df3d7",
       "voicePolicy": "local",
-      "id": "components/map-view/parts/MapVoiceControls.tsx:20:5",
+      "id": "components/map-view/parts/MapVoiceControls.tsx:27:7",
       "file": "components/map-view/parts/MapVoiceControls.tsx",
-      "line": 20,
-      "column": 5,
+      "line": 27,
+      "column": 7,
       "owner": "MapVoiceControls",
       "tag": "Button",
       "label": "{labels[10]}",
@@ -12045,7 +12036,38 @@
         {
           "event": "onClick",
           "handlers": [
+            "event.stopPropagation",
             "map.panBy"
+          ]
+        }
+      ],
+      "href": null,
+      "disabled": null,
+      "hasDirectHandler": true,
+      "global": false,
+      "routes": [
+        "/locations"
+      ]
+    },
+    {
+      "runtimeId": "ui.97b4f5295aa0efcb",
+      "voicePolicy": "local",
+      "id": "components/map-view/parts/MapVoiceControls.tsx:28:7",
+      "file": "components/map-view/parts/MapVoiceControls.tsx",
+      "line": 28,
+      "column": 7,
+      "owner": "MapVoiceControls",
+      "tag": "Button",
+      "label": "{mapLabels[3]}",
+      "fieldId": null,
+      "fieldType": "button",
+      "secureField": false,
+      "events": [
+        {
+          "event": "onClick",
+          "handlers": [
+            "event.stopPropagation",
+            "map.panTo"
           ]
         }
       ],
@@ -12060,10 +12082,10 @@
     {
       "runtimeId": "ui.ad00eabeb8adf6fe",
       "voicePolicy": "local",
-      "id": "components/map-view/parts/MapVoiceControls.tsx:21:5",
+      "id": "components/map-view/parts/MapVoiceControls.tsx:29:7",
       "file": "components/map-view/parts/MapVoiceControls.tsx",
-      "line": 21,
-      "column": 5,
+      "line": 29,
+      "column": 7,
       "owner": "MapVoiceControls",
       "tag": "Button",
       "label": "{labels[11]}",
@@ -12074,6 +12096,37 @@
         {
           "event": "onClick",
           "handlers": [
+            "event.stopPropagation",
+            "map.panBy"
+          ]
+        }
+      ],
+      "href": null,
+      "disabled": null,
+      "hasDirectHandler": true,
+      "global": false,
+      "routes": [
+        "/locations"
+      ]
+    },
+    {
+      "runtimeId": "ui.4c159d49da03fc98",
+      "voicePolicy": "local",
+      "id": "components/map-view/parts/MapVoiceControls.tsx:30:7",
+      "file": "components/map-view/parts/MapVoiceControls.tsx",
+      "line": 30,
+      "column": 7,
+      "owner": "MapVoiceControls",
+      "tag": "Button",
+      "label": "{mapLabels[2]}",
+      "fieldId": null,
+      "fieldType": "button",
+      "secureField": false,
+      "events": [
+        {
+          "event": "onClick",
+          "handlers": [
+            "event.stopPropagation",
             "map.panBy"
           ]
         }

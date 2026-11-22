@@ -12,8 +12,8 @@ export function AccessibilityBar() {
   const state = useAccessibility()
   const t = CONTROL_PROMPTS[resolveAssistantLanguage(language)]
   return <div className="notranslate" translate="no" data-testid="accessibility-toolbar">
-    <Button data-voice-control="ui.5e657ef31f4d5b07" className="fixed top-20 left-4 z-30 h-12 w-12 rounded-full bg-purple-700 p-0 shadow-lg" aria-label={t.accessibility} aria-expanded={state.open} onClick={() => setAccessibility({ open: !state.open })}><Accessibility className="h-5 w-5"/></Button>
-    {state.open && <Card className="fixed top-36 left-4 z-30 max-h-[60dvh] w-72 overflow-auto border-2 border-purple-200 shadow-xl"><CardContent className="space-y-4 p-4">
+    <Button data-voice-control="ui.5e657ef31f4d5b07" className="fixed bottom-20 left-4 z-[60] h-12 w-12 rounded-full bg-purple-700 p-0 shadow-lg md:bottom-6" aria-label={t.accessibility} aria-expanded={state.open} onClick={() => setAccessibility({ open: !state.open })}><Accessibility className="h-5 w-5"/></Button>
+    {state.open && <Card className="fixed bottom-36 left-4 z-[60] max-h-[60dvh] w-72 overflow-auto border-2 border-purple-200 shadow-xl md:bottom-20"><CardContent className="space-y-4 p-4">
       <div className="flex items-center justify-between"><h3 className="text-sm font-semibold">{t.accessibility}</h3><Button data-voice-control="ui.a5f9c09110aa5540" variant="ghost" aria-label={t.back} onClick={() => setAccessibility({ open: false })}><ChevronUp/></Button></div>
       <div className="flex items-center justify-between"><span className="flex gap-2 text-sm"><Type size={18}/>{t.fontSize}</span><output data-testid="accessibility-font-size">{state.fontSize}px</output></div>
       <div className="flex gap-2"><Button data-voice-control="ui.01b20ed72eea17d5" variant="outline" className="min-h-11 flex-1" disabled={state.fontSize <= 12} onClick={() => setAccessibility({ fontSize: state.fontSize - 2 })}>{t.decreaseFont}</Button><Button data-voice-control="ui.6616468571682297" variant="outline" className="min-h-11 flex-1" disabled={state.fontSize >= 24} onClick={() => setAccessibility({ fontSize: state.fontSize + 2 })}>{t.increaseFont}</Button></div>

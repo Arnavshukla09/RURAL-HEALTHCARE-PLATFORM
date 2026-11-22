@@ -8,7 +8,7 @@ The avatar becomes the user's controller for the active website: it explains ava
 
 Target **100% of eligible first-party interactive controls** after voice activation, with every browser/OS limitation explicitly accounted for. A PWA cannot grant its own permissions, remain an uninterrupted microphone after suspension/closure, or operate another application's private UI. End-to-end touch-free setup/system handoffs may require Android Voice Access, iOS Voice Control or another supported assistive input. Their language/device coverage must also be checked. A native companion is a separate project only if system-wide/background operation is essential.
 
-See [implemented behavior and limits](HANDS_FREE_IMPLEMENTATION.md). The [option map](HANDS_FREE_ACTION_MAP.md) groups all 28 page entries. The [497-candidate source inventory](HANDS_FREE_CONTROL_INVENTORY.md) and [JSON references](HANDS_FREE_CONTROL_INVENTORY.json) cover first-party JSX controls, not live runtime multiplicity or proven voice coverage.
+See [implemented behavior and limits](HANDS_FREE_IMPLEMENTATION.md). The [option map](HANDS_FREE_ACTION_MAP.md) groups all 28 page entries. The [499-candidate source inventory](HANDS_FREE_CONTROL_INVENTORY.md) and [JSON references](HANDS_FREE_CONTROL_INVENTORY.json) cover first-party JSX controls, not live runtime multiplicity or proven voice coverage.
 
 ## What the screenshots reveal
 

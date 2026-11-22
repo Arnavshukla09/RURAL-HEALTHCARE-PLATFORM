@@ -63,7 +63,7 @@ for (const file of [...walkFiles('app'), ...walkFiles('components')].filter(file
         if (/reopen|reschedule|claim|role|provision|invite|erase/i.test(handlerText) && !field) policy = 'handoff'
         if (field && /onRoleChange|handleRoleChange|provision|approveClaim|erase/i.test(handlerText)) policy = 'handoff'
         if (legacy && !field && (type === 'submit' || /submit|save|update|approve|reject|delete|remove/i.test(handlerText))) policy = 'handoff'
-        if (!field && /router\.push|router\.back|onGo\(|toggleSection|map\.(zoom|pan)|onPageChange|onShowRoute/.test(handlerText) && !/save|send|submit|delete|remove/i.test(handlerText)) policy = 'local'
+        if (!field && /router\.push|router\.back|onGo\(|toggleSection|map\.(zoom|pan)|onPageChange|onShowRoute|onNearest/.test(handlerText) && !/save|send|submit|delete|remove/i.test(handlerText)) policy = 'local'
         if (!['button', 'a', 'input', 'textarea', 'select', 'form', 'Button', 'Input', 'Textarea', 'SelectTrigger', 'SelectItem', 'Checkbox', 'RadioGroupItem', 'Switch', 'TabsTrigger', 'DialogTrigger', 'DropdownMenuItem', 'Link', 'div', 'span'].includes(tag)) policy = 'container'
         if (relative.startsWith('components/voice-assistant/') && !relative.endsWith('/MeetingControls.tsx')) policy = 'assistant'
         controls[id] = { file: relative, tag, policy, secure, fieldType: type, line: parsed.getLineAndCharacterOfPosition(node.getStart(parsed)).line + 1 }

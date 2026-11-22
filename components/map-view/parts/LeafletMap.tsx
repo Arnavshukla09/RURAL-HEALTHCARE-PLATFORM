@@ -9,65 +9,34 @@
  */
 
 import { useState, useRef, useEffect, ReactNode } from "react"
-import dynamic from "next/dynamic"
-import { Loader2 } from "lucide-react"
+import { Map as NativeMap } from "leaflet"
+import { createLeafletContext, LeafletProvider, type LeafletContextInterface } from "@react-leaflet/core"
+import MapVoiceControls from "./MapVoiceControls"
 
-export const MapContainer = dynamic(() => import("react-leaflet").then((m) => m.MapContainer), { ssr: false })
-export const TileLayer = dynamic(() => import("react-leaflet").then((m) => m.TileLayer), { ssr: false })
-export const Marker = dynamic(() => import("react-leaflet").then((m) => m.Marker), { ssr: false })
-export const Popup = dynamic(() => import("react-leaflet").then((m) => m.Popup), { ssr: false })
-export const Circle = dynamic(() => import("react-leaflet").then((m) => m.Circle), { ssr: false })
-export const Polyline = dynamic(() => import("react-leaflet").then((m) => m.Polyline), { ssr: false })
-const MapVoiceControls = dynamic(() => import("./MapVoiceControls"), { ssr: false })
+// MapView is loaded through a client-only boundary; layers share one owned map.
+export { TileLayer, Marker, Popup, Circle, Polyline } from "react-leaflet"
 
-export function LeafletMap({
-  children,
-  center,
-  zoom,
-}: {
-  children: ReactNode
-  center: [number, number]
-  zoom: number
-}) {
-  const [ready, setReady] = useState(false)
-  const [mapKey, setMapKey] = useState(0)
-  const mountedRef = useRef(false)
-
+export function LeafletMap({ children, center, zoom }: { children: ReactNode; center: [number, number]; zoom: number }) {
+  const host = useRef<HTMLDivElement>(null)
+  const initialView = useRef({ center, zoom })
+  const [context, setContext] = useState<LeafletContextInterface | null>(null)
+  const [latitude, longitude] = center
   useEffect(() => {
-    if (mountedRef.current) {
-      setMapKey((k) => k + 1)
-    } else {
-      mountedRef.current = true
-    }
-    const id = requestAnimationFrame(() => setReady(true))
-    return () => {
-      cancelAnimationFrame(id)
-      setReady(false)
-    }
+    if (!host.current) return
+    // Own creation and removal in the same effect. Strict Mode may replay the
+    // effect, but the previous instance is removed before another is created.
+    const map = new NativeMap(host.current, { zoomControl: false }).setView(initialView.current.center, initialView.current.zoom)
+    setContext(createLeafletContext(map))
+    const resize = () => map.invalidateSize()
+    const observer = typeof ResizeObserver !== "undefined" ? new ResizeObserver(resize) : null
+    observer?.observe(host.current)
+    window.addEventListener("resize", resize)
+    return () => { observer?.disconnect(); window.removeEventListener("resize", resize); map.remove() }
   }, [])
-
-  if (!ready) {
-    return (
-      <div className="h-full w-full bg-gradient-to-br from-blue-50 to-teal-50 flex items-center justify-center">
-        <div className="text-center text-gray-400">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
-          <p className="text-sm">Loading map...</p>
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <MapContainer
-      key={`map-${mapKey}-${center[0].toFixed(4)}-${center[1].toFixed(4)}`}
-      center={center}
-      zoom={zoom}
-      style={{ height: "100%", width: "100%" }}
-    >
-      {children}
-      <MapVoiceControls center={center}/>
-    </MapContainer>
-  )
+  useEffect(() => { context?.map.setView([latitude, longitude], zoom) }, [context, latitude, longitude, zoom])
+  return <div ref={host} className="h-full w-full" style={{ height: "100%", width: "100%" }}>
+    {context && <LeafletProvider value={context}>{children}<MapVoiceControls center={center}/></LeafletProvider>}
+  </div>
 }
 
 export function makeIcon(color: string, isTop10: boolean, isUser = false) {

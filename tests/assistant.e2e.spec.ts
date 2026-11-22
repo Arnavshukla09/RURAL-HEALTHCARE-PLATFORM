@@ -65,6 +65,7 @@ test("emergency guidance interrupts intake and works after network loss", async 
 
 test("all13 language options include Assamese and Urdu direction", async ({ page }) => {
   const guide = await openGuide(page)
+  await guide.getByRole("button", { name: "Settings", exact: true }).click()
   const selector = guide.getByRole("combobox")
   await expect(selector.locator("option")).toHaveCount(13)
   await selector.selectOption("as")
@@ -122,7 +123,8 @@ test("font and contrast commands share toolbar state without trapping an ongoing
 })
 
 test("all thirteen native accessibility commands change actual root settings", async ({ page }) => {
-  await openGuide(page)
+  const guide = await openGuide(page)
+  await guide.getByRole("button", { name: "Settings", exact: true }).click()
   const { CONTROL_PROMPTS } = await import("../lib/assistant/control-catalog")
   for (const [code, catalog] of Object.entries(CONTROL_PROMPTS)) {
     await page.getByRole("dialog", { name: "RuralHealth", exact: true }).getByRole("combobox").selectOption(code)
@@ -133,6 +135,44 @@ test("all thirteen native accessibility commands change actual root settings", a
     await input.fill(catalog.contrastOn); await input.press("Enter")
     await expect(page.locator("html")).toHaveAttribute("data-high-contrast", "")
   }
+})
+
+test("keeps conversation and action buttons separate on a phone", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  const guide = await openGuide(page)
+  await expect(guide.getByTestId("assistant-conversation")).toBeVisible()
+  await expect(guide.getByTestId("assistant-action-panel")).toBeHidden()
+  await expect(guide.getByTestId("assistant-conversation").getByRole("button")).toHaveCount(0)
+  await expect(guide.getByRole("textbox", { name: "Type instead", exact: true })).toBeInViewport()
+  await guide.getByRole("tab", { name: "Actions", exact: true }).click()
+  await expect(guide.getByTestId("assistant-action-panel").getByRole("button", { name: "Book a doctor", exact: true })).toBeVisible()
+  await guide.getByRole("tab", { name: "Chat", exact: true }).click()
+  await expect(guide.getByTestId("assistant-conversation")).toContainText("health guide")
+  await expect(guide.getByRole("button", { name: "Cancel task", exact: true })).toBeInViewport()
+  await page.screenshot({ path: "scratch/assistant-chat-mobile.png" })
+})
+
+test("groups map controls and keeps nearest within the chosen service", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.route("**/api/facilities/nearby?**", route => route.fulfill({ json: { facilities: [{ id: "test-clinic", name: "Test Clinic", type: "clinic", lat: 23.26, lon: 77.41, distance_km: 1, phone: null, address: "Bhopal", district: "Bhopal" }] } }))
+  await page.route("**/api/facilities/district/**", route => route.fulfill({ json: { facilities: [{ id: "test-clinic", nameEn: "Test Clinic", nameHi: "परीक्षण क्लिनिक", tier: "chc", lat: 23.26, lon: 77.41, phone: null, addressEn: "Bhopal", addressHi: "भोपाल", blockName: "Bhopal" }] } }))
+  await page.route("https://*.tile.openstreetmap.org/**", route => route.abort())
+  await page.goto("/locations")
+  const search = page.getByTestId("facility-search-controls")
+  await expect(search.getByTestId("facility-location-search")).toBeVisible()
+  const filters = search.getByTestId("facility-service-filters")
+  const clinic = filters.getByRole("button").filter({ hasText: "Clinic" })
+  await clinic.click()
+  await search.getByTestId("facility-location-actions").getByRole("button", { name: "Nearest", exact: true }).click()
+  await expect(clinic).toHaveAttribute("aria-pressed", "true")
+  await expect(search.getByRole("status")).toContainText("Test Clinic")
+  await expect(page.getByTestId("map-navigation-controls").getByRole("button")).toHaveCount(7)
+  await expect(page.locator(".leaflet-control-zoom")).toHaveCount(0)
+  await search.getByRole("button", { name: "Expand map", exact: true }).click()
+  await expect(page.getByTestId("map-navigation-controls")).toBeVisible()
+  await search.getByRole("button", { name: "Compact map", exact: true }).click()
+  await expect(page.getByRole("heading", { name: "Something went wrong", exact: true })).toHaveCount(0)
+  await page.screenshot({ path: "scratch/facility-map-mobile.png", fullPage: true })
 })
 
 test("a new task interrupts a slow question and late replies cannot resurrect it", async ({ page }) => {

@@ -10,7 +10,7 @@
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Search, Loader2, LocateFixed, MapPin, Minimize2, Maximize2 } from "lucide-react"
+import { Search, Loader2, LocateFixed, MapPin, Minimize2, Maximize2, Navigation } from "lucide-react"
 import { SearchableDropdown } from "./SearchableDropdown"
 import type { Facility } from "../types"
 import { TYPE_CONFIG } from "../types"
@@ -35,6 +35,10 @@ interface FacilityMapControlsProps {
   facilitiesCount: number
   isMapExpanded: boolean
   setIsMapExpanded: (expanded: boolean | ((prev: boolean) => boolean)) => void
+  onNearest: () => void
+  nearestLabel: string
+  nearestDisabled: boolean
+  nearestName?: string
 }
 
 export function FacilityMapControls({
@@ -57,26 +61,31 @@ export function FacilityMapControls({
   facilitiesCount,
   isMapExpanded,
   setIsMapExpanded,
+  onNearest,
+  nearestLabel,
+  nearestDisabled,
+  nearestName,
 }: FacilityMapControlsProps) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" data-testid="facility-search-controls">
       <div>
         <h2 className="text-2xl font-bold mb-1">
-          {en ? "National Healthcare Facility Discovery" : "राष्ट्रीय स्वास्थ्य सुविधा खोज"}
+          {en ? "Find healthcare nearby" : "आस-पास स्वास्थ्य सुविधाएं खोजें"}
         </h2>
         <p className="text-sm text-gray-500">
           {en
-            ? "Capability-aware facility locator indexed by Local Government Directory (LGD) and Indian Public Health Standards (IPHS)"
-            : "स्थानीय निकाय निर्देशिका (LGD) एवं भारतीय लोक स्वास्थ्य मानक (IPHS) आधारित स्वास्थ्य केंद्र खोज"}
+            ? "Choose a location and service, then find the nearest result."
+            : "स्थान और सेवा चुनें, फिर सबसे नज़दीकी परिणाम खोजें।"}
         </p>
       </div>
 
       {/* LGD Geographic Navigation & Search Row */}
-      <div className="relative z-30 flex flex-col md:flex-row gap-3 items-stretch md:items-center bg-blue-50/60 p-3 rounded-xl border border-blue-100">
+      <div className="relative z-30 flex flex-col gap-4 rounded-2xl border border-gray-200 bg-white p-4">
+      <div className="flex flex-col gap-3 md:flex-row md:items-end" data-testid="facility-location-search">
         <div className="flex-1 flex gap-2">
           <div className="w-1/2 md:w-52">
             <SearchableDropdown data-voice-control="ui.c409f2cc5d0d8184"
-              label={en ? "State (LGD)" : "राज्य (LGD)"}
+              label={en ? "State" : "राज्य"}
               placeholder={en ? "Select State" : "राज्य चुनें"}
               searchPlaceholder={en ? "Search state..." : "राज्य खोजें..."}
               selectedCode={selectedState}
@@ -88,7 +97,7 @@ export function FacilityMapControls({
 
           <div className="w-1/2 md:w-56">
             <SearchableDropdown data-voice-control="ui.078e0bff4c22ae48"
-              label={en ? "District (LGD)" : "जिला (LGD)"}
+              label={en ? "District" : "जिला"}
               placeholder={en ? "Select District" : "जिला चुनें"}
               searchPlaceholder={en ? "Search district..." : "जिला खोजें..."}
               selectedCode={selectedDistrict}
@@ -109,31 +118,22 @@ export function FacilityMapControls({
               placeholder={en ? "Search hospital or CHC name..." : "अस्पताल या CHC का नाम खोजें..."}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 h-9 text-xs bg-white" aria-label={[en ? "Search Facility" : "सुविधा खोजें"].join(' ')}
+              className="pl-9 h-11 text-sm bg-white" aria-label={[en ? "Search Facility" : "सुविधा खोजें"].join(' ')}
             />
           </div>
         </div>
       </div>
 
-      {/* Controls row */}
-      <div className="flex flex-col gap-3">
-        <div className="flex flex-wrap gap-2 items-center">
-          <Button data-voice-control="ui.32ff11f9a954ab08"
-            size="sm"
-            variant="outline"
-            onClick={onUseMyLocation}
-            disabled={locating}
-            className="gap-1.5 shrink-0"
-          >
-            {locating ? <Loader2 className="h-4 w-4 animate-spin" /> : <LocateFixed className="h-4 w-4" />}
-            {en ? "Use My Location" : "मेरा स्थान"}
-          </Button>
-
+      <div className="space-y-2 border-t border-gray-100 pt-3" data-testid="facility-service-filters">
+        <p className="text-xs font-semibold text-gray-600">{en ? "Services" : "सेवाएं"}</p>
+        <div className="flex flex-wrap gap-2">
           {(["all", "hospital", "health_post", "clinic", "pharmacy", "lab", "doctors"] as const).map((t) => (
             <button data-voice-control="ui.0032e5c70cf0d313"
               key={t}
+              type="button"
+              aria-pressed={filter === t}
               onClick={() => onFilterChange(t)}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+              className={`min-h-11 px-3 py-2 rounded-xl text-xs font-medium border transition-all ${
                 filter === t
                   ? "bg-blue-600 text-white border-blue-600"
                   : "bg-white text-gray-600 border-gray-200 hover:border-blue-300"
@@ -146,11 +146,17 @@ export function FacilityMapControls({
                   }`}
             </button>
           ))}
-
+        </div>
+      </div>
+      <div className="grid grid-cols-2 items-end gap-3 border-t border-gray-100 pt-3 sm:flex sm:justify-between" data-testid="facility-location-actions">
+          <Button data-voice-control="ui.32ff11f9a954ab08" type="button" variant="outline" onClick={onUseMyLocation} disabled={locating} className="min-h-11 gap-2">
+            {locating ? <Loader2 className="h-4 w-4 animate-spin"/> : <LocateFixed className="h-4 w-4"/>}{en ? "Use My Location" : "मेरा स्थान"}
+          </Button>
+        <label className="grid gap-1 text-xs font-semibold text-gray-600">{en ? "Search radius" : "खोज का दायरा"}
           <select data-voice-control="ui.d000cf7f1414a10b"
             value={radiusKm}
             onChange={(e) => onRadiusChange(Number(e.target.value))}
-            className="text-xs border rounded-full px-3 py-1.5 bg-white ml-auto"
+            className="min-h-11 min-w-28 rounded-xl border border-gray-200 bg-white px-3 text-sm font-normal text-gray-900" aria-label={[en ? "Search radius" : "खोज का दायरा"].join(' ')}
           >
             {[10, 25, 50, 100].map((km) => (
               <option key={km} value={km}>
@@ -158,7 +164,10 @@ export function FacilityMapControls({
               </option>
             ))}
           </select>
-        </div>
+        </label>
+        <Button data-voice-control="ui.460c306d2393970b" type="button" onClick={onNearest} disabled={nearestDisabled} className="col-span-2 min-h-11 gap-2 bg-blue-700 text-white hover:bg-blue-800"><Navigation className="h-4 w-4"/>{nearestLabel}</Button>
+      </div>
+      {nearestName && <p role="status" className="rounded-xl bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-900">{nearestLabel}: {nearestName}</p>}
       </div>
 
       {/* Map Header with Compact / Expand Toggle */}
@@ -175,13 +184,13 @@ export function FacilityMapControls({
           size="sm"
           variant="outline"
           onClick={() => setIsMapExpanded((prev) => !prev)}
-          className="h-7 text-xs gap-1.5 bg-white hover:bg-gray-50 border-gray-200 text-gray-700 shadow-xs"
+          className="min-h-11 text-xs gap-1.5 bg-white hover:bg-gray-50 border-gray-200 text-gray-700 shadow-xs"
         >
           {isMapExpanded ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
           <span>
             {isMapExpanded
-              ? en ? "Compact Map (260px)" : "छोटा नक्शा (260px)"
-              : en ? "Expand Map (460px)" : "बड़ा नक्शा (460px)"}
+              ? en ? "Compact map" : "छोटा नक्शा"
+              : en ? "Expand map" : "बड़ा नक्शा"}
           </span>
         </Button>
       </div>

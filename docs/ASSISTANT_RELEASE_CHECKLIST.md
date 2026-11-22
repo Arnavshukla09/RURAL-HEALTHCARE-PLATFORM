@@ -48,7 +48,7 @@ Run `npx playwright test` for browser journeys. The assistant journeys mock spee
 |---|---|
 | All 13 languages | Native speakers review instructions, emergency wording, symptom terms, names, dates/numbers and confirmation clarity; Urdu direction is correct |
 | Real speech | Test recognition and synthesis for every language on low-end Android, iOS and desktop; document unavailable voices and online/offline processing |
-| Website controller | Audit all 28 routes/modal/tab/result states; voice maps 497 reachable source templates with explicit dispositions, not 497 certified executable actions |
+| Website controller | Audit all 28 routes/modal/tab/result states; voice maps 499 reachable source templates with explicit dispositions, not 499 certified executable actions |
 | Interruption/accessibility | Verify actual font/contrast changes, cancellation during slow reads and submitted writes, corrections, wake/echo/false-confirmation handling and secure-input suspension |
 | Offline PWA | Prepare a pack, reload offline, navigate saved pages, queue a booking, reconnect and observe an actual acknowledgment; verify storage eviction/reinstallation behavior |
 | Emergency | Test local guidance, dial links, beacon interruption, stop/restart, phone lock, denied permissions and cleanup; confirm tapping does not imply dispatch |
