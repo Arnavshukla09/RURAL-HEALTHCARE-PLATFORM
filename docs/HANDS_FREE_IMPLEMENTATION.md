@@ -6,6 +6,8 @@ Updated 22 November 2026. This update implements a controller across the existin
 
 The floating panel separates **Chat** (conversation only) from **Actions** (tasks and current selections). Current choices open Actions automatically; language/offline settings collapse behind the settings icon. Speak, replay, Stop, Cancel and emergency help remain in the footer, and accessibility stays available in the header. The panel grows with conversation content rather than reserving an empty full-height window.
 
+“Open chat,” “show actions” and “open settings” switch those surfaces by voice; the native Select command followed by the native panel label also works. Explicit prefixes preserve ordinary “chat” answers when choosing a consultation mode. Map-control groups explicitly enable pointer interaction so Leaflet's overlay styles cannot intercept their buttons.
+
 The facility toolbar orders location/search, service filters, then GPS/radius/Nearest. Nearest respects the chosen service. Map zoom controls sit at the upper left, with a directional/recenter pad at the lower right; route details sit below the map. The native map is created and removed in the same effect through the existing map-core provider, so filter and size changes do not initialize its container twice. The accessibility launcher sits in the lower-left corner instead of covering page headings.
 
 | Capability | Current behavior |

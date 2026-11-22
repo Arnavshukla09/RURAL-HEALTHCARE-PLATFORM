@@ -3837,7 +3837,7 @@
     "policy": "assistant",
     "secure": false,
     "fieldType": "button",
-    "line": 46
+    "line": 55
   },
   "ui.8325c9a5a93fd6d8": {
     "file": "components/voice-assistant/AssistantPanel.tsx",
@@ -3845,7 +3845,7 @@
     "policy": "assistant",
     "secure": false,
     "fieldType": "button",
-    "line": 47
+    "line": 56
   },
   "ui.990a6c99cc1af3ff": {
     "file": "components/voice-assistant/AssistantPanel.tsx",
@@ -3853,7 +3853,7 @@
     "policy": "assistant",
     "secure": false,
     "fieldType": "button",
-    "line": 48
+    "line": 57
   },
   "ui.8b80606d3332eb6d": {
     "file": "components/voice-assistant/AssistantPanel.tsx",
@@ -3861,7 +3861,7 @@
     "policy": "assistant",
     "secure": false,
     "fieldType": "",
-    "line": 51
+    "line": 60
   },
   "ui.2780b6939ae9ab96": {
     "file": "components/voice-assistant/AssistantPanel.tsx",
@@ -3869,7 +3869,7 @@
     "policy": "assistant",
     "secure": false,
     "fieldType": "button",
-    "line": 54
+    "line": 63
   },
   "ui.6e797b6f58a9e21e": {
     "file": "components/voice-assistant/AssistantPanel.tsx",
@@ -3877,7 +3877,7 @@
     "policy": "assistant",
     "secure": false,
     "fieldType": "button",
-    "line": 57
+    "line": 66
   },
   "ui.88bc1f0893e2717b": {
     "file": "components/voice-assistant/AssistantPanel.tsx",
@@ -3885,7 +3885,7 @@
     "policy": "assistant",
     "secure": false,
     "fieldType": "button",
-    "line": 68
+    "line": 77
   },
   "ui.58626b9cb2ade380": {
     "file": "components/voice-assistant/AssistantPanel.tsx",
@@ -3893,7 +3893,7 @@
     "policy": "assistant",
     "secure": false,
     "fieldType": "button",
-    "line": 69
+    "line": 78
   },
   "ui.658a6b18f7f0c944": {
     "file": "components/voice-assistant/AssistantPanel.tsx",
@@ -3901,7 +3901,7 @@
     "policy": "assistant",
     "secure": false,
     "fieldType": "button",
-    "line": 70
+    "line": 79
   },
   "ui.361a4716ee08ea42": {
     "file": "components/voice-assistant/AssistantPanel.tsx",
@@ -3909,7 +3909,7 @@
     "policy": "assistant",
     "secure": false,
     "fieldType": "button",
-    "line": 70
+    "line": 79
   },
   "ui.942e30c956f9b2f3": {
     "file": "components/voice-assistant/AssistantPanel.tsx",
@@ -3917,7 +3917,7 @@
     "policy": "assistant",
     "secure": false,
     "fieldType": "button",
-    "line": 71
+    "line": 80
   },
   "ui.3aff41b469e06540": {
     "file": "components/voice-assistant/AssistantPanel.tsx",
@@ -3925,7 +3925,7 @@
     "policy": "assistant",
     "secure": false,
     "fieldType": "button",
-    "line": 72
+    "line": 81
   },
   "ui.fb8d78ae84c95c3f": {
     "file": "components/voice-assistant/AssistantPanel.tsx",
@@ -3933,7 +3933,7 @@
     "policy": "assistant",
     "secure": false,
     "fieldType": "",
-    "line": 75
+    "line": 84
   },
   "ui.9d1aaab16b8150af": {
     "file": "components/voice-assistant/AssistantPanel.tsx",
@@ -3941,7 +3941,7 @@
     "policy": "assistant",
     "secure": false,
     "fieldType": "",
-    "line": 76
+    "line": 85
   },
   "ui.33b2694ab5005c31": {
     "file": "components/voice-assistant/AssistantPanel.tsx",
@@ -3949,7 +3949,7 @@
     "policy": "assistant",
     "secure": false,
     "fieldType": "",
-    "line": 76
+    "line": 85
   },
   "ui.41d797e82355b2ef": {
     "file": "components/voice-assistant/AssistantPanel.tsx",
@@ -3957,7 +3957,7 @@
     "policy": "assistant",
     "secure": false,
     "fieldType": "submit",
-    "line": 76
+    "line": 85
   },
   "ui.43d3b9d44db0c9b7": {
     "file": "components/voice-assistant/AssistantPanel.tsx",
@@ -3965,7 +3965,7 @@
     "policy": "assistant",
     "secure": false,
     "fieldType": "button",
-    "line": 77
+    "line": 86
   },
   "ui.18cbf23cb6405eaf": {
     "file": "components/voice-assistant/AssistantPanel.tsx",
@@ -3973,7 +3973,7 @@
     "policy": "assistant",
     "secure": false,
     "fieldType": "button",
-    "line": 77
+    "line": 86
   },
   "ui.f88049b789a89920": {
     "file": "components/voice-assistant/AssistantPanel.tsx",
@@ -3981,7 +3981,7 @@
     "policy": "assistant",
     "secure": false,
     "fieldType": "button",
-    "line": 77
+    "line": 86
   },
   "ui.6bf10c81f8905fba": {
     "file": "components/voice-assistant/AssistantPanel.tsx",
@@ -3989,7 +3989,7 @@
     "policy": "assistant",
     "secure": false,
     "fieldType": "button",
-    "line": 78
+    "line": 87
   },
   "ui.41f7f8e77eec6464": {
     "file": "components/voice-assistant/AssistantPanel.tsx",
@@ -3997,7 +3997,7 @@
     "policy": "assistant",
     "secure": false,
     "fieldType": "button",
-    "line": 78
+    "line": 87
   },
   "ui.a22bf1e71c1028f5": {
     "file": "components/voice-assistant/index.tsx",
@@ -4005,7 +4005,7 @@
     "policy": "assistant",
     "secure": false,
     "fieldType": "button",
-    "line": 160
+    "line": 167
   },
   "ui.e11ca77cc94ba14e": {
     "file": "components/voice-assistant/MeetingControls.tsx",

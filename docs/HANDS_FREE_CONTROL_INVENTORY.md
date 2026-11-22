@@ -1,6 +1,6 @@
 # Hands-free control inventory
 
-Source commit: `548baeecd99cb9946708bb59f320fc43c8fdc3c3`. Generated 22 November 2026.
+Source commit: `23768473b5ada99204f50a667bf49f0c93a63392`. Generated 22 November 2026.
 
 **Implemented source registration inventory, not device or end-to-end coverage certification.** These are static JSX templates; one facility-card template may render many buttons. A reachable template can be hidden or disabled at runtime. Dispositions include executable controls, containers, avatar-owned controls and explicit handoffs. Role permissions must be evaluated by the server and active UI state.
 
@@ -15,28 +15,28 @@ The inventory excludes input values, credentials and conversation data. Handler 
 | components/LanguageSuggestionBanner.tsx:110 | button | Switch to {meta.nativeName} | handleAccept | ui.acab67c248fc4ab4 / confirm |
 | components/LanguageSuggestionBanner.tsx:117 | button | Keep {language === "hi" ? "हिन्दी" : "English"} | handleDismiss | ui.45c346c083948b8a / confirm |
 | components/LanguageSuggestionBanner.tsx:123 | button | Dismiss language suggestion | handleDismiss | ui.a34b98fc0dab5184 / confirm |
-| components/voice-assistant/index.tsx:160 | button | {t("welcome")} | openAssistant | ui.a22bf1e71c1028f5 / assistant |
-| components/voice-assistant/AssistantPanel.tsx:46 | button | {controller.prompt("accessibility")} | no direct handler: inspect wiring | ui.69cdcd9ecaa9d407 / assistant |
-| components/voice-assistant/AssistantPanel.tsx:47 | button | {labels.settings} | setSettingsOpen | ui.8325c9a5a93fd6d8 / assistant |
-| components/voice-assistant/AssistantPanel.tsx:48 | button | {t("close")} | no direct handler: inspect wiring | ui.990a6c99cc1af3ff / assistant |
-| components/voice-assistant/AssistantPanel.tsx:51 | select | {t("chooseLanguage")} | props.setLanguage | ui.8b80606d3332eb6d / assistant |
-| components/voice-assistant/AssistantPanel.tsx:54 | button | {t("downloadOffline")} | no direct handler: inspect wiring | ui.2780b6939ae9ab96 / assistant |
-| components/voice-assistant/AssistantPanel.tsx:57 | button | {labels[value]} {value === "actions" && hasActions && <span className="ms-2 inline-block h-2 w-2 rounded-full bg-teal-600"/>} | setPane | ui.6e797b6f58a9e21e / assistant |
-| components/voice-assistant/AssistantPanel.tsx:68 | button | {option.label} | controller.select | ui.88bc1f0893e2717b / assistant |
-| components/voice-assistant/AssistantPanel.tsx:69 | button | {choice.label} {choice.detail && <span className="block text-xs font-normal text-gray-500">{choice.detail}</span>} | workflow.select, workflow.say, t | ui.58626b9cb2ade380 / assistant |
-| components/voice-assistant/AssistantPanel.tsx:70 | button | {t("yesNo")} | workflow.confirm | ui.658a6b18f7f0c944 / assistant |
-| components/voice-assistant/AssistantPanel.tsx:70 | button | {t("cancel")} | workflow.confirm | ui.361a4716ee08ea42 / assistant |
-| components/voice-assistant/AssistantPanel.tsx:71 | button | {t(key)} | setPane, props.onRun | ui.942e30c956f9b2f3 / assistant |
-| components/voice-assistant/AssistantPanel.tsx:72 | button | {controller.prompt(controller.menu.length > 0 ? "more" : "options")} | voice.interrupt, workflow.cancelTask, controller.list | ui.3aff41b469e06540 / assistant |
-| components/voice-assistant/AssistantPanel.tsx:75 | a | {t("emergencyCall")} | link navigation | ui.fb8d78ae84c95c3f / assistant |
-| components/voice-assistant/AssistantPanel.tsx:76 | form | → | event.preventDefault, props.onSend | ui.9d1aaab16b8150af / assistant |
-| components/voice-assistant/AssistantPanel.tsx:76 | input | {t("textInput")} | props.setInput | ui.33b2694ab5005c31 / assistant |
-| components/voice-assistant/AssistantPanel.tsx:76 | button | {t("send")} | parent form submission | ui.41d797e82355b2ef / assistant |
-| components/voice-assistant/AssistantPanel.tsx:77 | button | {t("listen")} | no direct handler: inspect wiring | ui.43d3b9d44db0c9b7 / assistant |
-| components/voice-assistant/AssistantPanel.tsx:77 | button | {t("replay")} | voice.enable, voice.speakReply | ui.18cbf23cb6405eaf / assistant |
-| components/voice-assistant/AssistantPanel.tsx:77 | button | {t("stop")} | no direct handler: inspect wiring | ui.f88049b789a89920 / assistant |
-| components/voice-assistant/AssistantPanel.tsx:78 | button | {controller.prompt("cancelTask")} | cancel | ui.6bf10c81f8905fba / assistant |
-| components/voice-assistant/AssistantPanel.tsx:78 | button | {t("emergency")} | props.onRun | ui.41f7f8e77eec6464 / assistant |
+| components/voice-assistant/index.tsx:167 | button | {t("welcome")} | openAssistant | ui.a22bf1e71c1028f5 / assistant |
+| components/voice-assistant/AssistantPanel.tsx:55 | button | {controller.prompt("accessibility")} | no direct handler: inspect wiring | ui.69cdcd9ecaa9d407 / assistant |
+| components/voice-assistant/AssistantPanel.tsx:56 | button | {labels.settings} | setSettingsOpen | ui.8325c9a5a93fd6d8 / assistant |
+| components/voice-assistant/AssistantPanel.tsx:57 | button | {t("close")} | no direct handler: inspect wiring | ui.990a6c99cc1af3ff / assistant |
+| components/voice-assistant/AssistantPanel.tsx:60 | select | {t("chooseLanguage")} | props.setLanguage | ui.8b80606d3332eb6d / assistant |
+| components/voice-assistant/AssistantPanel.tsx:63 | button | {t("downloadOffline")} | no direct handler: inspect wiring | ui.2780b6939ae9ab96 / assistant |
+| components/voice-assistant/AssistantPanel.tsx:66 | button | {labels[value]} {value === "actions" && hasActions && <span className="ms-2 inline-block h-2 w-2 rounded-full bg-teal-600"/>} | setPane | ui.6e797b6f58a9e21e / assistant |
+| components/voice-assistant/AssistantPanel.tsx:77 | button | {option.label} | controller.select | ui.88bc1f0893e2717b / assistant |
+| components/voice-assistant/AssistantPanel.tsx:78 | button | {choice.label} {choice.detail && <span className="block text-xs font-normal text-gray-500">{choice.detail}</span>} | workflow.select, workflow.say, t | ui.58626b9cb2ade380 / assistant |
+| components/voice-assistant/AssistantPanel.tsx:79 | button | {t("yesNo")} | workflow.confirm | ui.658a6b18f7f0c944 / assistant |
+| components/voice-assistant/AssistantPanel.tsx:79 | button | {t("cancel")} | workflow.confirm | ui.361a4716ee08ea42 / assistant |
+| components/voice-assistant/AssistantPanel.tsx:80 | button | {t(key)} | setPane, props.onRun | ui.942e30c956f9b2f3 / assistant |
+| components/voice-assistant/AssistantPanel.tsx:81 | button | {controller.prompt(controller.menu.length > 0 ? "more" : "options")} | voice.interrupt, workflow.cancelTask, controller.list | ui.3aff41b469e06540 / assistant |
+| components/voice-assistant/AssistantPanel.tsx:84 | a | {t("emergencyCall")} | link navigation | ui.fb8d78ae84c95c3f / assistant |
+| components/voice-assistant/AssistantPanel.tsx:85 | form | → | event.preventDefault, props.onSend | ui.9d1aaab16b8150af / assistant |
+| components/voice-assistant/AssistantPanel.tsx:85 | input | {t("textInput")} | props.setInput | ui.33b2694ab5005c31 / assistant |
+| components/voice-assistant/AssistantPanel.tsx:85 | button | {t("send")} | parent form submission | ui.41d797e82355b2ef / assistant |
+| components/voice-assistant/AssistantPanel.tsx:86 | button | {t("listen")} | no direct handler: inspect wiring | ui.43d3b9d44db0c9b7 / assistant |
+| components/voice-assistant/AssistantPanel.tsx:86 | button | {t("replay")} | voice.enable, voice.speakReply | ui.18cbf23cb6405eaf / assistant |
+| components/voice-assistant/AssistantPanel.tsx:86 | button | {t("stop")} | no direct handler: inspect wiring | ui.f88049b789a89920 / assistant |
+| components/voice-assistant/AssistantPanel.tsx:87 | button | {controller.prompt("cancelTask")} | cancel | ui.6bf10c81f8905fba / assistant |
+| components/voice-assistant/AssistantPanel.tsx:87 | button | {t("emergency")} | props.onRun | ui.41f7f8e77eec6464 / assistant |
 | components/PwaUpdaterAndInstaller.tsx:149 | Button | {en ? "Reload" : "रीलोड"} | handleApplyUpdate | ui.34a17ca82a3edff6 / confirm |
 | components/PwaUpdaterAndInstaller.tsx:176 | Button | {en ? "Install" : "इंस्टॉल"} | handleInstallClick | ui.f163facae17b696d / confirm |
 | components/PwaUpdaterAndInstaller.tsx:183 | button | Dismiss | handleDismissBanner | ui.742887fa1b993e93 / confirm |

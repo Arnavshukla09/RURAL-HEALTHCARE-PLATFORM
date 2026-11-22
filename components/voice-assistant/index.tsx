@@ -9,6 +9,7 @@ import { useAssistantWorkflow } from "./useAssistantWorkflow"
 import { useVoiceSession } from "./useVoiceSession"
 import { AvatarFace } from "./AvatarFace"
 import { AssistantPanel } from "./AssistantPanel"
+import { PANEL_LABELS } from "@/lib/assistant/panel-labels"
 import { ASSISTANT_CONFIG } from "@/lib/assistant/config"
 import { detectAssistantIntent } from "@/lib/assistant/intents"
 import { installLocalRecognition, getSpeechLangFromCode } from "@/lib/ai/speech"
@@ -37,6 +38,12 @@ export function VoiceAssistant() {
     const command = detectControlCommand(text, language)
     if (intent === "emergency") { pageController.clear(); await workflow.start("emergency"); return }
     const input = normalizeAssistantText(text).replace(/[.!?]+$/u, "")
+    const panelLabels = PANEL_LABELS[getAssistantLanguage(language).code]
+    for (const pane of ["chat", "actions", "settings"] as const) {
+      if ([`open ${pane}`, `show ${pane}`, `${pageController.prompt("select")} ${panelLabels[pane]}`].some(value => input === normalizeAssistantText(value))) {
+        window.dispatchEvent(new CustomEvent("rhcp:assistant-panel", { detail: pane === "settings" ? { settings: true } : { pane } })); return
+      }
+    }
     const ownCommand = (key: "close" | "downloadOffline" | "listen" | "replay", aliases: string[]) => [workflow.prompt(key), ...aliases].some(value => input === normalizeAssistantText(value))
     if (ownCommand("close", ["close assistant", "close chatbot"])) { voice.stop(); setOpen(false); return }
     if (ownCommand("downloadOffline", ["prepare offline", "download offline guidance"])) { if (online && !installing) await prepareOffline(); else workflow.say(workflow.prompt("onlineRequired")); return }

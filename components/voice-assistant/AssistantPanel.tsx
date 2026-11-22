@@ -32,6 +32,15 @@ export function AssistantPanel(props: Props) {
   const confirming = ["book-confirm", "cancel-confirm", "records-confirm"].includes(workflow.stage)
   const hasActions = controller.menu.length > 0 || workflow.choices.length > 0 || confirming
   useEffect(() => {
+    const changePanel = (event: Event) => {
+      const detail = (event as CustomEvent).detail
+      if (detail?.pane === "chat" || detail?.pane === "actions") setPane(detail.pane)
+      if (detail?.settings === true) setSettingsOpen(true)
+    }
+    window.addEventListener("rhcp:assistant-panel", changePanel)
+    return () => window.removeEventListener("rhcp:assistant-panel", changePanel)
+  }, [])
+  useEffect(() => {
     if (hasActions) setPane("actions")
     else if (previousActions.current) setPane("chat")
     previousActions.current = hasActions
