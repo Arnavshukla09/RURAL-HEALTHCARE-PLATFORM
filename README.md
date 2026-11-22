@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Next.js 15](https://img.shields.io/badge/Next.js-15.5-black?logo=next.js)](https://nextjs.org/)
 [![Local PostgreSQL 15](https://img.shields.io/badge/Local_PostgreSQL-15_PostGIS-336791?logo=postgresql)](https://www.postgresql.org/)
-[![Tests Passing](https://img.shields.io/badge/Tests-307%20Passing-brightgreen)](docs/VOICE_ASSISTANT_SETUP.md)
+[![Tests Passing](https://img.shields.io/badge/Tests-310%20Passing-brightgreen)](docs/VOICE_ASSISTANT_SETUP.md)
 
 An offline-first, mobile Progressive Web Application (PWA) engineered for rural and resource-constrained healthcare environments in India. Built with a serverless Backend-For-Frontend (BFF) architecture, the platform provides atomic appointment scheduling, WebRTC teleconsultations, pan-India PostGIS facility lookups, emergency visual first-aid triage, offline mutation queuing with exponential backoff, and ABDM/HL7 FHIR R4 clinical document export.
 
@@ -250,7 +250,7 @@ npm run build
 
 | Test Tier | Scope | Total Tests | Status |
 | :--- | :--- | :---: | :---: |
-| **Unit Tests (`npm run test:unit`)** | Existing subsystems plus assistant parsing/actions, audio races, account isolation, report gates and DOM lifecycle | **307** | **PASS locally** |
+| **Unit Tests (`npm run test:unit`)** | Existing subsystems plus assistant parsing/actions, audio races, account isolation, report gates and DOM lifecycle | **310** | **PASS locally** |
 | **Integration Tests (`npm run test:integration`)** | Live PostgreSQL RLS, care-relationship scoping, slot locking and atomic replay | **29** | **PASS in GitHub's disposable local Supabase job** |
 | **Assistant Browser Journeys** | Guided intake, offline emergency, language selection, denied rooms and explicit offline voice activation; speech mocked | **6** | **PASS locally; real speech remains unverified** |
 | **Optional Voice Contracts** | Pinned install/repair, explicit gated authentication, language declarations and local/token access | **15** | **PASS; no model inference performed** |

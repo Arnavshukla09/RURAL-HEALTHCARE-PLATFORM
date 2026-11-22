@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [Unreleased] - 2026-11-22
 
 ### Website controller and accessibility
+- Made the voice registry CI comparison independent of Windows/Linux filesystem order, while still rejecting changed targets, security markers and action dispositions; added portability regressions.
 - Registered first-party page controls throughout all 28 routes, with current page/modal menus, numbered/name selection, native field events, enabled/stale-target checks and explicit secure/device/legacy-write handoffs. CI checks registration coverage.
 - Shared font, contrast, read/reset and native speech-rate settings between the toolbar and avatar, including emergency pages. Added accessible labels inferred from existing field labels.
 - Enabled task replacement during pending reads/model requests, revoked old confirmations, retained truthful acknowledgments of already dispatched writes, and added guided answer corrections.

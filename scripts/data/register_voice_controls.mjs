@@ -3,6 +3,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import ts from 'typescript'
 import crypto from 'node:crypto'
+import { sameVoiceRegistrations } from './voice_registry_compare.mjs'
 
 const tags = new Set(['button', 'a', 'input', 'textarea', 'select', 'form', 'Button', 'Input', 'Textarea', 'Select', 'SelectTrigger', 'SelectItem', 'Checkbox', 'RadioGroupItem', 'Switch', 'TabsTrigger', 'DialogTrigger', 'DropdownMenuItem', 'Link'])
 const events = new Set(['onClick', 'onChange', 'onValueChange', 'onSubmit', 'onSelect', 'onCheckedChange'])
@@ -80,11 +81,8 @@ const output = JSON.stringify(controls, null, 2) + '\n'
 if (apply) fs.writeFileSync('lib/assistant/registered-controls.json', output)
 else {
   const recorded = JSON.parse(fs.readFileSync('lib/assistant/registered-controls.json', 'utf8'))
-  // Source line numbers are audit references, not action identity.
-  for (const entry of Object.values(recorded)) delete entry.line
   const actual = JSON.parse(output)
-  for (const entry of Object.values(actual)) delete entry.line
-  if (missing || JSON.stringify(recorded) !== JSON.stringify(actual)) {
+  if (missing || !sameVoiceRegistrations(recorded, actual)) {
     console.error('Voice map is out of date. Review new controls and run register_voice_controls.mjs --register.')
     process.exitCode = 1
   }
