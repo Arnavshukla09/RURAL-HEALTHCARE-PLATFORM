@@ -36,7 +36,7 @@ Until that RPC is installed, offline replay reports `MIGRATION_REQUIRED` and ret
 
 ## Optional owned voice server
 
-This repository contains the service and installation contracts. Its heavyweight dependencies and model assets were **not installed or downloaded in this session**: automatic approval review rejected network/dependency access. Browser/real microphone/model quality has not been certified. The candidate's code and weight licenses, native-language quality and hardware compatibility must be checked at installation. The installer accepts only explicitly listed permissive license identifiers; it does not replace reading the actual model/voice terms.
+This repository contains the service and installation contracts. Heavyweight dependencies and model assets have **not been installed or downloaded**. Official public metadata was read on 22 November 2026: IndicConformer reports MIT and gated access; Whisper and Qwen report Apache 2.0 and ungated access. Metadata is not a substitute for reading full code/weight/voice terms, running inference or native-speaker/hardware validation. The gated Indic model card itself could not be read without account access. The installer accepts only explicitly listed license identifiers and never accepts model-access terms automatically.
 
 Use Python 3.11 or 3.12 on the machine that will run inference. Create an isolated environment and install the pinned requirements:
 
@@ -45,17 +45,19 @@ py -3.11 -m venv .voice-venv
 .\.voice-venv\Scripts\python.exe -m pip install -r services/voice/requirements.txt
 ```
 
-Review the official model card and pinned custom AI4Bharat implementation before the explicit first download:
+For IndicConformer, request access on its [official Hugging Face page](https://huggingface.co/ai4bharat/indic-conformer-600m-multilingual), review its gated card/implementation and verify the supported language codes. Provide a read token through `HF_TOKEN` in the installer environment, then explicitly opt into authentication. After verifying all twelve selected Indian-language codes, the first-install command is:
 
 ```powershell
-.\.voice-venv\Scripts\python.exe services/voice/install_models.py --allow-model-code
+.\.voice-venv\Scripts\python.exe services/voice/install_models.py --allow-model-code --use-hf-token --indic-languages hi,mr,bn,te,ta,gu,kn,pa,or,ml,as,ur
 ```
+
+`--indic-languages` records the operator-reviewed subset when the publisher's language metadata is missing; it does not certify model quality. Omit unsupported codes. Without declared/reviewed languages the installer refuses to advertise Indic coverage. `HF_TOKEN` is used only for explicit downloads/repair and is never written to the model lock. Remove it from the installation environment afterward; runtime needs no Hugging Face token. Never place it in browser/public environment variables. The separate `VOICE_SERVICE_TOKEN` authenticates your owned service.
 
 `--no-chat` omits the optional conversation model for a smaller deployment. Keep the model-lock file, model cache and dependency environment when moving/backing up the service. eSpeak NG is a separate optional installation from its official distribution; preserve its license notices. `ESPEAK_NG_PATH` may point to the executable if it is not on PATH. The health endpoint reports only voices actually found on that installation and Indian ASR locale tags declared in the installed model metadata.
 
 Normal installer runs retain the existing lock without downloading anything. To restore missing snapshot files after a damaged cache, explicitly run `services/voice/install_models.py --repair` with the same environment. Repair uses only the revisions already in the lock and does not update model choices or rewrite the lock. Keep its backup: repair cannot reconstruct a lost lock. `--no-chat` is an installation-time choice; adding a conversation model later requires a separately reviewed installation, rather than silently changing an existing lock.
 
-The installer uses public, unauthenticated Hugging Face downloads. A gated or private model is not supported by this installer and requires a separately reviewed access configuration. Health metadata indicates candidate snapshot presence, not a successful inference benchmark.
+The installer remains unauthenticated unless `--use-hf-token` is explicitly supplied. A gated snapshot repair may also need that flag and approved account access, but it still uses only the original locked commits. Health metadata indicates installed snapshot presence and declared/reviewed languages, not a successful inference benchmark.
 
 Run the local-only service at the fixed default port:
 
@@ -75,12 +77,12 @@ Hardware, electricity, bandwidth, uptime and hosting still have costs. Larger sp
 
 ## Verification evidence and remaining gates
 
-The final suite contains **303 unit tests**. TypeScript, ESLint, Knip, import/export checks, module limits and **25 sealed migration hashes** passed. The production build passed using placeholder Supabase credentials. The dependency-free Python suite passed **11 tests**. The full local Playwright run passed **9 tests**, including all six assistant journeys and an unmocked login-field editability regression; **3 role-login cases skipped** without local test accounts. Integration smoke passed **3 tests** and skipped **26 database-dependent tests** locally; GitHub's disposable Supabase job subsequently passed all 29 required cases for `9b0490f`. Dataset provenance and 21 algorithmic benchmark checks passed. The npm audit passed with the existing, unexpired advisory allowlist, not zero advisories.
+The final suite contains **303 unit tests**. TypeScript, ESLint, Knip, import/export checks, module limits and **25 sealed migration hashes** passed. The production build passed using placeholder Supabase credentials. The dependency-free Python suite passed **15 tests**, including explicit gated-token opt-in, secret-free locks and missing-language refusal. The full local Playwright run passed **9 tests**, including all six assistant journeys and an unmocked login-field editability regression; **3 role-login cases skipped** without local test accounts. GitHub CI for [`c528b62`](https://github.com/Arnavshukla09/RURAL-HEALTHCARE-PLATFORM/actions/runs/45033470049) passed quality/build, all 29 required disposable-database cases and the full seeded browser job. Dataset provenance and 21 algorithmic benchmark checks passed. The npm audit passed with the existing, unexpired advisory allowlist, not zero advisories.
 
 The first CI browser run exposed Chromium terminating its renderer with `No binder found for interface media.mojom.OnDeviceSpeechRecognition`. The avatar was probing the experimental offline recognizer at mount even while closed. Startup no longer calls that experimental API; probing occurs only during requested offline preparation or an activated offline voice session. Offline voice checks freshly installed packs after reload and does not select an unreachable owned recognizer merely from stale online health metadata. Banner style suppression and early DOM guard initialization are also idempotent to prevent redundant observer work and repeated method wrapping. Native-speech capability checks still need verification on real devices.
 
 - Existing and new unit tests exercise language/confirmation parsing, native numeric/date/temperature handling, server authorization, replay ownership, private-data cleanup, signed actions, clinical severity floors, and safe booking/room/record acknowledgments.
-- Eleven Python tests validate offline runtime flags, immutable snapshot locks, relative path relocation, repair at locked commits, local/token access and one-time custom-code approval. They do **not** execute downloaded models.
+- Fifteen Python tests validate offline flags, immutable locks, relocation, repair, service access, explicit download-token use and declared/reviewed-language requirements. They do **not** execute downloaded models.
 - Six Playwright assistant journeys passed: guided intake with explicit units, emergency routing after network loss, Assamese/Urdu selection, invalid consultation links, explicit server-denied rooms and user-activated offline recognition probing. Speech and model responses are mocked; no real microphone/model certification is claimed.
 - All 29 database/safety cases, including the six new replay/expiry cases, passed the GitHub disposable Supabase job for commit `9b0490f`. The clean database integration pass is distinct from the still-required new database mutation proof described in the rollout runbook.
 - Native-speaker speech/content review, actual low-end Android/iOS testing, and real conferencing remain release gates.

@@ -104,6 +104,57 @@ class InstallationContractTests(unittest.TestCase):
             self.assertEqual(error.exception.code, 2)
             self.assertFalse((Path(directory) / "model-lock.json").exists())
 
+    def test_authentication_requires_explicit_opt_in_and_a_token_value(self):
+        with patch.dict(os.environ, {"HF_TOKEN": "fixture-access-token"}):
+            self.assertIs(install_models.download_token(False), False)
+            self.assertEqual(install_models.download_token(True), "fixture-access-token")
+        with patch.dict(os.environ, {}, clear=True):
+            with self.assertRaisesRegex(RuntimeError, "HF_TOKEN"):
+                install_models.download_token(True)
+
+    def test_gated_model_never_uses_an_environment_token_without_opt_in(self):
+        hub = types.ModuleType("huggingface_hub")
+        hub.HfApi = Mock(return_value=types.SimpleNamespace(model_info=lambda _: types.SimpleNamespace(gated="auto")))
+        hub.snapshot_download = Mock()
+        with tempfile.TemporaryDirectory() as directory, patch.object(install_models, "MODEL_ROOT", Path(directory)), patch.object(sys, "argv", ["install_models.py", "--allow-model-code"]), patch.dict(os.environ, {"HF_TOKEN": "fixture-access-token"}), patch.dict(sys.modules, {"huggingface_hub": hub}):
+            with self.assertRaisesRegex(RuntimeError, "gated access"):
+                install_models.main()
+            hub.HfApi.assert_called_once_with(token=False)
+            hub.snapshot_download.assert_not_called()
+            self.assertFalse((Path(directory) / "model-lock.json").exists())
+
+    def test_gated_auth_records_reviewed_languages_but_never_the_token(self):
+        with tempfile.TemporaryDirectory() as directory, patch.object(install_models, "MODEL_ROOT", Path(directory)):
+            root = Path(directory)
+            revision = "c" * 40
+            hub = types.ModuleType("huggingface_hub")
+            hub.HfApi = Mock(return_value=types.SimpleNamespace(model_info=lambda repo: types.SimpleNamespace(gated="auto" if repo.startswith("ai4bharat/") else False, card_data={"license": "mit"}, sha=revision)))
+            def download(**kwargs):
+                self.assertEqual(kwargs["token"], "fixture-access-token")
+                self.assertEqual(kwargs["revision"], revision)
+                location = root / "cache" / ("models--" + kwargs["repo_id"].replace("/", "--")) / "snapshots" / revision
+                location.mkdir(parents=True)
+                (location / "config.json").write_text("{}")
+                return str(location)
+            hub.snapshot_download = Mock(side_effect=download)
+            args = ["install_models.py", "--allow-model-code", "--no-chat", "--use-hf-token", "--indic-languages", "hi,as,ur"]
+            with patch.object(sys, "argv", args), patch.dict(os.environ, {"HF_TOKEN": "fixture-access-token"}), patch.dict(sys.modules, {"huggingface_hub": hub}), contextlib.redirect_stdout(io.StringIO()) as output:
+                install_models.main()
+            contents = (root / "model-lock.json").read_text()
+            self.assertNotIn("fixture-access-token", contents)
+            self.assertNotIn("fixture-access-token", output.getvalue())
+            self.assertEqual(json.loads(contents)["models"]["indic"]["declaredLanguages"], ["hi", "as", "ur"])
+            self.assertEqual(json.loads(contents)["models"]["indic"]["languageSource"], "operator-reviewed")
+
+    def test_unreviewed_missing_language_metadata_cannot_claim_indic_coverage(self):
+        hub = types.ModuleType("huggingface_hub")
+        hub.HfApi = Mock(return_value=types.SimpleNamespace(model_info=lambda _: types.SimpleNamespace(gated=False, card_data={"license": "mit"}, sha="d" * 40)))
+        hub.snapshot_download = Mock()
+        with tempfile.TemporaryDirectory() as directory, patch.object(install_models, "MODEL_ROOT", Path(directory)), patch.object(sys, "argv", ["install_models.py", "--allow-model-code"]), patch.dict(sys.modules, {"huggingface_hub": hub}):
+            with self.assertRaisesRegex(RuntimeError, "language metadata is missing"):
+                install_models.main()
+            hub.snapshot_download.assert_not_called()
+
 
 if __name__ == "__main__":
     unittest.main()

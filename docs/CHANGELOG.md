@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Added an optional owned voice service at port 8765, immutable snapshot locks, offline runtime loading and explicit repair at locked commits. Model assets and heavyweight dependencies are not part of the repository.
 - Extended CI to require both local database suites and dependency-free Python contracts. Added setup, repository structure and release-audit guidance with explicit model/device/cost limitations.
 - Removed startup probing of experimental on-device recognition after Chromium renderer diagnostics exposed a missing backend binder. Added unmocked login editability coverage and idempotent translation-banner/DOM-guard initialization; role-login checks remain enforced.
+- Verified official model-license/access metadata; added explicit one-time gated-token authentication and operator-reviewed language declarations. Download tokens are never saved in snapshot locks and are unnecessary at runtime. Seeded GitHub browser, disposable database and quality/build jobs passed for the frontend fix.
 
 ## [1.3.0] - 2026-11-14
 

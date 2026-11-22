@@ -251,7 +251,7 @@ npm run build
 | **Unit Tests (`npm run test:unit`)** | Existing subsystems plus assistant parsing/actions, audio races, account isolation, report gates and DOM lifecycle | **303** | **PASS locally** |
 | **Integration Tests (`npm run test:integration`)** | Live PostgreSQL RLS, care-relationship scoping, slot locking and atomic replay | **29** | **PASS in GitHub's disposable local Supabase job** |
 | **Assistant Browser Journeys** | Guided intake, offline emergency, language selection, denied rooms and explicit offline voice activation; speech mocked | **6** | **PASS locally; real speech remains unverified** |
-| **Optional Voice Contracts** | Pinned install/repair, offline flags and local/token access | **11** | **PASS; no model inference performed** |
+| **Optional Voice Contracts** | Pinned install/repair, explicit gated authentication, language declarations and local/token access | **15** | **PASS; no model inference performed** |
 | **Algorithmic Benchmarks (`npm run benchmark:integration`)** | PostGIS coordinates, AI safety prompt neutralization, backoff dynamics, ABHA format | **21** | **PASS** |
 | **Component Quality Gate (`npm run check:components`)** | Imports, export signatures, TypeScript typecheck, ESLint, LOC standards ($\le 400$) | **8 / 8 Gates** | **PASS** |
 | **Migration Immutability (`npm run check:migrations`)** | Cryptographic SHA-256 seal verification on all 25 migration files | **25 / 25 Files** | **PASS** |

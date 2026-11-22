@@ -38,7 +38,7 @@ flowchart TD
    - Executes browser user journeys against the full local Next.js + Supabase stack.
    - Six assistant journeys passed locally with mocked speech/service responses, plus unmocked login editability/public/security checks. Actual all-language microphones/models and real conferences remain manual release checks. The three role-login journeys require ephemeral local test accounts.
 5. **Owned Voice Contract Suite**:
-   - `python -m unittest discover -s services/voice/tests -v` runs 11 dependency-free installation/repair/offline/access tests. CI uses Python 3.11 and does not download model weights.
+   - `python -m unittest discover -s services/voice/tests -v` runs 15 dependency-free installation/repair/offline/access/language-declaration tests. CI uses Python 3.11 and does not download model weights.
 
 ---
 

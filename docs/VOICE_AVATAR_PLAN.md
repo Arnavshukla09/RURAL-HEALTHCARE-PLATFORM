@@ -17,6 +17,8 @@ On low-end phones, unlimited arbitrary conversation in all 13 languages at zero 
 
 ## Research status
 
+Final setup audit update: official Hugging Face API metadata was successfully read on 22 November 2026 for the three installed-service candidates. IndicConformer reports MIT and gated access; Whisper/Qwen report Apache 2.0 and ungated access. The gated Indic card/implementation still requires account approval before review. The installer now supports explicit one-time token use and operator-reviewed language declarations; see [VOICE_ASSISTANT_SETUP.md](VOICE_ASSISTANT_SETUP.md). Inference quality, hardware compatibility and permanent hosted-service pricing remain unverified. The failed research attempts below describe the earlier audit stage.
+
 Live official-source verification was attempted. The browser approval gate rejected Google search, then rejected an official Hugging Face model card even after the user explicitly approved official-source reads. A separately approval-reviewed, read-only download of public model documentation was also rejected with the same automatic-review `content-blocked` failure. No blocked downloads were executed and no project/patient information was transmitted.
 
 Therefore the candidate comparison below is **provisional**. The links identify official project/reference pages for verification; their current contents, model-weight licenses, exact language coverage, sizes, pricing and quotas were not retrieved in this session. Do not treat this as a completed live web search or a certification of any vendor's terms.
