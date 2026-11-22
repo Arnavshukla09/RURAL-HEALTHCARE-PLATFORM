@@ -228,7 +228,7 @@ export function Directory({ language }: DirectoryProps) {
                 <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 ml-1">
                   <Search className="h-5 w-5 sm:h-6 sm:w-6" />
                 </div>
-                <Input
+                <Input data-voice-control="ui.5c67444981886e4f"
                   type="text"
                   placeholder={
                     language === "hi"
@@ -240,7 +240,7 @@ export function Directory({ language }: DirectoryProps) {
                   className="border-0 shadow-none text-xs sm:text-sm md:text-base font-medium px-3 h-10 sm:h-11 focus-visible:ring-0 placeholder:text-gray-400 text-gray-900 bg-transparent"
                 />
                 {searchQuery && (
-                  <button
+                  <button data-voice-control="ui.de76451e5bbb8870"
                     onClick={() => setSearchQuery("")}
                     className="h-8 w-8 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 flex items-center justify-center shrink-0 mr-1"
                     title="Clear Search"
@@ -252,7 +252,7 @@ export function Directory({ language }: DirectoryProps) {
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-gray-100">
-              <Button
+              <Button data-voice-control="ui.6dbe0ccd208e7a53"
                 variant={isFilterMenuOpen ? "default" : "outline"}
                 size="sm"
                 onClick={() => setIsFilterMenuOpen((prev) => !prev)}
@@ -283,7 +283,7 @@ export function Directory({ language }: DirectoryProps) {
               </Button>
 
               {(isGpsActive || isStateActive || selectedSpecialty !== "all" || searchQuery.trim()) && (
-                <Button
+                <Button data-voice-control="ui.1d725d7eadeecbf2"
                   variant="ghost"
                   size="sm"
                   onClick={resetAllFilters}
@@ -320,7 +320,7 @@ export function Directory({ language }: DirectoryProps) {
             {/* Specialty Filter Chips */}
             <ScrollableFilterRow contentClassName="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none pt-1">
               {specialties.map((specialty) => (
-                <button
+                <button data-voice-control="ui.36217303766779fc"
                   key={specialty.key}
                   onClick={() => setSelectedSpecialty(specialty.key)}
                   className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium whitespace-nowrap transition-colors shrink-0 border ${

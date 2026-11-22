@@ -19,6 +19,7 @@ Model identifiers are defined once in `services/voice/install_models.py`; protoc
 ## What works without a model service
 
 - Persistent avatar and native instructions, navigation and pictorial choices.
+- Website control discovery/selection, non-secret field editing, shared accessibility, task replacement and supported wake-prefixed speech interruption. See [HANDS_FREE_IMPLEMENTATION.md](HANDS_FREE_IMPLEMENTATION.md) for the complete option map, explicit handoffs and release limits.
 - Local command matching, symptom severity rules and emergency instructions.
 - Authenticated provider/slot/appointment lookup, draft-bound signed confirmations, creation/cancellation and authorized consultation entry.
 - Account-scoped offline request capture, checksum-verified public/language packs and truthful pending/confirmed status.

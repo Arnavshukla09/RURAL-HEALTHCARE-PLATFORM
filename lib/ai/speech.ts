@@ -90,6 +90,7 @@ export interface SpeechRecognitionOptions {
   continuous?: boolean
   interimResults?: boolean
   processLocally?: boolean
+  preserveOutput?: boolean
   onResult: (result: SpeechRecognitionResult) => void
   onInterimResult?: (result: SpeechRecognitionResult) => void
   onError?: (error: string) => void
@@ -118,7 +119,7 @@ export function startSpeechRecognition(options: SpeechRecognitionOptions): boole
     return false
   }
   stopSpeechRecognition()
-  stopSpeaking()
+  if (!options.preserveOutput) stopSpeaking()
   const generation = recognitionGeneration
   try {
     const recognition = new constructor()

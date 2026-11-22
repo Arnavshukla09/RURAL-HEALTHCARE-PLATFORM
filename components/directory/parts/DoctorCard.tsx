@@ -47,7 +47,7 @@ export function DoctorCard({ doctor, language, userCoords, t }: DoctorCardProps)
   }
 
   return (
-    <Card className="hover:shadow-md transition-shadow border-gray-200">
+    <Card data-voice-context={doctor.name} data-voice-entity={String(doctor.id)} className="hover:shadow-md transition-shadow border-gray-200">
       <CardContent className="p-4 sm:p-6">
         <div className="flex flex-col lg:flex-row gap-5 items-start justify-between">
           {/* Left: Avatar + Details */}
@@ -228,7 +228,7 @@ export function DoctorCard({ doctor, language, userCoords, t }: DoctorCardProps)
 
             <div className="flex flex-wrap sm:flex-nowrap gap-2">
               {doctor.phone ? (
-                <Button
+                <Button data-voice-control="ui.4784354a0fcb8ec8"
                   size="sm"
                   className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs h-8 px-3 rounded-lg flex items-center gap-1.5"
                   onClick={() => window.open(`tel:${doctor.phone}`)}
@@ -237,7 +237,7 @@ export function DoctorCard({ doctor, language, userCoords, t }: DoctorCardProps)
                   <span>{t.callNow}</span>
                 </Button>
               ) : (
-                <Button
+                <Button data-voice-control="ui.c670b906ec638770"
                   size="sm"
                   variant="outline"
                   disabled
@@ -249,7 +249,7 @@ export function DoctorCard({ doctor, language, userCoords, t }: DoctorCardProps)
               )}
 
               {/* Road Route Navigation Button */}
-              <Button
+              <Button data-voice-control="ui.e79ec33277810e6a"
                 size="sm"
                 variant="outline"
                 className="text-xs h-8 px-2.5 font-medium rounded-lg flex items-center gap-1 border-blue-200 text-blue-700 hover:bg-blue-50"
@@ -266,7 +266,7 @@ export function DoctorCard({ doctor, language, userCoords, t }: DoctorCardProps)
               </Button>
 
               {doctor.recordType === "clinician" && (
-                <Button
+                <Button data-voice-control="ui.9f138415ecad26a2"
                   size="sm"
                   variant="secondary"
                   className="text-xs h-8 px-3 font-semibold rounded-lg flex items-center gap-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100"

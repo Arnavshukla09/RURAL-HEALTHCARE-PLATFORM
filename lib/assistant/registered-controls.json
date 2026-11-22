@@ -1,0 +1,4058 @@
+{
+  "ui.536209c6db9e0cdb": {
+    "file": "app/admin/chat-review/page.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 84
+  },
+  "ui.7248a25a6d885bfb": {
+    "file": "app/admin/chat-review/page.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 129
+  },
+  "ui.63a8ea338dac3229": {
+    "file": "app/admin/chat-review/page.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 139
+  },
+  "ui.0361bd8b1d954a6e": {
+    "file": "app/doctor/claim/no-invite-card.tsx",
+    "tag": "form",
+    "policy": "handoff",
+    "secure": true,
+    "fieldType": "",
+    "line": 71
+  },
+  "ui.ff37b2f8c67e49b3": {
+    "file": "app/doctor/claim/no-invite-card.tsx",
+    "tag": "Input",
+    "policy": "handoff",
+    "secure": true,
+    "fieldType": "text",
+    "line": 77
+  },
+  "ui.ad0574c43e4d32e2": {
+    "file": "app/doctor/claim/no-invite-card.tsx",
+    "tag": "Button",
+    "policy": "handoff",
+    "secure": false,
+    "fieldType": "submit",
+    "line": 91
+  },
+  "ui.8ec77e2a49bdbbdd": {
+    "file": "app/doctor/claim/no-invite-card.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 100
+  },
+  "ui.1c10498caf65ee9c": {
+    "file": "app/doctor/claim/no-invite-card.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 108
+  },
+  "ui.fe9c8f5071bfb386": {
+    "file": "app/doctor/claim/page.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 211
+  },
+  "ui.30100d792ef2da4b": {
+    "file": "app/doctor/claim/page.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 238
+  },
+  "ui.fa34a0eeff711d5d": {
+    "file": "app/doctor/claim/page.tsx",
+    "tag": "form",
+    "policy": "handoff",
+    "secure": false,
+    "fieldType": "",
+    "line": 249
+  },
+  "ui.0047ee6b17d18e88": {
+    "file": "app/doctor/claim/page.tsx",
+    "tag": "Input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "",
+    "line": 279
+  },
+  "ui.ac40c9d7f6e9fe92": {
+    "file": "app/doctor/claim/page.tsx",
+    "tag": "Input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "",
+    "line": 291
+  },
+  "ui.19576ca010dca3ec": {
+    "file": "app/doctor/claim/page.tsx",
+    "tag": "Input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "email",
+    "line": 304
+  },
+  "ui.95f089103b99f8e3": {
+    "file": "app/doctor/claim/page.tsx",
+    "tag": "Input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "",
+    "line": 318
+  },
+  "ui.1da2c088f24572ec": {
+    "file": "app/doctor/claim/page.tsx",
+    "tag": "Button",
+    "policy": "handoff",
+    "secure": false,
+    "fieldType": "submit",
+    "line": 337
+  },
+  "ui.66ef0e9c540b29f1": {
+    "file": "app/doctor/claim/page.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 354
+  },
+  "ui.02495202de39a89b": {
+    "file": "app/error.tsx",
+    "tag": "a",
+    "policy": "link",
+    "secure": false,
+    "fieldType": "",
+    "line": 25
+  },
+  "ui.a42c1dd155008a60": {
+    "file": "app/error.tsx",
+    "tag": "button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 30
+  },
+  "ui.4eb9bb78c178c23a": {
+    "file": "app/error.tsx",
+    "tag": "a",
+    "policy": "link",
+    "secure": false,
+    "fieldType": "",
+    "line": 36
+  },
+  "ui.9df5d38f2bf53e10": {
+    "file": "app/loading.tsx",
+    "tag": "a",
+    "policy": "link",
+    "secure": false,
+    "fieldType": "",
+    "line": 9
+  },
+  "ui.c1529c6214bc834b": {
+    "file": "app/not-found.tsx",
+    "tag": "a",
+    "policy": "link",
+    "secure": false,
+    "fieldType": "",
+    "line": 9
+  },
+  "ui.65d89fdff384d3ca": {
+    "file": "app/not-found.tsx",
+    "tag": "a",
+    "policy": "link",
+    "secure": false,
+    "fieldType": "",
+    "line": 13
+  },
+  "ui.05b3498bd42fe297": {
+    "file": "app/offline/page.tsx",
+    "tag": "select",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "",
+    "line": 30
+  },
+  "ui.ea69d1812b074d51": {
+    "file": "app/offline/page.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 42
+  },
+  "ui.1a750c65f310a8c3": {
+    "file": "app/offline/page.tsx",
+    "tag": "a",
+    "policy": "link",
+    "secure": false,
+    "fieldType": "",
+    "line": 57
+  },
+  "ui.ee304b30a23063e2": {
+    "file": "app/offline/page.tsx",
+    "tag": "Link",
+    "policy": "link",
+    "secure": false,
+    "fieldType": "",
+    "line": 69
+  },
+  "ui.5323ec14c907a1f6": {
+    "file": "app/offline/page.tsx",
+    "tag": "Link",
+    "policy": "link",
+    "secure": false,
+    "fieldType": "",
+    "line": 72
+  },
+  "ui.b2c28fe8b90c1295": {
+    "file": "app/offline/page.tsx",
+    "tag": "Link",
+    "policy": "link",
+    "secure": false,
+    "fieldType": "",
+    "line": 73
+  },
+  "ui.f7b6bd7964447c1e": {
+    "file": "app/teleconsult/confirm/page.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 20
+  },
+  "ui.ebf49bd04affa59f": {
+    "file": "app/teleconsult/confirm/page.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 21
+  },
+  "ui.5afac2630c61a51d": {
+    "file": "app/teleconsult/room/page.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 78
+  },
+  "ui.d90dca3736821a38": {
+    "file": "app/teleconsult/room/page.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 87
+  },
+  "ui.6518dac067db160e": {
+    "file": "app/teleconsult/room/page.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 93
+  },
+  "ui.be08763567e9dfd9": {
+    "file": "app/teleconsult/room/page.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 94
+  },
+  "ui.0b61b53b447eb482": {
+    "file": "app/teleconsult/room/page.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 95
+  },
+  "ui.9b59fb541fe27b46": {
+    "file": "app/teleconsult/room/page.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 96
+  },
+  "ui.5dc15754f719fa5b": {
+    "file": "app/teleconsult/room/rx-modal.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 75
+  },
+  "ui.c51c88f9104e7278": {
+    "file": "app/teleconsult/room/rx-modal.tsx",
+    "tag": "Input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "",
+    "line": 99
+  },
+  "ui.e865da80aceff0ee": {
+    "file": "app/teleconsult/room/rx-modal.tsx",
+    "tag": "Input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "",
+    "line": 107
+  },
+  "ui.c4bd6a0c207a1958": {
+    "file": "app/teleconsult/room/rx-modal.tsx",
+    "tag": "Input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "",
+    "line": 116
+  },
+  "ui.f850cf56a2cae9b0": {
+    "file": "app/teleconsult/room/rx-modal.tsx",
+    "tag": "Input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "",
+    "line": 124
+  },
+  "ui.2db43e99d574fde6": {
+    "file": "app/teleconsult/room/rx-modal.tsx",
+    "tag": "Textarea",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "",
+    "line": 136
+  },
+  "ui.9defd83df150752c": {
+    "file": "app/teleconsult/room/rx-modal.tsx",
+    "tag": "Textarea",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "",
+    "line": 148
+  },
+  "ui.f213ffd4ceb97f72": {
+    "file": "app/teleconsult/room/rx-modal.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 157
+  },
+  "ui.30d625c54cd21538": {
+    "file": "app/teleconsult/room/rx-modal.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 167
+  },
+  "ui.93c78565c6d15f15": {
+    "file": "app/teleconsult/room/rx-modal.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 176
+  },
+  "ui.5e657ef31f4d5b07": {
+    "file": "components/AccessibilityBar.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 15
+  },
+  "ui.a5f9c09110aa5540": {
+    "file": "components/AccessibilityBar.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 17
+  },
+  "ui.01b20ed72eea17d5": {
+    "file": "components/AccessibilityBar.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 19
+  },
+  "ui.6616468571682297": {
+    "file": "components/AccessibilityBar.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 19
+  },
+  "ui.6f0808e8adb11d66": {
+    "file": "components/AccessibilityBar.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 20
+  },
+  "ui.14df208a3de96489": {
+    "file": "components/AccessibilityBar.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 21
+  },
+  "ui.cf6ec693b2cd441d": {
+    "file": "components/AccessibilityBar.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 22
+  },
+  "ui.89b79bd04184b5ca": {
+    "file": "components/AccessibilityBar.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 23
+  },
+  "ui.993e8b0292eb1de7": {
+    "file": "components/admin-campaign-manager/index.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 153
+  },
+  "ui.a865916de6954231": {
+    "file": "components/admin-campaign-manager/parts/CampaignCard.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 60
+  },
+  "ui.94cabbfe50d40a80": {
+    "file": "components/admin-campaign-manager/parts/CampaignCard.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 67
+  },
+  "ui.047e7a600798af60": {
+    "file": "components/admin-campaign-manager/parts/CampaignCard.tsx",
+    "tag": "button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 116
+  },
+  "ui.a877352628b65f58": {
+    "file": "components/admin-campaign-manager/parts/CampaignCard.tsx",
+    "tag": "button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 122
+  },
+  "ui.274241554811cf47": {
+    "file": "components/admin-campaign-manager/parts/CampaignCard.tsx",
+    "tag": "a",
+    "policy": "link",
+    "secure": false,
+    "fieldType": "",
+    "line": 186
+  },
+  "ui.7fdd8c537463ef73": {
+    "file": "components/admin-campaign-manager/parts/CampaignCard.tsx",
+    "tag": "a",
+    "policy": "link",
+    "secure": false,
+    "fieldType": "",
+    "line": 199
+  },
+  "ui.bec87d64eb365c19": {
+    "file": "components/admin-campaign-manager/parts/CampaignCard.tsx",
+    "tag": "a",
+    "policy": "link",
+    "secure": false,
+    "fieldType": "",
+    "line": 208
+  },
+  "ui.49ad82253e2dadea": {
+    "file": "components/admin-campaign-manager/parts/CampaignCard.tsx",
+    "tag": "a",
+    "policy": "link",
+    "secure": false,
+    "fieldType": "",
+    "line": 219
+  },
+  "ui.3dec55e9561d423d": {
+    "file": "components/admin-campaign-manager/parts/CampaignForm.tsx",
+    "tag": "input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "",
+    "line": 55
+  },
+  "ui.1aa2dc2b465decd9": {
+    "file": "components/admin-campaign-manager/parts/CampaignForm.tsx",
+    "tag": "select",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "",
+    "line": 66
+  },
+  "ui.6db78d897e87809d": {
+    "file": "components/admin-campaign-manager/parts/CampaignForm.tsx",
+    "tag": "textarea",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "",
+    "line": 85
+  },
+  "ui.22bf3471d98db5e9": {
+    "file": "components/admin-campaign-manager/parts/CampaignForm.tsx",
+    "tag": "input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "",
+    "line": 100
+  },
+  "ui.0a717e00faea4c35": {
+    "file": "components/admin-campaign-manager/parts/CampaignForm.tsx",
+    "tag": "input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "",
+    "line": 111
+  },
+  "ui.62a9468012434c48": {
+    "file": "components/admin-campaign-manager/parts/CampaignForm.tsx",
+    "tag": "input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "date",
+    "line": 126
+  },
+  "ui.7740b86a67ec1a43": {
+    "file": "components/admin-campaign-manager/parts/CampaignForm.tsx",
+    "tag": "input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "time",
+    "line": 137
+  },
+  "ui.c4b3fb6ee216f869": {
+    "file": "components/admin-campaign-manager/parts/CampaignForm.tsx",
+    "tag": "input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "date",
+    "line": 148
+  },
+  "ui.b0612c86075bc180": {
+    "file": "components/admin-campaign-manager/parts/CampaignForm.tsx",
+    "tag": "select",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "",
+    "line": 159
+  },
+  "ui.cb9c5e2bbef96e7d": {
+    "file": "components/admin-campaign-manager/parts/CampaignForm.tsx",
+    "tag": "input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "number",
+    "line": 177
+  },
+  "ui.1e0f27cf6bec58a2": {
+    "file": "components/admin-campaign-manager/parts/CampaignForm.tsx",
+    "tag": "input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "",
+    "line": 192
+  },
+  "ui.5415f2c8c24bab2b": {
+    "file": "components/admin-campaign-manager/parts/CampaignForm.tsx",
+    "tag": "input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "",
+    "line": 203
+  },
+  "ui.8a0dca025ac6f7cc": {
+    "file": "components/admin-campaign-manager/parts/CampaignForm.tsx",
+    "tag": "input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "checkbox",
+    "line": 214
+  },
+  "ui.94de833dd11e0205": {
+    "file": "components/admin-campaign-manager/parts/CampaignForm.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 226
+  },
+  "ui.a6aa4fb1f0a6f54f": {
+    "file": "components/admin-campaign-manager/parts/CampaignForm.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 244
+  },
+  "ui.48f9465b4d6b5fab": {
+    "file": "components/admin-user-management/index.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 186
+  },
+  "ui.124aedddd0064172": {
+    "file": "components/admin-user-management/index.tsx",
+    "tag": "button",
+    "policy": "handoff",
+    "secure": false,
+    "fieldType": "",
+    "line": 199
+  },
+  "ui.a25f9946bba9f424": {
+    "file": "components/admin-user-management/parts/DoctorClaimsTab.tsx",
+    "tag": "Button",
+    "policy": "handoff",
+    "secure": false,
+    "fieldType": "",
+    "line": 153
+  },
+  "ui.679d3890df0fe500": {
+    "file": "components/admin-user-management/parts/DoctorClaimsTab.tsx",
+    "tag": "Button",
+    "policy": "handoff",
+    "secure": false,
+    "fieldType": "",
+    "line": 161
+  },
+  "ui.319eee542512f93f": {
+    "file": "components/admin-user-management/parts/DoctorClaimsTab.tsx",
+    "tag": "Input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "",
+    "line": 208
+  },
+  "ui.d500908a706b0211": {
+    "file": "components/admin-user-management/parts/DoctorClaimsTab.tsx",
+    "tag": "div",
+    "policy": "handoff",
+    "secure": false,
+    "fieldType": "",
+    "line": 232
+  },
+  "ui.9321c8e90d839e7d": {
+    "file": "components/admin-user-management/parts/DoctorClaimsTab.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 246
+  },
+  "ui.e90bea3ea73592df": {
+    "file": "components/admin-user-management/parts/DoctorClaimsTab.tsx",
+    "tag": "Button",
+    "policy": "handoff",
+    "secure": false,
+    "fieldType": "",
+    "line": 276
+  },
+  "ui.52878405b4d05f08": {
+    "file": "components/admin-user-management/parts/DoctorClaimsTab.tsx",
+    "tag": "Button",
+    "policy": "handoff",
+    "secure": false,
+    "fieldType": "",
+    "line": 298
+  },
+  "ui.2b9e8e610816b49a": {
+    "file": "components/admin-user-management/parts/DoctorClaimsTab.tsx",
+    "tag": "Button",
+    "policy": "handoff",
+    "secure": false,
+    "fieldType": "",
+    "line": 312
+  },
+  "ui.9e82ed7e2d7a45d6": {
+    "file": "components/admin-user-management/parts/UsersTab.tsx",
+    "tag": "input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "",
+    "line": 61
+  },
+  "ui.a93662e09a48c889": {
+    "file": "components/admin-user-management/parts/UsersTab.tsx",
+    "tag": "button",
+    "policy": "handoff",
+    "secure": false,
+    "fieldType": "",
+    "line": 70
+  },
+  "ui.9537168bf53df1d1": {
+    "file": "components/admin-user-management/parts/UsersTab.tsx",
+    "tag": "Button",
+    "policy": "handoff",
+    "secure": false,
+    "fieldType": "",
+    "line": 117
+  },
+  "ui.3d8211165689b32a": {
+    "file": "components/admin-user-management/parts/UsersTab.tsx",
+    "tag": "Button",
+    "policy": "handoff",
+    "secure": false,
+    "fieldType": "",
+    "line": 134
+  },
+  "ui.d750d871e31a47fc": {
+    "file": "components/admin-user-management/parts/UsersTab.tsx",
+    "tag": "select",
+    "policy": "handoff",
+    "secure": false,
+    "fieldType": "",
+    "line": 175
+  },
+  "ui.e9da3102394dc0f7": {
+    "file": "components/admin-user-management/parts/UsersTab.tsx",
+    "tag": "Button",
+    "policy": "handoff",
+    "secure": false,
+    "fieldType": "",
+    "line": 197
+  },
+  "ui.7cdba78128834d17": {
+    "file": "components/AdminAppointments.tsx",
+    "tag": "input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "",
+    "line": 158
+  },
+  "ui.8db650195092f69f": {
+    "file": "components/AdminAppointments.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 164
+  },
+  "ui.c4351c5563876ff9": {
+    "file": "components/AdminAppointments.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 211
+  },
+  "ui.f147eeba7fa8a320": {
+    "file": "components/AdminAppointments.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 227
+  },
+  "ui.0f8d6f48dde89dca": {
+    "file": "components/AdminAppointments.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 232
+  },
+  "ui.16a46a9d9040ddc1": {
+    "file": "components/AdminAppointments.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 239
+  },
+  "ui.e0474ab8f06ab548": {
+    "file": "components/AdminAppointments.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 252
+  },
+  "ui.3aab5316d245d0b0": {
+    "file": "components/AdminDashboard.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 208
+  },
+  "ui.df7eb4a04d09ba2d": {
+    "file": "components/AdminNotifications.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 154
+  },
+  "ui.3efc0c6c846c93d7": {
+    "file": "components/AdminNotifications.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 158
+  },
+  "ui.88338ab6f6913c45": {
+    "file": "components/AdminNotifications.tsx",
+    "tag": "button",
+    "policy": "handoff",
+    "secure": false,
+    "fieldType": "",
+    "line": 187
+  },
+  "ui.b9be07855876e2f7": {
+    "file": "components/AdminNotifications.tsx",
+    "tag": "select",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "",
+    "line": 203
+  },
+  "ui.5c40684931b4c910": {
+    "file": "components/AdminNotifications.tsx",
+    "tag": "input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "",
+    "line": 219
+  },
+  "ui.be0ada96adb10d40": {
+    "file": "components/AdminNotifications.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 225
+  },
+  "ui.1c6845b487b1b6c8": {
+    "file": "components/AdminNotifications.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 247
+  },
+  "ui.eabb7feeaa4cb05b": {
+    "file": "components/AdminNotifications.tsx",
+    "tag": "input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "",
+    "line": 262
+  },
+  "ui.c935d02324ed0d47": {
+    "file": "components/AdminNotifications.tsx",
+    "tag": "textarea",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "",
+    "line": 270
+  },
+  "ui.eac9756be1413603": {
+    "file": "components/AdminNotifications.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 275
+  },
+  "ui.b3cac656160ccc91": {
+    "file": "components/AdminNotifications.tsx",
+    "tag": "button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 356
+  },
+  "ui.46f434722274fa07": {
+    "file": "components/AdminNotifications.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 366
+  },
+  "ui.291f0677f3e4701e": {
+    "file": "components/AdminRecords.tsx",
+    "tag": "input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "",
+    "line": 156
+  },
+  "ui.9c567af1de2ed33e": {
+    "file": "components/AdminRecords.tsx",
+    "tag": "button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 191
+  },
+  "ui.5bbd849564782f18": {
+    "file": "components/AdminRecords.tsx",
+    "tag": "Button",
+    "policy": "handoff",
+    "secure": false,
+    "fieldType": "",
+    "line": 232
+  },
+  "ui.0baaebb23e5b51a6": {
+    "file": "components/AppointmentManager.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 185
+  },
+  "ui.0b58acb0c6432692": {
+    "file": "components/AppointmentManager.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 188
+  },
+  "ui.bc507ee429be5563": {
+    "file": "components/AppointmentManager.tsx",
+    "tag": "select",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "",
+    "line": 206
+  },
+  "ui.d65d2a2e76be7d28": {
+    "file": "components/AppointmentManager.tsx",
+    "tag": "Input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "date",
+    "line": 219
+  },
+  "ui.83ac28abde539522": {
+    "file": "components/AppointmentManager.tsx",
+    "tag": "Input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "time",
+    "line": 220
+  },
+  "ui.bcc2aa22c53ecf72": {
+    "file": "components/AppointmentManager.tsx",
+    "tag": "Input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "",
+    "line": 224
+  },
+  "ui.5daa2eff69998e7d": {
+    "file": "components/AppointmentManager.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 230
+  },
+  "ui.809cc21e54702815": {
+    "file": "components/AppointmentManager.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 234
+  },
+  "ui.22b5e7ac4e480bc8": {
+    "file": "components/AppointmentManager.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 268
+  },
+  "ui.32574086fc7d6c20": {
+    "file": "components/AppointmentManager.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 273
+  },
+  "ui.4ddcb3ed46d76b6f": {
+    "file": "components/AppointmentManager.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 290
+  },
+  "ui.6ab1ff691cb2d7b7": {
+    "file": "components/AppointmentManager.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 303
+  },
+  "ui.b37082e1a2e79366": {
+    "file": "components/authentication/index.tsx",
+    "tag": "TabsTrigger",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 284
+  },
+  "ui.6b6d2044ca4035ea": {
+    "file": "components/authentication/index.tsx",
+    "tag": "TabsTrigger",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 285
+  },
+  "ui.24af5b1ecc313961": {
+    "file": "components/authentication/parts/LoginForm.tsx",
+    "tag": "button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "button",
+    "line": 52
+  },
+  "ui.8ad31c0f71393a33": {
+    "file": "components/authentication/parts/LoginForm.tsx",
+    "tag": "button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "button",
+    "line": 60
+  },
+  "ui.c731f57581a85bc3": {
+    "file": "components/authentication/parts/LoginForm.tsx",
+    "tag": "button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "button",
+    "line": 68
+  },
+  "ui.fb32904e0489e274": {
+    "file": "components/authentication/parts/LoginForm.tsx",
+    "tag": "form",
+    "policy": "container",
+    "secure": false,
+    "fieldType": "",
+    "line": 79
+  },
+  "ui.d9a05694116d6a6e": {
+    "file": "components/authentication/parts/LoginForm.tsx",
+    "tag": "Input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "email",
+    "line": 84
+  },
+  "ui.371c706ce4e0df90": {
+    "file": "components/authentication/parts/LoginForm.tsx",
+    "tag": "Input",
+    "policy": "handoff",
+    "secure": true,
+    "fieldType": "",
+    "line": 98
+  },
+  "ui.84a30ff88dc37f7c": {
+    "file": "components/authentication/parts/LoginForm.tsx",
+    "tag": "Button",
+    "policy": "handoff",
+    "secure": true,
+    "fieldType": "button",
+    "line": 107
+  },
+  "ui.35a8a6a989dfaa6f": {
+    "file": "components/authentication/parts/LoginForm.tsx",
+    "tag": "button",
+    "policy": "handoff",
+    "secure": true,
+    "fieldType": "button",
+    "line": 121
+  },
+  "ui.96145683862410ac": {
+    "file": "components/authentication/parts/LoginForm.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "submit",
+    "line": 131
+  },
+  "ui.01445b0eb8c7c8af": {
+    "file": "components/authentication/parts/OAuthGuestFooter.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 30
+  },
+  "ui.69cca8e8d37db13b": {
+    "file": "components/authentication/parts/OAuthGuestFooter.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 39
+  },
+  "ui.f6c490fdc964eb46": {
+    "file": "components/authentication/parts/RegisterForm.tsx",
+    "tag": "form",
+    "policy": "container",
+    "secure": false,
+    "fieldType": "",
+    "line": 40
+  },
+  "ui.c45dcc54e3ac137c": {
+    "file": "components/authentication/parts/RegisterForm.tsx",
+    "tag": "Input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "",
+    "line": 45
+  },
+  "ui.787cfe7404c21895": {
+    "file": "components/authentication/parts/RegisterForm.tsx",
+    "tag": "Input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "email",
+    "line": 59
+  },
+  "ui.c6310f820364f32a": {
+    "file": "components/authentication/parts/RegisterForm.tsx",
+    "tag": "Input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "tel",
+    "line": 74
+  },
+  "ui.255dd7fc86b738cf": {
+    "file": "components/authentication/parts/RegisterForm.tsx",
+    "tag": "Input",
+    "policy": "handoff",
+    "secure": true,
+    "fieldType": "",
+    "line": 88
+  },
+  "ui.ed8b8f12b057c6c9": {
+    "file": "components/authentication/parts/RegisterForm.tsx",
+    "tag": "Button",
+    "policy": "handoff",
+    "secure": true,
+    "fieldType": "button",
+    "line": 97
+  },
+  "ui.f772e9808fef15e6": {
+    "file": "components/authentication/parts/RegisterForm.tsx",
+    "tag": "Input",
+    "policy": "handoff",
+    "secure": true,
+    "fieldType": "",
+    "line": 110
+  },
+  "ui.64ff192a95953ffb": {
+    "file": "components/authentication/parts/RegisterForm.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "submit",
+    "line": 120
+  },
+  "ui.039bcbecd6113073": {
+    "file": "components/BottomTabBar.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 27
+  },
+  "ui.6281d64510ffa9dd": {
+    "file": "components/camp-locations/index.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 323
+  },
+  "ui.d285353b4802a165": {
+    "file": "components/camp-locations/index.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 359
+  },
+  "ui.dd61827482e17ef7": {
+    "file": "components/camp-locations/index.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 368
+  },
+  "ui.356cef4a34f39efd": {
+    "file": "components/camp-locations/parts/CampCard.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 189
+  },
+  "ui.1ffc1b5829ecc50c": {
+    "file": "components/camp-locations/parts/CampCard.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 201
+  },
+  "ui.2808abf04980a4e3": {
+    "file": "components/camp-locations/parts/CampCard.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 212
+  },
+  "ui.6c400021b6050090": {
+    "file": "components/camp-locations/parts/CampCard.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 223
+  },
+  "ui.b543bbcf5692b747": {
+    "file": "components/camp-locations/parts/CampCard.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 244
+  },
+  "ui.a4d50693c423c2b5": {
+    "file": "components/camp-locations/parts/CampSearchFilters.tsx",
+    "tag": "Input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "",
+    "line": 79
+  },
+  "ui.ceeda1b6d5e1ded9": {
+    "file": "components/camp-locations/parts/CampSearchFilters.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 87
+  },
+  "ui.2f46dbd86890c5db": {
+    "file": "components/camp-locations/parts/CampSearchFilters.tsx",
+    "tag": "select",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "",
+    "line": 106
+  },
+  "ui.bdcbce9362e5d4d4": {
+    "file": "components/camp-locations/parts/CampSearchFilters.tsx",
+    "tag": "select",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "",
+    "line": 128
+  },
+  "ui.b33a6c403a09cc88": {
+    "file": "components/camp-locations/parts/CampSearchFilters.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "button",
+    "line": 153
+  },
+  "ui.5ba5ef32556155a0": {
+    "file": "components/consultation-portal/index.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 252
+  },
+  "ui.793195ffdbadd79d": {
+    "file": "components/consultation-portal/parts/AppointmentConfirmation.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 171
+  },
+  "ui.a73f9e7c7378b3fb": {
+    "file": "components/consultation-portal/parts/AppointmentConfirmation.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 182
+  },
+  "ui.97173b2ab64c5534": {
+    "file": "components/consultation-portal/parts/AppointmentConfirmation.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 194
+  },
+  "ui.d12b2ac0fb363b3b": {
+    "file": "components/consultation-portal/parts/AppointmentConfirmation.tsx",
+    "tag": "a",
+    "policy": "link",
+    "secure": false,
+    "fieldType": "",
+    "line": 213
+  },
+  "ui.030aa8bbde7510f0": {
+    "file": "components/consultation-portal/parts/AppointmentConfirmation.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 228
+  },
+  "ui.62b026786ee0135f": {
+    "file": "components/consultation-portal/parts/AppointmentConfirmation.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 242
+  },
+  "ui.86710f9ef3f712f1": {
+    "file": "components/consultation-portal/parts/AppointmentConfirmation.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 252
+  },
+  "ui.5ed40b741ab7604f": {
+    "file": "components/consultation-portal/parts/AppointmentConfirmation.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 262
+  },
+  "ui.2a7c606391ab8d64": {
+    "file": "components/consultation-portal/parts/BookingFormStep.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 103
+  },
+  "ui.171d59e2c4509e5a": {
+    "file": "components/consultation-portal/parts/BookingFormStep.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 145
+  },
+  "ui.caaf3eea95e260f8": {
+    "file": "components/consultation-portal/parts/BookingFormStep.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 178
+  },
+  "ui.232565c09a08d49f": {
+    "file": "components/consultation-portal/parts/BookingFormStep.tsx",
+    "tag": "Input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "text",
+    "line": 209
+  },
+  "ui.e071324bc6cf972d": {
+    "file": "components/consultation-portal/parts/BookingFormStep.tsx",
+    "tag": "Input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "tel",
+    "line": 221
+  },
+  "ui.47926fd9eca0a551": {
+    "file": "components/consultation-portal/parts/BookingFormStep.tsx",
+    "tag": "textarea",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "",
+    "line": 235
+  },
+  "ui.50e277041615e29c": {
+    "file": "components/consultation-portal/parts/BookingFormStep.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 250
+  },
+  "ui.1dd2e63afd38e9cf": {
+    "file": "components/consultation-portal/parts/ConsultationModeStep.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 41
+  },
+  "ui.44ee2df74dfe5798": {
+    "file": "components/consultation-portal/parts/DoctorSelectionStep.tsx",
+    "tag": "select",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "",
+    "line": 71
+  },
+  "ui.ddac381add197ab6": {
+    "file": "components/consultation-portal/parts/DoctorSelectionStep.tsx",
+    "tag": "Input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "text",
+    "line": 90
+  },
+  "ui.7979c0d14e6c88a8": {
+    "file": "components/consultation-portal/parts/DoctorSelectionStep.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 102
+  },
+  "ui.e0c2831d0e706f06": {
+    "file": "components/consultation-portal/parts/DoctorSelectionStep.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 116
+  },
+  "ui.6a607eb536f91aca": {
+    "file": "components/consultation-portal/parts/DoctorSelectionStep.tsx",
+    "tag": "div",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 145
+  },
+  "ui.648850fac3484bce": {
+    "file": "components/consultation-portal/parts/DoctorSelectionStep.tsx",
+    "tag": "button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 195
+  },
+  "ui.be91c297003b2cba": {
+    "file": "components/consultation-portal/parts/DoctorSelectionStep.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 218
+  },
+  "ui.66121876aec0b156": {
+    "file": "components/consultation-portal/parts/DoctorSelectionStep.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 228
+  },
+  "ui.d0f2f1c91c47efd3": {
+    "file": "components/dashboard/parts/QuickActions.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 32
+  },
+  "ui.eda17bec2841fd0b": {
+    "file": "components/dashboard/parts/QuickActions.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 40
+  },
+  "ui.794dffe4dda2a42f": {
+    "file": "components/dashboard/parts/QuickActions.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 49
+  },
+  "ui.4e2e0c541cda2275": {
+    "file": "components/dashboard/parts/QuickActions.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 58
+  },
+  "ui.29de197c11886f09": {
+    "file": "components/dashboard/parts/QuickActions.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 79
+  },
+  "ui.123f736a3af53e3d": {
+    "file": "components/dashboard/parts/RegisteredCampsList.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 37
+  },
+  "ui.6a5334ac1a920371": {
+    "file": "components/dashboard/parts/SchemesPreview.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 70
+  },
+  "ui.5faa3be960bd4221": {
+    "file": "components/dashboard/parts/WelcomeHeader.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 85
+  },
+  "ui.5c67444981886e4f": {
+    "file": "components/directory/index.tsx",
+    "tag": "Input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "text",
+    "line": 231
+  },
+  "ui.de76451e5bbb8870": {
+    "file": "components/directory/index.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 243
+  },
+  "ui.6dbe0ccd208e7a53": {
+    "file": "components/directory/index.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 255
+  },
+  "ui.1d725d7eadeecbf2": {
+    "file": "components/directory/index.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 286
+  },
+  "ui.36217303766779fc": {
+    "file": "components/directory/index.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 323
+  },
+  "ui.0773508feaa931fb": {
+    "file": "components/directory/parts/DirectoryHeader.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 58
+  },
+  "ui.715fde387bb07016": {
+    "file": "components/directory/parts/DirectoryPagination.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 45
+  },
+  "ui.e3c723eb0f640841": {
+    "file": "components/directory/parts/DirectoryPagination.tsx",
+    "tag": "button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 63
+  },
+  "ui.a2bbf6b413eba652": {
+    "file": "components/directory/parts/DirectoryPagination.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 78
+  },
+  "ui.51b8dafcd6090008": {
+    "file": "components/directory/parts/DirectoryResults.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 117
+  },
+  "ui.4784354a0fcb8ec8": {
+    "file": "components/directory/parts/DoctorCard.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 231
+  },
+  "ui.c670b906ec638770": {
+    "file": "components/directory/parts/DoctorCard.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 240
+  },
+  "ui.e79ec33277810e6a": {
+    "file": "components/directory/parts/DoctorCard.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 252
+  },
+  "ui.9f138415ecad26a2": {
+    "file": "components/directory/parts/DoctorCard.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 269
+  },
+  "ui.1fec09a6bd800167": {
+    "file": "components/directory/parts/LocationFiltersPanel.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 73
+  },
+  "ui.4ca74873a167b204": {
+    "file": "components/directory/parts/LocationFiltersPanel.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 98
+  },
+  "ui.2af606da584a597a": {
+    "file": "components/directory/parts/LocationFiltersPanel.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 105
+  },
+  "ui.24c0018c38bb9ad7": {
+    "file": "components/directory/parts/LocationFiltersPanel.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 132
+  },
+  "ui.0e634383b3197287": {
+    "file": "components/directory/parts/LocationFiltersPanel.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 166
+  },
+  "ui.1e39cee4517b1b48": {
+    "file": "components/directory/parts/LocationFiltersPanel.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 188
+  },
+  "ui.7bbfbeada2fead7b": {
+    "file": "components/directory/parts/LocationFiltersPanel.tsx",
+    "tag": "SearchableDropdown",
+    "policy": "container",
+    "secure": false,
+    "fieldType": "",
+    "line": 198
+  },
+  "ui.9894b6eb5dd891d8": {
+    "file": "components/directory/parts/LocationFiltersPanel.tsx",
+    "tag": "SearchableDropdown",
+    "policy": "container",
+    "secure": false,
+    "fieldType": "",
+    "line": 211
+  },
+  "ui.2d7931406d15fdef": {
+    "file": "components/directory/parts/LocationGuardPrompt.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 50
+  },
+  "ui.fa99c1f5fef9d59a": {
+    "file": "components/directory/parts/LocationGuardPrompt.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 58
+  },
+  "ui.b7ee4b55b6b0be50": {
+    "file": "components/directory/parts/LocationGuardPrompt.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 82
+  },
+  "ui.8ee3b5c404063e66": {
+    "file": "components/directory/parts/SearchableDropdown.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "button",
+    "line": 82
+  },
+  "ui.48f3d4467e7ebd0a": {
+    "file": "components/directory/parts/SearchableDropdown.tsx",
+    "tag": "input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "text",
+    "line": 109
+  },
+  "ui.7b277f096a74672a": {
+    "file": "components/directory/parts/SearchableDropdown.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "button",
+    "line": 121
+  },
+  "ui.3252d467a73c2346": {
+    "file": "components/directory/parts/SearchableDropdown.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "button",
+    "line": 148
+  },
+  "ui.e2651c25a4d74e35": {
+    "file": "components/doctor-patients/index.tsx",
+    "tag": "input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "",
+    "line": 246
+  },
+  "ui.7955839421acfb23": {
+    "file": "components/doctor-patients/parts/PatientCard.tsx",
+    "tag": "button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 108
+  },
+  "ui.404d0afdcb79e88e": {
+    "file": "components/doctor-patients/parts/PatientCard.tsx",
+    "tag": "a",
+    "policy": "link",
+    "secure": false,
+    "fieldType": "",
+    "line": 169
+  },
+  "ui.a0745c0d60dc5ee1": {
+    "file": "components/DoctorAppointmentRequests.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 139
+  },
+  "ui.08ffaa6f90a600ae": {
+    "file": "components/DoctorAppointmentRequests.tsx",
+    "tag": "input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "",
+    "line": 152
+  },
+  "ui.6bf9f7eef6480b99": {
+    "file": "components/DoctorAppointmentRequests.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 208
+  },
+  "ui.e2424bfddc156e77": {
+    "file": "components/DoctorAppointmentRequests.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 229
+  },
+  "ui.46c19da2ee343aeb": {
+    "file": "components/DoctorAppointmentRequests.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 243
+  },
+  "ui.c51bd7b201a28656": {
+    "file": "components/DoctorAppointmentRequests.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 249
+  },
+  "ui.703651f2b8ae5f39": {
+    "file": "components/DoctorAppointmentRequests.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 264
+  },
+  "ui.9d00efa97200d8e5": {
+    "file": "components/DoctorAppointmentRequests.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 284
+  },
+  "ui.1a11de9ec80769f1": {
+    "file": "components/DoctorDashboard.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 186
+  },
+  "ui.c59e9bd3c90987a9": {
+    "file": "components/DoctorDashboard.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 191
+  },
+  "ui.eccd70e342877b58": {
+    "file": "components/DoctorDashboard.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 200
+  },
+  "ui.791db3e2546a70f2": {
+    "file": "components/DoctorDashboard.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 268
+  },
+  "ui.23fc8723d502f3bc": {
+    "file": "components/emergency/parts/EmergencyContactsModal.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 83
+  },
+  "ui.fde8ca8d2f3c5b9a": {
+    "file": "components/emergency/parts/EmergencyContactsModal.tsx",
+    "tag": "button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 108
+  },
+  "ui.9cffa4558c3d3c60": {
+    "file": "components/emergency/parts/EmergencyContactsModal.tsx",
+    "tag": "div",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 125
+  },
+  "ui.cf9f4f1c9f356110": {
+    "file": "components/emergency/parts/EmergencyContactsModal.tsx",
+    "tag": "button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 146
+  },
+  "ui.80fc2fdef4f2fee3": {
+    "file": "components/emergency/parts/EmergencyContactsModal.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 163
+  },
+  "ui.aaab49b5c5b21a05": {
+    "file": "components/emergency/parts/EmergencyContactsModal.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 179
+  },
+  "ui.08a2bd20cbeb677c": {
+    "file": "components/emergency/parts/EmergencyPrimaryActions.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 43
+  },
+  "ui.d7805a75f70bcee4": {
+    "file": "components/emergency/parts/EmergencyPrimaryActions.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 52
+  },
+  "ui.16c32bb055f9f667": {
+    "file": "components/emergency/parts/EmergencyPrimaryActions.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 63
+  },
+  "ui.6f819cdc5c3baed0": {
+    "file": "components/emergency/parts/EmergencyPrimaryActions.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 73
+  },
+  "ui.e3327d947c79f27f": {
+    "file": "components/emergency/parts/EmergencyPrimaryActions.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 85
+  },
+  "ui.3ee19cd7d79e3479": {
+    "file": "components/emergency/parts/EmergencyPrimaryActions.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 94
+  },
+  "ui.455ffb0cc3f05276": {
+    "file": "components/emergency/parts/EmergencyVaultModal.tsx",
+    "tag": "Input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "",
+    "line": 50
+  },
+  "ui.b8a00763db003eb4": {
+    "file": "components/emergency/parts/EmergencyVaultModal.tsx",
+    "tag": "Input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "",
+    "line": 58
+  },
+  "ui.b07915b3f44c96c3": {
+    "file": "components/emergency/parts/EmergencyVaultModal.tsx",
+    "tag": "select",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "",
+    "line": 68
+  },
+  "ui.7831528edd712fa6": {
+    "file": "components/emergency/parts/EmergencyVaultModal.tsx",
+    "tag": "Input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "",
+    "line": 87
+  },
+  "ui.1347d9cc5b32c94f": {
+    "file": "components/emergency/parts/EmergencyVaultModal.tsx",
+    "tag": "Input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "",
+    "line": 96
+  },
+  "ui.0280e5f220d6a31d": {
+    "file": "components/emergency/parts/EmergencyVaultModal.tsx",
+    "tag": "Input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "",
+    "line": 105
+  },
+  "ui.7bf4e4a593cc9126": {
+    "file": "components/emergency/parts/EmergencyVaultModal.tsx",
+    "tag": "Input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "",
+    "line": 115
+  },
+  "ui.5199db32c0d801fb": {
+    "file": "components/emergency/parts/EmergencyVaultModal.tsx",
+    "tag": "Input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "",
+    "line": 124
+  },
+  "ui.5549448269c5b427": {
+    "file": "components/emergency/parts/EmergencyVaultModal.tsx",
+    "tag": "Input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "",
+    "line": 133
+  },
+  "ui.e2d32d43be081dd2": {
+    "file": "components/emergency/parts/EmergencyVaultModal.tsx",
+    "tag": "Input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "",
+    "line": 145
+  },
+  "ui.47eb156de9647f67": {
+    "file": "components/emergency/parts/EmergencyVaultModal.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 156
+  },
+  "ui.8fddc4107fa25f5b": {
+    "file": "components/emergency/parts/EmergencyVaultSummary.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 39
+  },
+  "ui.28f831a44155c263": {
+    "file": "components/emergency/parts/ShakeDistressPrompt.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 54
+  },
+  "ui.e1175e365e38a229": {
+    "file": "components/emergency/parts/ShakeDistressPrompt.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 61
+  },
+  "ui.2596832a19cdfa1e": {
+    "file": "components/emergency/parts/StrobeBeaconOverlay.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 68
+  },
+  "ui.96e48bb0faf7fbf2": {
+    "file": "components/emergency/parts/StrobeBeaconOverlay.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 78
+  },
+  "ui.895b87aee2fc4139": {
+    "file": "components/emergency/parts/StrobeBeaconOverlay.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 90
+  },
+  "ui.afacba94da980dcb": {
+    "file": "components/Footer.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 125
+  },
+  "ui.44751042f49f9812": {
+    "file": "components/Footer.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 131
+  },
+  "ui.a40b1fdabf7f265b": {
+    "file": "components/Footer.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 137
+  },
+  "ui.46702260116d4b71": {
+    "file": "components/Footer.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 143
+  },
+  "ui.29c8c51497c45eb3": {
+    "file": "components/Footer.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 158
+  },
+  "ui.33b2e8bf683bddae": {
+    "file": "components/Footer.tsx",
+    "tag": "a",
+    "policy": "link",
+    "secure": false,
+    "fieldType": "",
+    "line": 172
+  },
+  "ui.06caae6ac8914183": {
+    "file": "components/Footer.tsx",
+    "tag": "a",
+    "policy": "link",
+    "secure": false,
+    "fieldType": "",
+    "line": 185
+  },
+  "ui.31fc52b1e64536ec": {
+    "file": "components/Footer.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 186
+  },
+  "ui.b68f0f516a7ab484": {
+    "file": "components/Footer.tsx",
+    "tag": "a",
+    "policy": "link",
+    "secure": false,
+    "fieldType": "",
+    "line": 190
+  },
+  "ui.19995574bc8e084b": {
+    "file": "components/Footer.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 191
+  },
+  "ui.971189deea086038": {
+    "file": "components/Footer.tsx",
+    "tag": "a",
+    "policy": "link",
+    "secure": false,
+    "fieldType": "",
+    "line": 195
+  },
+  "ui.747f44182cd4fa25": {
+    "file": "components/Footer.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 196
+  },
+  "ui.badee11319ec974e": {
+    "file": "components/government-schemes/index.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 125
+  },
+  "ui.3634ce04f201e3b4": {
+    "file": "components/government-schemes/index.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 226
+  },
+  "ui.92bd7fa5ec453006": {
+    "file": "components/government-schemes/parts/SchemeCard.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 132
+  },
+  "ui.938fe2ebb4dbe47b": {
+    "file": "components/government-schemes/parts/SchemeCard.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 143
+  },
+  "ui.046f0fd9fcff83eb": {
+    "file": "components/government-schemes/parts/SchemeFilterControls.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 62
+  },
+  "ui.d1f7ef4e777fa1ee": {
+    "file": "components/government-schemes/parts/SchemeFilterControls.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 72
+  },
+  "ui.3e5c93ec0861b500": {
+    "file": "components/government-schemes/parts/SchemeFilterControls.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 82
+  },
+  "ui.b5cb6936669b833d": {
+    "file": "components/government-schemes/parts/SchemeFilterControls.tsx",
+    "tag": "SearchableStateSelect",
+    "policy": "container",
+    "secure": false,
+    "fieldType": "",
+    "line": 100
+  },
+  "ui.83765125f3971297": {
+    "file": "components/government-schemes/parts/SchemeFilterControls.tsx",
+    "tag": "Input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "text",
+    "line": 116
+  },
+  "ui.e86496679fcf2ed4": {
+    "file": "components/government-schemes/parts/SchemeFilterControls.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 128
+  },
+  "ui.d4889df6dd9cda8e": {
+    "file": "components/government-schemes/parts/SchemeFilterControls.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 147
+  },
+  "ui.7af85df7d76850e8": {
+    "file": "components/government-schemes/parts/SchemeFilterControls.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 161
+  },
+  "ui.648e04fc00d1dd90": {
+    "file": "components/government-schemes/parts/SchemePagination.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 45
+  },
+  "ui.f9a0c6c7643c6926": {
+    "file": "components/government-schemes/parts/SchemePagination.tsx",
+    "tag": "button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 69
+  },
+  "ui.8388e908a4456d9e": {
+    "file": "components/government-schemes/parts/SchemePagination.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 83
+  },
+  "ui.3a03981f9d5bd12b": {
+    "file": "components/government-schemes/parts/SearchableStateSelect.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "button",
+    "line": 83
+  },
+  "ui.6f0bc6ad661e746a": {
+    "file": "components/government-schemes/parts/SearchableStateSelect.tsx",
+    "tag": "input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "text",
+    "line": 105
+  },
+  "ui.7a9cb951ba66fcaf": {
+    "file": "components/government-schemes/parts/SearchableStateSelect.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "button",
+    "line": 116
+  },
+  "ui.82072eb0c2f1a137": {
+    "file": "components/government-schemes/parts/SearchableStateSelect.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "button",
+    "line": 137
+  },
+  "ui.97c3a73eeb7cfd62": {
+    "file": "components/header/index.tsx",
+    "tag": "div",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 110
+  },
+  "ui.66bf882d0b762e2d": {
+    "file": "components/header/parts/DesktopNav.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 53
+  },
+  "ui.cb0a106bf21b19f5": {
+    "file": "components/header/parts/DesktopNav.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 67
+  },
+  "ui.ee8b44ed9023f131": {
+    "file": "components/header/parts/DesktopNav.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 83
+  },
+  "ui.c05fb82c293da213": {
+    "file": "components/header/parts/DesktopNav.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 106
+  },
+  "ui.5c92ea08ca8091ad": {
+    "file": "components/header/parts/DesktopNav.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 124
+  },
+  "ui.554a327d8d147076": {
+    "file": "components/header/parts/DesktopNav.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 142
+  },
+  "ui.e40b072bb6b47cb6": {
+    "file": "components/header/parts/DesktopNav.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 159
+  },
+  "ui.56fb054a105d7f1b": {
+    "file": "components/header/parts/MobileMenu.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 62
+  },
+  "ui.bc0c7b4455f5572d": {
+    "file": "components/header/parts/MobileMenu.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 72
+  },
+  "ui.0cbe5463fc60f759": {
+    "file": "components/header/parts/MobileMenu.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 87
+  },
+  "ui.c912ae6b42347bb1": {
+    "file": "components/header/parts/MobileMenu.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 104
+  },
+  "ui.ce0e7d4f08ede2d0": {
+    "file": "components/header/parts/MobileMenu.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 126
+  },
+  "ui.ca79dd067c0f02d9": {
+    "file": "components/header/parts/MobileMenu.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 141
+  },
+  "ui.9bc49ff927622cfc": {
+    "file": "components/header/parts/MobileMenu.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 158
+  },
+  "ui.b644278e54304d80": {
+    "file": "components/header/parts/MobileMenu.tsx",
+    "tag": "button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 175
+  },
+  "ui.4f0c1a9dc3b76beb": {
+    "file": "components/header/parts/MobileMenu.tsx",
+    "tag": "Link",
+    "policy": "link",
+    "secure": false,
+    "fieldType": "",
+    "line": 183
+  },
+  "ui.9e2b6c402ae34d33": {
+    "file": "components/header/parts/MobileMenu.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 188
+  },
+  "ui.0fc8b60655e6d8dd": {
+    "file": "components/header/parts/UserMenu.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 76
+  },
+  "ui.6b905cd00f040aee": {
+    "file": "components/header/parts/UserMenu.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 99
+  },
+  "ui.b676390641cad373": {
+    "file": "components/header/parts/UserMenu.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 127
+  },
+  "ui.e026c45828ae746a": {
+    "file": "components/header/parts/UserMenu.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 160
+  },
+  "ui.7b956c377b82c0b5": {
+    "file": "components/header/parts/UserMenu.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 168
+  },
+  "ui.dc96e66960c96c7c": {
+    "file": "components/header/parts/UserMenu.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 174
+  },
+  "ui.dcfb72b70dbe4560": {
+    "file": "components/header/parts/UserMenu.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 180
+  },
+  "ui.b53120ce220a3363": {
+    "file": "components/header/parts/UserMenu.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 186
+  },
+  "ui.bd4209cb75b3e89a": {
+    "file": "components/header/parts/UserMenu.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 192
+  },
+  "ui.58c47c0a0e56e69e": {
+    "file": "components/header/parts/UserMenu.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 202
+  },
+  "ui.2bbf473ee899f2ea": {
+    "file": "components/header/parts/UserMenu.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 208
+  },
+  "ui.619f066a13f32c6a": {
+    "file": "components/header/parts/UserMenu.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 214
+  },
+  "ui.1de631a95db634df": {
+    "file": "components/header/parts/UserMenu.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 220
+  },
+  "ui.c586a27c38836477": {
+    "file": "components/header/parts/UserMenu.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 226
+  },
+  "ui.c3a9069f64125cfc": {
+    "file": "components/header/parts/UserMenu.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 232
+  },
+  "ui.ad890ba90b0c9548": {
+    "file": "components/header/parts/UserMenu.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 238
+  },
+  "ui.291ffead52c10327": {
+    "file": "components/header/parts/UserMenu.tsx",
+    "tag": "button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 247
+  },
+  "ui.55f99e1358361bd8": {
+    "file": "components/header/parts/UserMenu.tsx",
+    "tag": "Link",
+    "policy": "link",
+    "secure": false,
+    "fieldType": "",
+    "line": 259
+  },
+  "ui.9a7558a5f5884bfd": {
+    "file": "components/header/parts/UserMenu.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 260
+  },
+  "ui.c6977dd8ab9d9977": {
+    "file": "components/header/parts/UserMenu.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 267
+  },
+  "ui.14efcc2bd8643201": {
+    "file": "components/header/parts/UserMenu.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 278
+  },
+  "ui.00dc9566c3079571": {
+    "file": "components/health-info-hub/index.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 69
+  },
+  "ui.27b516960d8cf3e0": {
+    "file": "components/health-info-hub/index.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 85
+  },
+  "ui.0914431bc5187221": {
+    "file": "components/health-info-hub/index.tsx",
+    "tag": "input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "",
+    "line": 97
+  },
+  "ui.ff375ec3db7662d3": {
+    "file": "components/health-info-hub/parts/AshaCopilotTab.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 80
+  },
+  "ui.1108a9d6834c335f": {
+    "file": "components/health-info-hub/parts/AshaCopilotTab.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 89
+  },
+  "ui.1996505af5cac069": {
+    "file": "components/health-info-hub/parts/ChildImciSection.tsx",
+    "tag": "input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "checkbox",
+    "line": 43
+  },
+  "ui.863bf02ab33b53ff": {
+    "file": "components/health-info-hub/parts/ChildImciSection.tsx",
+    "tag": "input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "checkbox",
+    "line": 60
+  },
+  "ui.1c1902b38f874cb8": {
+    "file": "components/health-info-hub/parts/ChildImciSection.tsx",
+    "tag": "input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "range",
+    "line": 73
+  },
+  "ui.b582c9ea14bfc71a": {
+    "file": "components/health-info-hub/parts/ChildImciSection.tsx",
+    "tag": "input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "checkbox",
+    "line": 84
+  },
+  "ui.c18faa5a078b4c12": {
+    "file": "components/health-info-hub/parts/ChildImciSection.tsx",
+    "tag": "input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "checkbox",
+    "line": 96
+  },
+  "ui.31e485c643c43342": {
+    "file": "components/health-info-hub/parts/ChildImciSection.tsx",
+    "tag": "input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "checkbox",
+    "line": 108
+  },
+  "ui.da82500fab8f308c": {
+    "file": "components/health-info-hub/parts/ChildImciSection.tsx",
+    "tag": "input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "checkbox",
+    "line": 117
+  },
+  "ui.9db5787575df2487": {
+    "file": "components/health-info-hub/parts/ChildImciSection.tsx",
+    "tag": "a",
+    "policy": "link",
+    "secure": false,
+    "fieldType": "",
+    "line": 189
+  },
+  "ui.903e276b2fa3543a": {
+    "file": "components/health-info-hub/parts/ChildImciSection.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 195
+  },
+  "ui.30b27125b9a6b5d5": {
+    "file": "components/health-info-hub/parts/MaternalAncSection.tsx",
+    "tag": "input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "checkbox",
+    "line": 45
+  },
+  "ui.253a7c30eb5600da": {
+    "file": "components/health-info-hub/parts/MaternalAncSection.tsx",
+    "tag": "input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "number",
+    "line": 61
+  },
+  "ui.f67f64136cd6e139": {
+    "file": "components/health-info-hub/parts/MaternalAncSection.tsx",
+    "tag": "input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "number",
+    "line": 72
+  },
+  "ui.b3fa2deffa549d2c": {
+    "file": "components/health-info-hub/parts/MaternalAncSection.tsx",
+    "tag": "a",
+    "policy": "link",
+    "secure": false,
+    "fieldType": "",
+    "line": 141
+  },
+  "ui.40f5d5e4e4e72c49": {
+    "file": "components/health-info-hub/parts/MaternalAncSection.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 147
+  },
+  "ui.9106b3d5b2a30038": {
+    "file": "components/helpline-directory/index.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 192
+  },
+  "ui.de608491033eb524": {
+    "file": "components/helpline-directory/parts/CriticalFastDialBar.tsx",
+    "tag": "a",
+    "policy": "link",
+    "secure": false,
+    "fieldType": "",
+    "line": 51
+  },
+  "ui.72d3a62f3a6578ea": {
+    "file": "components/helpline-directory/parts/HelplineCard.tsx",
+    "tag": "div",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 31
+  },
+  "ui.35f91c0f1e7e05a6": {
+    "file": "components/helpline-directory/parts/HelplineCard.tsx",
+    "tag": "button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 106
+  },
+  "ui.673ba271d043f52a": {
+    "file": "components/helpline-directory/parts/HelplineCard.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 120
+  },
+  "ui.fce8d312a283b484": {
+    "file": "components/helpline-directory/parts/HelplineHeaderControls.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 68
+  },
+  "ui.a207aad07da8223c": {
+    "file": "components/helpline-directory/parts/HelplineHeaderControls.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 79
+  },
+  "ui.e3ec592c439db024": {
+    "file": "components/helpline-directory/parts/HelplineHeaderControls.tsx",
+    "tag": "select",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "",
+    "line": 100
+  },
+  "ui.a132fb6cb0d02fab": {
+    "file": "components/helpline-directory/parts/HelplineHeaderControls.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 113
+  },
+  "ui.5620f88690e201d6": {
+    "file": "components/helpline-directory/parts/HelplineHeaderControls.tsx",
+    "tag": "Input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "",
+    "line": 133
+  },
+  "ui.1acb4db87f39859d": {
+    "file": "components/helpline-directory/parts/HelplineHeaderControls.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 152
+  },
+  "ui.691f2edc6e106166": {
+    "file": "components/JitsiMeeting.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 176
+  },
+  "ui.e852313112d51e5a": {
+    "file": "components/JitsiMeeting.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 201
+  },
+  "ui.6f2a99b18f080b6c": {
+    "file": "components/LandingPage.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 117
+  },
+  "ui.bec8d013294aceff": {
+    "file": "components/LandingPage.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 125
+  },
+  "ui.141f698945606c64": {
+    "file": "components/LandingPage.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 134
+  },
+  "ui.fffaca034e130cfb": {
+    "file": "components/LandingPage.tsx",
+    "tag": "Card",
+    "policy": "container",
+    "secure": false,
+    "fieldType": "",
+    "line": 167
+  },
+  "ui.b21f663d7bdb7212": {
+    "file": "components/LandingPage.tsx",
+    "tag": "Card",
+    "policy": "container",
+    "secure": false,
+    "fieldType": "",
+    "line": 176
+  },
+  "ui.7aca5886b762da58": {
+    "file": "components/LandingPage.tsx",
+    "tag": "Card",
+    "policy": "container",
+    "secure": false,
+    "fieldType": "",
+    "line": 185
+  },
+  "ui.1d97942b39f7edae": {
+    "file": "components/LandingPage.tsx",
+    "tag": "Card",
+    "policy": "container",
+    "secure": false,
+    "fieldType": "",
+    "line": 194
+  },
+  "ui.d3c300124e56fbb0": {
+    "file": "components/LandingPage.tsx",
+    "tag": "Card",
+    "policy": "container",
+    "secure": false,
+    "fieldType": "",
+    "line": 203
+  },
+  "ui.7963c082035124bf": {
+    "file": "components/LandingPage.tsx",
+    "tag": "Card",
+    "policy": "container",
+    "secure": false,
+    "fieldType": "",
+    "line": 212
+  },
+  "ui.4e0d975220413561": {
+    "file": "components/LandingPage.tsx",
+    "tag": "Card",
+    "policy": "container",
+    "secure": false,
+    "fieldType": "",
+    "line": 252
+  },
+  "ui.acab67c248fc4ab4": {
+    "file": "components/LanguageSuggestionBanner.tsx",
+    "tag": "button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 110
+  },
+  "ui.45c346c083948b8a": {
+    "file": "components/LanguageSuggestionBanner.tsx",
+    "tag": "button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 117
+  },
+  "ui.a34b98fc0dab5184": {
+    "file": "components/LanguageSuggestionBanner.tsx",
+    "tag": "button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 123
+  },
+  "ui.460c306d2393970b": {
+    "file": "components/map-view/index.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "button",
+    "line": 132
+  },
+  "ui.5a670490cba71047": {
+    "file": "components/map-view/index.tsx",
+    "tag": "a",
+    "policy": "link",
+    "secure": false,
+    "fieldType": "",
+    "line": 152
+  },
+  "ui.6a00842567934279": {
+    "file": "components/map-view/index.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 181
+  },
+  "ui.3f3ede1b01d49393": {
+    "file": "components/map-view/parts/FacilityCard.tsx",
+    "tag": "a",
+    "policy": "link",
+    "secure": false,
+    "fieldType": "",
+    "line": 220
+  },
+  "ui.7fc4b88bf7982c43": {
+    "file": "components/map-view/parts/FacilityCard.tsx",
+    "tag": "a",
+    "policy": "link",
+    "secure": false,
+    "fieldType": "",
+    "line": 235
+  },
+  "ui.0a16e5d6b15178d5": {
+    "file": "components/map-view/parts/FacilityCard.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 245
+  },
+  "ui.419103d716d45697": {
+    "file": "components/map-view/parts/FacilityListPagination.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 35
+  },
+  "ui.fec27ae58fc72b13": {
+    "file": "components/map-view/parts/FacilityListPagination.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 52
+  },
+  "ui.c409f2cc5d0d8184": {
+    "file": "components/map-view/parts/FacilityMapControls.tsx",
+    "tag": "SearchableDropdown",
+    "policy": "container",
+    "secure": false,
+    "fieldType": "",
+    "line": 78
+  },
+  "ui.078e0bff4c22ae48": {
+    "file": "components/map-view/parts/FacilityMapControls.tsx",
+    "tag": "SearchableDropdown",
+    "policy": "container",
+    "secure": false,
+    "fieldType": "",
+    "line": 90
+  },
+  "ui.aacb7b5278886778": {
+    "file": "components/map-view/parts/FacilityMapControls.tsx",
+    "tag": "Input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "",
+    "line": 108
+  },
+  "ui.32ff11f9a954ab08": {
+    "file": "components/map-view/parts/FacilityMapControls.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 121
+  },
+  "ui.0032e5c70cf0d313": {
+    "file": "components/map-view/parts/FacilityMapControls.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 133
+  },
+  "ui.d000cf7f1414a10b": {
+    "file": "components/map-view/parts/FacilityMapControls.tsx",
+    "tag": "select",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "",
+    "line": 150
+  },
+  "ui.b5e235754a451f6e": {
+    "file": "components/map-view/parts/FacilityMapControls.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "button",
+    "line": 173
+  },
+  "ui.284c4c3866dc78af": {
+    "file": "components/map-view/parts/FacilityPopupContent.tsx",
+    "tag": "a",
+    "policy": "link",
+    "secure": false,
+    "fieldType": "",
+    "line": 143
+  },
+  "ui.534027ed62a120bc": {
+    "file": "components/map-view/parts/FacilityPopupContent.tsx",
+    "tag": "a",
+    "policy": "link",
+    "secure": false,
+    "fieldType": "",
+    "line": 160
+  },
+  "ui.5bb33774e8bc69e5": {
+    "file": "components/map-view/parts/FacilityPopupContent.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 168
+  },
+  "ui.962e568e751796f9": {
+    "file": "components/map-view/parts/FacilityPopupContent.tsx",
+    "tag": "a",
+    "policy": "link",
+    "secure": false,
+    "fieldType": "",
+    "line": 183
+  },
+  "ui.50cea3883c320ca8": {
+    "file": "components/map-view/parts/MapVoiceControls.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "button",
+    "line": 15
+  },
+  "ui.c638d6dfc806ae51": {
+    "file": "components/map-view/parts/MapVoiceControls.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "button",
+    "line": 16
+  },
+  "ui.97b4f5295aa0efcb": {
+    "file": "components/map-view/parts/MapVoiceControls.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "button",
+    "line": 17
+  },
+  "ui.40f28443773b41e8": {
+    "file": "components/map-view/parts/MapVoiceControls.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "button",
+    "line": 18
+  },
+  "ui.4c159d49da03fc98": {
+    "file": "components/map-view/parts/MapVoiceControls.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "button",
+    "line": 19
+  },
+  "ui.697afaffef7df3d7": {
+    "file": "components/map-view/parts/MapVoiceControls.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "button",
+    "line": 20
+  },
+  "ui.ad00eabeb8adf6fe": {
+    "file": "components/map-view/parts/MapVoiceControls.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "button",
+    "line": 21
+  },
+  "ui.acc86de0a84026ee": {
+    "file": "components/map-view/parts/SearchableDropdown.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "button",
+    "line": 87
+  },
+  "ui.26b62ad39de50d91": {
+    "file": "components/map-view/parts/SearchableDropdown.tsx",
+    "tag": "input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "text",
+    "line": 106
+  },
+  "ui.202dc0f234e1e46e": {
+    "file": "components/map-view/parts/SearchableDropdown.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "button",
+    "line": 125
+  },
+  "ui.1f851802caaf2ec7": {
+    "file": "components/notification-bell/index.tsx",
+    "tag": "button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 318
+  },
+  "ui.ed3858c2824d6d6e": {
+    "file": "components/notification-bell/index.tsx",
+    "tag": "div",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 341
+  },
+  "ui.04868b6821c23a0f": {
+    "file": "components/notification-bell/parts/NotificationItem.tsx",
+    "tag": "div",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 38
+  },
+  "ui.4a849a075599620a": {
+    "file": "components/notification-bell/parts/NotificationPanel.tsx",
+    "tag": "button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 77
+  },
+  "ui.77012b1327a82b95": {
+    "file": "components/notification-bell/parts/NotificationPanel.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 84
+  },
+  "ui.3e497e1d43bc4f62": {
+    "file": "components/notification-bell/parts/NotificationPanel.tsx",
+    "tag": "NotificationItem",
+    "policy": "container",
+    "secure": false,
+    "fieldType": "",
+    "line": 115
+  },
+  "ui.c17fd2c52660d197": {
+    "file": "components/notification-bell/parts/NotificationPanel.tsx",
+    "tag": "button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 126
+  },
+  "ui.df1b990275b3d5fb": {
+    "file": "components/notification-bell/parts/NotificationTabs.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 29
+  },
+  "ui.80a86e57911b8c0b": {
+    "file": "components/notification-bell/parts/NotificationTabs.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 39
+  },
+  "ui.dbf16f98fa000dc6": {
+    "file": "components/notification-bell/parts/NotificationTabs.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 50
+  },
+  "ui.a1f655071d82ee92": {
+    "file": "components/OfflineSyncBadge.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 112
+  },
+  "ui.4229017daab1f56d": {
+    "file": "components/OfflineSyncBadge.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 154
+  },
+  "ui.487b61bd8ce05d50": {
+    "file": "components/OfflineSyncBadge.tsx",
+    "tag": "button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 248
+  },
+  "ui.57b232830f0da393": {
+    "file": "components/OfflineSyncBadge.tsx",
+    "tag": "button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 255
+  },
+  "ui.e26236cf3fec49ae": {
+    "file": "components/OfflineSyncBadge.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 281
+  },
+  "ui.5d845e5dc3359b63": {
+    "file": "components/OfflineSyncBadge.tsx",
+    "tag": "button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 288
+  },
+  "ui.6406b0a9d7a62bc0": {
+    "file": "components/patient-records/index.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 274
+  },
+  "ui.c4c92f9226dc10d3": {
+    "file": "components/patient-records/index.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 280
+  },
+  "ui.800c77735fffd0a0": {
+    "file": "components/patient-records/index.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 295
+  },
+  "ui.55caf7dd4adbf1b6": {
+    "file": "components/patient-records/index.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 303
+  },
+  "ui.6b32fe047d80d784": {
+    "file": "components/patient-records/index.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 375
+  },
+  "ui.c7a716c1cd439e70": {
+    "file": "components/patient-records/parts/AddRecordCard.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 68
+  },
+  "ui.c864c451c9af467e": {
+    "file": "components/patient-records/parts/AddRecordCard.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 77
+  },
+  "ui.9d5ad5e1198a930c": {
+    "file": "components/patient-records/parts/AddRecordCard.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 83
+  },
+  "ui.f0b70d3078a96504": {
+    "file": "components/patient-records/parts/AddRecordCard.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 97
+  },
+  "ui.c1926ff32efe6cee": {
+    "file": "components/patient-records/parts/AddRecordCard.tsx",
+    "tag": "input",
+    "policy": "handoff",
+    "secure": false,
+    "fieldType": "file",
+    "line": 116
+  },
+  "ui.47688865157ef1c4": {
+    "file": "components/patient-records/parts/AddRecordCard.tsx",
+    "tag": "button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 123
+  },
+  "ui.58d6fc928af65cd7": {
+    "file": "components/patient-records/parts/AddRecordCard.tsx",
+    "tag": "textarea",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "",
+    "line": 146
+  },
+  "ui.ddb6743170e5dce5": {
+    "file": "components/patient-records/parts/AddRecordCard.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 159
+  },
+  "ui.9d9bde0c757a5edc": {
+    "file": "components/patient-records/parts/AddRecordCard.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 163
+  },
+  "ui.f03660ba79f1d809": {
+    "file": "components/patient-records/parts/AddRecordCard.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 172
+  },
+  "ui.fc74b6fccefef406": {
+    "file": "components/patient-records/parts/MedicalProfileCard.tsx",
+    "tag": "input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "number",
+    "line": 68
+  },
+  "ui.e91ef6fa4b4f3f0d": {
+    "file": "components/patient-records/parts/MedicalProfileCard.tsx",
+    "tag": "input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "number",
+    "line": 78
+  },
+  "ui.aabc109bbd9f1c9f": {
+    "file": "components/patient-records/parts/MedicalProfileCard.tsx",
+    "tag": "select",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "",
+    "line": 88
+  },
+  "ui.ad235e05eb28177f": {
+    "file": "components/patient-records/parts/MedicalProfileCard.tsx",
+    "tag": "input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "text",
+    "line": 99
+  },
+  "ui.7144b5359770e511": {
+    "file": "components/patient-records/parts/MedicalProfileCard.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 109
+  },
+  "ui.ff7375052a69c8b0": {
+    "file": "components/patient-records/parts/RecordFilterRow.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 38
+  },
+  "ui.c274f45f887de900": {
+    "file": "components/patient-records/parts/RecordItem.tsx",
+    "tag": "button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 86
+  },
+  "ui.aa0cfdd0132b3cba": {
+    "file": "components/patient-records/parts/RecordItem.tsx",
+    "tag": "a",
+    "policy": "link",
+    "secure": false,
+    "fieldType": "",
+    "line": 102
+  },
+  "ui.34a17ca82a3edff6": {
+    "file": "components/PwaUpdaterAndInstaller.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 149
+  },
+  "ui.f163facae17b696d": {
+    "file": "components/PwaUpdaterAndInstaller.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 176
+  },
+  "ui.742887fa1b993e93": {
+    "file": "components/PwaUpdaterAndInstaller.tsx",
+    "tag": "button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 183
+  },
+  "ui.758767d4d33a9612": {
+    "file": "components/PwaUpdaterAndInstaller.tsx",
+    "tag": "button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 206
+  },
+  "ui.09c3bf8b9ba0ba8e": {
+    "file": "components/symptom-checker/parts/Step1PatientInfo.tsx",
+    "tag": "input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "number",
+    "line": 41
+  },
+  "ui.0bdb63537eb71d2b": {
+    "file": "components/symptom-checker/parts/Step1PatientInfo.tsx",
+    "tag": "select",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "",
+    "line": 58
+  },
+  "ui.ff28663a878928da": {
+    "file": "components/symptom-checker/parts/Step1PatientInfo.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "button",
+    "line": 75
+  },
+  "ui.75ed4c7f9e10f09f": {
+    "file": "components/symptom-checker/parts/Step1PatientInfo.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "button",
+    "line": 82
+  },
+  "ui.51657e2a3efda2c9": {
+    "file": "components/symptom-checker/parts/Step1PatientInfo.tsx",
+    "tag": "input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "number",
+    "line": 91
+  },
+  "ui.8dbc5283ca168b6c": {
+    "file": "components/symptom-checker/parts/Step1PatientInfo.tsx",
+    "tag": "select",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "",
+    "line": 114
+  },
+  "ui.7cebea74d56dfa48": {
+    "file": "components/symptom-checker/parts/Step1PatientInfo.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 129
+  },
+  "ui.72d178e51791f44e": {
+    "file": "components/symptom-checker/parts/Step2BodyPart.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 42
+  },
+  "ui.45c4da96ceb2ef98": {
+    "file": "components/symptom-checker/parts/Step2BodyPart.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 60
+  },
+  "ui.381a01d37787ccdf": {
+    "file": "components/symptom-checker/parts/Step2BodyPart.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 64
+  },
+  "ui.68defffcfb85ecff": {
+    "file": "components/symptom-checker/parts/Step3Symptoms.tsx",
+    "tag": "button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 59
+  },
+  "ui.a8a1abe5954195f4": {
+    "file": "components/symptom-checker/parts/Step3Symptoms.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 82
+  },
+  "ui.45dbe8124b80aaa7": {
+    "file": "components/symptom-checker/parts/Step3Symptoms.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 86
+  },
+  "ui.0e9d21a9bfbb2085": {
+    "file": "components/symptom-checker/parts/Step4ResultChat.tsx",
+    "tag": "button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 144
+  },
+  "ui.5fb9c33a2d2d37a9": {
+    "file": "components/symptom-checker/parts/Step4ResultChat.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "button",
+    "line": 175
+  },
+  "ui.20f34485edfccc1e": {
+    "file": "components/symptom-checker/parts/Step4ResultChat.tsx",
+    "tag": "input",
+    "policy": "field",
+    "secure": false,
+    "fieldType": "text",
+    "line": 185
+  },
+  "ui.462fdfd13042c5e7": {
+    "file": "components/symptom-checker/parts/Step4ResultChat.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 201
+  },
+  "ui.9910067048b9ae79": {
+    "file": "components/symptom-checker/parts/Step4ResultChat.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 216
+  },
+  "ui.ff9e56f547986bd5": {
+    "file": "components/symptom-checker/parts/Step4ResultChat.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 226
+  },
+  "ui.bd5025b133c7cc03": {
+    "file": "components/symptom-checker/parts/Step4ResultChat.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "",
+    "line": 234
+  },
+  "ui.2fa15f0ffb0ba399": {
+    "file": "components/symptom-checker/parts/Step4ResultChat.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "",
+    "line": 238
+  },
+  "ui.a22bf1e71c1028f5": {
+    "file": "components/voice-assistant/index.tsx",
+    "tag": "button",
+    "policy": "assistant",
+    "secure": false,
+    "fieldType": "button",
+    "line": 163
+  },
+  "ui.875c6f9018451edf": {
+    "file": "components/voice-assistant/index.tsx",
+    "tag": "button",
+    "policy": "assistant",
+    "secure": false,
+    "fieldType": "button",
+    "line": 171
+  },
+  "ui.8c1225679761d77a": {
+    "file": "components/voice-assistant/index.tsx",
+    "tag": "select",
+    "policy": "assistant",
+    "secure": false,
+    "fieldType": "",
+    "line": 174
+  },
+  "ui.367aacd43b129d3a": {
+    "file": "components/voice-assistant/index.tsx",
+    "tag": "button",
+    "policy": "assistant",
+    "secure": false,
+    "fieldType": "button",
+    "line": 177
+  },
+  "ui.009f9da4962734e9": {
+    "file": "components/voice-assistant/index.tsx",
+    "tag": "button",
+    "policy": "assistant",
+    "secure": false,
+    "fieldType": "button",
+    "line": 183
+  },
+  "ui.fc3709f1cbe48590": {
+    "file": "components/voice-assistant/index.tsx",
+    "tag": "a",
+    "policy": "assistant",
+    "secure": false,
+    "fieldType": "",
+    "line": 188
+  },
+  "ui.2b0512a9f2abe764": {
+    "file": "components/voice-assistant/index.tsx",
+    "tag": "button",
+    "policy": "assistant",
+    "secure": false,
+    "fieldType": "button",
+    "line": 189
+  },
+  "ui.f7088da9ed7768c5": {
+    "file": "components/voice-assistant/index.tsx",
+    "tag": "button",
+    "policy": "assistant",
+    "secure": false,
+    "fieldType": "button",
+    "line": 193
+  },
+  "ui.1c8b5e2b641ebb38": {
+    "file": "components/voice-assistant/index.tsx",
+    "tag": "button",
+    "policy": "assistant",
+    "secure": false,
+    "fieldType": "button",
+    "line": 194
+  },
+  "ui.9662031c9ee75b8b": {
+    "file": "components/voice-assistant/index.tsx",
+    "tag": "button",
+    "policy": "assistant",
+    "secure": false,
+    "fieldType": "button",
+    "line": 196
+  },
+  "ui.a9d2952bd43bcd52": {
+    "file": "components/voice-assistant/index.tsx",
+    "tag": "button",
+    "policy": "assistant",
+    "secure": false,
+    "fieldType": "button",
+    "line": 200
+  },
+  "ui.c2cdd0bbcb439bef": {
+    "file": "components/voice-assistant/index.tsx",
+    "tag": "button",
+    "policy": "assistant",
+    "secure": false,
+    "fieldType": "button",
+    "line": 201
+  },
+  "ui.15790bb13f64bd3a": {
+    "file": "components/voice-assistant/index.tsx",
+    "tag": "button",
+    "policy": "assistant",
+    "secure": false,
+    "fieldType": "button",
+    "line": 202
+  },
+  "ui.5199be8da8573ff9": {
+    "file": "components/voice-assistant/index.tsx",
+    "tag": "button",
+    "policy": "assistant",
+    "secure": false,
+    "fieldType": "button",
+    "line": 205
+  },
+  "ui.527f49828819bf82": {
+    "file": "components/voice-assistant/index.tsx",
+    "tag": "button",
+    "policy": "assistant",
+    "secure": false,
+    "fieldType": "button",
+    "line": 206
+  },
+  "ui.995a1817c05cf852": {
+    "file": "components/voice-assistant/index.tsx",
+    "tag": "button",
+    "policy": "assistant",
+    "secure": false,
+    "fieldType": "button",
+    "line": 207
+  },
+  "ui.7c7a39c1b8cd1bf3": {
+    "file": "components/voice-assistant/index.tsx",
+    "tag": "form",
+    "policy": "assistant",
+    "secure": false,
+    "fieldType": "",
+    "line": 209
+  },
+  "ui.72a5158aff026c14": {
+    "file": "components/voice-assistant/index.tsx",
+    "tag": "input",
+    "policy": "assistant",
+    "secure": false,
+    "fieldType": "",
+    "line": 209
+  },
+  "ui.747b6194f748cf68": {
+    "file": "components/voice-assistant/index.tsx",
+    "tag": "button",
+    "policy": "assistant",
+    "secure": false,
+    "fieldType": "submit",
+    "line": 209
+  },
+  "ui.60ad7f69a7a154c2": {
+    "file": "components/voice-assistant/index.tsx",
+    "tag": "button",
+    "policy": "assistant",
+    "secure": false,
+    "fieldType": "button",
+    "line": 210
+  },
+  "ui.e11ca77cc94ba14e": {
+    "file": "components/voice-assistant/MeetingControls.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "button",
+    "line": 9
+  },
+  "ui.6c267fe90208ccb5": {
+    "file": "components/voice-assistant/MeetingControls.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "button",
+    "line": 10
+  },
+  "ui.b77405404fa375c1": {
+    "file": "components/voice-assistant/MeetingControls.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "button",
+    "line": 11
+  },
+  "ui.977bba067f927635": {
+    "file": "components/voice-assistant/MeetingControls.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "button",
+    "line": 12
+  },
+  "ui.dd970638ca2af0c3": {
+    "file": "components/voice-assistant/MeetingControls.tsx",
+    "tag": "Button",
+    "policy": "local",
+    "secure": false,
+    "fieldType": "button",
+    "line": 13
+  },
+  "ui.179dbaf08ecb1d31": {
+    "file": "components/voice-assistant/MeetingControls.tsx",
+    "tag": "Button",
+    "policy": "confirm",
+    "secure": false,
+    "fieldType": "button",
+    "line": 14
+  },
+  "ui.a019fabf3e58266c": {
+    "file": "components/voice-assistant/MeetingControls.tsx",
+    "tag": "Button",
+    "policy": "handoff",
+    "secure": false,
+    "fieldType": "button",
+    "line": 15
+  },
+  "ui.bd3bb0cf4d0809ee": {
+    "file": "components/voice-assistant/MeetingControls.tsx",
+    "tag": "Button",
+    "policy": "handoff",
+    "secure": false,
+    "fieldType": "button",
+    "line": 16
+  }
+}

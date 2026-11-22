@@ -49,7 +49,7 @@ export function LoginForm({
           </span>
         </div>
         <div className="grid grid-cols-3 gap-1.5">
-          <button
+          <button data-voice-control="ui.24af5b1ecc313961"
             type="button"
             onClick={() => onFillDemo("patient")}
             className="px-2 py-1.5 rounded-md bg-teal-50 border border-teal-200 text-teal-800 hover:bg-teal-100 font-medium transition-colors text-center text-xs"
@@ -57,7 +57,7 @@ export function LoginForm({
           >
             👤 Patient
           </button>
-          <button
+          <button data-voice-control="ui.8ad31c0f71393a33"
             type="button"
             onClick={() => onFillDemo("doctor")}
             className="px-2 py-1.5 rounded-md bg-blue-50 border border-blue-200 text-blue-800 hover:bg-blue-100 font-medium transition-colors text-center text-xs"
@@ -65,7 +65,7 @@ export function LoginForm({
           >
             🩺 Doctor
           </button>
-          <button
+          <button data-voice-control="ui.c731f57581a85bc3"
             type="button"
             onClick={() => onFillDemo("admin")}
             className="px-2 py-1.5 rounded-md bg-purple-50 border border-purple-200 text-purple-800 hover:bg-purple-100 font-medium transition-colors text-center text-xs"
@@ -76,35 +76,35 @@ export function LoginForm({
         </div>
       </div>
 
-      <form onSubmit={onLogin}>
+      <form data-voice-control="ui.fb32904e0489e274" onSubmit={onLogin}>
         <div className="space-y-2">
           <Label htmlFor="login-email">{t.email}</Label>
           <div className="relative">
             <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-            <Input
+            <Input data-voice-control="ui.d9a05694116d6a6e"
               id="login-email"
               type="email"
               className="pl-10"
               value={formData.email}
               onChange={(e) => onInputChange("email", e.target.value)}
               placeholder="your@email.com"
-              disabled={isLoading}
+              disabled={isLoading} aria-label={[t.email].join(' ')}
             />
           </div>
         </div>
         <div className="space-y-2 mt-4">
           <Label htmlFor="login-password">{t.password}</Label>
           <div className="relative">
-            <Input
+            <Input data-voice-control="ui.371c706ce4e0df90"
               id="login-password"
               type={showPassword ? "text" : "password"}
               className="pr-10"
               value={formData.password}
               onChange={(e) => onInputChange("password", e.target.value)}
               placeholder="Enter your password"
-              disabled={isLoading}
+              disabled={isLoading} aria-label={[t.password].join(' ')}
             />
-            <Button
+            <Button data-voice-control="ui.84a30ff88dc37f7c"
               type="button"
               variant="ghost"
               size="sm"
@@ -118,7 +118,7 @@ export function LoginForm({
 
         {/* Forgot password */}
         <div className="flex justify-end mt-2">
-          <button
+          <button data-voice-control="ui.35a8a6a989dfaa6f"
             type="button"
             onClick={onForgotPassword}
             className="text-xs text-teal-600 hover:text-teal-800 underline-offset-2 hover:underline"
@@ -128,7 +128,7 @@ export function LoginForm({
           </button>
         </div>
 
-        <Button
+        <Button data-voice-control="ui.96145683862410ac"
           type="submit"
           className="w-full mt-5 gradient-primary text-white"
           disabled={isLoading}

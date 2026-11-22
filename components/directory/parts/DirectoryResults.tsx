@@ -114,7 +114,7 @@ export function DirectoryResults({
                 : "No verified practitioners match the selected state/district filters. Try expanding your search."}
           </p>
           <div className="flex justify-center gap-2 pt-2">
-            <Button onClick={resetAllFilters} variant="outline" size="sm" className="text-xs font-semibold gap-1.5">
+            <Button data-voice-control="ui.51b8dafcd6090008" onClick={resetAllFilters} variant="outline" size="sm" className="text-xs font-semibold gap-1.5">
               <RotateCcw className="h-3 w-3" />
               <span>{t.resetFilters}</span>
             </Button>

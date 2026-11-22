@@ -50,7 +50,7 @@ export function DesktopNav({
           {doctorItems.map((item) => {
             const Icon = item.icon
             return (
-              <button
+              <button data-voice-control="ui.66bf882d0b762e2d"
                 key={item.key}
                 onClick={() => onGo(item.key)}
                 className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -64,7 +64,7 @@ export function DesktopNav({
               </button>
             )
           })}
-          <button
+          <button data-voice-control="ui.cb0a106bf21b19f5"
             onClick={() => onGo("/emergency")}
             className="flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium text-red-300 hover:bg-red-900/30 hover:text-red-200 transition-colors"
           >
@@ -80,7 +80,7 @@ export function DesktopNav({
           {adminItems.map((item) => {
             const Icon = item.icon
             return (
-              <button
+              <button data-voice-control="ui.ee8b44ed9023f131"
                 key={item.key}
                 onClick={() => onGo(item.key)}
                 className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -103,7 +103,7 @@ export function DesktopNav({
           {publicNavItems.map((item) => {
             const Icon = item.icon
             return (
-              <button
+              <button data-voice-control="ui.c05fb82c293da213"
                 key={item.key}
                 onClick={() => onGo(item.key)}
                 className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -121,7 +121,7 @@ export function DesktopNav({
           {/* My Care Dropdown — ONLY displayed to logged-in users */}
           {user && (
             <div ref={careRef} className="relative">
-              <button
+              <button data-voice-control="ui.5c92ea08ca8091ad"
                 onClick={() => setCareDropOpen((prev) => !prev)}
                 className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                   userCareItems.some((i) => isActive(i.key))
@@ -139,7 +139,7 @@ export function DesktopNav({
               {careDropOpen && (
                 <div className="absolute top-full left-0 mt-1 w-52 bg-white rounded-xl border border-gray-100 shadow-xl py-1 z-50">
                   {userCareItems.map((item) => (
-                    <button
+                    <button data-voice-control="ui.554a327d8d147076"
                       key={item.key}
                       onClick={() => onGo(item.key)}
                       className={`w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-teal-50 hover:text-teal-700 ${
@@ -156,7 +156,7 @@ export function DesktopNav({
             </div>
           )}
 
-          <button
+          <button data-voice-control="ui.e40b072bb6b47cb6"
             onClick={() => onGo("/emergency")}
             className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
               isActive("/emergency")

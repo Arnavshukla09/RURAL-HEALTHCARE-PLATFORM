@@ -34,7 +34,7 @@ export function RegisteredCampsList({
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>{upcomingCampaignsTitle}</CardTitle>
-        <Button variant="outline" size="sm" onClick={() => router.push("/camps")}>
+        <Button data-voice-control="ui.123f736a3af53e3d" variant="outline" size="sm" onClick={() => router.push("/camps")}>
           {viewAllText}
         </Button>
       </CardHeader>

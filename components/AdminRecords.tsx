@@ -153,7 +153,7 @@ export function AdminRecords({ language }: AdminRecordsProps) {
 
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <input value={search} onChange={e => setSearch(e.target.value)}
+          <input data-voice-control="ui.291f0677f3e4701e" value={search} onChange={e => setSearch(e.target.value)}
             placeholder={en ? "Search by name, email, role..." : "नाम, ईमेल, भूमिका से खोजें..."}
             className="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-white focus:outline-none focus:border-purple-400 shadow-2xs" />
         </div>
@@ -188,7 +188,7 @@ export function AdminRecords({ language }: AdminRecordsProps) {
                         </div>
                       </div>
                     </div>
-                    <button onClick={() => loadRecords(patient.id)}
+                    <button data-voice-control="ui.9c567af1de2ed33e" onClick={() => loadRecords(patient.id)}
                       className="flex items-center gap-1.5 text-purple-600 hover:text-purple-800 text-sm font-medium px-3 py-1.5 rounded-lg hover:bg-purple-50 transition-colors flex-shrink-0">
                       {isLoadingThis
                         ? <Loader2 className="h-4 w-4 animate-spin" />
@@ -229,7 +229,7 @@ export function AdminRecords({ language }: AdminRecordsProps) {
                               </span>
 
                               {/* Administration Action: Remove File / Record without exposing clinical contents */}
-                              <Button
+                              <Button data-voice-control="ui.5bbd849564782f18"
                                 size="sm"
                                 variant="outline"
                                 onClick={() => handleDelete(patient.id, rec.id)}

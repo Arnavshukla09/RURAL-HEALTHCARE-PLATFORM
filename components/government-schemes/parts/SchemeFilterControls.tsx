@@ -59,7 +59,7 @@ export function SchemeFilterControls({
         {/* Scope Navigation Tabs: All vs National vs State */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pb-3 border-b border-gray-100">
           <div className="flex items-center p-1 bg-gray-100/90 rounded-xl w-full sm:w-auto">
-            <button
+            <button data-voice-control="ui.046f0fd9fcff83eb"
               onClick={() => setScopeMode("all")}
               className={`flex-1 sm:flex-initial px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
                 scopeMode === "all"
@@ -69,7 +69,7 @@ export function SchemeFilterControls({
             >
               {en ? `All Schemes (${totalCount})` : `सभी योजनाएं (${totalCount})`}
             </button>
-            <button
+            <button data-voice-control="ui.d1f7ef4e777fa1ee"
               onClick={() => setScopeMode("national")}
               className={`flex-1 sm:flex-initial px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
                 scopeMode === "national"
@@ -79,7 +79,7 @@ export function SchemeFilterControls({
             >
               {en ? `🇮🇳 National (${nationalCount})` : `🇮🇳 केंद्रीय योजनाएं (${nationalCount})`}
             </button>
-            <button
+            <button data-voice-control="ui.3e5c93ec0861b500"
               onClick={() => setScopeMode("state")}
               className={`flex-1 sm:flex-initial px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
                 scopeMode === "state"
@@ -97,7 +97,7 @@ export function SchemeFilterControls({
               <span className="text-xs font-semibold text-gray-500 hidden md:inline">
                 {en ? "Filter State:" : "राज्य चुनें:"}
               </span>
-              <SearchableStateSelect
+              <SearchableStateSelect data-voice-control="ui.b5cb6936669b833d"
                 selectedStateCode={selectedStateCode}
                 onSelect={setSelectedStateCode}
                 language={language}
@@ -113,7 +113,7 @@ export function SchemeFilterControls({
             <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 ml-1">
               <Search className="h-4 w-4 sm:h-5 sm:w-5" />
             </div>
-            <Input
+            <Input data-voice-control="ui.83765125f3971297"
               type="text"
               placeholder={
                 en
@@ -125,7 +125,7 @@ export function SchemeFilterControls({
               className="border-0 shadow-none text-xs sm:text-sm font-medium px-3 h-9 sm:h-10 focus-visible:ring-0 placeholder:text-gray-400 text-gray-900 bg-transparent"
             />
             {searchQuery && (
-              <button
+              <button data-voice-control="ui.e86496679fcf2ed4"
                 onClick={() => setSearchQuery("")}
                 className="h-7 w-7 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100 flex items-center justify-center shrink-0 mr-1"
                 title="Clear"
@@ -144,7 +144,7 @@ export function SchemeFilterControls({
               <span>{en ? "Target Categories & Diseases:" : "श्रेणी एवं रोग अनुसार फ़िल्टर:"}</span>
             </span>
             {hasActiveFilters && (
-              <button
+              <button data-voice-control="ui.d4889df6dd9cda8e"
                 onClick={resetAllFilters}
                 className="text-xs text-gray-500 hover:text-red-600 font-semibold flex items-center gap-1"
               >
@@ -158,7 +158,7 @@ export function SchemeFilterControls({
             {CATEGORY_FILTERS.map((cat) => {
               const isSelected = selectedCategory === cat.key
               return (
-                <button
+                <button data-voice-control="ui.7af85df7d76850e8"
                   key={cat.key}
                   onClick={() => setSelectedCategory(cat.key)}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors shrink-0 border ${

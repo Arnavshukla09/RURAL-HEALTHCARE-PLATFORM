@@ -65,30 +65,30 @@ export function MedicalProfileCard({ en, onProfileSaved, onError, onSuccess }: M
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div>
             <label className="text-xs font-semibold text-gray-500 mb-1 block">{en ? "Height (cm)" : "लंबाई (cm)"}</label>
-            <input
+            <input data-voice-control="ui.fc74b6fccefef406"
               type="number"
               value={profileForm.height}
               onChange={e => setProfileForm(p => ({ ...p, height: e.target.value }))}
               className="w-full text-sm p-2 border rounded-lg focus:ring-blue-500"
-              placeholder="e.g. 170"
+              placeholder="e.g. 170" aria-label={[en ? "Height (cm)" : "लंबाई (cm)"].join(' ')}
             />
           </div>
           <div>
             <label className="text-xs font-semibold text-gray-500 mb-1 block">{en ? "Weight (kg)" : "वजन (kg)"}</label>
-            <input
+            <input data-voice-control="ui.e91ef6fa4b4f3f0d"
               type="number"
               value={profileForm.weight}
               onChange={e => setProfileForm(p => ({ ...p, weight: e.target.value }))}
               className="w-full text-sm p-2 border rounded-lg focus:ring-blue-500"
-              placeholder="e.g. 65"
+              placeholder="e.g. 65" aria-label={[en ? "Weight (kg)" : "वजन (kg)"].join(' ')}
             />
           </div>
           <div>
             <label className="text-xs font-semibold text-gray-500 mb-1 block">{en ? "Blood Group" : "रक्त समूह"}</label>
-            <select
+            <select data-voice-control="ui.aabc109bbd9f1c9f"
               value={profileForm.bloodGroup}
               onChange={e => setProfileForm(p => ({ ...p, bloodGroup: e.target.value }))}
-              className="w-full text-sm p-2 border rounded-lg focus:ring-blue-500"
+              className="w-full text-sm p-2 border rounded-lg focus:ring-blue-500" aria-label={[en ? "Blood Group" : "रक्त समूह"].join(' ')}
             >
               <option value="">{en ? "Select" : "चुनें"}</option>
               {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(bg => <option key={bg} value={bg}>{bg}</option>)}
@@ -96,17 +96,17 @@ export function MedicalProfileCard({ en, onProfileSaved, onError, onSuccess }: M
           </div>
           <div className="col-span-2 md:col-span-4">
             <label className="text-xs font-semibold text-gray-500 mb-1 block">{en ? "Chronic Conditions / Allergies" : "पुरानी बीमारियाँ / एलर्जी"}</label>
-            <input
+            <input data-voice-control="ui.ad235e05eb28177f"
               type="text"
               value={profileForm.chronic}
               onChange={e => setProfileForm(p => ({ ...p, chronic: e.target.value }))}
               className="w-full text-sm p-2 border rounded-lg focus:ring-blue-500"
-              placeholder={en ? "e.g. Asthma, Peanut allergy (leave blank if none)" : "उदा. अस्थमा, मूंगफली से एलर्जी"}
+              placeholder={en ? "e.g. Asthma, Peanut allergy (leave blank if none)" : "उदा. अस्थमा, मूंगफली से एलर्जी"} aria-label={[en ? "Chronic Conditions / Allergies" : "पुरानी बीमारियाँ / एलर्जी"].join(' ')}
             />
           </div>
         </div>
         <div className="flex justify-end">
-          <Button
+          <Button data-voice-control="ui.7144b5359770e511"
             size="sm"
             className="bg-blue-600 hover:bg-blue-700 text-white"
             disabled={savingProfile || !profileForm.height || !profileForm.weight || !profileForm.bloodGroup}

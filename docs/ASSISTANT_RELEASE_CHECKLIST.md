@@ -6,6 +6,7 @@ Updated 22 November 2026. The code is integrated into the existing project. Prod
 
 1. A floating SVG avatar appears throughout the open website/PWA. Tap it to start audio; choose one of the 13 existing languages.
 2. The guide asks one question at a time. You can speak, type or tap the large choices. Matching device voices speak replies; recognition depends on the browser/device or configured owned service.
+   “Page options” and “more options” discover the mapped website controls; “select three” operates an advertised option. Field mode supports next/previous/clear, and “new question …” leaves it. Font/contrast/read/reset settings work during other tasks. Use Cancel task or, during speech where supported, “RuralHealth new request …”. See [current controller behavior and handoffs](HANDS_FREE_IMPLEMENTATION.md).
 3. Navigation and symptom rules run locally. Serious warning signs interrupt normal tasks and show emergency guidance and a phone-call link.
 4. Booking/cancellation requires patient confirmation. The server validates identity, provider, time and the signed draft, then the avatar checks the receipt before announcing success.
 5. Use the download control while online to save public guidance, native packs and application assets. Offline bookings remain pending; an account-owned queue retries when connectivity/browser execution permits. Help is not dispatched merely by opening a phone dialler.
@@ -26,6 +27,7 @@ Run from the repository root:
 
 ```powershell
 npm run check:components
+node scripts/data/register_voice_controls.mjs
 npm run check:migrations
 npm run report:dataset
 npm run benchmark:integration
@@ -46,6 +48,8 @@ Run `npx playwright test` for browser journeys. The assistant journeys mock spee
 |---|---|
 | All 13 languages | Native speakers review instructions, emergency wording, symptom terms, names, dates/numbers and confirmation clarity; Urdu direction is correct |
 | Real speech | Test recognition and synthesis for every language on low-end Android, iOS and desktop; document unavailable voices and online/offline processing |
+| Website controller | Audit all 28 routes/modal/tab/result states; voice maps 497 reachable source templates with explicit dispositions, not 497 certified executable actions |
+| Interruption/accessibility | Verify actual font/contrast changes, cancellation during slow reads and submitted writes, corrections, wake/echo/false-confirmation handling and secure-input suspension |
 | Offline PWA | Prepare a pack, reload offline, navigate saved pages, queue a booking, reconnect and observe an actual acknowledgment; verify storage eviction/reinstallation behavior |
 | Emergency | Test local guidance, dial links, beacon interruption, stop/restart, phone lock, denied permissions and cleanup; confirm tapping does not imply dispatch |
 | Identity/privacy | Account A's drafts/queue cannot appear or execute as B; logout wipes private caches and recordings; ordinary users cannot elevate roles |

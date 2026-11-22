@@ -83,7 +83,7 @@ export function RecordItem({ rec, en, formatDate, onDelete }: RecordItemProps) {
               <span className="text-[11px] text-gray-500">{formatDate(rec.created_at)}</span>
             )}
           </div>
-          <button
+          <button data-voice-control="ui.c274f45f887de900"
             onClick={() => onDelete(rec.id)}
             className="text-red-500 hover:text-red-700 text-xs flex items-center p-1 rounded hover:bg-red-50 transition-colors shrink-0"
             title={en ? 'Delete record' : 'रिकॉर्ड हटाएं'}
@@ -99,7 +99,7 @@ export function RecordItem({ rec, en, formatDate, onDelete }: RecordItemProps) {
 
         {rec.file_url && (
           <div className="flex items-center gap-2 mt-2">
-            <a
+            <a data-voice-control="ui.aa0cfdd0132b3cba"
               href={rec.file_url}
               target="_blank"
               rel="noopener noreferrer"

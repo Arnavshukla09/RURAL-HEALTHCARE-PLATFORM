@@ -141,7 +141,7 @@ export function Step4ResultChat({
                         {displayedContent}
                         {isAssistant && (
                           <div className="mt-2.5 pt-1.5 border-t border-gray-100 flex items-center justify-between">
-                            <button
+                            <button data-voice-control="ui.0e9d21a9bfbb2085"
                               onClick={() => handleToggleMessageLanguage(i)}
                               disabled={translatingIdx === i}
                               className="inline-flex items-center gap-1.5 text-xs text-teal-700 hover:text-teal-900 bg-teal-50 hover:bg-teal-100 px-2.5 py-1 rounded-full transition-all font-medium border border-teal-200"
@@ -172,7 +172,7 @@ export function Step4ResultChat({
             </div>
 
             <div className="flex gap-2">
-              <Button
+              <Button data-voice-control="ui.5fb9c33a2d2d37a9"
                 type="button"
                 variant={isListening ? "destructive" : "outline"}
                 size="icon"
@@ -182,7 +182,7 @@ export function Step4ResultChat({
               >
                 {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
               </Button>
-              <input
+              <input data-voice-control="ui.20f34485edfccc1e"
                 type="text"
                 value={chatInput}
                 onChange={(e) => setChatInput(e.target.value)}
@@ -198,7 +198,7 @@ export function Step4ResultChat({
                 }
                 className="flex-1 border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-teal-500"
               />
-              <Button
+              <Button data-voice-control="ui.462fdfd13042c5e7"
                 onClick={() => handleChat()}
                 disabled={!chatInput.trim() || chatLoading}
                 className="gradient-primary text-white"
@@ -213,7 +213,7 @@ export function Step4ResultChat({
       {/* CTA buttons */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {(aiResult.urgency === "emergency" || aiResult.urgency === "high") && (
-          <Button
+          <Button data-voice-control="ui.9910067048b9ae79"
             variant="destructive"
             size="lg"
             className="w-full"
@@ -223,7 +223,7 @@ export function Step4ResultChat({
             {en ? "Call Emergency 108" : "आपातकाल 108 पर कॉल करें"}
           </Button>
         )}
-        <Button
+        <Button data-voice-control="ui.ff9e56f547986bd5"
           size="lg"
           className="w-full gradient-primary text-white"
           onClick={() => router.push("/consultation")}
@@ -231,11 +231,11 @@ export function Step4ResultChat({
           <Stethoscope className="mr-2 h-4 w-4" />
           {en ? "Book Consultation" : "परामर्श बुक करें"}
         </Button>
-        <Button variant="outline" size="lg" onClick={() => router.push("/locations")}>
+        <Button data-voice-control="ui.bd5025b133c7cc03" variant="outline" size="lg" onClick={() => router.push("/locations")}>
           <MapPin className="mr-2 h-4 w-4" />
           {en ? "Find Nearest Hospital" : "निकटतम अस्पताल खोजें"}
         </Button>
-        <Button variant="ghost" size="sm" onClick={onReset} className="col-span-full">
+        <Button data-voice-control="ui.2fa15f0ffb0ba399" variant="ghost" size="sm" onClick={onReset} className="col-span-full">
           <Home className="mr-2 h-4 w-4" />
           {en ? "Check Again" : "फिर से जांचें"}
         </Button>

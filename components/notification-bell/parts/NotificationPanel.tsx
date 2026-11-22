@@ -74,14 +74,14 @@ export function NotificationPanel({
         </div>
         <div className="flex items-center gap-2">
           {unreadCount > 0 && (
-            <button
+            <button data-voice-control="ui.4a849a075599620a"
               onClick={markAllRead}
               className="text-xs font-semibold text-teal-600 hover:text-teal-800"
             >
               {en ? "Mark all read" : "सभी पढ़े"}
             </button>
           )}
-          <button
+          <button data-voice-control="ui.77012b1327a82b95"
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 p-0.5"
             aria-label="Close"
@@ -112,7 +112,7 @@ export function NotificationPanel({
           </div>
         ) : (
           filteredNotifications.map((n) => (
-            <NotificationItem
+            <NotificationItem data-voice-control="ui.3e497e1d43bc4f62"
               key={n.id}
               notification={n}
               en={en}
@@ -123,7 +123,7 @@ export function NotificationPanel({
 
         {nextCursor && user && (
           <div className="p-2 border-t border-gray-100 bg-gray-50/50">
-            <button
+            <button data-voice-control="ui.c17fd2c52660d197"
               onClick={onLoadMore}
               disabled={loadingMore}
               className="w-full py-1.5 text-xs text-teal-600 hover:text-teal-800 font-medium flex items-center justify-center gap-1"

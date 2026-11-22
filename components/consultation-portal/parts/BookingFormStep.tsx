@@ -100,7 +100,7 @@ export function BookingFormStep({
               const isSunday = d.getDay() === 0
 
               return (
-                <button
+                <button data-voice-control="ui.2a7c606391ab8d64"
                   key={iso}
                   disabled={isSunday}
                   onClick={() => {
@@ -142,7 +142,7 @@ export function BookingFormStep({
                   {slots.morning.map((s) => {
                     const isBooked = bookedSlots.has(`${selectedDoctor.id}_${selectedDate}_${s.time}`)
                     return (
-                      <button
+                      <button data-voice-control="ui.171d59e2c4509e5a"
                         key={s.time}
                         disabled={!s.available || isBooked}
                         onClick={() => setSelectedSlot(s.time)}
@@ -175,7 +175,7 @@ export function BookingFormStep({
                   {slots.afternoon.map((s) => {
                     const isBooked = bookedSlots.has(`${selectedDoctor.id}_${selectedDate}_${s.time}`)
                     return (
-                      <button
+                      <button data-voice-control="ui.caaf3eea95e260f8"
                         key={s.time}
                         disabled={!s.available || isBooked}
                         onClick={() => setSelectedSlot(s.time)}
@@ -206,24 +206,24 @@ export function BookingFormStep({
               <label className="text-[11px] font-bold text-gray-600 block mb-1">
                 {en ? "Patient Full Name:" : "मरीज का पूरा नाम:"}
               </label>
-              <Input
+              <Input data-voice-control="ui.232565c09a08d49f"
                 type="text"
                 value={patientName}
                 onChange={(e) => setPatientName(e.target.value)}
                 placeholder={en ? "e.g. Ramesh Kumar" : "जैसे रमेश कुमार"}
-                className="h-9 text-xs rounded-xl"
+                className="h-9 text-xs rounded-xl" aria-label={[en ? "Patient Full Name:" : "मरीज का पूरा नाम:"].join(' ')}
               />
             </div>
             <div>
               <label className="text-[11px] font-bold text-gray-600 block mb-1">
                 {en ? "Contact Phone Number:" : "संपर्क फोन नंबर:"}
               </label>
-              <Input
+              <Input data-voice-control="ui.e071324bc6cf972d"
                 type="tel"
                 value={patientPhone}
                 onChange={(e) => setPatientPhone(e.target.value)}
                 placeholder="+91 98765 43210"
-                className="h-9 text-xs rounded-xl font-mono"
+                className="h-9 text-xs rounded-xl font-mono" aria-label={[en ? "Contact Phone Number:" : "संपर्क फोन नंबर:"].join(' ')}
               />
             </div>
           </div>
@@ -232,12 +232,12 @@ export function BookingFormStep({
             <label className="text-[11px] font-bold text-gray-600 block mb-1">
               {en ? "Reason for Consultation / Symptoms:" : "परामर्श का कारण / लक्षण:"}
             </label>
-            <textarea
+            <textarea data-voice-control="ui.47926fd9eca0a551"
               rows={2}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder={en ? "Briefly explain symptoms or medical background..." : "लक्षणों का संक्षिप्त विवरण..."}
-              className="w-full text-xs p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full text-xs p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500" aria-label={[en ? "Reason for Consultation / Symptoms:" : "परामर्श का कारण / लक्षण:"].join(' ')}
             />
           </div>
 
@@ -247,7 +247,7 @@ export function BookingFormStep({
         </div>
 
         {/* Confirm Button */}
-        <Button
+        <Button data-voice-control="ui.50e277041615e29c"
           onClick={onBook}
           disabled={loading || !selectedSlot}
           className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-xs flex items-center justify-center gap-2 mt-2"

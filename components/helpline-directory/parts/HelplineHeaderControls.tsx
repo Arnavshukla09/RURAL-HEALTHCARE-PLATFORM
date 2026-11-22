@@ -65,7 +65,7 @@ export function HelplineHeaderControls({
 
         {/* View Mode Toggle */}
         <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl self-start sm:self-auto border border-gray-200">
-          <button
+          <button data-voice-control="ui.fce8d312a283b484"
             onClick={() => setViewMode("state")}
             className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
               viewMode === "state"
@@ -76,7 +76,7 @@ export function HelplineHeaderControls({
             <MapPin className="h-3.5 w-3.5 text-red-600" />
             <span>{en ? "State View" : "राज्य अनुसार"}</span>
           </button>
-          <button
+          <button data-voice-control="ui.a207aad07da8223c"
             onClick={() => setViewMode("all")}
             className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
               viewMode === "all"
@@ -97,7 +97,7 @@ export function HelplineHeaderControls({
             <span className="text-xs font-semibold text-gray-700 flex-shrink-0">
               {en ? "Select State / UT:" : "राज्य / केंद्र शासित प्रदेश चुनें:"}
             </span>
-            <select
+            <select data-voice-control="ui.e3ec592c439db024"
               value={selectedStateCode}
               onChange={(e) => setSelectedStateCode(e.target.value)}
               className="bg-white border border-gray-300 text-gray-900 text-xs sm:text-sm rounded-lg focus:ring-red-500 focus:border-red-500 block w-full py-1.5 px-2.5 font-medium shadow-sm"
@@ -110,7 +110,7 @@ export function HelplineHeaderControls({
             </select>
           </div>
 
-          <Button
+          <Button data-voice-control="ui.a132fb6cb0d02fab"
             onClick={handleDetectLocation}
             disabled={isDetectingLocation}
             variant="outline"
@@ -130,7 +130,7 @@ export function HelplineHeaderControls({
       {/* Search Input */}
       <div className="mt-3 relative">
         <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-        <Input
+        <Input data-voice-control="ui.5620f88690e201d6"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder={
@@ -149,7 +149,7 @@ export function HelplineHeaderControls({
           const Icon = theme.icon
           const isSelected = selectedCategory === cat
           return (
-            <button
+            <button data-voice-control="ui.1acb4db87f39859d"
               key={cat}
               onClick={() => setSelectedCategory(cat)}
               className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors flex-shrink-0 border ${

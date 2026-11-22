@@ -140,7 +140,7 @@ export function FacilityPopupContent({
 
       {f.phone ? (
         <div className="pt-0.5">
-          <a
+          <a data-voice-control="ui.284c4c3866dc78af"
             href={`tel:${f.phone}`}
             className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-1 rounded border border-emerald-200 hover:bg-emerald-100 flex items-center justify-between gap-1.5"
           >
@@ -157,7 +157,7 @@ export function FacilityPopupContent({
 
       <div className="pt-1 flex flex-col gap-1">
         {isDoc && f.recordType === "clinician" && (
-          <a
+          <a data-voice-control="ui.534027ed62a120bc"
             href="/consultation"
             className="w-full text-center py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded text-xs font-semibold flex items-center justify-center gap-1"
           >
@@ -165,7 +165,7 @@ export function FacilityPopupContent({
             <span>{en ? "Book Consultation" : "परामर्श बुक करें"}</span>
           </a>
         )}
-        <Button
+        <Button data-voice-control="ui.5bb33774e8bc69e5"
           size="sm"
           variant="outline"
           className="w-full h-7 text-xs"
@@ -180,7 +180,7 @@ export function FacilityPopupContent({
             : en ? "Show Route" : "मार्ग दिखाएं"}
         </Button>
         {isNoRoute && (
-          <a
+          <a data-voice-control="ui.962e568e751796f9"
             href={`https://www.google.com/maps/dir/?api=1&destination=${f.lat},${f.lon}`}
             target="_blank"
             rel="noopener noreferrer"

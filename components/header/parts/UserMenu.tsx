@@ -73,7 +73,7 @@ export function UserMenu({
 
       {/* Multi-Language Dropdown */}
       <div ref={langRef} className="relative hidden sm:block">
-        <button
+        <button data-voice-control="ui.0fc8b60655e6d8dd"
           onClick={() => setLangDropOpen((prev) => !prev)}
           className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium border rounded-md transition-colors ${
             role !== "patient"
@@ -96,7 +96,7 @@ export function UserMenu({
               {en ? "Choose Language / भाषा चुनें" : "भाषा चुनें / Choose Language"}
             </div>
             {SUPPORTED_LANGUAGES.map((l) => (
-              <button
+              <button data-voice-control="ui.6b905cd00f040aee"
                 key={l.code}
                 onClick={() => {
                   setLanguage(l.code)
@@ -124,7 +124,7 @@ export function UserMenu({
 
       {user ? (
         <div ref={userRef} className="relative hidden sm:block">
-          <button
+          <button data-voice-control="ui.b676390641cad373"
             onClick={() => setUserDropOpen((prev) => !prev)}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm font-medium transition-colors max-w-36 ${
               role !== "patient"
@@ -157,7 +157,7 @@ export function UserMenu({
                   {badge.label}
                 </span>
               </div>
-              <button
+              <button data-voice-control="ui.e026c45828ae746a"
                 onClick={() => onGo("/dashboard")}
                 className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
               >
@@ -165,31 +165,31 @@ export function UserMenu({
               </button>
               {role === "doctor" && (
                 <>
-                  <button
+                  <button data-voice-control="ui.7b956c377b82c0b5"
                     onClick={() => onGo("/doctor/patients")}
                     className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
                   >
                     {en ? "Patient Records" : "मरीज़ रिकॉर्ड"}
                   </button>
-                  <button
+                  <button data-voice-control="ui.dc96e66960c96c7c"
                     onClick={() => onGo("/doctor/requests")}
                     className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
                   >
                     {en ? "Appointment Requests" : "नई अनुरोध"}
                   </button>
-                  <button
+                  <button data-voice-control="ui.dcfb72b70dbe4560"
                     onClick={() => onGo("/appointments")}
                     className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
                   >
                     {en ? "Appointments" : "अपॉइंटमेंट"}
                   </button>
-                  <button
+                  <button data-voice-control="ui.b53120ce220a3363"
                     onClick={() => onGo("/directory")}
                     className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
                   >
                     {en ? "Find Doctors" : "डॉक्टर खोजें"}
                   </button>
-                  <button
+                  <button data-voice-control="ui.bd4209cb75b3e89a"
                     onClick={() => onGo("/locations")}
                     className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
                   >
@@ -199,43 +199,43 @@ export function UserMenu({
               )}
               {role === "admin" && (
                 <>
-                  <button
+                  <button data-voice-control="ui.58c47c0a0e56e69e"
                     onClick={() => onGo("/admin/users")}
                     className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
                   >
                     {en ? "Manage Users" : "उपयोगकर्ता प्रबंधन"}
                   </button>
-                  <button
+                  <button data-voice-control="ui.2bbf473ee899f2ea"
                     onClick={() => onGo("/admin/campaigns")}
                     className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
                   >
                     {en ? "Campaigns" : "अभियान"}
                   </button>
-                  <button
+                  <button data-voice-control="ui.619f066a13f32c6a"
                     onClick={() => onGo("/admin/appointments")}
                     className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
                   >
                     {en ? "Appointments" : "अपॉइंटमेंट"}
                   </button>
-                  <button
+                  <button data-voice-control="ui.1de631a95db634df"
                     onClick={() => onGo("/admin/records")}
                     className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
                   >
                     {en ? "Records" : "रिकॉर्ड"}
                   </button>
-                  <button
+                  <button data-voice-control="ui.c586a27c38836477"
                     onClick={() => onGo("/directory")}
                     className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
                   >
                     {en ? "Find Doctors" : "डॉक्टर खोजें"}
                   </button>
-                  <button
+                  <button data-voice-control="ui.c3a9069f64125cfc"
                     onClick={() => onGo("/locations")}
                     className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
                   >
                     {en ? "Hospitals" : "अस्पताल"}
                   </button>
-                  <button
+                  <button data-voice-control="ui.ad890ba90b0c9548"
                     onClick={() => onGo("/admin/notifications")}
                     className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
                   >
@@ -244,7 +244,7 @@ export function UserMenu({
                 </>
               )}
               <div className="border-t border-gray-50 mt-1">
-                <button
+                <button data-voice-control="ui.291ffead52c10327"
                   onClick={onLogout}
                   className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"
                 >
@@ -256,15 +256,15 @@ export function UserMenu({
           )}
         </div>
       ) : (
-        <Link href="/login" className="hidden sm:inline-flex">
-          <Button size="sm" className="gradient-primary text-white text-xs">
+        <Link data-voice-control="ui.55f99e1358361bd8" href="/login" className="hidden sm:inline-flex">
+          <Button data-voice-control="ui.9a7558a5f5884bfd" size="sm" className="gradient-primary text-white text-xs">
             {en ? "Login" : "लॉगिन"}
           </Button>
         </Link>
       )}
 
       {/* Mobile Direct 1-Tap SOS Button */}
-      <Button
+      <Button data-voice-control="ui.c6977dd8ab9d9977"
         variant="destructive"
         size="sm"
         onClick={() => onGo("/emergency")}
@@ -275,7 +275,7 @@ export function UserMenu({
         <span>SOS</span>
       </Button>
 
-      <Button
+      <Button data-voice-control="ui.14efcc2bd8643201"
         variant="outline"
         size="sm"
         className={`md:hidden ${

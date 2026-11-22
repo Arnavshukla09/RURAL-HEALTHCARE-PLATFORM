@@ -315,7 +315,7 @@ export function NotificationBell({ user, language }: NotificationBellProps) {
 
   return (
     <div ref={panelRef} className="relative">
-      <button
+      <button data-voice-control="ui.1f851802caaf2ec7"
         onClick={handleOpen}
         className={`relative p-2 rounded-lg transition-colors ${
           isDarkNav
@@ -338,7 +338,7 @@ export function NotificationBell({ user, language }: NotificationBellProps) {
           {mounted &&
             createPortal(
               <div className="md:hidden">
-                <div
+                <div data-voice-control="ui.ed3858c2824d6d6e"
                   className="fixed inset-0 bg-black/40 z-[90] backdrop-blur-xs"
                   onClick={() => setOpen(false)}
                   aria-hidden="true"

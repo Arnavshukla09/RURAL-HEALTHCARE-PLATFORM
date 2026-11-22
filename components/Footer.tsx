@@ -122,25 +122,25 @@ export function Footer() {
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">{t.quickLinks}</h3>
             <div className="space-y-2">
-              <button 
+              <button data-voice-control="ui.afacba94da980dcb"
                 onClick={() => router.push('/')}
                 className="block text-gray-300 hover:text-white transition-colors text-sm"
               >
                 {language === 'en' ? 'Home' : 'होम'}
               </button>
-              <button 
+              <button data-voice-control="ui.44751042f49f9812"
                 onClick={() => router.push('/directory')}
                 className="block text-gray-300 hover:text-white transition-colors text-sm"
               >
                 {language === 'en' ? 'Directory' : 'निर्देशिका'}
               </button>
-              <button 
+              <button data-voice-control="ui.a40b1fdabf7f265b"
                 onClick={() => router.push('/camps')}
                 className="block text-gray-300 hover:text-white transition-colors text-sm"
               >
                 {language === 'en' ? 'Campaigns' : 'अभियान'}
               </button>
-              <button 
+              <button data-voice-control="ui.46702260116d4b71"
                 onClick={() => router.push('/consultation')}
                 className="block text-gray-300 hover:text-white transition-colors text-sm"
               >
@@ -155,7 +155,7 @@ export function Footer() {
             <div className="space-y-2">
               {(['about', 'faq', 'privacy', 'contact'] as const).map(key => (
                 <div key={key}>
-                  <button
+                  <button data-voice-control="ui.29c8c51497c45eb3"
                     onClick={() => toggleSection(key)}
                     className="flex items-center gap-1 text-gray-300 hover:text-white transition-colors text-sm"
                   >
@@ -169,7 +169,7 @@ export function Footer() {
                   )}
                 </div>
               ))}
-              <a
+              <a data-voice-control="ui.33b2e8bf683bddae"
                 href="mailto:support@ruralhealth.in?subject=Feedback"
                 className="block text-gray-300 hover:text-white transition-colors text-sm"
               >
@@ -182,18 +182,18 @@ export function Footer() {
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">{language === 'en' ? 'Connect' : 'जुड़ें'}</h3>
             <div className="flex space-x-3">
-              <a href={socialLinks.GitHub} target="_blank" rel="noopener noreferrer">
-                <Button size="sm" variant="outline" className="border-gray-600 hover:bg-gray-800">
+              <a data-voice-control="ui.06caae6ac8914183" href={socialLinks.GitHub} target="_blank" rel="noopener noreferrer">
+                <Button data-voice-control="ui.31fc52b1e64536ec" size="sm" variant="outline" className="border-gray-600 hover:bg-gray-800">
                   <ExternalLink className="h-4 w-4 mr-1.5" /> GitHub
                 </Button>
               </a>
-              <a href={socialLinks.LinkedIn} target="_blank" rel="noopener noreferrer">
-                <Button size="sm" variant="outline" className="border-gray-600 hover:bg-gray-800">
+              <a data-voice-control="ui.b68f0f516a7ab484" href={socialLinks.LinkedIn} target="_blank" rel="noopener noreferrer">
+                <Button data-voice-control="ui.19995574bc8e084b" size="sm" variant="outline" className="border-gray-600 hover:bg-gray-800">
                   <Linkedin className="h-4 w-4 mr-1.5" /> LinkedIn
                 </Button>
               </a>
-              <a href={socialLinks.Email}>
-                <Button size="sm" variant="outline" className="border-gray-600 hover:bg-gray-800">
+              <a data-voice-control="ui.971189deea086038" href={socialLinks.Email}>
+                <Button data-voice-control="ui.747f44182cd4fa25" size="sm" variant="outline" className="border-gray-600 hover:bg-gray-800">
                   <Mail className="h-4 w-4 mr-1.5" /> Email
                 </Button>
               </a>

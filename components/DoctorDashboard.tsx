@@ -183,12 +183,12 @@ export function DoctorDashboard({ user, language, setJitsiRoom }: DoctorDashboar
                           const btnLabel = isChat ? (en ? "Chat" : "चैट") : isAudio ? (en ? "Join Call" : "कॉल जॉइन") : (en ? "Join Video" : "वीडियो जॉइन")
                           const BtnIcon = isChat ? MessageSquare : isAudio ? Phone : Video
                           return (
-                            <Button size="sm" className="flex-1 gradient-primary text-white h-7 text-xs" onClick={() => joinCall(appt.id)}>
+                            <Button data-voice-control="ui.1a11de9ec80769f1" size="sm" className="flex-1 gradient-primary text-white h-7 text-xs" onClick={() => joinCall(appt.id)}>
                               <BtnIcon className="h-3 w-3 mr-1" />{btnLabel}
                             </Button>
                           )
                         })()}
-                        <Button size="sm" variant="outline" className="flex-1 h-7 text-xs text-green-600 border-green-200" onClick={() => markDone(appt.id)}>
+                        <Button data-voice-control="ui.c59e9bd3c90987a9" size="sm" variant="outline" className="flex-1 h-7 text-xs text-green-600 border-green-200" onClick={() => markDone(appt.id)}>
                           <CheckCircle className="h-3 w-3 mr-1" />{en ? "Done" : "पूर्ण"}
                         </Button>
                       </div>
@@ -197,7 +197,7 @@ export function DoctorDashboard({ user, language, setJitsiRoom }: DoctorDashboar
                 })
               )}
               {nextCursor && (
-                <Button
+                <Button data-voice-control="ui.eccd70e342877b58"
                   variant="outline"
                   className="w-full mt-2"
                   onClick={handleLoadMoreAppointments}
@@ -265,7 +265,7 @@ export function DoctorDashboard({ user, language, setJitsiRoom }: DoctorDashboar
               ].map((action, i) => {
                 const Icon = action.icon
                 return (
-                  <button key={i} onClick={() => router.push(`/${action.page}`)}
+                  <button data-voice-control="ui.791db3e2546a70f2" key={i} onClick={() => router.push(`/${action.page}`)}
                     className="flex flex-col items-center gap-2 p-3 rounded-xl border border-gray-200 bg-white hover:border-teal-300 hover:bg-teal-50 transition-all text-center">
                     <Icon className="h-5 w-5 text-teal-600" />
                     <span className="text-xs font-medium text-gray-700">{action.label}</span>

@@ -34,7 +34,7 @@ export function PatientCard({
   onToggleRecords,
 }: PatientCardProps) {
   return (
-    <Card className="overflow-hidden hover:shadow-md transition-shadow">
+    <Card data-voice-context={`${patient.first_name || ""} ${patient.last_name || ""}`} data-voice-entity={patient.id} className="overflow-hidden hover:shadow-md transition-shadow">
       <CardContent className="p-4">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -105,7 +105,7 @@ export function PatientCard({
             </div>
           </div>
 
-          <button
+          <button data-voice-control="ui.7955839421acfb23"
             onClick={onToggleRecords}
             disabled={isLoadingRec}
             className="flex items-center gap-1.5 text-teal-600 hover:text-teal-800 text-sm font-medium px-3 py-1.5 rounded-lg hover:bg-teal-50 transition-colors shrink-0 disabled:opacity-50"
@@ -166,7 +166,7 @@ export function PatientCard({
                     {rec.content || rec.notes || "—"}
                   </p>
                   {rec.file_url && (
-                    <a
+                    <a data-voice-control="ui.404d0afdcb79e88e"
                       href={rec.file_url}
                       target="_blank"
                       rel="noopener noreferrer"

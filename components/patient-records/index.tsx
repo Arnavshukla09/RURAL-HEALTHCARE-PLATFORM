@@ -271,13 +271,13 @@ export function PatientRecords({ language, user }: PatientRecordsProps) {
               <h2 className="text-xl font-bold text-teal-800 mb-2">{t.firstTimeTitle}</h2>
               <p className="text-sm text-teal-700/80 max-w-md mx-auto mb-6">{t.firstTimeDesc}</p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Button
+                <Button data-voice-control="ui.6406b0a9d7a62bc0"
                   onClick={() => { setShowAdd(true); setAddMode('upload') }}
                   className="gradient-primary text-white gap-2 text-sm"
                 >
                   <Upload className="h-4 w-4" />{t.uploadFile}
                 </Button>
-                <Button
+                <Button data-voice-control="ui.c4c92f9226dc10d3"
                   variant="outline"
                   onClick={() => { setShowAdd(true); setAddMode('manual') }}
                   className="gap-2 text-sm border-teal-300 text-teal-700 hover:bg-teal-50"
@@ -292,7 +292,7 @@ export function PatientRecords({ language, user }: PatientRecordsProps) {
         {/* Add Button toolbar */}
         {!isFirstTime && !showAdd && (
           <div className="flex justify-end gap-2">
-            <Button
+            <Button data-voice-control="ui.800c77735fffd0a0"
               size="sm"
               variant="outline"
               onClick={() => { setShowAdd(true); setAddMode('upload') }}
@@ -300,7 +300,7 @@ export function PatientRecords({ language, user }: PatientRecordsProps) {
             >
               <Upload className="h-4 w-4" />{en ? 'Upload' : 'अपलोड'}
             </Button>
-            <Button
+            <Button data-voice-control="ui.55caf7dd4adbf1b6"
               size="sm"
               onClick={() => { setShowAdd(true); setAddMode('manual') }}
               className="gap-1.5 gradient-primary text-white"
@@ -372,7 +372,7 @@ export function PatientRecords({ language, user }: PatientRecordsProps) {
                 </div>
               )}
               {nextCursor && (
-                <Button
+                <Button data-voice-control="ui.6b32fe047d80d784"
                   variant="outline"
                   className="w-full mt-3"
                   onClick={handleLoadMoreRecords}

@@ -38,6 +38,10 @@ export function StrobeBeaconOverlay({
 }: StrobeBeaconOverlayProps) {
   return (
     <div
+      role="dialog"
+      data-emergency-beacon="true"
+      aria-modal="true"
+      aria-label={t.beaconActive}
       className={`fixed inset-0 z-50 flex flex-col items-center justify-center p-6 text-center transition-colors duration-100 ${
         strobeLightOn ? "bg-red-600 text-white" : "bg-black text-yellow-300"
       }`}
@@ -62,7 +66,7 @@ export function StrobeBeaconOverlay({
 
         {/* Hardware Toggles: Siren & Camera LED Flashlight */}
         <div className="grid grid-cols-2 gap-3">
-          <Button
+          <Button data-voice-control="ui.2596832a19cdfa1e"
             onClick={onToggleSiren}
             className={`font-bold py-3 text-xs sm:text-sm rounded-xl ${
               sirenActive ? "bg-yellow-400 text-black hover:bg-yellow-300" : "bg-gray-800 text-white"
@@ -72,7 +76,7 @@ export function StrobeBeaconOverlay({
             <span>{sirenActive ? t.sirenOff : t.sirenOn}</span>
           </Button>
 
-          <Button
+          <Button data-voice-control="ui.96e48bb0faf7fbf2"
             onClick={onToggleTorch}
             className={`font-bold py-3 text-xs sm:text-sm rounded-xl ${
               torchActive ? "bg-yellow-400 text-black hover:bg-yellow-300" : "bg-gray-800 text-white"
@@ -84,7 +88,7 @@ export function StrobeBeaconOverlay({
         </div>
 
         {/* Dismiss / Stop Everything Button */}
-        <Button
+        <Button data-voice-control="ui.895b87aee2fc4139"
           onClick={onStopAllAlarms}
           className="w-full bg-white text-black hover:bg-gray-200 font-black text-lg py-4 rounded-xl shadow-2xl"
         >

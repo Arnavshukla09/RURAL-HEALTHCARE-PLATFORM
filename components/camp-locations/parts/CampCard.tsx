@@ -186,7 +186,7 @@ export function CampCard({
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-2.5 pt-2.5 border-t border-gray-100 items-stretch sm:items-center justify-between">
           <div className="flex flex-wrap items-center gap-1.5">
-            <Button
+            <Button data-voice-control="ui.356cef4a34f39efd"
               variant="outline"
               size="sm"
               onClick={() => onCall(camp)}
@@ -198,7 +198,7 @@ export function CampCard({
               <span className="font-bold text-blue-700 ml-1 select-all">{camp.contact}</span>
             </Button>
 
-            <Button
+            <Button data-voice-control="ui.1ffc1b5829ecc50c"
               variant="outline"
               size="sm"
               onClick={() => onCopyNumber(camp.contact)}
@@ -209,7 +209,7 @@ export function CampCard({
               <span className="text-[11px] font-medium">{language === "en" ? "Copy" : "कॉपी"}</span>
             </Button>
 
-            <Button
+            <Button data-voice-control="ui.2808abf04980a4e3"
               variant="outline"
               size="sm"
               onClick={() => onShare(camp)}
@@ -220,7 +220,7 @@ export function CampCard({
             </Button>
 
             {camp.address && (
-              <Button
+              <Button data-voice-control="ui.6c400021b6050090"
                 variant="outline"
                 size="sm"
                 onClick={() =>
@@ -241,7 +241,7 @@ export function CampCard({
           </div>
 
           <div className="flex flex-col items-stretch sm:items-end">
-            <Button
+            <Button data-voice-control="ui.b543bbcf5692b747"
               size="sm"
               onClick={() => onRegister(camp)}
               disabled={registering === camp.id || isRegistered}

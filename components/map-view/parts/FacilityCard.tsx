@@ -115,6 +115,8 @@ export function FacilityCard({
 
   return (
     <Card
+      data-voice-context={f.name}
+      data-voice-entity={f.id}
       className={`border hover:shadow-md transition-all hover:border-blue-300 bg-white ${
         isDoc ? "border-purple-200" : ""
       }`}
@@ -215,7 +217,7 @@ export function FacilityCard({
         <div className="flex items-center justify-between gap-1.5 pt-2 border-t border-gray-100 mt-auto">
           <div className="flex items-center gap-1">
             {f.phone ? (
-              <a
+              <a data-voice-control="ui.3f3ede1b01d49393"
                 href={`tel:${f.phone}`}
                 className="h-7 px-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors"
                 title={f.phone}
@@ -230,7 +232,7 @@ export function FacilityCard({
             )}
 
             {isDoc && f.recordType === "clinician" && (
-              <a
+              <a data-voice-control="ui.7fc4b88bf7982c43"
                 href="/consultation"
                 className="h-7 px-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors"
               >
@@ -240,7 +242,7 @@ export function FacilityCard({
             )}
           </div>
 
-          <Button
+          <Button data-voice-control="ui.0a16e5d6b15178d5"
             size="sm"
             variant="outline"
             className="h-7 text-xs px-2 text-blue-700 hover:bg-blue-50 border-blue-200 flex items-center gap-1 shrink-0"

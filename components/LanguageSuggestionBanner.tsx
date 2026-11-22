@@ -107,20 +107,20 @@ export function LanguageSuggestionBanner() {
         </div>
 
         <div className="flex items-center gap-2 ml-auto">
-          <button
+          <button data-voice-control="ui.acab67c248fc4ab4"
             onClick={handleAccept}
             className="flex items-center gap-1 px-3 py-1 bg-white text-teal-900 rounded-md text-xs font-semibold hover:bg-teal-50 transition shadow-sm"
           >
             <Check className="h-3.5 w-3.5 text-teal-700" />
             <span>Switch to {meta.nativeName}</span>
           </button>
-          <button
+          <button data-voice-control="ui.45c346c083948b8a"
             onClick={handleDismiss}
             className="px-2.5 py-1 text-xs text-teal-200 hover:text-white transition"
           >
             Keep {language === "hi" ? "हिन्दी" : "English"}
           </button>
-          <button
+          <button data-voice-control="ui.a34b98fc0dab5184"
             onClick={handleDismiss}
             className="p-1 text-teal-300 hover:text-white rounded transition"
             aria-label="Dismiss language suggestion"

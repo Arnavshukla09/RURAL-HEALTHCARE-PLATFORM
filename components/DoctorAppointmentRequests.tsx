@@ -136,7 +136,7 @@ export function DoctorAppointmentRequests({ language, setJitsiRoom }: DoctorAppo
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="flex rounded-xl bg-white border border-gray-200 p-1 gap-1">
             {(["pending", "approved", "all"] as const).map(t => (
-              <button key={t} onClick={() => setTab(t)}
+              <button data-voice-control="ui.a0745c0d60dc5ee1" key={t} onClick={() => setTab(t)}
                 className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${tab === t ? "bg-teal-600 text-white" : "text-gray-600 hover:bg-gray-100"}`}>
                 {t === "pending" ? (en ? "Pending" : "लंबित") : t === "approved" ? (en ? "Completed" : "पूर्ण") : (en ? "All" : "सभी")}
                 <span className="ml-1.5 text-xs opacity-75">
@@ -149,7 +149,7 @@ export function DoctorAppointmentRequests({ language, setJitsiRoom }: DoctorAppo
           </div>
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <input value={search} onChange={e => setSearch(e.target.value)}
+            <input data-voice-control="ui.08ffaa6f90a600ae" value={search} onChange={e => setSearch(e.target.value)}
               placeholder={en ? "Search by patient name or notes..." : "मरीज़ या नोट्स से खोजें..."}
               className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-teal-400" />
           </div>
@@ -205,7 +205,7 @@ export function DoctorAppointmentRequests({ language, setJitsiRoom }: DoctorAppo
                         {p?.email && <p className="text-xs text-gray-400 mt-0.5">{p.email}</p>}
                       </div>
                     </div>
-                    <button onClick={() => setExpanded(isExpanded ? null : appt.id)}
+                    <button data-voice-control="ui.6bf9f7eef6480b99" onClick={() => setExpanded(isExpanded ? null : appt.id)}
                       className="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors">
                       {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
                     </button>
@@ -226,7 +226,7 @@ export function DoctorAppointmentRequests({ language, setJitsiRoom }: DoctorAppo
                             <p className="text-xs font-semibold text-purple-700">{en ? "Consultation Room" : "परामर्श रूम"}</p>
                             <p className="text-xs text-purple-500 font-mono">{appt.teleconsult_room_id}</p>
                           </div>
-                          <Button size="sm" className="bg-purple-600 hover:bg-purple-700 text-white h-8 text-xs"
+                          <Button data-voice-control="ui.e2424bfddc156e77" size="sm" className="bg-purple-600 hover:bg-purple-700 text-white h-8 text-xs"
                             onClick={() => {
                               router.push(`/teleconsult/room?appointmentId=${encodeURIComponent(appt.id)}&lang=${encodeURIComponent(language)}`)
                             }}>
@@ -240,13 +240,13 @@ export function DoctorAppointmentRequests({ language, setJitsiRoom }: DoctorAppo
                       <div className="flex flex-wrap gap-2">
                         {appt.status === "scheduled" && !isExpired(appt) && (
                           <>
-                            <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white h-8 text-xs flex-1"
+                            <Button data-voice-control="ui.46c19da2ee343aeb" size="sm" className="bg-green-600 hover:bg-green-700 text-white h-8 text-xs flex-1"
                               disabled={updating === appt.id}
                               onClick={() => updateStatus(appt.id, "completed")}>
                               {updating === appt.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle className="h-3 w-3 mr-1" />}
                               {en ? "Mark Completed" : "पूर्ण करें"}
                             </Button>
-                            <Button size="sm" variant="outline" className="border-red-200 text-red-600 hover:bg-red-50 h-8 text-xs flex-1"
+                            <Button data-voice-control="ui.c51bd7b201a28656" size="sm" variant="outline" className="border-red-200 text-red-600 hover:bg-red-50 h-8 text-xs flex-1"
                               disabled={updating === appt.id}
                               onClick={() => updateStatus(appt.id, "cancelled")}>
                               <XCircle className="h-3 w-3 mr-1" />
@@ -261,7 +261,7 @@ export function DoctorAppointmentRequests({ language, setJitsiRoom }: DoctorAppo
                           </div>
                         )}
                         {appt.status === "cancelled" && (
-                          <Button size="sm" className="bg-teal-600 hover:bg-teal-700 text-white h-8 text-xs"
+                          <Button data-voice-control="ui.703651f2b8ae5f39" size="sm" className="bg-teal-600 hover:bg-teal-700 text-white h-8 text-xs"
                             disabled={updating === appt.id}
                             onClick={() => updateStatus(appt.id, "scheduled")}>
                             {en ? "Re-schedule" : "पुनः शेड्यूल"}
@@ -281,7 +281,7 @@ export function DoctorAppointmentRequests({ language, setJitsiRoom }: DoctorAppo
             )
           })}
           {nextCursor && (
-            <Button
+            <Button data-voice-control="ui.9d00efa97200d8e5"
               variant="outline"
               className="w-full mt-3"
               onClick={handleLoadMore}

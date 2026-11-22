@@ -75,7 +75,7 @@ function TeleconsultRoomContent() {
         {loading ? <Loader2 className="h-8 w-8 animate-spin mx-auto text-teal-600" /> : <Video className="h-8 w-8 mx-auto text-red-600" />}
         <h1 className="text-lg font-bold">{loading ? (en ? "Checking appointment access…" : "अपॉइंटमेंट प्रवेश जांच जारी है…") : (en ? "Unable to join consultation" : "परामर्श में प्रवेश नहीं हो सका")}</h1>
         {!loading && <p role="alert" className="text-sm text-red-700">{accessError}</p>}
-        <Button onClick={() => router.push("/appointments")}>{en ? "My Appointments" : "मेरी अपॉइंटमेंट"}</Button>
+        <Button data-voice-control="ui.5afac2630c61a51d" onClick={() => router.push("/appointments")}>{en ? "My Appointments" : "मेरी अपॉइंटमेंट"}</Button>
       </CardContent></Card>
     </div>
   )
@@ -84,16 +84,16 @@ function TeleconsultRoomContent() {
     <div className="min-h-screen bg-slate-950 text-white p-3 sm:p-4 flex flex-col gap-3">
       <header className="max-w-6xl mx-auto w-full flex flex-wrap justify-between gap-3 bg-white/10 p-3 rounded-2xl">
         <div className="flex gap-3 items-center">
-          <Button variant="ghost" size="sm" onClick={() => setShowRxModal(true)}><ArrowLeft className="h-4 w-4 mr-1" />{en ? "Exit" : "बाहर"}</Button>
+          <Button data-voice-control="ui.d90dca3736821a38" variant="ghost" size="sm" onClick={() => setShowRxModal(true)}><ArrowLeft className="h-4 w-4 mr-1" />{en ? "Exit" : "बाहर"}</Button>
           {isDoctor ? <Stethoscope className="h-5 w-5 text-teal-300" /> : <User className="h-5 w-5 text-teal-300" />}
           <div><p className="font-bold text-sm">{activeRoom.participantName}</p><p className="text-xs text-teal-200 flex gap-1 items-center"><ShieldCheck className="h-3 w-3" />{en ? "Appointment access verified" : "अपॉइंटमेंट प्रवेश सत्यापित"}</p></div>
           <Badge>{isDoctor ? (en ? "Clinician" : "चिकित्सक") : (en ? "Patient" : "मरीज")}</Badge>
         </div>
         <div className="flex gap-2 flex-wrap">
-          <Button size="sm" variant="outline" className="text-slate-900" onClick={() => setIs2GMode(!is2GMode)}>{is2GMode ? <WifiOff className="h-4 w-4 mr-1" /> : <Wifi className="h-4 w-4 mr-1" />}{is2GMode ? (en ? "Audio mode" : "आवाज मोड") : (en ? "Use audio" : "आवाज प्रयोग करें")}</Button>
-          <Button size="sm" onClick={() => setShowRxModal(true)}><FileText className="h-4 w-4 mr-1" />{isDoctor ? (en ? "Consultation record" : "परामर्श रिकॉर्ड") : (en ? "My notes" : "मेरे नोट")}</Button>
-          <Button size="sm" onClick={copyLink}>{copied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}{en ? "Copy link" : "लिंक कॉपी"}</Button>
-          <Button size="sm" onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(`Consultation appointment: ${currentUrl}\nThe assigned participants must sign in to join.`)}`, "_blank", "noopener,noreferrer")}><Share2 className="h-4 w-4 mr-1" />WhatsApp</Button>
+          <Button data-voice-control="ui.6518dac067db160e" size="sm" variant="outline" className="text-slate-900" onClick={() => setIs2GMode(!is2GMode)}>{is2GMode ? <WifiOff className="h-4 w-4 mr-1" /> : <Wifi className="h-4 w-4 mr-1" />}{is2GMode ? (en ? "Audio mode" : "आवाज मोड") : (en ? "Use audio" : "आवाज प्रयोग करें")}</Button>
+          <Button data-voice-control="ui.be08763567e9dfd9" size="sm" onClick={() => setShowRxModal(true)}><FileText className="h-4 w-4 mr-1" />{isDoctor ? (en ? "Consultation record" : "परामर्श रिकॉर्ड") : (en ? "My notes" : "मेरे नोट")}</Button>
+          <Button data-voice-control="ui.0b61b53b447eb482" size="sm" onClick={copyLink}>{copied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}{en ? "Copy link" : "लिंक कॉपी"}</Button>
+          <Button data-voice-control="ui.9b59fb541fe27b46" size="sm" onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(`Consultation appointment: ${currentUrl}\nThe assigned participants must sign in to join.`)}`, "_blank", "noopener,noreferrer")}><Share2 className="h-4 w-4 mr-1" />WhatsApp</Button>
         </div>
       </header>
       {accessError && <p role="alert" className="text-amber-200 max-w-6xl mx-auto">{accessError}</p>}

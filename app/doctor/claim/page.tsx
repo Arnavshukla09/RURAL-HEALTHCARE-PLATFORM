@@ -208,7 +208,7 @@ function DoctorClaimContent() {
               <p className="text-xs text-emerald-700">
                 Your credentials have been validated by the medical administration. You can access your Doctor Dashboard anytime.
               </p>
-              <Button
+              <Button data-voice-control="ui.fe9c8f5071bfb386"
                 onClick={() => router.push("/doctor/dashboard")}
                 className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs h-10 px-6 rounded-xl shadow-md mt-2"
               >
@@ -235,7 +235,7 @@ function DoctorClaimContent() {
               <p className="text-[11px] text-gray-500">
                 You will receive an SMS confirmation once approved. For immediate clinical emergencies, please call the state helpline.
               </p>
-              <Button
+              <Button data-voice-control="ui.30100d792ef2da4b"
                 variant="outline"
                 size="sm"
                 onClick={() => router.push("/")}
@@ -246,7 +246,7 @@ function DoctorClaimContent() {
             </div>
           ) : (
             /* Submission Form */
-            <form onSubmit={handleClaimSubmit} className="space-y-4">
+            <form data-voice-control="ui.fa34a0eeff711d5d" onSubmit={handleClaimSubmit} className="space-y-4">
               <div className="p-4 rounded-2xl bg-purple-50/70 border border-purple-200 space-y-3">
                 <div className="flex items-start gap-3">
                   <Avatar className="h-12 w-12 border border-purple-300 shrink-0">
@@ -276,11 +276,11 @@ function DoctorClaimContent() {
                   <label className="font-bold text-slate-700 block mb-1">
                     NMC / State Medical Council Reg No:
                   </label>
-                  <Input
+                  <Input data-voice-control="ui.0047ee6b17d18e88"
                     value={councilRegInput}
                     onChange={(e) => setCouncilRegInput(e.target.value)}
                     className="h-9 text-xs bg-white rounded-xl"
-                    required
+                    required aria-label={["NMC / State Medical Council Reg No:"].join(' ')}
                   />
                 </div>
 
@@ -288,12 +288,12 @@ function DoctorClaimContent() {
                   <label className="font-bold text-slate-700 block mb-1">
                     Doctor Mobile Phone (for OTP & Alerts):
                   </label>
-                  <Input
+                  <Input data-voice-control="ui.ac40c9d7f6e9fe92"
                     placeholder="e.g. 9876543210"
                     value={mobileNumber}
                     onChange={(e) => setMobileNumber(e.target.value)}
                     className="h-9 text-xs bg-white rounded-xl"
-                    required
+                    required aria-label={["Doctor Mobile Phone (for OTP & Alerts):"].join(' ')}
                   />
                 </div>
 
@@ -301,12 +301,12 @@ function DoctorClaimContent() {
                   <label className="font-bold text-slate-700 block mb-1">
                     Professional / Hospital Email Address:
                   </label>
-                  <Input
+                  <Input data-voice-control="ui.19576ca010dca3ec"
                     type="email"
                     placeholder="e.g. dr.goenka@aiimsbhopal.edu.in"
                     value={emailAddress}
                     onChange={(e) => setEmailAddress(e.target.value)}
-                    className="h-9 text-xs bg-white rounded-xl"
+                    className="h-9 text-xs bg-white rounded-xl" aria-label={["Professional / Hospital Email Address:"].join(' ')}
                   />
                 </div>
 
@@ -315,7 +315,7 @@ function DoctorClaimContent() {
                     <CreditCard className="h-3.5 w-3.5 text-purple-600" />
                     <span>Direct UPI ID for Patient Fees (GPay / PhonePe / Paytm VPA):</span>
                   </label>
-                  <Input
+                  <Input data-voice-control="ui.95f089103b99f8e3"
                     placeholder="e.g. dr.name@okhdfcbank or 9826012345@upi"
                     value={customUpi}
                     onChange={(e) => setCustomUpi(e.target.value)}
@@ -334,7 +334,7 @@ function DoctorClaimContent() {
                 </div>
               )}
 
-              <Button
+              <Button data-voice-control="ui.1da2c088f24572ec"
                 type="submit"
                 disabled={submitting}
                 className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-xs sm:text-sm h-11 rounded-xl shadow-md flex items-center justify-center gap-2"
@@ -351,7 +351,7 @@ function DoctorClaimContent() {
           )}
 
           <div className="pt-2 border-t border-slate-200 text-center">
-            <Button
+            <Button data-voice-control="ui.66ef0e9c540b29f1"
               variant="ghost"
               size="sm"
               onClick={() => router.push("/")}

@@ -65,7 +65,7 @@ export function AddRecordCard({
             {addMode === 'upload' ? <Upload className="h-5 w-5 text-teal-600" /> : <Plus className="h-5 w-5 text-teal-600" />}
             {addMode === 'upload' ? t.uploadFile : t.addManual}
           </CardTitle>
-          <button
+          <button data-voice-control="ui.c7a716c1cd439e70"
             onClick={onClose}
             className="p-1 hover:bg-gray-100 rounded-lg"
           >
@@ -74,13 +74,13 @@ export function AddRecordCard({
         </div>
         {/* Mode switch */}
         <div className="flex gap-2 mt-2">
-          <button
+          <button data-voice-control="ui.c864c451c9af467e"
             onClick={() => setAddMode('manual')}
             className={`text-xs px-3 py-1.5 rounded-full transition-colors ${addMode === 'manual' ? 'bg-teal-600 text-white' : 'bg-white border text-gray-600 hover:bg-gray-50'}`}
           >
             ✏️ {t.addManual}
           </button>
-          <button
+          <button data-voice-control="ui.9d5ad5e1198a930c"
             onClick={() => setAddMode('upload')}
             className={`text-xs px-3 py-1.5 rounded-full transition-colors ${addMode === 'upload' ? 'bg-teal-600 text-white' : 'bg-white border text-gray-600 hover:bg-gray-50'}`}
           >
@@ -94,7 +94,7 @@ export function AddRecordCard({
           <label className="text-sm font-medium block mb-1.5">{t.selectType}</label>
           <div className="flex flex-wrap gap-2">
             {RECORD_TYPES.map(rt => (
-              <button
+              <button data-voice-control="ui.f0b70d3078a96504"
                 key={rt.value}
                 onClick={() => setFormData(f => ({ ...f, record_type: rt.value }))}
                 className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border-2 text-sm transition-all ${
@@ -113,14 +113,14 @@ export function AddRecordCard({
         {/* Upload area */}
         {addMode === 'upload' && (
           <div>
-            <input
+            <input data-voice-control="ui.c1926ff32efe6cee"
               ref={fileRef}
               type="file"
               accept=".jpg,.jpeg,.png,.pdf"
               className="hidden"
               onChange={e => setSelectedFile(e.target.files?.[0] || null)}
             />
-            <button
+            <button data-voice-control="ui.47688865157ef1c4"
               onClick={() => fileRef.current?.click()}
               className="w-full border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-teal-400 hover:bg-teal-50/30 transition-all"
             >
@@ -143,24 +143,24 @@ export function AddRecordCard({
         {/* Notes/details */}
         <div>
           <label className="text-sm font-medium block mb-1.5">{t.details}</label>
-          <textarea
+          <textarea data-voice-control="ui.58d6fc928af65cd7"
             rows={3}
             value={formData.content}
             onChange={e => setFormData(f => ({ ...f, content: e.target.value }))}
             placeholder={en
               ? 'e.g. "Dr. Singh prescribed Paracetamol 500mg for 5 days for viral fever"'
               : 'जैसे "डॉ. सिंह ने वायरल बुखार के लिए 5 दिन पैरासिटामोल 500mg लिखा"'}
-            className="w-full border rounded-xl p-3 text-sm focus:outline-none focus:border-teal-500 resize-none"
+            className="w-full border rounded-xl p-3 text-sm focus:outline-none focus:border-teal-500 resize-none" aria-label={[t.details].join(' ')}
           />
         </div>
 
         {/* Action buttons */}
         <div className="flex justify-end gap-2">
-          <Button variant="outline" size="sm" onClick={onClose}>
+          <Button data-voice-control="ui.ddb6743170e5dce5" variant="outline" size="sm" onClick={onClose}>
             {t.cancel}
           </Button>
           {addMode === 'upload' ? (
-            <Button
+            <Button data-voice-control="ui.9d9bde0c757a5edc"
               size="sm"
               className="gradient-primary text-white gap-1.5"
               disabled={!selectedFile || uploading}
@@ -169,7 +169,7 @@ export function AddRecordCard({
               {uploading ? <><Loader2 className="h-4 w-4 animate-spin" />{t.saving}</> : <><Upload className="h-4 w-4" />{t.uploadAndSave}</>}
             </Button>
           ) : (
-            <Button
+            <Button data-voice-control="ui.f03660ba79f1d809"
               size="sm"
               className="gradient-primary text-white gap-1.5"
               disabled={!formData.content.trim() || saving}

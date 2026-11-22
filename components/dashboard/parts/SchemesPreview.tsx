@@ -67,7 +67,7 @@ export function SchemesPreview({ language }: SchemesPreviewProps) {
         </div>
       </CardContent>
       <div className="p-4 pt-0">
-        <Button
+        <Button data-voice-control="ui.6a5334ac1a920371"
           variant="outline"
           className="w-full text-green-700 border-green-200 hover:bg-green-100"
           onClick={() => router.push("/health-info/schemes")}

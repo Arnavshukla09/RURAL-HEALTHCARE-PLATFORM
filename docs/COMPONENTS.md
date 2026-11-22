@@ -7,24 +7,13 @@ This document catalogs the domain-specific React components used throughout the 
 ## 1. Core Layout & Navigation
 
 ### 1.1 `AccessibilityBar.tsx`
-- **Purpose:** Provides global language selector (13 Indian languages via Google Translate engine) and high-contrast mode toggle for visually impaired users.
-- **Props:**
-  ```typescript
-  {
-    language: string; // Active language code from SUPPORTED_LANGUAGES (13 Indian languages)
-    setLanguage: (lang: string) => void; // Accepts any SUPPORTED_LANGUAGES code (13 languages)
-    highContrast: boolean;
-    setHighContrast: (val: boolean) => void;
-  }
-  ```
-- **State:** None (Pure component driven by props).
-- **Dependencies:** `lucide-react` (icons).
-- **Styling:** Tailwind sticky header with z-index.
-- **Files Where Used:** `app/page.tsx`
-- **Usage Example:**
-  ```tsx
-  <AccessibilityBar language={language} setLanguage={setLanguage} highContrast={false} setHighContrast={() => {}} />
-  ```
+- **Purpose:** Shared font-size, contrast, page-read, stop and reset controls, available throughout the layout including emergency pages.
+- **Props:** None. Language comes from AppProvider; native controller labels cover the 13 picker languages.
+- **State:** `lib/assistant/accessibility.ts` shares font size (12–24 px), contrast, panel and speech rate with the bot. Non-private preferences persist locally.
+- **Audio:** Page reading/stop go through the avatar voice session and current speech locale. Browser/device voice readiness and private-reading consent still apply.
+- **Files Where Used:** `app/layout.tsx`.
+- **Usage:** `<AccessibilityBar />`.
+- **Controller behavior and audit:** [HANDS_FREE_IMPLEMENTATION.md](HANDS_FREE_IMPLEMENTATION.md).
 
 ### 1.2 `Dashboard.tsx`
 - **Purpose:** The primary authenticated grid view showing quick actions, recent notifications, and dynamic widgets based on user role (Patient vs. Provider).

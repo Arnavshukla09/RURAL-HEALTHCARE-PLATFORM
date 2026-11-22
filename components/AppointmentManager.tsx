@@ -182,10 +182,10 @@ export function AppointmentManager({ user, language, setJitsiRoom }: Appointment
 
         {/* Tabs */}
         <div className="flex gap-2 justify-center">
-          <Button variant={activeTab === "upcoming" ? "default" : "outline"} size="sm" onClick={() => setActiveTab("upcoming")} className={activeTab === "upcoming" ? "gradient-primary text-white" : ""}>
+          <Button data-voice-control="ui.0baaebb23e5b51a6" variant={activeTab === "upcoming" ? "default" : "outline"} size="sm" onClick={() => setActiveTab("upcoming")} className={activeTab === "upcoming" ? "gradient-primary text-white" : ""}>
             <Calendar className="h-4 w-4 mr-1.5" />{en ? "Upcoming" : "आगामी"} ({upcoming.length})
           </Button>
-          <Button variant={activeTab === "past" ? "default" : "outline"} size="sm" onClick={() => setActiveTab("past")} className={activeTab === "past" ? "gradient-primary text-white" : ""}>
+          <Button data-voice-control="ui.0b58acb0c6432692" variant={activeTab === "past" ? "default" : "outline"} size="sm" onClick={() => setActiveTab("past")} className={activeTab === "past" ? "gradient-primary text-white" : ""}>
             <CheckCircle className="h-4 w-4 mr-1.5" />{en ? "Past" : "पिछले"} ({past.length})
           </Button>
         </div>
@@ -203,10 +203,10 @@ export function AppointmentManager({ user, language, setJitsiRoom }: Appointment
               {providers.length > 0 && (
                 <div>
                   <Label>{en ? "Select Doctor" : "डॉक्टर चुनें"}</Label>
-                  <select
+                  <select data-voice-control="ui.bc507ee429be5563"
                     className="w-full border rounded-lg p-2.5 mt-1 bg-white text-sm focus:outline-none focus:border-teal-500"
                     value={bookingForm.provider_id}
-                    onChange={e => setBookingForm(f => ({ ...f, provider_id: e.target.value }))}
+                    onChange={e => setBookingForm(f => ({ ...f, provider_id: e.target.value }))} aria-label={[en ? "Select Doctor" : "डॉक्टर चुनें"].join(' ')}
                   >
                     <option value="">{en ? "-- Select a doctor --" : "-- डॉक्टर चुनें --"}</option>
                     {providers.map(p => (
@@ -216,22 +216,22 @@ export function AppointmentManager({ user, language, setJitsiRoom }: Appointment
                 </div>
               )}
               <div className="grid grid-cols-2 gap-3">
-                <div><Label>{en ? "Date" : "तारीख"}</Label><Input type="date" value={bookingForm.date} min={new Date().toISOString().split('T')[0]} onChange={e => setBookingForm(f => ({ ...f, date: e.target.value }))} /></div>
-                <div><Label>{en ? "Time" : "समय"}</Label><Input type="time" value={bookingForm.time} onChange={e => setBookingForm(f => ({ ...f, time: e.target.value }))} /></div>
+                <div><Label>{en ? "Date" : "तारीख"}</Label><Input data-voice-control="ui.d65d2a2e76be7d28" type="date" value={bookingForm.date} min={new Date().toISOString().split('T')[0]} onChange={e => setBookingForm(f => ({ ...f, date: e.target.value }))} aria-label={[en ? "Date" : "तारीख"].join(' ')} /></div>
+                <div><Label>{en ? "Time" : "समय"}</Label><Input data-voice-control="ui.83ac28abde539522" type="time" value={bookingForm.time} onChange={e => setBookingForm(f => ({ ...f, time: e.target.value }))} aria-label={[en ? "Time" : "समय"].join(' ')} /></div>
               </div>
               <div>
                 <Label>{en ? "Notes (optional)" : "नोट्स (वैकल्पिक)"}</Label>
-                <Input placeholder={en ? "Describe your symptoms or reason for visit" : "अपने लक्षण या दौरे का कारण बताएं"}
+                <Input data-voice-control="ui.bcc2aa22c53ecf72" placeholder={en ? "Describe your symptoms or reason for visit" : "अपने लक्षण या दौरे का कारण बताएं"}
                   value={bookingForm.notes}
-                  onChange={e => setBookingForm(f => ({ ...f, notes: e.target.value }))} />
+                  onChange={e => setBookingForm(f => ({ ...f, notes: e.target.value }))} aria-label={[en ? "Notes (optional)" : "नोट्स (वैकल्पिक)"].join(' ')} />
               </div>
               {bookingError && <p className="text-red-600 text-sm">{bookingError}</p>}
               <div className="flex gap-2">
-                <Button className="flex-1 gradient-primary text-white" onClick={handleBookAppointment} disabled={bookingLoading}>
+                <Button data-voice-control="ui.5daa2eff69998e7d" className="flex-1 gradient-primary text-white" onClick={handleBookAppointment} disabled={bookingLoading}>
                   {bookingLoading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <CheckCircle className="h-4 w-4 mr-1" />}
                   {en ? "Confirm Booking" : "बुकिंग कन्फर्म करें"}
                 </Button>
-                <Button variant="outline" onClick={() => { setShowBooking(false); setBookingError("") }}>
+                <Button data-voice-control="ui.809cc21e54702815" variant="outline" onClick={() => { setShowBooking(false); setBookingError("") }}>
                   {en ? "Cancel" : "रद्द करें"}
                 </Button>
               </div>
@@ -242,7 +242,7 @@ export function AppointmentManager({ user, language, setJitsiRoom }: Appointment
         {/* Appointments List */}
         <div className="space-y-3">
           {display.map(a => (
-            <Card key={a.id} className="hover-lift">
+            <Card key={a.id} data-voice-entity={a.id} data-voice-context={`${formatDate(a.appointment_date)} ${formatTime(a.appointment_date)}`} className="hover-lift">
               <CardContent className="p-4">
                 <div className="flex items-start justify-between">
                   <div className="flex items-start gap-3">
@@ -265,12 +265,12 @@ export function AppointmentManager({ user, language, setJitsiRoom }: Appointment
                     </Badge>
                     <div className="flex items-center gap-2">
                       {!isPastTime(a) && a.status === "scheduled" && a.teleconsult_room_id && (
-                        <Button size="sm" className="h-7 text-xs gradient-primary text-white" onClick={() => joinCall(a.id)}>
+                        <Button data-voice-control="ui.22b5e7ac4e480bc8" size="sm" className="h-7 text-xs gradient-primary text-white" onClick={() => joinCall(a.id)}>
                           <Video className="h-3 w-3 mr-1" />{en ? "Join" : "जुड़ें"}
                         </Button>
                       )}
                       {!isPastTime(a) && a.status === "scheduled" && (
-                        <Button size="sm" variant="outline" className="h-7 text-xs text-red-600 border-red-200 hover:bg-red-50" onClick={() => handleCancelAppointment(a.id)}>
+                        <Button data-voice-control="ui.32574086fc7d6c20" size="sm" variant="outline" className="h-7 text-xs text-red-600 border-red-200 hover:bg-red-50" onClick={() => handleCancelAppointment(a.id)}>
                           <XCircle className="h-3 w-3 mr-1" />{en ? "Cancel" : "रद्द करें"}
                         </Button>
                       )}
@@ -287,7 +287,7 @@ export function AppointmentManager({ user, language, setJitsiRoom }: Appointment
             </div>
           )}
           {nextCursor && (
-            <Button
+            <Button data-voice-control="ui.4ddcb3ed46d76b6f"
               variant="outline"
               className="w-full mt-2"
               onClick={handleLoadMore}
@@ -300,7 +300,7 @@ export function AppointmentManager({ user, language, setJitsiRoom }: Appointment
         </div>
 
         {!isDoctor && (
-          <Button className="w-full gradient-primary text-white" onClick={() => router.push("/consultation")}>
+          <Button data-voice-control="ui.6ab1ff691cb2d7b7" className="w-full gradient-primary text-white" onClick={() => router.push("/consultation")}>
             <Plus className="h-4 w-4 mr-1.5" />
             {en ? "Book New Appointment" : "नया अपॉइंटमेंट बुक करें"}
           </Button>

@@ -59,6 +59,9 @@ jobs:
       - name: Dataset Provenance Verification
         run: npm run report:dataset
 
+      - name: First-party voice control coverage gate
+        run: node scripts/data/register_voice_controls.mjs
+
       - name: Subsystem Simulation Benchmark
         run: npm run benchmark:integration
 

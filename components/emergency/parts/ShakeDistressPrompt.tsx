@@ -51,14 +51,14 @@ export function ShakeDistressPrompt({
         </div>
 
         <div className="grid grid-cols-2 gap-2 pt-1">
-          <Button
+          <Button data-voice-control="ui.28f831a44155c263"
             onClick={onCancel}
             variant="outline"
             className="bg-white/10 hover:bg-white/20 border-white/40 text-white font-bold text-xs py-2 h-auto rounded-xl"
           >
             {language === "en" ? "Cancel (Accidental)" : "रद्द करें (गलती से हुआ)"}
           </Button>
-          <Button
+          <Button data-voice-control="ui.e1175e365e38a229"
             onClick={onConfirm}
             className="bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs py-2 h-auto rounded-xl shadow"
           >

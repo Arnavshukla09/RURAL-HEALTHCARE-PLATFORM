@@ -17,8 +17,8 @@ function AppointmentReview() {
     {loading ? <Loader2 className="h-8 w-8 animate-spin mx-auto" /> : <ShieldCheck className="h-8 w-8 text-teal-600 mx-auto" />}
     <h1 className="font-bold text-xl">{en ? "Review your appointment" : "अपनी अपॉइंटमेंट की समीक्षा करें"}</h1>
     <p className="text-sm text-slate-600">{en ? "Sign in with your account to review appointment details and make confirmed changes." : "अपॉइंटमेंट विवरण और पुष्टि किए गए बदलाव के लिए अपने खाते में लॉगिन करें।"}</p>
-    {!loading && <Button className="w-full" onClick={() => router.push(user ? destination : "/login?redirect=/appointments")}><Calendar className="h-4 w-4 mr-2" />{user ? (en ? "Open appointments" : "अपॉइंटमेंट खोलें") : (en ? "Sign in" : "लॉगिन करें")}</Button>}
-    {user && appointmentId && <Button variant="outline" className="w-full" onClick={() => router.push(consultationJoinPath(appointmentId, language))}>{en ? "Request consultation entry" : "परामर्श प्रवेश जांचें"}</Button>}
+    {!loading && <Button data-voice-control="ui.f7b6bd7964447c1e" className="w-full" onClick={() => router.push(user ? destination : "/login?redirect=/appointments")}><Calendar className="h-4 w-4 mr-2" />{user ? (en ? "Open appointments" : "अपॉइंटमेंट खोलें") : (en ? "Sign in" : "लॉगिन करें")}</Button>}
+    {user && appointmentId && <Button data-voice-control="ui.ebf49bd04affa59f" variant="outline" className="w-full" onClick={() => router.push(consultationJoinPath(appointmentId, language))}>{en ? "Request consultation entry" : "परामर्श प्रवेश जांचें"}</Button>}
   </CardContent></Card></div>
 }
 export default function TeleconsultConfirmPage() {

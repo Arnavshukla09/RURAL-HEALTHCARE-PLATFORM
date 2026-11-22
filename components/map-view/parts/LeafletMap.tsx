@@ -18,6 +18,7 @@ export const Marker = dynamic(() => import("react-leaflet").then((m) => m.Marker
 export const Popup = dynamic(() => import("react-leaflet").then((m) => m.Popup), { ssr: false })
 export const Circle = dynamic(() => import("react-leaflet").then((m) => m.Circle), { ssr: false })
 export const Polyline = dynamic(() => import("react-leaflet").then((m) => m.Polyline), { ssr: false })
+const MapVoiceControls = dynamic(() => import("./MapVoiceControls"), { ssr: false })
 
 export function LeafletMap({
   children,
@@ -64,6 +65,7 @@ export function LeafletMap({
       style={{ height: "100%", width: "100%" }}
     >
       {children}
+      <MapVoiceControls center={center}/>
     </MapContainer>
   )
 }

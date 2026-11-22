@@ -27,7 +27,7 @@ export function OAuthGuestFooter({
   return (
     <div className="mt-5 pt-4 border-t border-border space-y-3">
       <p className="text-xs text-center text-muted-foreground">{t.orContinueWith}</p>
-      <Button
+      <Button data-voice-control="ui.01445b0eb8c7c8af"
         variant="outline"
         onClick={onGoogleLogin}
         className="w-full"
@@ -36,7 +36,7 @@ export function OAuthGuestFooter({
         <Chrome className="h-4 w-4 mr-2" />
         Google
       </Button>
-      <Button
+      <Button data-voice-control="ui.69cca8e8d37db13b"
         variant="ghost"
         onClick={onGuestAccess}
         className="w-full text-muted-foreground text-sm"

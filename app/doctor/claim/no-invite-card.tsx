@@ -68,13 +68,13 @@ export function NoInviteCard({
           </div>
 
           {/* Paste Invitation Link Form */}
-          <form onSubmit={onManualTokenSubmit} className="space-y-3">
+          <form data-voice-control="ui.0361bd8b1d954a6e" onSubmit={onManualTokenSubmit} className="space-y-3">
             <label className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
               <KeyRound className="h-3.5 w-3.5 text-indigo-400" />
               <span>Have a Private Invite Link from SMS or WhatsApp?</span>
             </label>
             <div className="space-y-2">
-              <Input
+              <Input data-voice-control="ui.ff37b2f8c67e49b3"
                 type="text"
                 placeholder="Paste your private invitation URL here..."
                 value={manualToken}
@@ -88,7 +88,7 @@ export function NoInviteCard({
                 </p>
               )}
             </div>
-            <Button
+            <Button data-voice-control="ui.ad0574c43e4d32e2"
               type="submit"
               className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs h-9 rounded-xl shadow-xs"
             >
@@ -97,7 +97,7 @@ export function NoInviteCard({
           </form>
 
           <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
-            <Button
+            <Button data-voice-control="ui.8ec77e2a49bdbbdd"
               variant="ghost"
               size="sm"
               onClick={onReturnHome}
@@ -105,7 +105,7 @@ export function NoInviteCard({
             >
               ← Return to Home
             </Button>
-            <Button
+            <Button data-voice-control="ui.1c10498caf65ee9c"
               variant="ghost"
               size="sm"
               onClick={onDoctorLogin}

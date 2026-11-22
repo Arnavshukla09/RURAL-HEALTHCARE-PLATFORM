@@ -22,18 +22,18 @@ export default function Error({
         </p>
         <p className="text-gray-500 mb-6 text-sm">
           For medical emergencies call{" "}
-          <a href="tel:108" className="text-red-600 font-bold underline">
+          <a data-voice-control="ui.02495202de39a89b" href="tel:108" className="text-red-600 font-bold underline">
             108
           </a>
         </p>
         <div className="flex gap-3 justify-center">
-          <button
+          <button data-voice-control="ui.a42c1dd155008a60"
             onClick={reset}
             className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
           >
             Try Again
           </button>
-          <a
+          <a data-voice-control="ui.4eb9bb78c178c23a"
             href="/"
             className="border border-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-100 transition-colors"
           >

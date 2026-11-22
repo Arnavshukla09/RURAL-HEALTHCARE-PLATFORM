@@ -80,7 +80,7 @@ export function EmergencyContactsModal({
               </span>
             </div>
 
-            <Button
+            <Button data-voice-control="ui.23fc8723d502f3bc"
               variant="outline"
               size="sm"
               onClick={() => setIsTestSmsMode(!isTestSmsMode)}
@@ -105,7 +105,7 @@ export function EmergencyContactsModal({
               <span className="text-[11px] font-bold text-amber-900">
                 {language === "en" ? "Select Recipients:" : "प्राप्तकर्ता चुनें:"}
               </span>
-              <button
+              <button data-voice-control="ui.fde8ca8d2f3c5b9a"
                 onClick={onToggleSelectAll}
                 className="text-[11px] font-semibold text-amber-800 underline hover:text-amber-950"
               >
@@ -122,7 +122,7 @@ export function EmergencyContactsModal({
             {savedContacts.map((contact) => {
               const isSelected = selectedContactIds.includes(contact.id)
               return (
-                <div
+                <div data-voice-control="ui.9cffa4558c3d3c60"
                   key={contact.id}
                   onClick={() => onToggleContactSelection(contact.id)}
                   className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors border ${
@@ -143,7 +143,7 @@ export function EmergencyContactsModal({
                     </div>
                   </div>
 
-                  <button
+                  <button data-voice-control="ui.cf9f4f1c9f356110"
                     onClick={(e) => {
                       e.stopPropagation()
                       onSendWhatsApp(contact.number)
@@ -160,7 +160,7 @@ export function EmergencyContactsModal({
           </div>
 
           <div className="space-y-2 pt-1">
-            <Button
+            <Button data-voice-control="ui.80fc2fdef4f2fee3"
               onClick={onSendNormalSms}
               className={`w-full font-bold py-3 flex items-center justify-center gap-2 text-xs sm:text-sm rounded-xl shadow ${
                 isTestSmsMode
@@ -176,7 +176,7 @@ export function EmergencyContactsModal({
               </span>
             </Button>
 
-            <Button
+            <Button data-voice-control="ui.aaab49b5c5b21a05"
               onClick={onShareViaApps}
               variant="outline"
               className="w-full border-2 border-emerald-600 text-emerald-800 hover:bg-emerald-50 font-bold py-2.5 flex items-center justify-center gap-2 text-xs rounded-xl"

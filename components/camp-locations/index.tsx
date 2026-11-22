@@ -320,7 +320,7 @@ export function CampLocations({ language }: CampLocationsProps) {
                 ? "Try selecting 'All India' or clearing your search term to see nationwide campaigns."
                 : "अखिल भारतीय अभियान देखने के लिए 'अखिल भारतीय' चुनें या खोज शब्द साफ़ करें।"}
             </p>
-            <Button size="sm" variant="outline" onClick={resetAllFilters} className="mt-2 text-xs">
+            <Button data-voice-control="ui.6281d64510ffa9dd" size="sm" variant="outline" onClick={resetAllFilters} className="mt-2 text-xs">
               {t.resetFilters}
             </Button>
           </CardContent>
@@ -356,7 +356,7 @@ export function CampLocations({ language }: CampLocationsProps) {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button
+            <Button data-voice-control="ui.d285353b4802a165"
               variant="default"
               size="sm"
               onClick={() => router.push("/directory")}
@@ -365,7 +365,7 @@ export function CampLocations({ language }: CampLocationsProps) {
               <Building2 className="h-3.5 w-3.5 mr-1.5" />
               <span>{en ? "Doctor Directory" : "चिकित्सक निर्देशिका"}</span>
             </Button>
-            <Button
+            <Button data-voice-control="ui.dd61827482e17ef7"
               variant="outline"
               size="sm"
               onClick={() => router.push("/consultation")}

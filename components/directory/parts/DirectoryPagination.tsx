@@ -42,7 +42,7 @@ export function DirectoryPagination({
       </p>
 
       <div className="flex items-center gap-1.5">
-        <Button
+        <Button data-voice-control="ui.715fde387bb07016"
           variant="outline"
           size="sm"
           onClick={() => handlePageSelect(Math.max(1, currentPage - 1))}
@@ -60,7 +60,7 @@ export function DirectoryPagination({
               p = Math.min(currentPage - 2 + i, totalPages - 4 + i)
             }
             return (
-              <button
+              <button data-voice-control="ui.e3c723eb0f640841"
                 key={p}
                 onClick={() => handlePageSelect(p)}
                 className={`h-8 w-8 text-xs font-semibold rounded-lg transition-colors ${
@@ -75,7 +75,7 @@ export function DirectoryPagination({
           })}
         </div>
 
-        <Button
+        <Button data-voice-control="ui.a2bbf6b413eba652"
           variant="outline"
           size="sm"
           onClick={() => handlePageSelect(Math.min(totalPages, currentPage + 1))}

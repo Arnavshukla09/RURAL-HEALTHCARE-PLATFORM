@@ -40,7 +40,7 @@ export function EmergencyPrimaryActions({
   return (
     <Card className="border-2 border-red-200 bg-white shadow-sm overflow-hidden">
       <CardContent className="p-4 sm:p-5 space-y-3.5">
-        <Button
+        <Button data-voice-control="ui.08a2bd20cbeb677c"
           onClick={() => { window.location.href = "tel:108" }}
           className="w-full min-h-[4.5rem] py-3 px-4 text-xl sm:text-2xl bg-red-600 hover:bg-red-700 animate-pulse font-black text-white rounded-xl shadow-md whitespace-normal leading-tight flex items-center justify-center text-center"
         >
@@ -49,7 +49,7 @@ export function EmergencyPrimaryActions({
         </Button>
 
         <div className="space-y-1">
-          <Button
+          <Button data-voice-control="ui.d7805a75f70bcee4"
             onClick={onTriggerDistressSos}
             className="w-full min-h-[3.75rem] h-auto py-3 px-4 text-sm sm:text-base bg-red-950 hover:bg-black font-extrabold text-white rounded-xl shadow-md flex items-center justify-center text-center gap-2 whitespace-normal break-words leading-snug"
           >
@@ -60,7 +60,7 @@ export function EmergencyPrimaryActions({
         </div>
 
         <div className="space-y-1">
-          <Button
+          <Button data-voice-control="ui.16c32bb055f9f667"
             onClick={onOpenContactAlert}
             className="w-full min-h-[3.75rem] h-auto py-3 px-4 text-sm sm:text-base bg-amber-600 hover:bg-amber-700 font-extrabold text-white rounded-xl shadow-md flex items-center justify-center text-center gap-2 whitespace-normal break-words leading-snug"
           >
@@ -70,7 +70,7 @@ export function EmergencyPrimaryActions({
           <p className="text-[11px] text-gray-500 text-center leading-tight">{t.contactBtnSub}</p>
         </div>
 
-        <Button
+        <Button data-voice-control="ui.6f819cdc5c3baed0"
           variant="outline"
           className="w-full min-h-[3.75rem] py-3 px-3.5 flex items-center justify-start gap-3 font-semibold rounded-xl text-left bg-amber-50 border-amber-300 text-amber-900 hover:bg-amber-100"
           onClick={onStartBeacon}
@@ -82,7 +82,7 @@ export function EmergencyPrimaryActions({
           </div>
         </Button>
 
-        <Button
+        <Button data-voice-control="ui.e3327d947c79f27f"
           variant="outline"
           className="w-full min-h-[3.25rem] py-2.5 px-3 text-xs sm:text-sm font-semibold rounded-xl border-gray-200 hover:bg-gray-50 flex items-center justify-center"
           onClick={() => router.push("/locations")}
@@ -91,7 +91,7 @@ export function EmergencyPrimaryActions({
           <span>{t.findHospital}</span>
         </Button>
 
-        <Button
+        <Button data-voice-control="ui.3ee19cd7d79e3479"
           variant="outline"
           className="w-full min-h-[3.75rem] py-2.5 px-3.5 rounded-xl text-center bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
           onClick={() => router.push("/health-info")}

@@ -150,7 +150,7 @@ export function AdminCampaignManager({ language }: AdminCampaignManagerProps) {
               {campaigns.length} {en ? "campaigns" : "अभियान"}
             </p>
           </div>
-          <Button
+          <Button data-voice-control="ui.993e8b0292eb1de7"
             className="bg-purple-600 hover:bg-purple-700 text-white"
             onClick={() => {
               setShowForm(!showForm)

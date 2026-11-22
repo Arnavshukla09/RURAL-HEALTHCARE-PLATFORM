@@ -26,7 +26,7 @@ export function NotificationTabs({
 }: NotificationTabsProps) {
   return (
     <div className="flex border-b border-gray-100 bg-gray-50/40 px-3 py-1.5 gap-1.5 text-xs">
-      <button
+      <button data-voice-control="ui.df1b990275b3d5fb"
         onClick={() => setActiveTab("all")}
         className={`px-2.5 py-1 rounded-md font-medium transition-colors ${
           activeTab === "all"
@@ -36,7 +36,7 @@ export function NotificationTabs({
       >
         {en ? "All" : "सभी"} ({totalCount})
       </button>
-      <button
+      <button data-voice-control="ui.80a86e57911b8c0b"
         onClick={() => setActiveTab("appointments")}
         className={`px-2.5 py-1 rounded-md font-medium transition-colors flex items-center gap-1 ${
           activeTab === "appointments"
@@ -47,7 +47,7 @@ export function NotificationTabs({
         <Calendar className="h-3 w-3" />
         <span>{en ? "Appointments" : "अपॉइंटमेंट"}</span>
       </button>
-      <button
+      <button data-voice-control="ui.dbf16f98fa000dc6"
         onClick={() => setActiveTab("alerts")}
         className={`px-2.5 py-1 rounded-md font-medium transition-colors flex items-center gap-1 ${
           activeTab === "alerts"

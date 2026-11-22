@@ -6,7 +6,7 @@ export default function Loading() {
         <p className="text-gray-600 font-medium">Loading RuralHealth...</p>
         <p className="text-sm mt-2 text-red-500">
           Emergency? Call{" "}
-          <a href="tel:108" className="font-bold underline">108</a>
+          <a data-voice-control="ui.9df5d38f2bf53e10" href="tel:108" className="font-bold underline">108</a>
         </p>
       </div>
     </div>

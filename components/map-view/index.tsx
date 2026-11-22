@@ -29,6 +29,8 @@ import { FacilityPopupContent } from "./parts/FacilityPopupContent"
 import { FacilityMapControls } from "./parts/FacilityMapControls"
 import { FacilityListPagination } from "./parts/FacilityListPagination"
 import { useFacilityDiscovery } from "./hooks/use-facility-discovery"
+import { useFacilityVoice } from "./hooks/use-facility-voice"
+import { getAssistantPrompt } from "@/lib/assistant/prompts"
 
 export function MapView({ language }: MapViewProps) {
   const en = language === "en"
@@ -69,6 +71,7 @@ export function MapView({ language }: MapViewProps) {
     counts,
     fetchFacilities,
   } = useFacilityDiscovery({ en })
+  const facilityVoice = useFacilityVoice({ sorted, loading, userCoords, filter, handleFilterChange, setCurrentPage })
 
   useEffect(() => {
     setLeafletReady(true)
@@ -126,6 +129,8 @@ export function MapView({ language }: MapViewProps) {
       />
 
       {/* Map with isolated stacking context */}
+      <Button data-voice-control="ui.460c306d2393970b" type="button" disabled={loading} onClick={() => facilityVoice.nearest()}>{getAssistantPrompt(language, "nearest")}</Button>
+      {facilityVoice.selectedId && <p role="status" className="text-sm font-semibold">{getAssistantPrompt(language, "nearest")}: {sorted.find(item => item.id === facilityVoice.selectedId)?.name}</p>}
       <div
         className="rounded-xl overflow-hidden border shadow-xs relative z-0 isolate transition-all duration-300"
         style={{ height: isMapExpanded ? 460 : 260 }}
@@ -144,7 +149,7 @@ export function MapView({ language }: MapViewProps) {
                     : "प्राकृतिक बाधा (नदी/पहाड़) या कच्चा पैदल मार्ग। नेविगेशन में सड़क मार्ग उपलब्ध नहीं है।"}
                 </p>
                 {routeData.destLat && routeData.destLon && (
-                  <a
+                  <a data-voice-control="ui.5a670490cba71047"
                     href={`https://www.google.com/maps/dir/?api=1&destination=${routeData.destLat},${routeData.destLon}`}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -173,7 +178,7 @@ export function MapView({ language }: MapViewProps) {
                 </p>
               </>
             )}
-            <Button size="sm" variant="outline" className="mt-2 h-7 text-xs w-full" onClick={() => setRouteData(null)}>
+            <Button data-voice-control="ui.6a00842567934279" size="sm" variant="outline" className="mt-2 h-7 text-xs w-full" onClick={() => setRouteData(null)}>
               {en ? "Clear Route" : "मार्ग हटाएं"}
             </Button>
           </div>

@@ -107,7 +107,7 @@ export function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <div
+          <div data-voice-control="ui.97c3a73eeb7cfd62"
             className="flex items-center cursor-pointer gap-2 flex-shrink-0"
             onClick={() => go(homeDestination)}
           >

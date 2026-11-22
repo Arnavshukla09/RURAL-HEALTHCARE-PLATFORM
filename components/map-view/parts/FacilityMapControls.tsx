@@ -75,7 +75,7 @@ export function FacilityMapControls({
       <div className="relative z-30 flex flex-col md:flex-row gap-3 items-stretch md:items-center bg-blue-50/60 p-3 rounded-xl border border-blue-100">
         <div className="flex-1 flex gap-2">
           <div className="w-1/2 md:w-52">
-            <SearchableDropdown
+            <SearchableDropdown data-voice-control="ui.c409f2cc5d0d8184"
               label={en ? "State (LGD)" : "राज्य (LGD)"}
               placeholder={en ? "Select State" : "राज्य चुनें"}
               searchPlaceholder={en ? "Search state..." : "राज्य खोजें..."}
@@ -87,7 +87,7 @@ export function FacilityMapControls({
           </div>
 
           <div className="w-1/2 md:w-56">
-            <SearchableDropdown
+            <SearchableDropdown data-voice-control="ui.078e0bff4c22ae48"
               label={en ? "District (LGD)" : "जिला (LGD)"}
               placeholder={en ? "Select District" : "जिला चुनें"}
               searchPlaceholder={en ? "Search district..." : "जिला खोजें..."}
@@ -105,11 +105,11 @@ export function FacilityMapControls({
           </label>
           <div className="relative">
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-            <Input
+            <Input data-voice-control="ui.aacb7b5278886778"
               placeholder={en ? "Search hospital or CHC name..." : "अस्पताल या CHC का नाम खोजें..."}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 h-9 text-xs bg-white"
+              className="pl-9 h-9 text-xs bg-white" aria-label={[en ? "Search Facility" : "सुविधा खोजें"].join(' ')}
             />
           </div>
         </div>
@@ -118,7 +118,7 @@ export function FacilityMapControls({
       {/* Controls row */}
       <div className="flex flex-col gap-3">
         <div className="flex flex-wrap gap-2 items-center">
-          <Button
+          <Button data-voice-control="ui.32ff11f9a954ab08"
             size="sm"
             variant="outline"
             onClick={onUseMyLocation}
@@ -130,7 +130,7 @@ export function FacilityMapControls({
           </Button>
 
           {(["all", "hospital", "health_post", "clinic", "pharmacy", "lab", "doctors"] as const).map((t) => (
-            <button
+            <button data-voice-control="ui.0032e5c70cf0d313"
               key={t}
               onClick={() => onFilterChange(t)}
               className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
@@ -147,7 +147,7 @@ export function FacilityMapControls({
             </button>
           ))}
 
-          <select
+          <select data-voice-control="ui.d000cf7f1414a10b"
             value={radiusKm}
             onChange={(e) => onRadiusChange(Number(e.target.value))}
             className="text-xs border rounded-full px-3 py-1.5 bg-white ml-auto"
@@ -170,7 +170,7 @@ export function FacilityMapControls({
             ({facilitiesCount} {en ? "facilities plotted" : "सुविधाएं दर्शाई गई"})
           </span>
         </span>
-        <Button
+        <Button data-voice-control="ui.b5e235754a451f6e"
           type="button"
           size="sm"
           variant="outline"

@@ -47,28 +47,28 @@ export function EmergencyVaultModal({
           <div className="grid grid-cols-2 gap-2.5">
             <div>
               <label className="text-xs font-semibold text-gray-700 block mb-1">{t.fullName}</label>
-              <Input
+              <Input data-voice-control="ui.455ffb0cc3f05276"
                 value={editingProfile.fullName}
                 onChange={(e) => setEditingProfile({ ...editingProfile, fullName: e.target.value })}
-                placeholder="Ramesh Kumar"
+                placeholder="Ramesh Kumar" aria-label={[t.fullName].join(' ')}
               />
             </div>
             <div>
               <label className="text-xs font-semibold text-gray-700 block mb-1">{t.age}</label>
-              <Input
+              <Input data-voice-control="ui.b8a00763db003eb4"
                 value={editingProfile.age}
                 onChange={(e) => setEditingProfile({ ...editingProfile, age: e.target.value })}
-                placeholder="45"
+                placeholder="45" aria-label={[t.age].join(' ')}
               />
             </div>
           </div>
 
           <div>
             <label className="text-xs font-semibold text-gray-700 block mb-1">{t.bloodGroup}</label>
-            <select
+            <select data-voice-control="ui.b07915b3f44c96c3"
               className="w-full border rounded-md p-2 text-xs sm:text-sm bg-white"
               value={editingProfile.bloodGroup}
-              onChange={(e) => setEditingProfile({ ...editingProfile, bloodGroup: e.target.value })}
+              onChange={(e) => setEditingProfile({ ...editingProfile, bloodGroup: e.target.value })} aria-label={[t.bloodGroup].join(' ')}
             >
               {["Unknown", "A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map((bg) => (
                 <option key={bg} value={bg}>{bg}</option>
@@ -84,56 +84,56 @@ export function EmergencyVaultModal({
 
             <div>
               <label className="text-[11px] font-semibold text-gray-700 block mb-1">{t.primaryContact}</label>
-              <Input
+              <Input data-voice-control="ui.7831528edd712fa6"
                 value={editingProfile.primaryEmergencyContact}
                 onChange={(e) => setEditingProfile({ ...editingProfile, primaryEmergencyContact: e.target.value })}
-                placeholder="+91 98765 43210"
+                placeholder="+91 98765 43210" aria-label={[t.primaryContact].join(' ')}
               />
             </div>
 
             <div>
               <label className="text-[11px] font-semibold text-gray-700 block mb-1">{t.secondaryContact}</label>
-              <Input
+              <Input data-voice-control="ui.1347d9cc5b32c94f"
                 value={editingProfile.secondaryEmergencyContact}
                 onChange={(e) => setEditingProfile({ ...editingProfile, secondaryEmergencyContact: e.target.value })}
-                placeholder="+91 91234 56789"
+                placeholder="+91 91234 56789" aria-label={[t.secondaryContact].join(' ')}
               />
             </div>
 
             <div>
               <label className="text-[11px] font-semibold text-gray-700 block mb-1">{t.tertiaryContact}</label>
-              <Input
+              <Input data-voice-control="ui.0280e5f220d6a31d"
                 value={editingProfile.tertiaryEmergencyContact || ""}
                 onChange={(e) => setEditingProfile({ ...editingProfile, tertiaryEmergencyContact: e.target.value })}
-                placeholder="+91 99887 76655"
+                placeholder="+91 99887 76655" aria-label={[t.tertiaryContact].join(' ')}
               />
             </div>
           </div>
 
           <div>
             <label className="text-xs font-semibold text-gray-700 block mb-1">{t.chronicConditions}</label>
-            <Input
+            <Input data-voice-control="ui.7bf4e4a593cc9126"
               value={editingProfile.chronicConditions}
               onChange={(e) => setEditingProfile({ ...editingProfile, chronicConditions: e.target.value })}
-              placeholder="Diabetes Type 2, Hypertension, Heart Patient"
+              placeholder="Diabetes Type 2, Hypertension, Heart Patient" aria-label={[t.chronicConditions].join(' ')}
             />
           </div>
 
           <div>
             <label className="text-xs font-semibold text-gray-700 block mb-1">{t.allergies}</label>
-            <Input
+            <Input data-voice-control="ui.5199db32c0d801fb"
               value={editingProfile.severeAllergies}
               onChange={(e) => setEditingProfile({ ...editingProfile, severeAllergies: e.target.value })}
-              placeholder="Penicillin, Sulfa drugs, Peanuts"
+              placeholder="Penicillin, Sulfa drugs, Peanuts" aria-label={[t.allergies].join(' ')}
             />
           </div>
 
           <div>
             <label className="text-xs font-semibold text-gray-700 block mb-1">{t.medications}</label>
-            <Input
+            <Input data-voice-control="ui.5549448269c5b427"
               value={editingProfile.currentMedications}
               onChange={(e) => setEditingProfile({ ...editingProfile, currentMedications: e.target.value })}
-              placeholder="Metformin 500mg, Telmisartan 40mg"
+              placeholder="Metformin 500mg, Telmisartan 40mg" aria-label={[t.medications].join(' ')}
             />
           </div>
 
@@ -142,18 +142,18 @@ export function EmergencyVaultModal({
               <Mic className="h-4 w-4 text-amber-700" />
               {t.customVoiceLabel}
             </label>
-            <Input
+            <Input data-voice-control="ui.e2d32d43be081dd2"
               value={editingProfile.customVoiceAlert || ""}
               onChange={(e) => setEditingProfile({ ...editingProfile, customVoiceAlert: e.target.value })}
               placeholder={t.customVoicePlaceholder}
-              className="bg-white border-amber-300 text-xs sm:text-sm"
+              className="bg-white border-amber-300 text-xs sm:text-sm" aria-label={[t.customVoiceLabel].join(' ')}
             />
             <p className="text-[11px] text-amber-800 leading-tight">
               {t.customVoiceHint}
             </p>
           </div>
 
-          <Button onClick={onSave} className="w-full bg-red-600 hover:bg-red-700 text-white font-bold">
+          <Button data-voice-control="ui.47eb156de9647f67" onClick={onSave} className="w-full bg-red-600 hover:bg-red-700 text-white font-bold">
             {language === "en" ? "Save Emergency Profile" : "आपातकालीन प्रोफाइल सुरक्षित करें"}
           </Button>
         </div>

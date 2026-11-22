@@ -48,7 +48,7 @@ export function CriticalFastDialBar({ en, t }: CriticalFastDialBarProps) {
           {CRITICAL_FAST_DIAL.map((item) => {
             const Icon = item.icon
             return (
-              <a
+              <a data-voice-control="ui.de608491033eb524"
                 key={item.number}
                 href={`tel:${item.number}`}
                 className="group bg-white rounded-xl p-3 text-gray-900 shadow-md hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5 flex flex-col justify-between border border-white/40 cursor-pointer"

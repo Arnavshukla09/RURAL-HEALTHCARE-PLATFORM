@@ -28,7 +28,7 @@ export function HelplineCard({ item, en, t, copiedId, onCopy }: HelplineCardProp
   const isCopied = copiedId === item.id
 
   return (
-    <div
+    <div data-voice-control="ui.72d3a62f3a6578ea"
       onClick={() => {
         window.location.href = `tel:${item.number}`
       }}
@@ -103,7 +103,7 @@ export function HelplineCard({ item, en, t, copiedId, onCopy }: HelplineCardProp
           <span className="font-mono text-base font-black text-gray-900 bg-white px-2.5 py-0.5 rounded-lg border border-gray-200 tracking-wider shadow-2xs">
             {item.number}
           </span>
-          <button
+          <button data-voice-control="ui.35f91c0f1e7e05a6"
             onClick={(e) => onCopy(item.id, item.number, e)}
             className="p-1.5 text-gray-400 hover:text-gray-700 rounded-md hover:bg-gray-100 transition"
             title={t.copyNumber}
@@ -117,7 +117,7 @@ export function HelplineCard({ item, en, t, copiedId, onCopy }: HelplineCardProp
           </button>
         </div>
 
-        <Button
+        <Button data-voice-control="ui.673ba271d043f52a"
           size="sm"
           className={`${theme.btnBg} text-white font-bold text-xs px-3.5 h-8 rounded-lg flex items-center gap-1.5 shadow-xs`}
           onClick={(e) => {

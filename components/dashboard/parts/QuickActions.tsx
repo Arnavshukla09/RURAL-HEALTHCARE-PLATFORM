@@ -29,7 +29,7 @@ export function QuickActions({ user, language, t }: QuickActionsProps) {
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Button
+          <Button data-voice-control="ui.d0f2f1c91c47efd3"
             onClick={() => router.push("/consultation")}
             className="h-16 flex items-center justify-center space-x-2"
           >
@@ -37,7 +37,7 @@ export function QuickActions({ user, language, t }: QuickActionsProps) {
             <span>{t.bookConsultation}</span>
           </Button>
 
-          <Button
+          <Button data-voice-control="ui.eda17bec2841fd0b"
             variant="outline"
             onClick={() => router.push("/directory")}
             className="h-16 flex items-center justify-center space-x-2"
@@ -46,7 +46,7 @@ export function QuickActions({ user, language, t }: QuickActionsProps) {
             <span>{t.viewDirectory}</span>
           </Button>
 
-          <Button
+          <Button data-voice-control="ui.794dffe4dda2a42f"
             variant="outline"
             onClick={() => router.push("/camps")}
             className="h-16 flex items-center justify-center space-x-2"
@@ -55,7 +55,7 @@ export function QuickActions({ user, language, t }: QuickActionsProps) {
             <span>{t.joinCampaign}</span>
           </Button>
 
-          <Button
+          <Button data-voice-control="ui.4e2e0c541cda2275"
             variant="outline"
             onClick={() =>
               router.push(user.role === "doctor" ? "/doctor/patients" : "/records")
@@ -76,7 +76,7 @@ export function QuickActions({ user, language, t }: QuickActionsProps) {
         </div>
 
         <div className="mt-4">
-          <Button
+          <Button data-voice-control="ui.29de197c11886f09"
             variant="destructive"
             size="lg"
             className="w-full"

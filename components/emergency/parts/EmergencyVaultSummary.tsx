@@ -36,7 +36,7 @@ export function EmergencyVaultSummary({
           </CardTitle>
           <p className="text-xs text-gray-500 mt-0.5">{t.vaultSubtitle}</p>
         </div>
-        <Button
+        <Button data-voice-control="ui.8fddc4107fa25f5b"
           variant="outline"
           size="sm"
           onClick={onOpenVault}

@@ -58,7 +58,7 @@ export function UsersTab({
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <input
+          <input data-voice-control="ui.9e82ed7e2d7a45d6"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={en ? "Search by name, email..." : "नाम, ईमेल से खोजें..."}
@@ -67,7 +67,7 @@ export function UsersTab({
         </div>
         <div className="flex rounded-xl bg-white border border-gray-200 p-1 gap-1">
           {["all", ...ROLES].map((r) => (
-            <button
+            <button data-voice-control="ui.a93662e09a48c889"
               key={r}
               onClick={() => setRoleFilter(r)}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors capitalize ${
@@ -114,7 +114,7 @@ export function UsersTab({
                           ? `Remove ${user.first_name} ${user.last_name}? This cannot be undone.`
                           : `${user.first_name} ${user.last_name} को हटाएं? यह पूर्ववत नहीं होगा।`}
                       </p>
-                      <Button
+                      <Button data-voice-control="ui.9537168bf53df1d1"
                         size="sm"
                         className="bg-red-600 hover:bg-red-700 text-white h-7 text-xs"
                         disabled={updating === user.id}
@@ -131,7 +131,7 @@ export function UsersTab({
                           "हटाएं"
                         )}
                       </Button>
-                      <Button
+                      <Button data-voice-control="ui.3d8211165689b32a"
                         size="sm"
                         variant="outline"
                         className="h-7 text-xs"
@@ -172,7 +172,7 @@ export function UsersTab({
                       </div>
                       <div>
                         <div className="relative">
-                          <select
+                          <select data-voice-control="ui.d750d871e31a47fc"
                             value={user.role || "patient"}
                             disabled={updating === user.id}
                             onChange={(e) => onUpdateRole(user.id, e.target.value)}
@@ -194,7 +194,7 @@ export function UsersTab({
                         </div>
                       </div>
                       <div>
-                        <Button
+                        <Button data-voice-control="ui.e9da3102394dc0f7"
                           size="sm"
                           variant="outline"
                           className="h-7 text-xs text-red-600 border-red-200 hover:bg-red-50"

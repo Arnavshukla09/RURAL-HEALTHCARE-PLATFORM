@@ -6,10 +6,10 @@ export interface AssistantAppointment { id: string; appointment_date: string; st
 export interface AssistantSlot { appointmentDate: string; available: boolean }
 export interface PreparedAction { draft: Record<string, string>; confirmationToken: string; expiresAt: string }
 
-export async function assistantAction<T>(action: string, fields: Record<string, unknown> = {}): Promise<T> {
+export async function assistantAction<T>(action: string, fields: Record<string, unknown> = {}, signal?: AbortSignal): Promise<T> {
   const response = await fetch("/api/assistant/actions", {
     method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action, ...fields }), signal: AbortSignal.timeout(15000),
+    body: JSON.stringify({ action, ...fields }), signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(15000)]) : AbortSignal.timeout(15000),
   })
   const data = await response.json().catch(() => ({}))
   if (!response.ok) throw new AssistantActionError(data.error || "Request failed", data.code || "REQUEST_FAILED", response.status)

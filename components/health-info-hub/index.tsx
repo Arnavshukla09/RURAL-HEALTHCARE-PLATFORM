@@ -66,7 +66,7 @@ export function HealthInfoHub({ language, symptomResult }: HealthInfoHubProps) {
           {tabs.map((t) => {
             const Icon = t.icon
             return (
-              <Button
+              <Button data-voice-control="ui.00dc9566c3079571"
                 key={t.key}
                 variant={tab === t.key ? "default" : "outline"}
                 size="sm"
@@ -82,7 +82,7 @@ export function HealthInfoHub({ language, symptomResult }: HealthInfoHubProps) {
 
         {/* Government Schemes Navigation Link */}
         <div className="max-w-md mx-auto">
-          <Button
+          <Button data-voice-control="ui.27b516960d8cf3e0"
             onClick={() => router.push("/health-info/schemes")}
             className="w-full bg-green-600 hover:bg-green-700 text-white shadow-md border border-green-500"
           >
@@ -94,7 +94,7 @@ export function HealthInfoHub({ language, symptomResult }: HealthInfoHubProps) {
         {/* Search Bar */}
         <div className="relative max-w-md mx-auto">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-          <input
+          <input data-voice-control="ui.0914431bc5187221"
             className="w-full pl-9 h-9 border rounded-lg text-sm"
             placeholder={en ? "Search..." : "खोजें..."}
             value={search}

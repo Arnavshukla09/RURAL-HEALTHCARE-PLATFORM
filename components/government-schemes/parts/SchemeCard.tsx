@@ -129,7 +129,7 @@ export function SchemeCard({ scheme, en }: SchemeCardProps) {
             {/* Footer Actions: Call & Website */}
             <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-gray-100">
               <div className="flex flex-wrap items-center gap-3">
-                <Button
+                <Button data-voice-control="ui.92bd7fa5ec453006"
                   size="sm"
                   className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs h-8 px-3 rounded-lg flex items-center gap-1.5 shadow-2xs"
                   onClick={() =>
@@ -140,7 +140,7 @@ export function SchemeCard({ scheme, en }: SchemeCardProps) {
                   <span>{scheme.contactPhone}</span>
                 </Button>
 
-                <Button
+                <Button data-voice-control="ui.938fe2ebb4dbe47b"
                   size="sm"
                   variant="outline"
                   className="text-xs h-8 px-3 font-semibold rounded-lg flex items-center gap-1.5 border-blue-200 text-blue-700 hover:bg-blue-50 bg-white"

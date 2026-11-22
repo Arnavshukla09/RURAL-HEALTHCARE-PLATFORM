@@ -151,11 +151,11 @@ export function AdminNotifications({ language }: AdminNotificationsProps) {
 
         {/* Tabs */}
         <div className="flex rounded-xl bg-white border border-gray-200 p-1 gap-1 w-fit">
-          <button onClick={() => setTab("compose")}
+          <button data-voice-control="ui.df7eb4a04d09ba2d" onClick={() => setTab("compose")}
             className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${tab === "compose" ? "bg-purple-600 text-white" : "text-gray-600 hover:bg-gray-100"}`}>
             <Send className="h-4 w-4 inline mr-1.5" />{en ? "Compose" : "लिखें"}
           </button>
-          <button onClick={() => setTab("sent")}
+          <button data-voice-control="ui.3efc0c6c846c93d7" onClick={() => setTab("sent")}
             className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${tab === "sent" ? "bg-purple-600 text-white" : "text-gray-600 hover:bg-gray-100"}`}>
             <Bell className="h-4 w-4 inline mr-1.5" />{en ? "Sent" : "भेजे गए"} ({sent.length})
           </button>
@@ -184,7 +184,7 @@ export function AdminNotifications({ language }: AdminNotificationsProps) {
                     ] as const).map(opt => {
                       const Icon = opt.icon
                       return (
-                        <button key={opt.value}
+                        <button data-voice-control="ui.88338ab6f6913c45" key={opt.value}
                           onClick={() => setForm(f => ({ ...f, recipient_type: opt.value, recipient_id: undefined, recipient_role: undefined }))}
                           className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 text-xs font-medium transition-colors ${
                             form.recipient_type === opt.value ? "border-purple-500 bg-purple-50 text-purple-700" : "border-gray-200 text-gray-600 hover:border-gray-300"
@@ -200,8 +200,8 @@ export function AdminNotifications({ language }: AdminNotificationsProps) {
                 {form.recipient_type === "role" && (
                   <div>
                     <label className="text-xs font-semibold text-gray-600 mb-1 block">{en ? "Role" : "भूमिका"}</label>
-                    <select value={form.recipient_role || "patient"} onChange={e => setForm(f => ({ ...f, recipient_role: e.target.value }))}
-                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl bg-white focus:outline-none focus:border-purple-400 capitalize">
+                    <select data-voice-control="ui.b9be07855876e2f7" value={form.recipient_role || "patient"} onChange={e => setForm(f => ({ ...f, recipient_role: e.target.value }))}
+                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl bg-white focus:outline-none focus:border-purple-400 capitalize" aria-label={[en ? "Role" : "भूमिका"].join(' ')}>
                       {["patient", "doctor", "admin"].map(r => <option key={r} value={r}>{r}</option>)}
                     </select>
                   </div>
@@ -216,13 +216,13 @@ export function AdminNotifications({ language }: AdminNotificationsProps) {
                     </label>
                     <div className="relative mb-2">
                       <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
-                      <input value={userSearch} onChange={e => setUserSearch(e.target.value)}
+                      <input data-voice-control="ui.5c40684931b4c910" value={userSearch} onChange={e => setUserSearch(e.target.value)}
                         placeholder={en ? "Search user..." : "उपयोगकर्ता खोजें..."}
-                        className="w-full pl-8 pr-3 py-2 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-purple-400" />
+                        className="w-full pl-8 pr-3 py-2 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-purple-400" aria-label={[en ? "Select User" : "उपयोगकर्ता चुनें", selectedUser && <span className="ml-2 text-purple-600 font-medium">✓ {selectedUser.first_name} {selectedUser.last_name}</span>].join(' ')} />
                     </div>
                     <div className="max-h-36 overflow-y-auto border border-gray-200 rounded-xl">
                       {filteredUsers.slice(0, 20).map(u => (
-                        <button key={u.id} onClick={() => setForm(f => ({ ...f, recipient_id: u.id }))}
+                        <button data-voice-control="ui.be0ada96adb10d40" key={u.id} onClick={() => setForm(f => ({ ...f, recipient_id: u.id }))}
                           className={`w-full text-left px-3 py-2 text-xs hover:bg-purple-50 transition-colors border-b border-gray-100 last:border-0 ${
                             form.recipient_id === u.id ? "bg-purple-50 text-purple-700 font-medium" : "text-gray-700"
                           }`}>
@@ -244,7 +244,7 @@ export function AdminNotifications({ language }: AdminNotificationsProps) {
                     {Object.entries(TYPE_COLORS).map(([k, v]) => {
                       const Icon = v.icon
                       return (
-                        <button key={k} onClick={() => setForm(f => ({ ...f, type: k as any }))}
+                        <button data-voice-control="ui.1c6845b487b1b6c8" key={k} onClick={() => setForm(f => ({ ...f, type: k as any }))}
                           className={`flex items-center gap-2 px-3 py-2 rounded-xl border-2 text-xs font-medium transition-colors ${
                             form.type === k ? "border-purple-500 bg-purple-50" : "border-gray-200 hover:border-gray-300"
                           }`}>
@@ -259,20 +259,20 @@ export function AdminNotifications({ language }: AdminNotificationsProps) {
                 {/* Title */}
                 <div>
                   <label className="text-xs font-semibold text-gray-600 mb-1 block">{en ? "Title *" : "शीर्षक *"}</label>
-                  <input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
+                  <input data-voice-control="ui.eabb7feeaa4cb05b" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
                     placeholder={en ? "Notification title..." : "सूचना का शीर्षक..."}
-                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-purple-400" />
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-purple-400" aria-label={[en ? "Title *" : "शीर्षक *"].join(' ')} />
                 </div>
 
                 {/* Message */}
                 <div>
                   <label className="text-xs font-semibold text-gray-600 mb-1 block">{en ? "Message *" : "संदेश *"}</label>
-                  <textarea value={form.message} onChange={e => setForm(f => ({ ...f, message: e.target.value }))}
+                  <textarea data-voice-control="ui.c935d02324ed0d47" value={form.message} onChange={e => setForm(f => ({ ...f, message: e.target.value }))}
                     rows={4} placeholder={en ? "Type your message here..." : "यहां संदेश लिखें..."}
-                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-purple-400 resize-none" />
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-purple-400 resize-none" aria-label={[en ? "Message *" : "संदेश *"].join(' ')} />
                 </div>
 
-                <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white" onClick={handleSend} disabled={sending}>
+                <Button data-voice-control="ui.eac9756be1413603" className="w-full bg-purple-600 hover:bg-purple-700 text-white" onClick={handleSend} disabled={sending}>
                   {sending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
                   {form.recipient_type === "all" ? (en ? `Send to All (${users.length})` : `सभी को भेजें (${users.length})`) :
                    form.recipient_type === "role" ? (en ? `Send to All ${form.recipient_role || "patient"}s` : `सभी ${form.recipient_role || "patient"} को भेजें`) :
@@ -353,7 +353,7 @@ export function AdminNotifications({ language }: AdminNotificationsProps) {
                           </div>
                         </div>
                       </div>
-                      <button onClick={() => deleteNotif(n.id!)}
+                      <button data-voice-control="ui.b3cac656160ccc91" onClick={() => deleteNotif(n.id!)}
                         className="flex-shrink-0 text-gray-300 hover:text-red-500 transition-colors">
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -363,7 +363,7 @@ export function AdminNotifications({ language }: AdminNotificationsProps) {
               )
             })}
             {nextCursor && (
-              <Button
+              <Button data-voice-control="ui.46f434722274fa07"
                 variant="outline"
                 className="w-full mt-3"
                 onClick={handleLoadMoreSent}

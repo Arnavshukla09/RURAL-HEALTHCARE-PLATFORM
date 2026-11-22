@@ -189,7 +189,7 @@ export function HelplineDirectory({ language, initialCoords }: HelplineDirectory
                   ? "Try searching for a different keyword or reset filters."
                   : "कृपया दूसरा शब्द खोजें या फ़िल्टर रीसेट करें।"}
               </p>
-              <Button
+              <Button data-voice-control="ui.9106b3d5b2a30038"
                 onClick={() => {
                   setSearchQuery("")
                   setSelectedCategory("all")

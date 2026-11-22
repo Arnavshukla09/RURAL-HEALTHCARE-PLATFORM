@@ -3,6 +3,8 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { checkLocalRecognition, getSpeechLangFromCode, getSpeechCapabilities, speak, startSpeechRecognition, stopSpeaking, stopSpeechRecognition } from "@/lib/ai/speech"
 import { startAudioRecording } from "@/lib/voice/audio-recording"
 import type { VoiceStatus } from "./types"
+import { getAccessibility } from "@/lib/assistant/accessibility"
+import { parseSpokenInterruption } from "@/lib/assistant/interruption"
 
 interface VoiceServiceStatus { available: boolean; asrLanguages: string[]; ttsLanguages: string[] }
 export function useVoiceSession(language: string, onTranscript: (text: string) => void, onError: (kind: "micDenied" | "micUnavailable" | "voiceUnavailable") => void) {
@@ -18,6 +20,8 @@ export function useVoiceSession(language: string, onTranscript: (text: string) =
   const recorder = useRef<{ stop: () => void; cancel: () => void } | null>(null)
   const turn = useRef(0)
   const retry = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const resumeAfterReply = useRef(true)
+  const ownsSpeech = useRef(false)
   onTranscriptRef.current = onTranscript
   onErrorRef.current = onError
   useEffect(() => {
@@ -29,7 +33,7 @@ export function useVoiceSession(language: string, onTranscript: (text: string) =
     turn.current++
     enabledRef.current = false; setEnabled(false); setStatus("idle")
     if (retry.current) clearTimeout(retry.current)
-    stopSpeechRecognition(); stopSpeaking(); recorder.current?.cancel(); recorder.current = null
+    stopSpeechRecognition(); if (ownsSpeech.current) stopSpeaking(); ownsSpeech.current = false; recorder.current?.cancel(); recorder.current = null
     playback.current?.pause(); playback.current = null
     if (playbackUrl.current) URL.revokeObjectURL(playbackUrl.current)
     playbackUrl.current = null
@@ -73,7 +77,7 @@ export function useVoiceSession(language: string, onTranscript: (text: string) =
       lang: getSpeechLangFromCode(language), interimResults: false,
       onResult: result => { if (result.isFinal && enabledRef.current && currentTurn === turn.current) { setStatus("idle"); onTranscriptRef.current(result.transcript) } },
       onErrorKind: kind => { if (currentTurn !== turn.current) return; stop(); onErrorRef.current(kind) },
-      onEnd: () => { if (currentTurn === turn.current) setStatus(previous => previous === "listening" ? "idle" : previous) },
+      onEnd: () => { if (currentTurn === turn.current) { setStatus(previous => previous === "listening" ? "idle" : previous); retry.current = setTimeout(() => { if (currentTurn === turn.current && enabledRef.current) listen().catch(() => {}) }, 800) } },
     })
     if (!available) { stop(); onErrorRef.current("micUnavailable") }
   }, [language, service, stop])
@@ -87,13 +91,30 @@ export function useVoiceSession(language: string, onTranscript: (text: string) =
     setStatus("speaking")
     const done = () => {
       if (currentTurn !== turn.current || !enabledRef.current) return
+      stopSpeechRecognition()
+      ownsSpeech.current = false
+      if (!resumeAfterReply.current) { stop(); return }
       setStatus("idle")
       retry.current = setTimeout(() => { listen().catch(() => {}) }, 350)
     }
     const capabilities = await getSpeechCapabilities(getSpeechLangFromCode(language))
     if (currentTurn !== turn.current || !enabledRef.current) return
+    const armInterruption = () => {
+      if (!resumeAfterReply.current || !capabilities.recognitionSupported || (!navigator.onLine && capabilities.recognitionOffline !== "available")) return
+      startSpeechRecognition({ lang: getSpeechLangFromCode(language), continuous: true, interimResults: false, preserveOutput: true,
+        onResult: result => {
+          if (!result.isFinal || currentTurn !== turn.current || !enabledRef.current) return
+          const request = parseSpokenInterruption(result.transcript, text, language)
+          if (!request) return
+          stop()
+          if (document.visibilityState === "visible") { enabledRef.current = true; setEnabled(true); onTranscriptRef.current(request) }
+        },
+      })
+    }
     if (capabilities.matchingVoiceAvailable) {
-      speak(text, { lang: getSpeechLangFromCode(language), localOnly: !navigator.onLine, rate: 0.85, onEnd: done, onError: () => { if (currentTurn === turn.current) { stop(); onErrorRef.current("voiceUnavailable") } } })
+      ownsSpeech.current = true
+      speak(text, { lang: getSpeechLangFromCode(language), localOnly: !navigator.onLine, rate: getAccessibility().rate, onEnd: done, onError: () => { if (currentTurn === turn.current) { stop(); onErrorRef.current("voiceUnavailable") } } })
+      armInterruption()
       return
     }
     if (service.available && service.ttsLanguages.includes(language)) {
@@ -108,21 +129,24 @@ export function useVoiceSession(language: string, onTranscript: (text: string) =
         audio.onended = () => { URL.revokeObjectURL(url); done() }
         audio.onerror = () => { URL.revokeObjectURL(url); if (currentTurn === turn.current) { stop(); onErrorRef.current("voiceUnavailable") } }
         await audio.play()
+        if (currentTurn === turn.current && enabledRef.current) armInterruption()
       } catch { if (currentTurn === turn.current) { stop(); onErrorRef.current("voiceUnavailable") } }
       finally { requests.current.delete(controller) }
       return
     }
     stop(); onErrorRef.current("voiceUnavailable")
   }, [language, service, listen, stop])
-  const enable = useCallback(() => { enabledRef.current = true; setEnabled(true) }, [])
+  const enable = useCallback(() => { resumeAfterReply.current = true; enabledRef.current = true; setEnabled(true) }, [])
+  const suspendAfterReply = useCallback(() => { resumeAfterReply.current = false; if (retry.current) clearTimeout(retry.current); stopSpeechRecognition(); recorder.current?.cancel(); recorder.current = null }, [])
+  const interrupt = useCallback(() => { const resume = enabledRef.current; stop(); if (resume && document.visibilityState === "visible") enable() }, [stop, enable])
   const toggleListen = useCallback(() => {
     if (status === "listening") { if (recorder.current) { recorder.current.stop(); setStatus("thinking") } else { stopSpeechRecognition(); setStatus("idle") } }
-    else { enable(); listen().catch(() => { stop(); onErrorRef.current("micDenied") }) }
-  }, [status, enable, listen, stop])
+    else { interrupt(); enable(); listen().catch(() => { stop(); onErrorRef.current("micDenied") }) }
+  }, [status, enable, listen, stop, interrupt])
   useEffect(() => {
     const onVisibility = () => { if (document.visibilityState !== "visible") stop() }
     document.addEventListener("visibilitychange", onVisibility)
     return () => { document.removeEventListener("visibilitychange", onVisibility); stop() }
   }, [stop])
-  return { enabled, status, service, enable, stop, listen, toggleListen, speakReply }
+  return { enabled, status, service, enable, stop, interrupt, suspendAfterReply, listen, toggleListen, speakReply }
 }

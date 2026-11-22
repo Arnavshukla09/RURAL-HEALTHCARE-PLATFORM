@@ -47,7 +47,7 @@ export function LocationGuardPrompt({
         </div>
 
         <div className="flex flex-col sm:flex-row gap-2 justify-center pt-2">
-          <Button
+          <Button data-voice-control="ui.2d7931406d15fdef"
             onClick={onDetectLocation}
             disabled={isLocating}
             className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold h-10 px-5 rounded-xl flex items-center justify-center gap-2"
@@ -55,7 +55,7 @@ export function LocationGuardPrompt({
             <Navigation className={`h-4 w-4 ${isLocating ? "animate-spin" : ""}`} />
             <span>{isLocating ? t.detectingLocation : "📍 Use My GPS Location"}</span>
           </Button>
-          <Button
+          <Button data-voice-control="ui.fa99c1f5fef9d59a"
             onClick={onOpenFilterMenu}
             variant="outline"
             className="border-blue-300 text-blue-700 hover:bg-blue-50 text-xs font-bold h-10 px-4 rounded-xl flex items-center justify-center gap-1.5"
@@ -79,7 +79,7 @@ export function LocationGuardPrompt({
               { code: "08", name: "Rajasthan" },
               { code: "29", name: "Karnataka" },
             ].map((s) => (
-              <button
+              <button data-voice-control="ui.b7ee4b55b6b0be50"
                 key={s.code}
                 onClick={() => onSelectState(s.code)}
                 className="px-2.5 py-1 text-xs bg-white text-blue-800 border border-blue-200 rounded-lg hover:bg-blue-50 font-medium transition"

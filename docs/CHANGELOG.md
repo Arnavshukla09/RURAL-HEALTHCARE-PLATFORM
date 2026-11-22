@@ -11,6 +11,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased] - 2026-11-22
 
+### Website controller and accessibility
+- Registered first-party page controls throughout all 28 routes, with current page/modal menus, numbered/name selection, native field events, enabled/stale-target checks and explicit secure/device/legacy-write handoffs. CI checks registration coverage.
+- Shared font, contrast, read/reset and native speech-rate settings between the toolbar and avatar, including emergency pages. Added accessible labels inferred from existing field labels.
+- Enabled task replacement during pending reads/model requests, revoked old confirmations, retained truthful acknowledgments of already dispatched writes, and added guided answer corrections.
+- Added restricted wake-prefixed speech interruption with echo/confirmation rejection, plus first-party Leaflet/Jitsi API controls and map-owned nearest selection.
+- Regenerated all 13 offline catalogs at revision 4 and documented full source mapping, simple operating steps and outstanding device/native/clinical audits. No model identifiers, ports, inference dependencies or migrations changed.
+
 ### Persistent multilingual assistant
 - Replaced the text widget with a globally mounted lightweight avatar, native guided prompts/commands in all 13 selected languages, finalized voice turns and pictorial controls.
 - Added guided symptoms, confirmed appointment creation/cancellation and authorized consultation entry. Runtime receipt checks prevent failed or mismatched writes from being announced as success.

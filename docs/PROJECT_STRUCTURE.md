@@ -9,12 +9,12 @@ RURAL-HEALTHCARE-PLATFORM/
 │   ├── offline/                 Native offline guidance
 │   └── teleconsult/             Confirmations and authorized consultation entry
 ├── components/                  Existing modular feature UI
-│   ├── voice-assistant/         Persistent avatar, voice session and guided workflows
+│   ├── voice-assistant/         Persistent avatar, page controller, voice session and workflows
 │   ├── consultation-portal/     Booking UI and receipt validation
 │   ├── emergency/               Emergency controls and resource lifecycle
 │   └── providers/               Authentication and language lifecycle
 ├── lib/                         Shared application logic
-│   ├── assistant/               13-language catalogs, parsing, packs and stable config
+│   ├── assistant/               Source control registry, accessibility, 13-language catalogs and packs
 │   ├── voice/                   Browser PCM recording
 │   ├── offline/                 Account-owned queues, cleanup and replay executors
 │   ├── services/                Server authorization and validated business actions

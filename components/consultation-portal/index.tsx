@@ -249,7 +249,7 @@ export function ConsultationPortal({ language, user, symptomResult }: Consultati
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-2xl text-xs sm:text-sm flex items-center justify-between">
           <span>{error}</span>
-          <button onClick={() => setError("")}>
+          <button data-voice-control="ui.5ba5ef32556155a0" onClick={() => setError("")}>
             <X className="h-4 w-4" />
           </button>
         </div>

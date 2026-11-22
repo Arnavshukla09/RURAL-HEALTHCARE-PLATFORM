@@ -1,5 +1,6 @@
 import { resolveAssistantLanguage, type AssistantLanguageCode } from "./languages"
 import type { AssistantPhraseCatalog } from "./phrase-catalog"
+import type { ControlKey } from "./control-catalog"
 
 export const OFFLINE_PACK_VERSION = 1
 export const PUBLIC_PACK_CACHE_PREFIX = "rhcp-public-assistant-v1-"
@@ -10,6 +11,7 @@ export interface OfflineLanguagePack {
   language: { code: AssistantLanguageCode; speechLocale: string; dir: string }
   prompts: Record<string, string>
   phrases: AssistantPhraseCatalog
+  controller: Record<ControlKey, string>
   vocabulary: { months: string[]; extraNumbers: Record<string, number>; symptoms: Record<string, string[]>; intensity: Record<"mild" | "moderate" | "severe", string> }
 }
 interface PackManifest { version: number; packs: Record<string, { url: string; sha256: string }> }
@@ -42,7 +44,7 @@ export async function getOfflinePackData(input: string): Promise<OfflineLanguage
     const response = await cache.match(entry.url)
     if (!response || await digest(response) !== entry.sha256) return null
     const pack = await response.json()
-    return pack.version === OFFLINE_PACK_VERSION && pack.catalogRevision === 3 && pack.language?.code === language && pack.prompts?.confirmBooking && pack.prompts?.confirmReadRecords && pack.prompts?.offlineTitle && pack.vocabulary?.months?.length === 12 ? pack : null
+    return pack.version === OFFLINE_PACK_VERSION && pack.catalogRevision === 4 && pack.language?.code === language && pack.controller?.cancelTask && pack.controller?.increaseFont && pack.prompts?.confirmBooking && pack.prompts?.confirmReadRecords && pack.prompts?.offlineTitle && pack.vocabulary?.months?.length === 12 ? pack : null
   } catch { return null }
 }
 

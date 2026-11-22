@@ -35,7 +35,7 @@ export function RecordFilterRow({
         if (tag.key !== 'all' && count === 0) return null
         const isSelected = selectedTag === tag.key
         return (
-          <button
+          <button data-voice-control="ui.ff7375052a69c8b0"
             key={tag.key}
             onClick={() => onSelectTag(tag.key)}
             className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors flex items-center gap-1.5 shrink-0 ${

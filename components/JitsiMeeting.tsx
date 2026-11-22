@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
 import { Button } from "./ui/button"
 import { AlertCircle, Loader2 } from "lucide-react"
 import { Alert, AlertDescription } from "./ui/alert"
+import { MeetingControls } from "./voice-assistant/MeetingControls"
 
 interface JitsiMeetingProps {
   roomName: string
@@ -29,6 +30,9 @@ export function JitsiMeeting({
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const onLeaveRef = useRef(onLeave)
+  const apiRef = useRef<{ executeCommand: (command: string) => void } | null>(null)
+  const [audioMuted, setAudioMuted] = useState<boolean | null>(null)
+  const [videoMuted, setVideoMuted] = useState<boolean | null>(null)
   onLeaveRef.current = onLeave
 
   const effectiveDomain = domain || process.env.NEXT_PUBLIC_JITSI_DOMAIN || "meet.jit.si"
@@ -124,6 +128,9 @@ export function JitsiMeeting({
         }
 
         const api = new JitsiMeetExternalAPI(effectiveDomain, options)
+        apiRef.current = api
+        api.addEventListener("audioMuteStatusChanged", (data: { muted: boolean }) => { if (!disposed) setAudioMuted(data.muted) })
+        api.addEventListener("videoMuteStatusChanged", (data: { muted: boolean }) => { if (!disposed) setVideoMuted(data.muted) })
         conference = api
         api.addEventListener("videoConferenceLeft", () => onLeaveRef.current?.())
 
@@ -152,7 +159,7 @@ export function JitsiMeeting({
     }
 
     initJitsi()
-    return () => { disposed = true; conference?.dispose() }
+    return () => { disposed = true; apiRef.current = null; conference?.dispose() }
   }, [roomName, displayName, language, jwt, domain, audioOnly])
 
   if (error) {
@@ -166,7 +173,7 @@ export function JitsiMeeting({
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>{error}</AlertDescription>
           </Alert>
-          <Button onClick={() => window.location.reload()} className="mt-4">
+          <Button data-voice-control="ui.691f2edc6e106166" onClick={() => window.location.reload()} className="mt-4">
             {t.retry}
           </Button>
         </CardContent>
@@ -176,6 +183,7 @@ export function JitsiMeeting({
 
   return (
     <div className="w-full flex flex-col">
+      {!loading && <MeetingControls language={language} audioMuted={audioMuted} videoMuted={videoMuted} onCommand={command => apiRef.current?.executeCommand(command)}/>}
       {loading && (
         <div className="w-full h-96 flex items-center justify-center bg-gray-100 rounded-lg">
           <div className="text-center">
@@ -190,7 +198,7 @@ export function JitsiMeeting({
         style={{ height: loading ? "0px" : "600px" }}
       />
       {!loading && onLeave && (
-        <Button variant="destructive" onClick={onLeave} className="mt-4">
+        <Button data-voice-control="ui.e852313112d51e5a" variant="destructive" onClick={onLeave} className="mt-4">
           {t.leave}
         </Button>
       )}

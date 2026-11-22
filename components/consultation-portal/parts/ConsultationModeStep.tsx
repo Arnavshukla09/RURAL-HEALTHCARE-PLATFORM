@@ -38,7 +38,7 @@ export function ConsultationModeStep({
             const Icon = ct.icon
             const active = consultType === ct.id
             return (
-              <button
+              <button data-voice-control="ui.1dd2e63afd38e9cf"
                 key={ct.id}
                 onClick={() => setConsultType(ct.id as any)}
                 className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all text-center ${

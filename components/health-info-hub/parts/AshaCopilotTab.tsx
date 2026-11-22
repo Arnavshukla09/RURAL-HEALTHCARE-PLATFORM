@@ -77,7 +77,7 @@ export function AshaCopilotTab({ en }: AshaCopilotTabProps) {
             </div>
 
             <div className="flex items-center gap-1.5 bg-emerald-100/70 p-1 rounded-xl self-start sm:self-auto border border-emerald-200">
-              <Button
+              <Button data-voice-control="ui.ff375ec3db7662d3"
                 variant={copilotMode === "imci" ? "default" : "ghost"}
                 size="sm"
                 onClick={() => setCopilotMode("imci")}
@@ -86,7 +86,7 @@ export function AshaCopilotTab({ en }: AshaCopilotTabProps) {
                 <Baby className="h-3.5 w-3.5 mr-1" />
                 {en ? "Child IMCI (0-5 Yrs)" : "शिशु स्वास्थ्य (0-5 वर्ष)"}
               </Button>
-              <Button
+              <Button data-voice-control="ui.1108a9d6834c335f"
                 variant={copilotMode === "anc" ? "default" : "ghost"}
                 size="sm"
                 onClick={() => setCopilotMode("anc")}

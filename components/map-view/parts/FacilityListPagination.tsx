@@ -32,7 +32,7 @@ export function FacilityListPagination({
 
   return (
     <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-      <Button
+      <Button data-voice-control="ui.419103d716d45697"
         variant="outline"
         size="sm"
         onClick={() => onPageChange(Math.max(currentPage - 1, 1))}
@@ -49,7 +49,7 @@ export function FacilityListPagination({
           : `${totalItems} में से ${(currentPage - 1) * pageSize + 1} - ${Math.min(currentPage * pageSize, totalItems)} दर्शा रहे`}
       </div>
 
-      <Button
+      <Button data-voice-control="ui.fec27ae58fc72b13"
         variant="outline"
         size="sm"
         onClick={() => onPageChange(Math.min(currentPage + 1, totalPages))}

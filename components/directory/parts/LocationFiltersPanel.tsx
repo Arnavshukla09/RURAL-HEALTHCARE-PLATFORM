@@ -70,7 +70,7 @@ export function LocationFiltersPanel({
                 <Lock className="h-3.5 w-3.5 text-amber-600" />
                 <span>{language === "hi" ? "राज्य फ़िल्टर सक्रिय होने के कारण GPS बंद है" : "GPS locked while State/District is chosen"}</span>
               </div>
-              <Button
+              <Button data-voice-control="ui.1fec09a6bd800167"
                 size="sm"
                 variant="outline"
                 onClick={() => {
@@ -95,14 +95,14 @@ export function LocationFiltersPanel({
               </div>
             </div>
             {isGpsActive && (
-              <button onClick={() => { setUserCoords(null); setLocationStatus(null); }} className="text-[11px] font-bold text-red-600 hover:underline">
+              <button data-voice-control="ui.4ca74873a167b204" onClick={() => { setUserCoords(null); setLocationStatus(null); }} className="text-[11px] font-bold text-red-600 hover:underline">
                 {language === "hi" ? "GPS हटाएं" : "Clear GPS"}
               </button>
             )}
           </div>
 
           <div className="space-y-3">
-            <Button
+            <Button data-voice-control="ui.2af606da584a597a"
               variant={isGpsActive ? "default" : "outline"}
               onClick={handleDetectLocation}
               disabled={isLocating || isStateActive}
@@ -129,7 +129,7 @@ export function LocationFiltersPanel({
               </div>
               <div className="grid grid-cols-4 gap-1.5">
                 {[10, 25, 50, 100].map((rad) => (
-                  <button
+                  <button data-voice-control="ui.24c0018c38bb9ad7"
                     key={rad}
                     disabled={!isGpsActive}
                     onClick={() => setSelectedRadius(rad)}
@@ -163,7 +163,7 @@ export function LocationFiltersPanel({
                 <Lock className="h-3.5 w-3.5 text-amber-600" />
                 <span>{language === "hi" ? "GPS चालू होने के कारण राज्य/जिला चयन बंद है" : "State & District locked while GPS is active"}</span>
               </div>
-              <Button
+              <Button data-voice-control="ui.0e634383b3197287"
                 size="sm"
                 variant="outline"
                 onClick={() => { setUserCoords(null); setLocationStatus(null); }}
@@ -185,7 +185,7 @@ export function LocationFiltersPanel({
               </div>
             </div>
             {isStateActive && (
-              <button
+              <button data-voice-control="ui.1e39cee4517b1b48"
                 onClick={() => { setSelectedStateCode("all"); setSelectedDistrictName("all"); }}
                 className="text-[11px] font-bold text-red-600 hover:underline"
               >
@@ -195,7 +195,7 @@ export function LocationFiltersPanel({
           </div>
 
           <div className="space-y-3">
-            <SearchableDropdown
+            <SearchableDropdown data-voice-control="ui.7bbfbeada2fead7b"
               label={t.stateFilter}
               placeholder={language === "hi" ? "राज्य चुनें (सभी राज्य)" : "Select State (All States)"}
               searchPlaceholder={language === "hi" ? "राज्य खोजें..." : "Type to search state..."}
@@ -208,7 +208,7 @@ export function LocationFiltersPanel({
               allOptionLabel={t.allStates}
             />
 
-            <SearchableDropdown
+            <SearchableDropdown data-voice-control="ui.9894b6eb5dd891d8"
               label={t.districtFilter}
               placeholder={
                 selectedStateCode === "all"

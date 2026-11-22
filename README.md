@@ -4,11 +4,13 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Next.js 15](https://img.shields.io/badge/Next.js-15.5-black?logo=next.js)](https://nextjs.org/)
 [![Local PostgreSQL 15](https://img.shields.io/badge/Local_PostgreSQL-15_PostGIS-336791?logo=postgresql)](https://www.postgresql.org/)
-[![Tests Passing](https://img.shields.io/badge/Tests-303%20Passing-brightgreen)](docs/VOICE_ASSISTANT_SETUP.md)
+[![Tests Passing](https://img.shields.io/badge/Tests-307%20Passing-brightgreen)](docs/VOICE_ASSISTANT_SETUP.md)
 
 An offline-first, mobile Progressive Web Application (PWA) engineered for rural and resource-constrained healthcare environments in India. Built with a serverless Backend-For-Frontend (BFF) architecture, the platform provides atomic appointment scheduling, WebRTC teleconsultations, pan-India PostGIS facility lookups, emergency visual first-aid triage, offline mutation queuing with exponential backoff, and ABDM/HL7 FHIR R4 clinical document export.
 
 The persistent voice avatar now provides native guided workflows in all 13 selected languages, emergency-first local guidance, pictorial controls, and server-confirmed appointment actions. Speech depends on available device engines or the optional owned inference service. Model snapshots are pinned once; that service uses port **8765** and makes no runtime model downloads. See [one-time setup and verification limits](docs/VOICE_ASSISTANT_SETUP.md). Offline replay requires both new forward migrations described there; no unlimited hosted-service or background-microphone entitlement is implied.
+
+The avatar now maps the website's current controls through “page options,” “more options,” numbered/name selection and field entry. Shared font/contrast/read controls and task replacement stay available during requests; supported native recognition also accepts wake-prefixed interruption during speech. [Implemented behavior, simple steps and outstanding audits](docs/HANDS_FREE_IMPLEMENTATION.md) distinguish source registration from real-device, all-language and clinical certification.
 
 **Author & Lead Engineer:** Arnav Shukla ([@Arnavshukla09](https://github.com/Arnavshukla09))  
 **Repository:** [github.com/Arnavshukla09/RURAL-HEALTHCARE-PLATFORM](https://github.com/Arnavshukla09/RURAL-HEALTHCARE-PLATFORM)  
@@ -248,7 +250,7 @@ npm run build
 
 | Test Tier | Scope | Total Tests | Status |
 | :--- | :--- | :---: | :---: |
-| **Unit Tests (`npm run test:unit`)** | Existing subsystems plus assistant parsing/actions, audio races, account isolation, report gates and DOM lifecycle | **303** | **PASS locally** |
+| **Unit Tests (`npm run test:unit`)** | Existing subsystems plus assistant parsing/actions, audio races, account isolation, report gates and DOM lifecycle | **307** | **PASS locally** |
 | **Integration Tests (`npm run test:integration`)** | Live PostgreSQL RLS, care-relationship scoping, slot locking and atomic replay | **29** | **PASS in GitHub's disposable local Supabase job** |
 | **Assistant Browser Journeys** | Guided intake, offline emergency, language selection, denied rooms and explicit offline voice activation; speech mocked | **6** | **PASS locally; real speech remains unverified** |
 | **Optional Voice Contracts** | Pinned install/repair, explicit gated authentication, language declarations and local/token access | **15** | **PASS; no model inference performed** |

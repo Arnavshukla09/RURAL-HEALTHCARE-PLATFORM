@@ -68,7 +68,7 @@ export function DoctorSelectionStep({
 
         <div className="flex items-center gap-1.5">
           <Building2 className="h-3.5 w-3.5 text-gray-400" />
-          <select
+          <select data-voice-control="ui.44ee2df74dfe5798"
             value={stateFilter}
             onChange={(e) => setStateFilter(e.target.value)}
             className="text-xs font-medium bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-1 text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
@@ -87,7 +87,7 @@ export function DoctorSelectionStep({
         {/* Search Box */}
         <div className="relative">
           <Search className="absolute left-3.5 top-3 h-4 w-4 text-gray-400" />
-          <Input
+          <Input data-voice-control="ui.ddac381add197ab6"
             type="text"
             placeholder={
               en
@@ -99,7 +99,7 @@ export function DoctorSelectionStep({
             className="pl-10 pr-8 text-xs sm:text-sm bg-gray-50/70 border-gray-200 rounded-xl h-10 focus:bg-white focus:border-blue-500"
           />
           {doctorSearch && (
-            <button
+            <button data-voice-control="ui.7979c0d14e6c88a8"
               onClick={() => setDoctorSearch("")}
               className="absolute right-3 top-3 text-xs text-gray-400 hover:text-gray-600"
             >
@@ -113,7 +113,7 @@ export function DoctorSelectionStep({
           {SPECIALTY_OPTIONS.map((sp) => {
             const isSelected = specialtyFilter === sp.key
             return (
-              <button
+              <button data-voice-control="ui.e0c2831d0e706f06"
                 key={sp.key}
                 onClick={() => {
                   setSpecialtyFilter(sp.key)
@@ -142,7 +142,7 @@ export function DoctorSelectionStep({
             paginatedDoctors.map((doc) => {
               const isSelected = selectedDoctor?.id === doc.id
               return (
-                <div
+                <div data-voice-control="ui.6a607eb536f91aca"
                   key={doc.id}
                   onClick={() => {
                     setSelectedDoctor(doc)
@@ -192,7 +192,7 @@ export function DoctorSelectionStep({
                   </div>
 
                   <div className="shrink-0 flex items-center self-center">
-                    <button
+                    <button data-voice-control="ui.648850fac3484bce"
                       className={`h-7 px-3 rounded-lg text-xs font-bold transition ${
                         isSelected
                           ? "bg-blue-600 text-white shadow-2xs"
@@ -215,7 +215,7 @@ export function DoctorSelectionStep({
               {en ? `Page ${currentPage} of ${totalPages}` : `पृष्ठ ${currentPage} / ${totalPages}`}
             </span>
             <div className="flex items-center gap-1.5">
-              <Button
+              <Button data-voice-control="ui.be91c297003b2cba"
                 size="sm"
                 variant="outline"
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
@@ -225,7 +225,7 @@ export function DoctorSelectionStep({
                 <ChevronLeft className="h-3.5 w-3.5 mr-0.5" />
                 <span>{en ? "Prev" : "पिछला"}</span>
               </Button>
-              <Button
+              <Button data-voice-control="ui.66121876aec0b156"
                 size="sm"
                 variant="outline"
                 onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}

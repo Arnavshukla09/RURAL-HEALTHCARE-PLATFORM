@@ -150,7 +150,7 @@ export function DoctorClaimsTab({
 
                     {isPending && (
                       <div className="flex items-center justify-end gap-2 pt-1">
-                        <Button
+                        <Button data-voice-control="ui.a25f9946bba9f424"
                           size="sm"
                           variant="outline"
                           onClick={() => onRejectClaim(claim.id)}
@@ -158,7 +158,7 @@ export function DoctorClaimsTab({
                         >
                           Reject Claim
                         </Button>
-                        <Button
+                        <Button data-voice-control="ui.679d3890df0fe500"
                           size="sm"
                           onClick={() => onApproveClaim(claim.id)}
                           className="text-xs h-8 bg-emerald-600 hover:bg-emerald-700 text-white font-bold gap-1 shadow-2xs"
@@ -205,7 +205,7 @@ export function DoctorClaimsTab({
             </label>
             <div className="relative">
               <Search className="h-4 w-4 text-gray-400 absolute left-3 top-3" />
-              <Input
+              <Input data-voice-control="ui.319eee542512f93f"
                 placeholder={
                   en
                     ? "e.g. Dr. Ajay Goenka, AIIMS Bhopal, GMC, BMHRC..."
@@ -216,7 +216,9 @@ export function DoctorClaimsTab({
                   setInviteSearch(e.target.value)
                   setSelectedInviteDoctor(null)
                 }}
-                className="pl-9 h-10 text-xs rounded-xl"
+                className="pl-9 h-10 text-xs rounded-xl" aria-label={[en
+                ? "Search Doctor by Name, Hospital, or NMC Number:"
+                : "नाम, अस्पताल या एनएमसी नंबर से खोजें:"].join(' ')}
               />
             </div>
           </div>
@@ -227,7 +229,7 @@ export function DoctorClaimsTab({
                 {en ? "Select clinician to generate invitation:" : "आमंत्रण हेतु डॉक्टर चुनें:"}
               </p>
               {matchedInviteDoctors.map((doc) => (
-                <div
+                <div data-voice-control="ui.d500908a706b0211"
                   key={doc.id}
                   onClick={() => setSelectedInviteDoctor(doc)}
                   className="p-2.5 rounded-lg bg-white hover:bg-indigo-100/60 border border-indigo-100 cursor-pointer flex items-center justify-between gap-3 text-xs"
@@ -241,7 +243,7 @@ export function DoctorClaimsTab({
                       Reg: {doc.regNo} • {doc.districtName}, {doc.stateName}
                     </p>
                   </div>
-                  <Button size="sm" className="h-7 text-xs bg-indigo-600 text-white rounded-lg">
+                  <Button data-voice-control="ui.9321c8e90d839e7d" size="sm" className="h-7 text-xs bg-indigo-600 text-white rounded-lg">
                     Select
                   </Button>
                 </div>
@@ -271,7 +273,7 @@ export function DoctorClaimsTab({
 
                 <div className="p-2.5 bg-white rounded-xl border border-indigo-200 flex items-center justify-between gap-2">
                   <span className="text-[11px] font-mono text-gray-700 truncate select-all">{inviteUrl}</span>
-                  <Button
+                  <Button data-voice-control="ui.e90bea3ea73592df"
                     size="sm"
                     variant="ghost"
                     onClick={() => {
@@ -293,7 +295,7 @@ export function DoctorClaimsTab({
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2 pt-1">
-                  <Button
+                  <Button data-voice-control="ui.52878405b4d05f08"
                     size="sm"
                     onClick={() =>
                       window.open(
@@ -307,7 +309,7 @@ export function DoctorClaimsTab({
                     <span>Dispatch via WhatsApp</span>
                   </Button>
 
-                  <Button
+                  <Button data-voice-control="ui.2b9e8e610816b49a"
                     size="sm"
                     variant="outline"
                     onClick={() =>

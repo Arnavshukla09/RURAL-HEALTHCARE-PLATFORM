@@ -55,7 +55,7 @@ export function DirectoryHeader({ language, title }: DirectoryHeaderProps) {
             </p>
           </div>
         </div>
-        <Button
+        <Button data-voice-control="ui.0773508feaa931fb"
           onClick={() => router.push("/locations")}
           className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl h-9 px-4 shrink-0 flex items-center gap-1.5 shadow-xs"
         >

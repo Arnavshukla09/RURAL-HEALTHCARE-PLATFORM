@@ -37,18 +37,18 @@ export function RegisterForm({
 
   return (
     <TabsContent value="register" className="space-y-4">
-      <form onSubmit={onSignUp}>
+      <form data-voice-control="ui.f6c490fdc964eb46" onSubmit={onSignUp}>
         <div className="space-y-2">
           <Label htmlFor="reg-name">{t.name}</Label>
           <div className="relative">
             <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-            <Input
+            <Input data-voice-control="ui.c45dcc54e3ac137c"
               id="reg-name"
               className="pl-10"
               value={formData.name}
               onChange={(e) => onInputChange("name", e.target.value)}
               placeholder={en ? "Your full name" : "आपका पूरा नाम"}
-              disabled={isLoading}
+              disabled={isLoading} aria-label={[t.name].join(' ')}
             />
           </div>
         </div>
@@ -56,14 +56,14 @@ export function RegisterForm({
           <Label htmlFor="reg-email">{t.email}</Label>
           <div className="relative">
             <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-            <Input
+            <Input data-voice-control="ui.787cfe7404c21895"
               id="reg-email"
               type="email"
               className="pl-10"
               value={formData.email}
               onChange={(e) => onInputChange("email", e.target.value)}
               placeholder="your@email.com"
-              disabled={isLoading}
+              disabled={isLoading} aria-label={[t.email].join(' ')}
             />
           </div>
         </div>
@@ -71,30 +71,30 @@ export function RegisterForm({
           <Label htmlFor="reg-phone">{t.phone}</Label>
           <div className="relative">
             <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-            <Input
+            <Input data-voice-control="ui.c6310f820364f32a"
               id="reg-phone"
               type="tel"
               className="pl-10"
               value={formData.phone}
               onChange={(e) => onInputChange("phone", e.target.value)}
               placeholder="+91 9876543210"
-              disabled={isLoading}
+              disabled={isLoading} aria-label={[t.phone].join(' ')}
             />
           </div>
         </div>
         <div className="space-y-2 mt-3">
           <Label htmlFor="reg-password">{t.password}</Label>
           <div className="relative">
-            <Input
+            <Input data-voice-control="ui.255dd7fc86b738cf"
               id="reg-password"
               type={showPassword ? "text" : "password"}
               className="pr-10"
               value={formData.password}
               onChange={(e) => onInputChange("password", e.target.value)}
               placeholder={en ? "Create a password" : "पासवर्ड बनाएं"}
-              disabled={isLoading}
+              disabled={isLoading} aria-label={[t.password].join(' ')}
             />
-            <Button
+            <Button data-voice-control="ui.ed8b8f12b057c6c9"
               type="button"
               variant="ghost"
               size="sm"
@@ -107,17 +107,17 @@ export function RegisterForm({
         </div>
         <div className="space-y-2 mt-3">
           <Label htmlFor="reg-confirm">{t.confirmPassword}</Label>
-          <Input
+          <Input data-voice-control="ui.f772e9808fef15e6"
             id="reg-confirm"
             type={showPassword ? "text" : "password"}
             value={formData.confirmPassword}
             onChange={(e) => onInputChange("confirmPassword", e.target.value)}
             placeholder={en ? "Confirm your password" : "पासवर्ड पुष्टि करें"}
-            disabled={isLoading}
+            disabled={isLoading} aria-label={[t.confirmPassword].join(' ')}
           />
         </div>
 
-        <Button
+        <Button data-voice-control="ui.64ff192a95953ffb"
           type="submit"
           className="w-full mt-5 gradient-primary text-white"
           disabled={isLoading}

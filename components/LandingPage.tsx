@@ -114,7 +114,7 @@ export function LandingPage({ language }: LandingPageProps) {
               </div>
               
               <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 w-full relative z-10">
-                <Button 
+                <Button data-voice-control="ui.6f2a99b18f080b6c"
                   size="lg" 
                   onClick={() => router.push("/login")}
                   className="text-sm sm:text-base md:text-lg px-5 sm:px-8 py-2.5 sm:py-3 w-full sm:w-auto justify-center rounded-xl shadow-sm whitespace-normal break-words h-auto min-h-[44px]"
@@ -122,7 +122,7 @@ export function LandingPage({ language }: LandingPageProps) {
                   <Heart className="mr-2 h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
                   <span>{t.hero.primaryCTA}</span>
                 </Button>
-                <Button 
+                <Button data-voice-control="ui.bec8d013294aceff"
                   variant="outline" 
                   size="lg"
                   onClick={() => router.push("/consultation")}
@@ -131,7 +131,7 @@ export function LandingPage({ language }: LandingPageProps) {
                   <Phone className="mr-2 h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
                   <span>{t.hero.secondaryCTA}</span>
                 </Button>
-                <Button 
+                <Button data-voice-control="ui.141f698945606c64"
                   variant="destructive" 
                   size="lg"
                   onClick={() => router.push("/emergency")}
@@ -164,7 +164,7 @@ export function LandingPage({ language }: LandingPageProps) {
           </div>
           
           <div className="grid md:grid-cols-3 lg:grid-cols-6 gap-4">
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push("/symptom-checker")}>
+            <Card data-voice-control="ui.fffaca034e130cfb" className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push("/symptom-checker")}>
               <CardHeader className="text-center pb-4">
                 <Activity className="h-10 w-10 text-primary mx-auto mb-2" />
                 <CardTitle className="text-sm">
@@ -173,7 +173,7 @@ export function LandingPage({ language }: LandingPageProps) {
               </CardHeader>
             </Card>
 
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push("/consultation")}>
+            <Card data-voice-control="ui.b21f663d7bdb7212" className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push("/consultation")}>
               <CardHeader className="text-center pb-4">
                 <Phone className="h-10 w-10 text-primary mx-auto mb-2" />
                 <CardTitle className="text-sm">
@@ -182,7 +182,7 @@ export function LandingPage({ language }: LandingPageProps) {
               </CardHeader>
             </Card>
 
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push("/locations")}>
+            <Card data-voice-control="ui.7aca5886b762da58" className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push("/locations")}>
               <CardHeader className="text-center pb-4">
                 <MapPin className="h-10 w-10 text-primary mx-auto mb-2" />
                 <CardTitle className="text-sm">
@@ -191,7 +191,7 @@ export function LandingPage({ language }: LandingPageProps) {
               </CardHeader>
             </Card>
 
-            <Card className="hover:shadow-lg transition-all cursor-pointer border-2 border-red-400 bg-red-50/60 shadow-sm hover:scale-[1.02]" onClick={() => router.push("/emergency")}>
+            <Card data-voice-control="ui.1d97942b39f7edae" className="hover:shadow-lg transition-all cursor-pointer border-2 border-red-400 bg-red-50/60 shadow-sm hover:scale-[1.02]" onClick={() => router.push("/emergency")}>
               <CardHeader className="text-center pb-4">
                 <AlertTriangle className="h-10 w-10 text-red-600 mx-auto mb-2 animate-pulse" />
                 <CardTitle className="text-sm font-bold text-red-700">
@@ -200,7 +200,7 @@ export function LandingPage({ language }: LandingPageProps) {
               </CardHeader>
             </Card>
 
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push("/directory")}>
+            <Card data-voice-control="ui.d3c300124e56fbb0" className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push("/directory")}>
               <CardHeader className="text-center pb-4">
                 <Stethoscope className="h-10 w-10 text-primary mx-auto mb-2" />
                 <CardTitle className="text-sm">
@@ -209,7 +209,7 @@ export function LandingPage({ language }: LandingPageProps) {
               </CardHeader>
             </Card>
 
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push("/records")}>
+            <Card data-voice-control="ui.7963c082035124bf" className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push("/records")}>
               <CardHeader className="text-center pb-4">
                 <Settings className="h-10 w-10 text-primary mx-auto mb-2" />
                 <CardTitle className="text-sm">
@@ -249,7 +249,7 @@ export function LandingPage({ language }: LandingPageProps) {
               </CardContent>
             </Card>
 
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push("/camps")}>
+            <Card data-voice-control="ui.4e0d975220413561" className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => router.push("/camps")}>
               <CardHeader>
                 <Calendar className="h-10 w-10 text-primary mb-2" />
                 <CardTitle>{t.features.campaigns.title}</CardTitle>

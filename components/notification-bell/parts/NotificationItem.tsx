@@ -35,7 +35,7 @@ export function NotificationItem({
     : ""
 
   return (
-    <div
+    <div data-voice-control="ui.04868b6821c23a0f"
       onClick={() => onClick(n)}
       className={`px-4 py-3 cursor-pointer transition-colors ${
         !n.is_read ? "bg-blue-50/50 hover:bg-blue-50/80" : "hover:bg-gray-50"

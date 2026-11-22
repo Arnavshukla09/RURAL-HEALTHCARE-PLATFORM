@@ -40,7 +40,7 @@ export function ChildImciSection({ en, imciData, setImciData }: ChildImciSection
               { key: "lethargicOrUnconscious", label: en ? "Lethargic or unconscious" : "सुस्त या बेहोश" },
             ].map((item) => (
               <label key={item.key} className="flex items-center gap-2.5 text-xs text-gray-700 cursor-pointer">
-                <input
+                <input data-voice-control="ui.1996505af5cac069"
                   type="checkbox"
                   checked={(imciData as any)[item.key]}
                   onChange={(e) => setImciData((prev) => ({ ...prev, [item.key]: e.target.checked }))}
@@ -57,7 +57,7 @@ export function ChildImciSection({ en, imciData, setImciData }: ChildImciSection
 
           <div className="space-y-2.5">
             <label className="flex items-center gap-2.5 text-xs text-gray-700 cursor-pointer">
-              <input
+              <input data-voice-control="ui.863bf02ab33b53ff"
                 type="checkbox"
                 checked={imciData.hasCoughOrDifficultyBreathing}
                 onChange={(e) => setImciData((prev) => ({ ...prev, hasCoughOrDifficultyBreathing: e.target.checked }))}
@@ -70,7 +70,7 @@ export function ChildImciSection({ en, imciData, setImciData }: ChildImciSection
               <div className="pl-6 space-y-2">
                 <label className="block text-xs text-gray-600">
                   {en ? `Respiratory Rate: ${imciData.respiratoryRate} breaths/min` : `श्वसन दर: ${imciData.respiratoryRate} सांस/मिनट`}
-                  <input
+                  <input data-voice-control="ui.1c1902b38f874cb8"
                     type="range"
                     min="20"
                     max="80"
@@ -81,7 +81,7 @@ export function ChildImciSection({ en, imciData, setImciData }: ChildImciSection
                 </label>
 
                 <label className="flex items-center gap-2 text-xs text-gray-700 cursor-pointer">
-                  <input
+                  <input data-voice-control="ui.b582c9ea14bfc71a"
                     type="checkbox"
                     checked={Boolean(imciData.chestIndrawing)}
                     onChange={(e) => setImciData((prev) => ({ ...prev, chestIndrawing: e.target.checked }))}
@@ -93,7 +93,7 @@ export function ChildImciSection({ en, imciData, setImciData }: ChildImciSection
             )}
 
             <label className="flex items-center gap-2.5 text-xs text-gray-700 cursor-pointer">
-              <input
+              <input data-voice-control="ui.c18faa5a078b4c12"
                 type="checkbox"
                 checked={imciData.hasDiarrhea}
                 onChange={(e) => setImciData((prev) => ({ ...prev, hasDiarrhea: e.target.checked }))}
@@ -105,7 +105,7 @@ export function ChildImciSection({ en, imciData, setImciData }: ChildImciSection
             {imciData.hasDiarrhea && (
               <div className="pl-6 space-y-1.5">
                 <label className="flex items-center gap-2 text-xs text-gray-700 cursor-pointer">
-                  <input
+                  <input data-voice-control="ui.31e485c643c43342"
                     type="checkbox"
                     checked={Boolean(imciData.bloodInStool)}
                     onChange={(e) => setImciData((prev) => ({ ...prev, bloodInStool: e.target.checked }))}
@@ -114,7 +114,7 @@ export function ChildImciSection({ en, imciData, setImciData }: ChildImciSection
                   <span>{en ? "Blood in stool (Dysentery)" : "मल में खून (पेचिश)"}</span>
                 </label>
                 <label className="flex items-center gap-2 text-xs text-gray-700 cursor-pointer">
-                  <input
+                  <input data-voice-control="ui.da82500fab8f308c"
                     type="checkbox"
                     checked={Boolean(imciData.sunkenEyes)}
                     onChange={(e) => setImciData((prev) => ({ ...prev, sunkenEyes: e.target.checked }))}
@@ -186,13 +186,13 @@ export function ChildImciSection({ en, imciData, setImciData }: ChildImciSection
 
             {imciResult.requiresImmediateReferral && (
               <div className="mt-4 pt-3 border-t border-red-200 flex gap-2">
-                <a
+                <a data-voice-control="ui.9db5787575df2487"
                   href="tel:108"
                   className="flex-1 bg-red-600 hover:bg-red-700 text-white text-xs font-bold py-2 rounded-lg text-center transition-colors"
                 >
                   {en ? "Dial 108 Ambulance" : "108 एम्बुलेंस डायल करें"}
                 </a>
-                <button
+                <button data-voice-control="ui.903e276b2fa3543a"
                   onClick={() => router.push("/locations")}
                   className="flex-1 bg-white border border-red-300 text-red-700 text-xs font-bold py-2 rounded-lg text-center hover:bg-red-50 transition-colors"
                 >

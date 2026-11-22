@@ -205,7 +205,7 @@ export function AdminDashboard({ user, language }: AdminDashboardProps) {
               ].map((action, i) => {
                 const Icon = action.icon
                 return (
-                  <button key={i} onClick={() => router.push(`/${action.page}`)}
+                  <button data-voice-control="ui.3aab5316d245d0b0" key={i} onClick={() => router.push(`/${action.page}`)}
                     className={`flex flex-col items-center gap-2 p-4 rounded-xl border border-gray-200 bg-white transition-all ${action.color}`}>
                     <Icon className="h-5 w-5 text-gray-600" />
                     <span className="text-xs font-medium text-gray-700 text-center">{action.label}</span>

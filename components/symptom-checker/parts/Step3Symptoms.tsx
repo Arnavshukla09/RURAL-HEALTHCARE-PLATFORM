@@ -56,7 +56,7 @@ export function Step3Symptoms({
             const sel = selectedSymptoms.includes(symptom)
             const label = !en && SYMPTOM_HI[symptom] ? SYMPTOM_HI[symptom] : symptom
             return (
-              <button
+              <button data-voice-control="ui.68defffcfb85ecff"
                 key={symptom}
                 onClick={() => toggleSymptom(symptom)}
                 className={`flex items-center gap-2.5 p-3 rounded-xl border-2 text-left text-sm transition-all ${
@@ -79,11 +79,11 @@ export function Step3Symptoms({
         {error && <p className="text-red-500 text-sm text-center">{error}</p>}
 
         <div className="flex justify-between">
-          <Button variant="outline" onClick={onBack}>
+          <Button data-voice-control="ui.a8a1abe5954195f4" variant="outline" onClick={onBack}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             {en ? "Back" : "पीछे"}
           </Button>
-          <Button
+          <Button data-voice-control="ui.45dbe8124b80aaa7"
             onClick={onAnalyze}
             disabled={selectedSymptoms.length === 0 || loading}
             className="gradient-primary text-white"

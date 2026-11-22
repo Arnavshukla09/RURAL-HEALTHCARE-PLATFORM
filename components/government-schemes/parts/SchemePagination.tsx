@@ -42,7 +42,7 @@ export function SchemePagination({
       </p>
 
       <div className="flex items-center gap-1.5 order-1 sm:order-2">
-        <Button
+        <Button data-voice-control="ui.648e04fc00d1dd90"
           size="sm"
           variant="outline"
           disabled={currentPage === 1}
@@ -66,7 +66,7 @@ export function SchemePagination({
             return null
           }
           return (
-            <button
+            <button data-voice-control="ui.f9a0c6c7643c6926"
               key={page}
               onClick={() => handleSelectPage(page)}
               className={`h-8 min-w-8 px-2.5 rounded-lg text-xs font-bold transition-all ${
@@ -80,7 +80,7 @@ export function SchemePagination({
           )
         })}
 
-        <Button
+        <Button data-voice-control="ui.8388e908a4456d9e"
           size="sm"
           variant="outline"
           disabled={currentPage === totalPages}

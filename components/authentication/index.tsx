@@ -281,8 +281,8 @@ export function Authentication({ setUser, setCurrentPage, language }: Authentica
           <CardContent className="pt-6">
             <Tabs defaultValue="login" className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-6">
-                <TabsTrigger value="login">{t.login}</TabsTrigger>
-                <TabsTrigger value="register">{t.register}</TabsTrigger>
+                <TabsTrigger data-voice-control="ui.b37082e1a2e79366" value="login">{t.login}</TabsTrigger>
+                <TabsTrigger data-voice-control="ui.6b6d2044ca4035ea" value="register">{t.register}</TabsTrigger>
               </TabsList>
 
               {/* Error/Success alerts */}

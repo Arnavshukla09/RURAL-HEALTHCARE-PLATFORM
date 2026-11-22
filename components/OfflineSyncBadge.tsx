@@ -109,7 +109,7 @@ export function OfflineSyncBadge({ language, role }: OfflineSyncBadgeProps) {
   return (
     <>
       {/* Header Pill / Badge */}
-      <button
+      <button data-voice-control="ui.a1f655071d82ee92"
         onClick={() => setIsOpen(true)}
         className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all shadow-sm ${
           failedCount > 0
@@ -151,7 +151,7 @@ export function OfflineSyncBadge({ language, role }: OfflineSyncBadgeProps) {
                   {totalWaiting} {en ? "items" : "मद"}
                 </span>
               </div>
-              <button
+              <button data-voice-control="ui.4229017daab1f56d"
                 onClick={() => setIsOpen(false)}
                 className="p-1 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
               >
@@ -245,14 +245,14 @@ export function OfflineSyncBadge({ language, role }: OfflineSyncBadgeProps) {
 
                     {item.status === "failed" && (
                       <div className="mt-2.5 flex items-center justify-end gap-2 pt-2 border-t border-red-200/50">
-                        <button
+                        <button data-voice-control="ui.487b61bd8ce05d50"
                           onClick={() => handleDiscard(item.client_op_id)}
                           className="px-2.5 py-1 text-gray-600 hover:text-red-700 font-medium flex items-center gap-1 rounded hover:bg-red-100/40 transition-colors"
                         >
                           <Trash2 className="h-3 w-3" />
                           {en ? "Discard" : "हटाएं"}
                         </button>
-                        <button
+                        <button data-voice-control="ui.57b232830f0da393"
                           onClick={() => handleRetry(item.client_op_id)}
                           className="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white font-medium rounded flex items-center gap-1 transition-colors"
                         >
@@ -278,14 +278,14 @@ export function OfflineSyncBadge({ language, role }: OfflineSyncBadgeProps) {
                   : "कनेक्टेड: स्वतः सिंक सक्रिय"}
               </span>
               <div className="flex items-center gap-2">
-                <button
+                <button data-voice-control="ui.e26236cf3fec49ae"
                   onClick={() => setIsOpen(false)}
                   className="px-3.5 py-1.5 text-xs text-gray-600 hover:text-gray-900 font-medium rounded-lg hover:bg-gray-200 transition-colors"
                 >
                   {en ? "Close" : "बंद करें"}
                 </button>
                 {online && totalWaiting > 0 && (
-                  <button
+                  <button data-voice-control="ui.5d845e5dc3359b63"
                     onClick={handleManualSync}
                     disabled={syncing}
                     className="px-3.5 py-1.5 text-xs bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg flex items-center gap-1.5 shadow-sm transition-colors disabled:opacity-50"

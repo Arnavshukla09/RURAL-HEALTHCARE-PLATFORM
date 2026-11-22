@@ -84,7 +84,9 @@ export function SearchableDropdown({
       <label className="text-[11px] font-semibold text-blue-900 block mb-1">
         {label}
       </label>
-      <button
+      <button data-voice-control="ui.acc86de0a84026ee"
+        aria-label={`${label}: ${displayName}`}
+        aria-expanded={isOpen}
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
         className="w-full text-xs font-medium border border-blue-200 rounded-lg p-2 bg-white text-gray-800 flex items-center justify-between hover:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-500 shadow-sm"
@@ -101,13 +103,13 @@ export function SearchableDropdown({
         <div className="absolute top-full left-0 mt-1 w-full min-w-[210px] z-[1050] bg-white rounded-lg shadow-xl border border-blue-200 p-1.5">
           <div className="relative mb-1">
             <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-gray-400" />
-            <input
+            <input data-voice-control="ui.26b62ad39de50d91"
               ref={inputRef}
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder={searchPlaceholder}
-              className="w-full pl-8 pr-2.5 py-1.5 text-xs border border-gray-200 rounded-md bg-gray-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-800"
+              className="w-full pl-8 pr-2.5 py-1.5 text-xs border border-gray-200 rounded-md bg-gray-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-800" aria-label={[label].join(' ')}
             />
           </div>
 
@@ -120,7 +122,7 @@ export function SearchableDropdown({
               filtered.map((item) => {
                 const isSelected = item.code === selectedCode
                 return (
-                  <button
+                  <button data-voice-control="ui.202dc0f234e1e46e"
                     key={item.code}
                     type="button"
                     onClick={() => {

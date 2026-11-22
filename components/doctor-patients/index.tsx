@@ -243,7 +243,7 @@ export function DoctorPatients({ language }: DoctorPatientsProps) {
         {/* Search */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <input
+          <input data-voice-control="ui.e2651c25a4d74e35"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={en ? "Search patients by name, email, phone..." : "नाम, ईमेल, फ़ोन से खोजें..."}

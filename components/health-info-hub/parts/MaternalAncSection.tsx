@@ -42,7 +42,7 @@ export function MaternalAncSection({ en, ancData, setAncData }: MaternalAncSecti
               { key: "reducedFetalMovements", label: en ? "Reduced / absent baby movements" : "गर्भ में शिशु की हलचल कम या बंद" },
             ].map((item) => (
               <label key={item.key} className="flex items-center gap-2.5 text-xs text-gray-700 cursor-pointer">
-                <input
+                <input data-voice-control="ui.30b27125b9a6b5d5"
                   type="checkbox"
                   checked={(ancData as any)[item.key]}
                   onChange={(e) => setAncData((prev) => ({ ...prev, [item.key]: e.target.checked }))}
@@ -58,22 +58,22 @@ export function MaternalAncSection({ en, ancData, setAncData }: MaternalAncSecti
               <label className="text-xs text-gray-600 block mb-1">
                 {en ? "Systolic BP (mmHg)" : "सिस्टोलिक बीपी"}
               </label>
-              <input
+              <input data-voice-control="ui.253a7c30eb5600da"
                 type="number"
                 value={ancData.systolicBp || 120}
                 onChange={(e) => setAncData((prev) => ({ ...prev, systolicBp: Number(e.target.value) }))}
-                className="w-full text-xs p-2 border rounded-lg"
+                className="w-full text-xs p-2 border rounded-lg" aria-label={[en ? "Systolic BP (mmHg)" : "सिस्टोलिक बीपी"].join(' ')}
               />
             </div>
             <div>
               <label className="text-xs text-gray-600 block mb-1">
                 {en ? "Diastolic BP (mmHg)" : "डायस्टोलिक बीपी"}
               </label>
-              <input
+              <input data-voice-control="ui.f67f64136cd6e139"
                 type="number"
                 value={ancData.diastolicBp || 80}
                 onChange={(e) => setAncData((prev) => ({ ...prev, diastolicBp: Number(e.target.value) }))}
-                className="w-full text-xs p-2 border rounded-lg"
+                className="w-full text-xs p-2 border rounded-lg" aria-label={[en ? "Diastolic BP (mmHg)" : "डायस्टोलिक बीपी"].join(' ')}
               />
             </div>
           </div>
@@ -138,13 +138,13 @@ export function MaternalAncSection({ en, ancData, setAncData }: MaternalAncSecti
 
             {ancResult.requiresImmediateHospitalization && (
               <div className="mt-4 pt-3 border-t border-red-200 flex gap-2">
-                <a
+                <a data-voice-control="ui.b3fa2deffa549d2c"
                   href="tel:108"
                   className="flex-1 bg-red-600 hover:bg-red-700 text-white text-xs font-bold py-2 rounded-lg text-center transition-colors"
                 >
                   {en ? "Call 108 (Obstetric Ambulance)" : "108 एम्बुलेंस बुलाएं"}
                 </a>
-                <button
+                <button data-voice-control="ui.40f5d5e4e4e72c49"
                   onClick={() => router.push("/locations")}
                   className="flex-1 bg-white border border-red-300 text-red-700 text-xs font-bold py-2 rounded-lg text-center hover:bg-red-50 transition-colors"
                 >

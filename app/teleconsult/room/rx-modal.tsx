@@ -72,7 +72,7 @@ export function RxModal({
               </p>
             </div>
           </div>
-          <button
+          <button data-voice-control="ui.5dc15754f719fa5b"
             onClick={onClose}
             className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white"
           >
@@ -96,35 +96,35 @@ export function RxModal({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-slate-50 rounded-2xl border border-slate-200 text-xs">
             <div>
               <label className="font-bold text-slate-600 block">{en ? "Consulting Doctor:" : "डॉक्टर:"}</label>
-              <Input
+              <Input data-voice-control="ui.c51c88f9104e7278"
                 value={rxData.doctorName}
                 readOnly
-                className="h-8 text-xs bg-white mt-1"
+                className="h-8 text-xs bg-white mt-1" aria-label={[en ? "Consulting Doctor:" : "डॉक्टर:"].join(' ')}
               />
             </div>
             <div>
               <label className="font-bold text-slate-600 block">{en ? "NMC Registration No:" : "पंजीकरण संख्या:"}</label>
-              <Input
+              <Input data-voice-control="ui.e865da80aceff0ee"
                 value={rxData.nmcRegNo}
                 readOnly
                 placeholder={en ? "Not supplied by the registry" : "पंजीकरण विवरण उपलब्ध नहीं"}
-                className="h-8 text-xs bg-white mt-1"
+                className="h-8 text-xs bg-white mt-1" aria-label={[en ? "NMC Registration No:" : "पंजीकरण संख्या:"].join(' ')}
               />
             </div>
             <div>
               <label className="font-bold text-slate-600 block">{en ? "Patient Name:" : "मरीज का नाम:"}</label>
-              <Input
+              <Input data-voice-control="ui.c4bd6a0c207a1958"
                 value={rxData.patientName}
                 readOnly
-                className="h-8 text-xs bg-white mt-1"
+                className="h-8 text-xs bg-white mt-1" aria-label={[en ? "Patient Name:" : "मरीज का नाम:"].join(' ')}
               />
             </div>
             <div>
               <label className="font-bold text-slate-600 block">{en ? "Clinical Diagnosis:" : "निदान / समस्या:"}</label>
-              <Input
+              <Input data-voice-control="ui.f850cf56a2cae9b0"
                 value={rxData.diagnosis}
                 onChange={(e) => setRxData({ ...rxData, diagnosis: e.target.value })}
-                className="h-8 text-xs bg-white mt-1"
+                className="h-8 text-xs bg-white mt-1" aria-label={[en ? "Clinical Diagnosis:" : "निदान / समस्या:"].join(' ')}
               />
             </div>
           </div>
@@ -133,11 +133,11 @@ export function RxModal({
             <label className="font-bold text-slate-700 block mb-1">
               {clinician ? (en ? "Prescribed medicines and dosage:" : "दवाइयाँ और खुराक:") : (en ? "Medication notes from the consultation:" : "परामर्श की दवा संबंधी जानकारी:")}
             </label>
-            <Textarea
+            <Textarea data-voice-control="ui.2db43e99d574fde6"
               value={rxData.medicines}
               onChange={(e) => setRxData({ ...rxData, medicines: e.target.value })}
               rows={3}
-              className="text-xs bg-white font-mono"
+              className="text-xs bg-white font-mono" aria-label={[clinician ? (en ? "Prescribed medicines and dosage:" : "दवाइयाँ और खुराक:") : (en ? "Medication notes from the consultation:" : "परामर्श की दवा संबंधी जानकारी:")].join(' ')}
             />
           </div>
 
@@ -145,16 +145,16 @@ export function RxModal({
             <label className="font-bold text-slate-700 block mb-1">
               {en ? "Advice & Precautions:" : "सलाह व सावधानियां:"}
             </label>
-            <Textarea
+            <Textarea data-voice-control="ui.9defd83df150752c"
               value={rxData.instructions}
               onChange={(e) => setRxData({ ...rxData, instructions: e.target.value })}
               rows={2}
-              className="text-xs bg-white"
+              className="text-xs bg-white" aria-label={[en ? "Advice & Precautions:" : "सलाह व सावधानियां:"].join(' ')}
             />
           </div>
 
           <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-200">
-            <Button
+            <Button data-voice-control="ui.f213ffd4ceb97f72"
               variant="outline"
               onClick={onPrint}
               className="border-teal-600 text-teal-700 hover:bg-teal-50 font-bold text-xs h-10 rounded-xl flex items-center gap-1.5"
@@ -164,7 +164,7 @@ export function RxModal({
             </Button>
 
             <div className="flex items-center gap-2">
-              <Button
+              <Button data-voice-control="ui.30d625c54cd21538"
                 onClick={onSaveRecord}
                 disabled={savingRecord}
                 className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs h-10 rounded-xl flex items-center gap-1.5 shadow-xs"
@@ -173,7 +173,7 @@ export function RxModal({
                 <span>{en ? "Save to Patient Records" : "मेडिकल रिकॉर्ड में सेव करें"}</span>
               </Button>
 
-              <Button
+              <Button data-voice-control="ui.93c78565c6d15f15"
                 variant="ghost"
                 onClick={onExit}
                 className="text-xs text-slate-600 hover:text-slate-900"

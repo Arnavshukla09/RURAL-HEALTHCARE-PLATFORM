@@ -122,7 +122,7 @@ export function GovernmentSchemes({ language }: GovernmentSchemesProps) {
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Navigation & Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <button
+          <button data-voice-control="ui.badee11319ec974e"
             onClick={() => router.back()}
             className="inline-flex items-center text-xs sm:text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors bg-white px-3 py-1.5 rounded-lg border border-gray-200 shadow-2xs"
           >
@@ -223,7 +223,7 @@ export function GovernmentSchemes({ language }: GovernmentSchemesProps) {
                   ? "No schemes available for the selected filters. Try choosing 'All Schemes' or another state."
                   : "चयनित फ़िल्टर के लिए कोई योजना नहीं मिली। 'सभी योजनाएं' चुनें।"}
               </p>
-              <Button size="sm" variant="outline" onClick={resetAllFilters} className="text-xs font-semibold rounded-xl mt-2">
+              <Button data-voice-control="ui.3634ce04f201e3b4" size="sm" variant="outline" onClick={resetAllFilters} className="text-xs font-semibold rounded-xl mt-2">
                 <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
                 <span>{en ? "Reset All Filters" : "सभी फ़िल्टर रीसेट करें"}</span>
               </Button>

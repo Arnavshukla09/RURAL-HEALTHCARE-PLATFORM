@@ -79,7 +79,7 @@ export function SearchableDropdown({
       <label className="text-[11px] font-bold text-gray-700 block mb-1">
         {label}
       </label>
-      <button
+      <button data-voice-control="ui.8ee3b5c404063e66"
         type="button"
         disabled={disabled}
         onClick={() => !disabled && setIsOpen((prev) => !prev)}
@@ -106,19 +106,19 @@ export function SearchableDropdown({
         <div className="absolute top-full left-0 mt-1.5 w-full min-w-[220px] z-50 bg-white rounded-xl shadow-xl border border-blue-200 p-2 animate-in fade-in zoom-in-95 duration-100">
           <div className="relative mb-1.5">
             <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-gray-400" />
-            <input
+            <input data-voice-control="ui.48f3d4467e7ebd0a"
               ref={inputRef}
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder={searchPlaceholder}
-              className="w-full pl-8 pr-2.5 py-1.5 text-xs border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-800"
+              className="w-full pl-8 pr-2.5 py-1.5 text-xs border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-800" aria-label={[label].join(' ')}
             />
           </div>
 
           <div className="max-h-[190px] overflow-y-auto divide-y divide-gray-50 space-y-0.5">
             {allOptionLabel && (
-              <button
+              <button data-voice-control="ui.7b277f096a74672a"
                 type="button"
                 onClick={() => {
                   onSelect("all")
@@ -145,7 +145,7 @@ export function SearchableDropdown({
               filtered.map((item) => {
                 const isSelected = item.code === selectedCode
                 return (
-                  <button
+                  <button data-voice-control="ui.3252d467a73c2346"
                     key={item.code}
                     type="button"
                     onClick={() => {

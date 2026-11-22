@@ -82,7 +82,7 @@ export function WelcomeHeader({ user, language, welcomeText }: WelcomeHeaderProp
             </p>
           </div>
         </div>
-        <Button
+        <Button data-voice-control="ui.5faa3be960bd4221"
           variant="destructive"
           size="lg"
           onClick={() => router.push("/emergency")}

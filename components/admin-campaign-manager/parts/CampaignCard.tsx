@@ -57,14 +57,14 @@ export function CampaignCard({
               : `"${c.title}" हटाएं?`}
           </p>
           <div className="flex gap-2">
-            <Button
+            <Button data-voice-control="ui.a865916de6954231"
               size="sm"
               className="bg-red-600 text-white flex-1 h-8"
               onClick={() => onDelete(c.id!)}
             >
               {en ? "Yes, Delete" : "हां, हटाएं"}
             </Button>
-            <Button
+            <Button data-voice-control="ui.94cabbfe50d40a80"
               size="sm"
               variant="outline"
               className="flex-1 h-8"
@@ -113,13 +113,13 @@ export function CampaignCard({
                 </h3>
               </div>
               <div className="flex gap-1.5 flex-shrink-0">
-                <button
+                <button data-voice-control="ui.047e7a600798af60"
                   onClick={() => onStartEdit(c)}
                   className="p-1.5 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
                 >
                   <Edit3 className="h-4 w-4" />
                 </button>
-                <button
+                <button data-voice-control="ui.a877352628b65f58"
                   onClick={() => onSetDeleteConfirm(c.id!)}
                   className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                 >
@@ -183,7 +183,7 @@ export function CampaignCard({
               {c.phone && (
                 <div className="flex items-center gap-2 text-gray-600">
                   <Phone className="h-4 w-4 flex-shrink-0 text-purple-500" />
-                  <a
+                  <a data-voice-control="ui.274241554811cf47"
                     href={`tel:${c.phone}`}
                     className="hover:text-purple-700 hover:underline"
                   >
@@ -196,7 +196,7 @@ export function CampaignCard({
             {/* Action buttons */}
             <div className="flex flex-wrap gap-2 pt-1 border-t border-gray-100">
               {c.phone && (
-                <a
+                <a data-voice-control="ui.7fdd8c537463ef73"
                   href={`tel:${c.phone}`}
                   className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-teal-50 text-teal-700 rounded-full hover:bg-teal-100 transition-colors"
                 >
@@ -205,7 +205,7 @@ export function CampaignCard({
                 </a>
               )}
               {c.map_url && (
-                <a
+                <a data-voice-control="ui.bec87d64eb365c19"
                   href={c.map_url}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -216,7 +216,7 @@ export function CampaignCard({
                 </a>
               )}
               {c.map_url && (
-                <a
+                <a data-voice-control="ui.49ad82253e2dadea"
                   href={c.map_url}
                   target="_blank"
                   rel="noopener noreferrer"

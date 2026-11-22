@@ -155,13 +155,13 @@ export function AdminAppointments({ language }: AdminAppointmentsProps) {
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <input value={search} onChange={e => setSearch(e.target.value)}
+            <input data-voice-control="ui.7cdba78128834d17" value={search} onChange={e => setSearch(e.target.value)}
               placeholder={en ? "Search by patient name, email, notes..." : "नाम, ईमेल, नोट से खोजें..."}
               className="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-white focus:outline-none focus:border-purple-400" />
           </div>
           <div className="flex rounded-xl bg-white border border-gray-200 p-1 gap-1">
             {["all","scheduled","completed","cancelled"].map(s => (
-              <button key={s} onClick={() => setStatusFilter(s)}
+              <button data-voice-control="ui.8db650195092f69f" key={s} onClick={() => setStatusFilter(s)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium capitalize transition-colors ${statusFilter === s ? "bg-purple-600 text-white" : "text-gray-600 hover:bg-gray-100"}`}>
                 {s}
               </button>
@@ -208,7 +208,7 @@ export function AdminAppointments({ language }: AdminAppointmentsProps) {
                         {p?.email && <p className="text-xs text-gray-400 mt-0.5">{p.email}</p>}
                       </div>
                     </div>
-                    <button onClick={() => setExpanded(isExpanded ? null : appt.id)} className="text-gray-400 hover:text-gray-600">
+                    <button data-voice-control="ui.c4351c5563876ff9" onClick={() => setExpanded(isExpanded ? null : appt.id)} className="text-gray-400 hover:text-gray-600">
                       {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
                     </button>
                   </div>
@@ -224,19 +224,19 @@ export function AdminAppointments({ language }: AdminAppointmentsProps) {
                       <div className="flex flex-wrap gap-2">
                         {appt.status === "scheduled" && (
                           <>
-                            <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white h-7 text-xs"
+                            <Button data-voice-control="ui.f147eeba7fa8a320" size="sm" className="bg-green-600 hover:bg-green-700 text-white h-7 text-xs"
                               disabled={updating === appt.id} onClick={() => updateStatus(appt.id, "completed")}>
                               {updating === appt.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle className="h-3 w-3 mr-1" />}
                               {en ? "Mark Completed" : "पूर्ण करें"}
                             </Button>
-                            <Button size="sm" variant="outline" className="border-red-200 text-red-600 h-7 text-xs"
+                            <Button data-voice-control="ui.0f8d6f48dde89dca" size="sm" variant="outline" className="border-red-200 text-red-600 h-7 text-xs"
                               disabled={updating === appt.id} onClick={() => updateStatus(appt.id, "cancelled")}>
                               <XCircle className="h-3 w-3 mr-1" />{en ? "Cancel" : "रद्द"}
                             </Button>
                           </>
                         )}
                         {appt.status !== "scheduled" && (
-                          <Button size="sm" variant="outline" className="h-7 text-xs"
+                          <Button data-voice-control="ui.16a46a9d9040ddc1" size="sm" variant="outline" className="h-7 text-xs"
                             disabled={updating === appt.id} onClick={() => updateStatus(appt.id, "scheduled")}>
                             {en ? "Re-open" : "पुनः खोलें"}
                           </Button>
@@ -249,7 +249,7 @@ export function AdminAppointments({ language }: AdminAppointmentsProps) {
             )
           })}
           {nextCursor && (
-            <Button
+            <Button data-voice-control="ui.e0474ab8f06ab548"
               variant="outline"
               className="w-full mt-3"
               onClick={handleLoadMore}

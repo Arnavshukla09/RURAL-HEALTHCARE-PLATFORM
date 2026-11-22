@@ -183,7 +183,7 @@ export function AdminUserManagement({ language }: AdminUserManagementProps) {
           </div>
           {/* Navigation Pill Tabs */}
           <div className="flex items-center gap-1.5 p-1 bg-white rounded-xl border border-purple-200 shadow-2xs">
-            <button
+            <button data-voice-control="ui.48f9465b4d6b5fab"
               onClick={() => setActiveTab("users")}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                 activeTab === "users"
@@ -196,7 +196,7 @@ export function AdminUserManagement({ language }: AdminUserManagementProps) {
               <span className="text-[10px] opacity-80">({users.length})</span>
             </button>
 
-            <button
+            <button data-voice-control="ui.124aedddd0064172"
               onClick={() => setActiveTab("claims")}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                 activeTab === "claims"

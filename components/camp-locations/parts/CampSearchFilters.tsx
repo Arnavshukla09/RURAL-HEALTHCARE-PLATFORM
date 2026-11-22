@@ -76,7 +76,7 @@ export function CampSearchFilters({
         <div className="flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center justify-between">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-            <Input
+            <Input data-voice-control="ui.a4d50693c423c2b5"
               placeholder={t.searchPlaceholder}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -84,7 +84,7 @@ export function CampSearchFilters({
             />
           </div>
           {hasActiveFilters && (
-            <Button
+            <Button data-voice-control="ui.ceeda1b6d5e1ded9"
               variant="outline"
               size="sm"
               onClick={resetAllFilters}
@@ -103,7 +103,7 @@ export function CampSearchFilters({
               <MapPin className="h-3.5 w-3.5 text-blue-600" />
               <span>{t.selectState}</span>
             </label>
-            <select
+            <select data-voice-control="ui.2f46dbd86890c5db"
               value={selectedStateCode}
               onChange={(e) => {
                 setSelectedStateCode(e.target.value)
@@ -125,7 +125,7 @@ export function CampSearchFilters({
               <Building2 className="h-3.5 w-3.5 text-emerald-600" />
               <span>{t.selectDistrict}</span>
             </label>
-            <select
+            <select data-voice-control="ui.bdcbce9362e5d4d4"
               value={selectedDistrictName}
               onChange={(e) => setSelectedDistrictName(e.target.value)}
               disabled={selectedStateCode === "all" || districtOptions.length === 0}
@@ -150,7 +150,7 @@ export function CampSearchFilters({
             {CAMPAIGN_CATEGORIES.map((cat) => {
               const isSelected = selectedCategory === cat.key
               return (
-                <button
+                <button data-voice-control="ui.b33a6c403a09cc88"
                   key={cat.key}
                   type="button"
                   onClick={() => setSelectedCategory(cat.key)}

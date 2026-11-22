@@ -39,7 +39,7 @@ export function Step2BodyPart({
             const Icon = part.icon
             const sel = selectedBodyPart === part.id
             return (
-              <button
+              <button data-voice-control="ui.72d178e51791f44e"
                 key={part.id}
                 onClick={() => setSelectedBodyPart(part.id)}
                 className={`p-3 rounded-xl border-2 flex flex-col items-center gap-1.5 transition-all hover:shadow-md ${
@@ -57,11 +57,11 @@ export function Step2BodyPart({
           })}
         </div>
         <div className="flex justify-between">
-          <Button variant="outline" onClick={onBack}>
+          <Button data-voice-control="ui.45c4da96ceb2ef98" variant="outline" onClick={onBack}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             {en ? "Back" : "पीछे"}
           </Button>
-          <Button
+          <Button data-voice-control="ui.381a01d37787ccdf"
             onClick={onNext}
             disabled={!selectedBodyPart}
             className="gradient-primary text-white"

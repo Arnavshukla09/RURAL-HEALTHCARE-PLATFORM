@@ -80,7 +80,7 @@ export function SearchableStateSelect({
 
   return (
     <div className="relative w-full sm:w-64" ref={dropdownRef}>
-      <button
+      <button data-voice-control="ui.3a03981f9d5bd12b"
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
         className="w-full text-xs font-semibold border border-blue-200 hover:border-blue-400 rounded-xl px-3 py-2 bg-white text-gray-800 flex items-center justify-between shadow-2xs transition-colors"
@@ -102,7 +102,7 @@ export function SearchableStateSelect({
         <div className="absolute top-full left-0 mt-1.5 w-full min-w-[240px] z-50 bg-white rounded-xl shadow-xl border border-blue-200 p-2 animate-in fade-in zoom-in-95 duration-100">
           <div className="relative mb-1.5">
             <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-gray-400" />
-            <input
+            <input data-voice-control="ui.6f0bc6ad661e746a"
               ref={inputRef}
               type="text"
               value={searchTerm}
@@ -113,7 +113,7 @@ export function SearchableStateSelect({
           </div>
 
           <div className="max-h-[200px] overflow-y-auto divide-y divide-gray-50 space-y-0.5">
-            <button
+            <button data-voice-control="ui.7a9cb951ba66fcaf"
               type="button"
               onClick={() => {
                 onSelect("all")
@@ -134,7 +134,7 @@ export function SearchableStateSelect({
             {filtered.map((item) => {
               const isSelected = item.code === selectedStateCode
               return (
-                <button
+                <button data-voice-control="ui.82072eb0c2f1a137"
                   key={item.code}
                   type="button"
                   onClick={() => {

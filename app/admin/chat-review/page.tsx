@@ -81,7 +81,7 @@ export default function ChatReviewPage() {
             Review, edit, and approve pending Gemini responses for permanent Tier 2 promotion.
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={fetchPending} disabled={loading}>
+        <Button data-voice-control="ui.536209c6db9e0cdb" variant="outline" size="sm" onClick={fetchPending} disabled={loading}>
           Refresh
         </Button>
       </div>
@@ -126,7 +126,7 @@ export default function ChatReviewPage() {
                   {item.answer}
                 </div>
                 <div className="flex items-center justify-end gap-2 pt-2 border-t">
-                  <Button
+                  <Button data-voice-control="ui.7248a25a6d885bfb"
                     size="sm"
                     variant="outline"
                     className="text-red-600 hover:bg-red-50"
@@ -136,7 +136,7 @@ export default function ChatReviewPage() {
                     <X className="h-4 w-4 mr-1" />
                     Reject
                   </Button>
-                  <Button
+                  <Button data-voice-control="ui.63a8ea338dac3229"
                     size="sm"
                     className="bg-teal-600 hover:bg-teal-700 text-white"
                     disabled={processingId === item.id}

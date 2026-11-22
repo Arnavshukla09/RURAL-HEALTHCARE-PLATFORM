@@ -27,7 +27,7 @@ export default function OfflinePage() {
       <div className="mx-auto max-w-2xl space-y-5">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2"><HeartPulse className="h-6 w-6 text-teal-600" aria-hidden="true"/><span className="text-lg font-bold text-gray-900">RuralHealth</span></div>
-          <select aria-label={t("chooseLanguage")} value={selected.code} onChange={event => setLanguage(event.target.value)} className="min-h-12 max-w-[50%] rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-900">
+          <select data-voice-control="ui.05b3498bd42fe297" aria-label={t("chooseLanguage")} value={selected.code} onChange={event => setLanguage(event.target.value)} className="min-h-12 max-w-[50%] rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-900">
             {ASSISTANT_LANGUAGES.map(entry => <option key={entry.code} value={entry.code}>{entry.nativeName}</option>)}
           </select>
         </div>
@@ -39,7 +39,7 @@ export default function OfflinePage() {
               <div className="space-y-3">
                 <h1 className="text-xl font-bold text-gray-900">{t("offlineTitle")}</h1>
                 <p className="text-sm leading-relaxed text-gray-700">{t("offlineGuidance")}</p>
-                <Button onClick={() => { setIsRetrying(true); window.location.reload() }} disabled={isRetrying} className="min-h-12 gap-2 bg-teal-700 text-white hover:bg-teal-800">
+                <Button data-voice-control="ui.ea69d1812b074d51" onClick={() => { setIsRetrying(true); window.location.reload() }} disabled={isRetrying} className="min-h-12 gap-2 bg-teal-700 text-white hover:bg-teal-800">
                   <RefreshCw className={`h-5 w-5 ${isRetrying ? "animate-spin" : ""}`} aria-hidden="true"/>{t("retryConnection")}
                 </Button>
               </div>
@@ -54,7 +54,7 @@ export default function OfflinePage() {
           </CardHeader>
           <CardContent className="space-y-3 p-4">
             {EMERGENCY_CONTACTS.map(contact => (
-              <a key={contact.number} href={`tel:${contact.number}`} className={`flex min-h-16 items-center justify-between gap-3 rounded-xl px-4 py-3 font-semibold focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-teal-600 ${contact.color}`}>
+              <a data-voice-control="ui.1a750c65f310a8c3" key={contact.number} href={`tel:${contact.number}`} className={`flex min-h-16 items-center justify-between gap-3 rounded-xl px-4 py-3 font-semibold focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-teal-600 ${contact.color}`}>
                 <span className="flex items-center gap-3"><Phone className="h-7 w-7 shrink-0" aria-hidden="true"/>{t(contact.key)}</span>
                 <span className="text-xl font-bold" dir="ltr">{contact.number}</span>
               </a>
@@ -66,11 +66,11 @@ export default function OfflinePage() {
         <Card className="shadow-sm">
           <CardHeader className="pb-2"><CardTitle className="text-base text-gray-900">{t("offlineSavedTitle")}</CardTitle></CardHeader>
           <CardContent className="space-y-3 p-4">
-            <Link href="/symptom-checker" className="flex min-h-16 items-start gap-3 rounded-xl border border-teal-100 bg-teal-50 p-4 hover:bg-teal-100">
+            <Link data-voice-control="ui.ee304b30a23063e2" href="/symptom-checker" className="flex min-h-16 items-start gap-3 rounded-xl border border-teal-100 bg-teal-50 p-4 hover:bg-teal-100">
               <Stethoscope className="h-8 w-8 shrink-0 text-teal-700" aria-hidden="true"/><div><p className="font-semibold text-gray-900">{t("checkSymptoms")}</p><p className="mt-1 text-xs leading-relaxed text-gray-600">{t("offlineSymptomsNote")}</p></div>
             </Link>
-            <Link href="/emergency" className="flex min-h-16 items-center gap-3 rounded-xl border border-red-100 bg-red-50 p-4 font-semibold text-red-900 hover:bg-red-100"><AlertTriangle className="h-8 w-8 shrink-0" aria-hidden="true"/>{t("emergency")}</Link>
-            <Link href="/" className="flex min-h-16 items-center gap-3 rounded-xl border border-gray-100 bg-gray-50 p-4 font-semibold text-gray-900 hover:bg-gray-100"><Home className="h-8 w-8 shrink-0 text-teal-700" aria-hidden="true"/>{t("home")}</Link>
+            <Link data-voice-control="ui.5323ec14c907a1f6" href="/emergency" className="flex min-h-16 items-center gap-3 rounded-xl border border-red-100 bg-red-50 p-4 font-semibold text-red-900 hover:bg-red-100"><AlertTriangle className="h-8 w-8 shrink-0" aria-hidden="true"/>{t("emergency")}</Link>
+            <Link data-voice-control="ui.b2c28fe8b90c1295" href="/" className="flex min-h-16 items-center gap-3 rounded-xl border border-gray-100 bg-gray-50 p-4 font-semibold text-gray-900 hover:bg-gray-100"><Home className="h-8 w-8 shrink-0 text-teal-700" aria-hidden="true"/>{t("home")}</Link>
             <p className="text-xs leading-relaxed text-gray-600">{t("offlineVoiceNote")}</p>
           </CardContent>
         </Card>

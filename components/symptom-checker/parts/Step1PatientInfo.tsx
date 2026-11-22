@@ -38,7 +38,7 @@ export function Step1PatientInfo({
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="text-sm font-medium block mb-1">{en ? "Age" : "उम्र"}</label>
-            <input
+            <input data-voice-control="ui.09c3bf8b9ba0ba8e"
               type="number"
               min="1"
               max="120"
@@ -50,15 +50,15 @@ export function Step1PatientInfo({
                 }
               }}
               placeholder={en ? "e.g. 35" : "जैसे 35"}
-              className="w-full border rounded-lg p-2.5 text-sm focus:outline-none focus:border-teal-500"
+              className="w-full border rounded-lg p-2.5 text-sm focus:outline-none focus:border-teal-500" aria-label={[en ? "Age" : "उम्र"].join(' ')}
             />
           </div>
           <div>
             <label className="text-sm font-medium block mb-1">{en ? "Gender" : "लिंग"}</label>
-            <select
+            <select data-voice-control="ui.0bdb63537eb71d2b"
               value={patientInfo.gender}
               onChange={(e) => setPatientInfo((p) => ({ ...p, gender: e.target.value }))}
-              className="w-full border rounded-lg p-2.5 text-sm focus:outline-none focus:border-teal-500 bg-white"
+              className="w-full border rounded-lg p-2.5 text-sm focus:outline-none focus:border-teal-500 bg-white" aria-label={[en ? "Gender" : "लिंग"].join(' ')}
             >
               <option value="male">{en ? "Male" : "पुरुष"}</option>
               <option value="female">{en ? "Female" : "महिला"}</option>
@@ -72,14 +72,14 @@ export function Step1PatientInfo({
             <div className="flex justify-between items-center mb-1">
               <label className="text-sm font-medium block">{en ? "Temperature" : "तापमान"}</label>
               <div className="flex gap-1 text-xs">
-                <button
+                <button data-voice-control="ui.ff28663a878928da"
                   type="button"
                   onClick={() => setPatientInfo((p) => ({ ...p, tempUnit: "C" }))}
                   className={`px-2 rounded ${patientInfo.tempUnit === "C" ? "bg-teal-600 text-white" : "bg-gray-200"}`}
                 >
                   °C
                 </button>
-                <button
+                <button data-voice-control="ui.75ed4c7f9e10f09f"
                   type="button"
                   onClick={() => setPatientInfo((p) => ({ ...p, tempUnit: "F" }))}
                   className={`px-2 rounded ${patientInfo.tempUnit === "F" ? "bg-teal-600 text-white" : "bg-gray-200"}`}
@@ -88,7 +88,7 @@ export function Step1PatientInfo({
                 </button>
               </div>
             </div>
-            <input
+            <input data-voice-control="ui.51657e2a3efda2c9"
               type="number"
               step="0.1"
               value={patientInfo.temperature}
@@ -111,10 +111,10 @@ export function Step1PatientInfo({
             <label className="text-sm font-medium block mb-1">
               {en ? "How many days sick?" : "कितने दिनों से बीमार?"}
             </label>
-            <select
+            <select data-voice-control="ui.8dbc5283ca168b6c"
               value={patientInfo.daysSick}
               onChange={(e) => setPatientInfo((p) => ({ ...p, daysSick: e.target.value }))}
-              className="w-full border rounded-lg p-2.5 text-sm focus:outline-none focus:border-teal-500 bg-white"
+              className="w-full border rounded-lg p-2.5 text-sm focus:outline-none focus:border-teal-500 bg-white" aria-label={[en ? "How many days sick?" : "कितने दिनों से बीमार?"].join(' ')}
             >
               {["1", "2", "3", "4-7", "7-14", "14+"].map((d) => (
                 <option key={d} value={d}>
@@ -126,7 +126,7 @@ export function Step1PatientInfo({
         </div>
 
         <div className="flex justify-end">
-          <Button onClick={onNext} className="gradient-primary text-white">
+          <Button data-voice-control="ui.7cebea74d56dfa48" onClick={onNext} className="gradient-primary text-white">
             {en ? "Next" : "अगला"} <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </div>

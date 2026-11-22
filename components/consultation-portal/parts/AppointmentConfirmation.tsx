@@ -168,7 +168,7 @@ export function AppointmentConfirmation({
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-              <Button
+              <Button data-voice-control="ui.793195ffdbadd79d"
                 size="sm"
                 onClick={() =>
                   window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(invitationText)}`, "_blank")
@@ -179,7 +179,7 @@ export function AppointmentConfirmation({
                 <span>{en ? "Send via WhatsApp" : "व्हाट्सएप पर भेजें"}</span>
               </Button>
 
-              <Button
+              <Button data-voice-control="ui.a73f9e7c7378b3fb"
                 size="sm"
                 variant="outline"
                 onClick={() => (window.location.href = `sms:${cleanPhone}?body=${encodeURIComponent(invitationText)}`)}
@@ -191,7 +191,7 @@ export function AppointmentConfirmation({
             </div>
 
             <div className="flex items-center gap-2 pt-1 flex-wrap">
-              <Button
+              <Button data-voice-control="ui.97173b2ab64c5534"
                 size="sm"
                 variant="ghost"
                 onClick={() => {
@@ -210,7 +210,7 @@ export function AppointmentConfirmation({
               </Button>
 
               {successData.doctor.phone && (
-                <a
+                <a data-voice-control="ui.d12b2ac0fb363b3b"
                   href={`tel:${successData.doctor.phone}`}
                   className="text-xs text-emerald-800 hover:text-emerald-950 flex items-center gap-1 ml-auto font-semibold px-2 py-1 rounded bg-emerald-100/60 hover:bg-emerald-100"
                 >
@@ -225,7 +225,7 @@ export function AppointmentConfirmation({
             </div>
 
             <div className="pt-2 border-t border-purple-200/80">
-              <Button
+              <Button data-voice-control="ui.030aa8bbde7510f0"
                 className="w-full bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white font-bold text-xs sm:text-sm h-10 rounded-xl shadow-xs flex items-center justify-center gap-2"
                 onClick={() => router.push(patientJoinUrl)}
               >
@@ -239,7 +239,7 @@ export function AppointmentConfirmation({
           </div>
 
           <div className="space-y-2 pt-1">
-            <Button
+            <Button data-voice-control="ui.62b026786ee0135f"
               variant="outline"
               className="w-full h-10 border-teal-300 text-teal-800 bg-teal-50 hover:bg-teal-100 font-bold rounded-xl shadow-xs flex items-center justify-center gap-2"
               onClick={() => router.push(`/records`)}
@@ -249,7 +249,7 @@ export function AppointmentConfirmation({
               <ArrowRight className="h-4 w-4" />
             </Button>
 
-            <Button
+            <Button data-voice-control="ui.86710f9ef3f712f1"
               variant="outline"
               className="w-full h-10 border-gray-300 text-gray-800 font-bold rounded-xl shadow-xs flex items-center justify-center gap-2"
               onClick={() => router.push(`/appointments`)}
@@ -259,7 +259,7 @@ export function AppointmentConfirmation({
               <ArrowRight className="h-4 w-4" />
             </Button>
 
-            <Button
+            <Button data-voice-control="ui.5ed40b741ab7604f"
               variant="ghost"
               className="w-full h-9 text-xs font-semibold rounded-xl text-gray-500 hover:text-gray-800"
               onClick={onReset}

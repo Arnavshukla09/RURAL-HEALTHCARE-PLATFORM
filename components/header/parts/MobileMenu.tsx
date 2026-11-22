@@ -59,7 +59,7 @@ export function MobileMenu({
           {doctorItems.map((item) => {
             const Icon = item.icon
             return (
-              <button
+              <button data-voice-control="ui.56fb054a105d7f1b"
                 key={item.key}
                 onClick={() => onGo(item.key)}
                 className="w-full flex items-center gap-2 px-4 py-3 text-sm text-teal-100 hover:bg-white/10 rounded-lg transition-colors"
@@ -69,7 +69,7 @@ export function MobileMenu({
               </button>
             )
           })}
-          <button
+          <button data-voice-control="ui.bc0c7b4455f5572d"
             onClick={() => onGo("/emergency")}
             className="w-full flex items-center gap-2 px-4 py-3 text-sm text-red-300 hover:bg-red-900/20 rounded-lg"
           >
@@ -84,7 +84,7 @@ export function MobileMenu({
         adminItems.map((item) => {
           const Icon = item.icon
           return (
-            <button
+            <button data-voice-control="ui.0cbe5463fc60f759"
               key={item.key}
               onClick={() => onGo(item.key)}
               className="w-full flex items-center gap-2 px-4 py-3 text-sm text-purple-100 hover:bg-white/10 rounded-lg transition-colors"
@@ -101,7 +101,7 @@ export function MobileMenu({
           {publicNavItems.map((item) => {
             const Icon = item.icon
             return (
-              <button
+              <button data-voice-control="ui.c912ae6b42347bb1"
                 key={item.key}
                 onClick={() => onGo(item.key)}
                 className={`w-full flex items-center gap-2 px-4 py-3 text-sm rounded-lg ${
@@ -123,7 +123,7 @@ export function MobileMenu({
                 {en ? "My Care" : "मेरी देखभाल"}
               </div>
               {userCareItems.map((item) => (
-                <button
+                <button data-voice-control="ui.ce0e7d4f08ede2d0"
                   key={item.key}
                   onClick={() => onGo(item.key)}
                   className={`w-full text-left px-6 py-2.5 text-sm rounded-lg ${
@@ -138,7 +138,7 @@ export function MobileMenu({
             </div>
           )}
 
-          <button
+          <button data-voice-control="ui.ca79dd067c0f02d9"
             onClick={() => onGo("/emergency")}
             className="w-full flex items-center gap-2 px-4 py-3 text-sm text-red-600 hover:bg-red-50 rounded-lg"
           >
@@ -155,7 +155,7 @@ export function MobileMenu({
         </div>
         <div className="flex flex-wrap gap-1 px-1">
           {SUPPORTED_LANGUAGES.map((l) => (
-            <button
+            <button data-voice-control="ui.9bc49ff927622cfc"
               key={l.code}
               onClick={() => {
                 setLanguage(l.code)
@@ -172,7 +172,7 @@ export function MobileMenu({
           ))}
         </div>
         {user ? (
-          <button
+          <button data-voice-control="ui.b644278e54304d80"
             onClick={onLogout}
             className="w-full text-left px-4 py-2.5 text-sm text-red-400 rounded-lg flex items-center gap-2 hover:bg-red-900/20"
           >
@@ -180,12 +180,12 @@ export function MobileMenu({
             {en ? "Logout" : "लॉगआउट"}
           </button>
         ) : (
-          <Link
+          <Link data-voice-control="ui.4f0c1a9dc3b76beb"
             href="/login"
             onClick={() => setMobileMenuOpen(false)}
             className="block w-full"
           >
-            <Button size="sm" className="w-full gradient-primary text-white">
+            <Button data-voice-control="ui.9e2b6c402ae34d33" size="sm" className="w-full gradient-primary text-white">
               {en ? "Login / Register" : "लॉगिन / पंजीकरण"}
             </Button>
           </Link>

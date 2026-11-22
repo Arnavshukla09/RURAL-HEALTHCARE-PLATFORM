@@ -146,7 +146,7 @@ export function PwaUpdaterAndInstaller({ language = "en" }: PwaUpdaterAndInstall
               </p>
             </div>
           </div>
-          <Button
+          <Button data-voice-control="ui.34a17ca82a3edff6"
             size="sm"
             onClick={handleApplyUpdate}
             className="bg-white text-teal-900 hover:bg-teal-100 font-semibold text-xs h-8 px-3 shadow"
@@ -173,14 +173,14 @@ export function PwaUpdaterAndInstaller({ language = "en" }: PwaUpdaterAndInstall
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button
+            <Button data-voice-control="ui.f163facae17b696d"
               size="sm"
               onClick={handleInstallClick}
               className="gradient-primary text-white font-medium text-xs h-8 px-3 shadow-sm"
             >
               {en ? "Install" : "इंस्टॉल"}
             </Button>
-            <button
+            <button data-voice-control="ui.742887fa1b993e93"
               onClick={handleDismissBanner}
               className="text-gray-400 hover:text-gray-600 p-1 rounded-full"
               aria-label="Dismiss"
@@ -203,7 +203,7 @@ export function PwaUpdaterAndInstaller({ language = "en" }: PwaUpdaterAndInstall
                 {en ? "Install on iPhone" : "iPhone पर इंस्टॉल करें"}
               </p>
             </div>
-            <button
+            <button data-voice-control="ui.758767d4d33a9612"
               onClick={handleDismissBanner}
               className="text-gray-400 hover:text-gray-600 p-1"
               aria-label="Dismiss"

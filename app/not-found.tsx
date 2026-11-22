@@ -6,11 +6,11 @@ export default function NotFound() {
         <h2 className="text-2xl font-bold mb-2 text-gray-800">Page Not Found</h2>
         <p className="text-gray-500 mb-6 text-sm">
           This page doesn&apos;t exist. For medical emergencies call{" "}
-          <a href="tel:108" className="text-red-600 font-bold underline">
+          <a data-voice-control="ui.c1529c6214bc834b" href="tel:108" className="text-red-600 font-bold underline">
             108
           </a>
         </p>
-        <a
+        <a data-voice-control="ui.65d89fdff384d3ca"
           href="/"
           className="bg-blue-600 text-white px-8 py-2.5 rounded-lg hover:bg-blue-700 transition-colors inline-block"
         >
