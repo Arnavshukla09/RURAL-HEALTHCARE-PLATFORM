@@ -5,6 +5,7 @@ import { startAudioRecording } from "@/lib/voice/audio-recording"
 import type { VoiceStatus } from "./types"
 import { getAccessibility } from "@/lib/assistant/accessibility"
 import { parseSpokenInterruption } from "@/lib/assistant/interruption"
+import { canUseDeviceRecognition, canUseOwnedSynthesis } from "@/lib/assistant/speech-fallback"
 
 interface VoiceServiceStatus { available: boolean; asrLanguages: string[]; ttsLanguages: string[] }
 export function useVoiceSession(language: string, onTranscript: (text: string) => void, onError: (kind: "micDenied" | "micUnavailable" | "voiceUnavailable") => void) {
@@ -22,6 +23,7 @@ export function useVoiceSession(language: string, onTranscript: (text: string) =
   const retry = useRef<ReturnType<typeof setTimeout> | null>(null)
   const resumeAfterReply = useRef(true)
   const ownsSpeech = useRef(false)
+  const failedOwnedRecognition = useRef(new Set<string>())
   onTranscriptRef.current = onTranscript
   onErrorRef.current = onError
   useEffect(() => {
@@ -44,7 +46,7 @@ export function useVoiceSession(language: string, onTranscript: (text: string) =
     const currentTurn = ++turn.current
     if (retry.current) clearTimeout(retry.current)
     stopSpeaking(); playback.current?.pause(); setStatus("listening")
-    if (service.available && service.asrLanguages.includes(language) && navigator.onLine) {
+    if (service.available && service.asrLanguages.includes(language) && navigator.onLine && !failedOwnedRecognition.current.has(language)) {
       const startup = new AbortController(); requests.current.add(startup)
       try {
         const recording = await startAudioRecording(async audio => {
@@ -60,7 +62,13 @@ export function useVoiceSession(language: string, onTranscript: (text: string) =
             if (!enabledRef.current || currentTurn !== turn.current) return
             if (!response.ok || !data.transcript?.trim()) throw new Error("No speech")
             setStatus("idle"); onTranscriptRef.current(data.transcript)
-          } catch { if (currentTurn === turn.current) { stop(); onErrorRef.current("micUnavailable") } }
+          } catch {
+            if (currentTurn !== turn.current || !enabledRef.current) return
+            failedOwnedRecognition.current.add(language)
+            if (canUseDeviceRecognition(getSpeechCapabilities(getSpeechLangFromCode(language)), navigator.onLine)) {
+              setStatus("idle"); retry.current = setTimeout(() => { if (enabledRef.current && currentTurn === turn.current) listen().catch(() => {}) }, 350)
+            } else { stop(); onErrorRef.current("micUnavailable") }
+          }
           finally { clearTimeout(timeout); requests.current.delete(controller) }
         }, () => { if (currentTurn === turn.current) { stop(); onErrorRef.current("micUnavailable") } }, startup.signal)
         if (!enabledRef.current || currentTurn !== turn.current) recording.cancel()
@@ -111,14 +119,10 @@ export function useVoiceSession(language: string, onTranscript: (text: string) =
         },
       })
     }
-    if (capabilities.matchingVoiceAvailable) {
-      ownsSpeech.current = true
-      speak(text, { lang: getSpeechLangFromCode(language), localOnly: !navigator.onLine, rate: getAccessibility().rate, onEnd: done, onError: () => { if (currentTurn === turn.current) { stop(); onErrorRef.current("voiceUnavailable") } } })
-      armInterruption()
-      return
-    }
-    if (service.available && service.ttsLanguages.includes(language)) {
+    const ownedSpeech = async () => {
+      if (!canUseOwnedSynthesis(service, language, navigator.onLine) || currentTurn !== turn.current || !enabledRef.current) { stop(); onErrorRef.current("voiceUnavailable"); return }
       const controller = new AbortController(); requests.current.add(controller)
+      const timeout = setTimeout(() => controller.abort(), 30000)
       try {
         const response = await fetch("/api/assistant/voice", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ task: "speak", language, text: text.slice(0, 1200) }), signal: controller.signal })
         if (!response.ok) throw new Error("No voice")
@@ -131,10 +135,15 @@ export function useVoiceSession(language: string, onTranscript: (text: string) =
         await audio.play()
         if (currentTurn === turn.current && enabledRef.current) armInterruption()
       } catch { if (currentTurn === turn.current) { stop(); onErrorRef.current("voiceUnavailable") } }
-      finally { requests.current.delete(controller) }
+      finally { clearTimeout(timeout); requests.current.delete(controller) }
+    }
+    if (capabilities.matchingVoiceAvailable) {
+      ownsSpeech.current = true
+      speak(text, { lang: getSpeechLangFromCode(language), localOnly: !navigator.onLine, rate: getAccessibility().rate, onEnd: done, onError: () => { if (currentTurn === turn.current) { stopSpeechRecognition(); ownsSpeech.current = false; ownedSpeech().catch(() => {}) } } })
+      armInterruption()
       return
     }
-    stop(); onErrorRef.current("voiceUnavailable")
+    await ownedSpeech()
   }, [language, service, listen, stop])
   const enable = useCallback(() => { resumeAfterReply.current = true; enabledRef.current = true; setEnabled(true) }, [])
   const suspendAfterReply = useCallback(() => { resumeAfterReply.current = false; if (retry.current) clearTimeout(retry.current); stopSpeechRecognition(); recorder.current?.cancel(); recorder.current = null }, [])

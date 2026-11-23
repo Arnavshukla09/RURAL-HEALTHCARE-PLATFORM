@@ -78,7 +78,7 @@ export async function processOfflineSyncBatch(supabase: any, user: any, body: an
       })
       if (error) {
         if (error.code === "PGRST202" || error.code === "42883") return NextResponse.json({ error: "Apply the atomic offline synchronization migration before replay", code: "MIGRATION_REQUIRED" }, { status: 503 })
-        throw new Error(error.message || "Atomic synchronization failed")
+        throw new Error("Atomic synchronization failed; check connectivity and retry")
       }
       if (!data || !["ok", "duplicate"].includes(data.status)) throw new Error("Database did not acknowledge the atomic operation")
       result = { client_op_id: op.client_op_id, status: data.status }

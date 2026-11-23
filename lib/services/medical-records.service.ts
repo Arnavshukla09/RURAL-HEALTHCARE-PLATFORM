@@ -59,10 +59,10 @@ export async function getOrCreatePatient(supabase: any, user: any): Promise<Pati
         .select("id, role")
         .single()
 
-      if (error) console.error("Admin patient upsert error:", error)
+      if (error) console.error("Patient profile provisioning failed")
       patient = created
     } catch (err) {
-      console.error("Admin client failed:", err)
+      console.error("Patient profile service unavailable")
     }
   }
   return patient

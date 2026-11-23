@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
     })
   } catch (err: any) {
     return NextResponse.json(
-      { error: err?.message || "Internal server error", code: "INTERNAL_ERROR" },
+      { error: "Erasure service unavailable", code: "INTERNAL_ERROR" },
       { status: 500 }
     )
   }

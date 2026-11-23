@@ -1,14 +1,10 @@
 title = "Gitleaks Configuration - Rural Healthcare Platform"
 
+[extend]
+useDefault = true
+
 [allowlist]
-description = "Allowlist for synthetic test fixtures, documentation examples, public placeholders, and historical commits"
-paths = [
-  '''^\.env\.example$''',
-  '''^tests/.*''',
-  '''^scripts/seed_e2e_users\.js$''',
-  '''^docs/.*''',
-  '''^audit-allowlist\.json$'''
-]
+description = "Explicit synthetic placeholder patterns and retained historical incident commits; current docs/tests are scanned"
 regexes = [
   '''placeholder-[a-zA-Z0-9_-]+''',
   '''YOUR_[A-Z0-9_]+''',
@@ -17,6 +13,7 @@ regexes = [
   '''sb_publishable_placeholder''',
   '''https://placeholder\.supabase\.co'''
 ]
+
 commits = [
   "30a19814be11b15743493452445e9942a006df14",
   "5ede26a27e025b6a37fc3cfca711eb44d8b5fc91",
@@ -30,3 +27,14 @@ commits = [
   "1a8e2ffd8c39e8bb4356c9a3fa2f6ceea9a5b3a4",
   "5e6e9bba475fa6a6f112e48270529d3c5fe85d1e"
 ]
+
+[[rules]]
+id = "generic-api-key"
+[[rules.allowlists]]
+description = "Source checksum map: a file path mapped to an exact SHA-256 digest, not a credential"
+regexTarget = "match"
+regexes = ['''[A-Za-z0-9_./-]+\.(tsx?|m?js|json|css|py)"?\s*:\s*"[a-f0-9]{64}"''']
+[[rules.allowlists]]
+description = "Legacy public browser storage key, retained to preserve local profile compatibility"
+regexTarget = "match"
+regexes = ['''STORAGE_KEY\s*=\s*"ruralhealth_emergency_vault_v1"''']

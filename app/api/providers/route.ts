@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from("healthcare_providers")
-      .select("*")
+      .select("id, name, phone, location, specialization, bio, avatar_url, is_verified")
       .eq("is_verified", true)
       .limit(50)
 
@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
     const { data: providers, error } = await query
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ error: "Provider lookup unavailable" }, { status: 500 })
     }
 
     if (!providers || providers.length === 0) {
@@ -53,29 +53,8 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    // Fetch names and phones from patients table
-    const userIds = providers.map((p) => p.user_id)
-    const { data: patients } = await supabase
-      .from("patients")
-      .select("user_id, first_name, last_name, phone")
-      .in("user_id", userIds)
-
-    const patientsMap = new Map(patients?.map((p) => [p.user_id, p]) || [])
-
-    const enrichedProviders = providers.map((provider) => {
-      const patient = patientsMap.get(provider.user_id)
-      return {
-        ...provider,
-        id: provider.id, // we'll use provider.id for bookings
-        name: patient
-          ? `Dr. ${patient.first_name} ${patient.last_name || ""}`.trim()
-          : (provider.name || "Doctor"),
-        phone: patient?.phone || provider.phone || "",
-        location: provider.location || provider.clinic_address || "Virtual",
-      }
-    })
-
-    return NextResponse.json(enrichedProviders, {
+    // Publish only explicit directory fields; never enrich from private patient profiles.
+    return NextResponse.json(providers, {
       headers: {
         "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
       },

@@ -1,0 +1,72 @@
+{
+  "date": "2026-11-23",
+  "baseCommit": "d4aeb5f",
+  "sourceState": "Finishing implementation working tree; source inventory hashes identify reviewed files",
+  "local": {
+    "componentGate": "passed",
+    "unitCases": 323,
+    "pythonContracts": 20,
+    "productionBuild": "passed with synthetic credentials",
+    "browser": {
+      "total": 24,
+      "passed": 21,
+      "skippedRoles": 3,
+      "audio": "mocked",
+      "completion": "test cases passed; Windows runner process teardown remained active"
+    },
+    "migrations": {
+      "sealed": 25,
+      "immutable": true
+    },
+    "datasetProvenance": "passed local file rules",
+    "algorithmicBenchmark": {
+      "passed": 21,
+      "total": 21
+    },
+    "clientBoundary": {
+      "roots": 152,
+      "reachableModules": 264,
+      "findings": 0
+    },
+    "securityMutations": {
+      "proven": 5,
+      "allRestored": true
+    },
+    "documentationLinks": "passed after report creation",
+    "publicationSafety": "see PUBLICATION_SAFETY.json",
+    "secretScans": "see SECRET_SCAN_SUMMARY.json",
+    "npmAudit": {
+      "gate": "passed",
+      "acceptedHighPackages": [
+        "@serwist/build",
+        "@serwist/next",
+        "@serwist/webpack-plugin",
+        "postcss",
+        "zod"
+      ],
+      "expiry": "2026-12-31"
+    },
+    "optionalPython": {
+      "candidatePackages": 54,
+      "osvFindings": 0,
+      "inference": "not installed/executed",
+      "compatibility": "metadata-only Windows Python 3.11 resolution; final non-yanked patch runtime requirements identical; final pip re-resolution blocked"
+    }
+  },
+  "finishingCommitCI": {
+    "status": "pending first push",
+    "requiredDatabaseCases": 29,
+    "requiredBrowserCases": 24
+  },
+  "manualReleaseGates": [
+    "All role/page/modal/dynamic states",
+    "Real ASR/TTS in all 13 languages",
+    "Native language and clinical review",
+    "Disability usability",
+    "Device/conferencing handoffs",
+    "Inference host install/ABI/performance",
+    "Owner-controlled deployment and migrations",
+    "Offline eviction/private storage/recovery"
+  ],
+  "publication": "Metadata only; no environment values, patient requests, transcripts, raw secret matches or private origins"
+}

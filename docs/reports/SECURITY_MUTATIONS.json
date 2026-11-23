@@ -1,0 +1,46 @@
+{
+  "date": "2026-11-23",
+  "scope": "Isolated behavioral unit mutations; source restored; no secrets/request contents in report",
+  "evidence": [
+    {
+      "mutation": "production-demo-claim-bypass",
+      "source": "lib/doctor-claims.ts",
+      "test": "tests/unit/doctor-claim-and-booking-lifecycle.test.ts",
+      "mutantExit": 1,
+      "restoredExit": 0,
+      "expectedFailureObserved": true
+    },
+    {
+      "mutation": "public-provider-select-all",
+      "source": "app/api/providers/route.ts",
+      "test": "tests/unit/public-directory-security.test.ts",
+      "mutantExit": 1,
+      "restoredExit": 0,
+      "expectedFailureObserved": true
+    },
+    {
+      "mutation": "foreign-preview-origin",
+      "source": "lib/security/request-origin.ts",
+      "test": "tests/unit/request-origin-security.test.ts",
+      "mutantExit": 1,
+      "restoredExit": 0,
+      "expectedFailureObserved": true
+    },
+    {
+      "mutation": "internal-capability-leak",
+      "source": "lib/services/voice-response.ts",
+      "test": "tests/unit/assistant-voice-proxy.test.ts",
+      "mutantExit": 1,
+      "restoredExit": 0,
+      "expectedFailureObserved": true
+    },
+    {
+      "mutation": "upstream-redirect-follow",
+      "source": "lib/services/assistant-voice.service.ts",
+      "test": "tests/unit/assistant-voice-proxy.test.ts",
+      "mutantExit": 1,
+      "restoredExit": 0,
+      "expectedFailureObserved": true
+    }
+  ]
+}

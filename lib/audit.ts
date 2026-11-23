@@ -31,7 +31,7 @@ export async function logAuditEvent(params: AuditEventParams): Promise<void> {
       details: params.details || {},
       ip_address: params.ipAddress || null,
     });
-  } catch (err) {
-    console.warn("[AuditLog] Failed to record audit log entry:", err);
+  } catch {
+    console.warn("[AuditLog] Failed to record audit log entry");
   }
 }

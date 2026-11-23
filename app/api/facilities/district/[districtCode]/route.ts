@@ -43,7 +43,7 @@ export async function GET(
         }
       )
     } catch (err) {
-      console.error(`Error reading facility pack ${districtCode}:`, err)
+      console.error("Facility pack unavailable")
     }
   }
 

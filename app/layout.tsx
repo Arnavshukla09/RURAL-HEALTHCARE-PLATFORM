@@ -134,7 +134,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
         {/* Preconnect to critical third-party origins to improve LCP */}
-        <link rel="preconnect" href="https://boyzdmlvzvcplzolenef.supabase.co" />
         <link rel="preconnect" href="https://translate.google.com" />
         <link rel="dns-prefetch" href="https://translate.google.com" />
         <link rel="dns-prefetch" href="https://generativelanguage.googleapis.com" />

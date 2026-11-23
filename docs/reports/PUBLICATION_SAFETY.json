@@ -1,0 +1,5 @@
+{
+  "scope": "Tracked and non-ignored source/docs; excludes ignored environment, models, builds and scratch",
+  "files": 574,
+  "findings": []
+}

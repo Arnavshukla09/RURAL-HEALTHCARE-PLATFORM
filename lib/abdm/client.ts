@@ -10,21 +10,12 @@ import { validateAbhaAddress, validateAbhaNumber } from "./validation"
 
 /**
  * ABDM Sandbox Gateway Client Stub
- * Fully operational zero-cost mock that switches to live NHA gateway when credentials are configured.
+ * Local format-checking stub. Does not contact NHA or verify identity.
  */
 export class AbdmGatewayClient {
-  private clientId: string | undefined
-  private clientSecret: string | undefined
-  private isConfigured: boolean
-
-  constructor() {
-    this.clientId = process.env.ABDM_CLIENT_ID
-    this.clientSecret = process.env.ABDM_CLIENT_SECRET
-    this.isConfigured = Boolean(this.clientId && this.clientSecret)
-  }
-
+  // No national gateway request is implemented. Credentials cannot enable a stub.
   get isLive(): boolean {
-    return this.isConfigured
+    return false
   }
 
   /**
@@ -40,24 +31,24 @@ export class AbdmGatewayClient {
     if (abhaInput.includes("@")) {
       const v = validateAbhaAddress(abhaInput)
       if (!v.isValid) {
-        return { verified: false, mode: this.isConfigured ? "live" : "simulated", message: v.error || "Invalid" }
+        return { verified: false, mode: "simulated", message: v.error || "Invalid" }
       }
       return {
         verified: true,
-        mode: this.isConfigured ? "live" : "simulated",
+        mode: "simulated",
         abhaAddress: v.normalized,
-        message: "ABHA Address verified",
+        message: "ABHA Address format valid; identity not verified",
       }
     } else {
       const v = validateAbhaNumber(abhaInput)
       if (!v.isValid) {
-        return { verified: false, mode: this.isConfigured ? "live" : "simulated", message: v.error || "Invalid" }
+        return { verified: false, mode: "simulated", message: v.error || "Invalid" }
       }
       return {
         verified: true,
-        mode: this.isConfigured ? "live" : "simulated",
+        mode: "simulated",
         abhaNumber: v.normalized,
-        message: "ABHA Number verified",
+        message: "ABHA Number format valid; identity not verified",
       }
     }
   }

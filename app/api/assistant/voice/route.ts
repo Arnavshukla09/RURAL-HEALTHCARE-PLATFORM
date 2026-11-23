@@ -7,7 +7,10 @@ export async function GET(request: Request) {
   return getAssistantVoiceStatus()
 }
 export async function POST(request: Request) {
-  const limit = await checkRateLimit(request, "public")
+  const limit = await checkRateLimit(request, "voice")
   if (!limit.success) return rateLimitResponse(limit)
-  return handleAssistantVoice(request)
+  const response = await handleAssistantVoice(request)
+  response.headers.set("Cache-Control", "private, no-store")
+  response.headers.set("X-Content-Type-Options", "nosniff")
+  return response
 }

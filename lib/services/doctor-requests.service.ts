@@ -106,7 +106,7 @@ export async function handleCreateDoctorRequest(supabase: any, user: any, body: 
     .select()
     .single()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return NextResponse.json({ error: "Doctor request service unavailable" }, { status: 500 })
   return NextResponse.json({ request: data, message: "Request submitted successfully" }, { status: 201 })
 }
 
@@ -164,7 +164,7 @@ export async function handleReviewDoctorRequest(supabase: any, user: any, body: 
         .update({ status: "pending", reviewed_at: null, admin_notes: null })
         .eq("id", request_id)
       return NextResponse.json({
-        error: "Service role client configuration error: " + (err?.message || "SUPABASE_SERVICE_ROLE_KEY missing"),
+        error: "Doctor review service unavailable",
         code: "ADMIN_CLIENT_ERROR",
       }, { status: 500 })
     }

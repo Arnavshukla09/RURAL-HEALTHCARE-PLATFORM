@@ -1,6 +1,6 @@
 # Website controller: implemented behavior and release audit
 
-Updated 22 November 2026. This update implements a controller across the existing website, including accessibility and task replacement. It does not certify every device, language, clinical workflow or browser/OS handoff as touch-free.
+Updated 23 November 2026. This update implements a controller across the existing website, including accessibility and task replacement. It does not certify every device, language, clinical workflow or browser/OS handoff as touch-free.
 
 ## What is implemented
 
@@ -75,7 +75,7 @@ Visibility changes, conference entry and emergency-beacon ownership continue to 
 
 Local checks cover type/lint/imports, component/API size limits, the source registry, native command catalogs/checksums, task ownership, spoken-interruption grammar and existing action/audio/account security contracts. Playwright uses mocked recognition/synthesis/service responses to test actual root font/contrast changes, toolbar synchronization, guided corrections, slow-request replacement, wake-prefixed interruption, navigation, fields, secret exclusion, disabled/stale targets and emergency-page accessibility. Real role login and database cases run against CI's disposable Supabase stack, not production.
 
-Local evidence for this update: **310 unit cases and 15 Python contracts passed**; type/lint/component/Knip/migration/source-map checks passed; production build passed. The full local browser run passed **19 journeys**, with the three role-login journeys skipped because disposable credentials were not available locally. CI seeds those accounts and must pass the full 22-journey suite and 29 real-database cases before release. Browser audio is simulated, not an inference or disability-usability certification.
+Local evidence for this update: **323 unit cases and 20 Python contracts passed**; type/lint/component/Knip/migration/source-map checks passed; production build passed. The full local browser run passed **21 journeys**, with the three role-login journeys skipped because disposable credentials were not available locally. CI seeds those accounts and must pass the full 24-journey suite and 29 real-database cases before release. Browser audio is simulated, not an inference or disability-usability certification.
 
 Before calling this fully hands-free for a target population, audit:
 
@@ -88,6 +88,8 @@ Before calling this fully hands-free for a target population, audit:
 | Legacy writes | Doctor invitation/provisioning, admin role/removal/record erasure and reopen/reschedule require their independent server/security review. Their mapped handoffs are not newly implemented write services. |
 | Clinical/disability | Qualified clinical review and sessions with users with the actual access needs, including non-readers, screen-reader/switch users and Urdu layouts. |
 | Offline/operations | Cache eviction, saved-region coverage, queued-write receipts, lost connectivity, service uptime and battery. PWA closure/suspension cannot guarantee continued listening. |
+
+The final security/model audit is recorded in [FINAL_AUDIT.md](FINAL_AUDIT.md), including independent model fallback, private proxy boundaries and stale modal scope rejection.
 
 The code adds no required paid inference or automation API. The UI refresh explicitly declares the already installed map-core dependency; it adds no inference packages. Hosting, hardware, electricity, bandwidth, native recordings and review effort still cost money. Free hosted quotas cannot be guaranteed forever. Native recordings for devices without a dynamic voice remain planned; no recordings or model weights were fabricated or installed as part of this update.
 

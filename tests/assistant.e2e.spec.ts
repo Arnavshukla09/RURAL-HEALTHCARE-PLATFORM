@@ -238,6 +238,31 @@ test("changed or disabled control targets cannot execute an old numbered option"
   await expect(guide).toContainText("page or options changed")
 })
 
+test("a newly opened modal revokes old page selections", async ({ page }) => {
+  const guide = await openGuide(page)
+  await send(page, "page options")
+  await page.evaluate(() => { const modal = document.createElement("div"); modal.setAttribute("role", "dialog"); modal.setAttribute("aria-modal", "true"); modal.textContent = "Fixture modal"; document.body.append(modal) })
+  await send(page, "select 3")
+  await expect(page).toHaveURL("/")
+  await expect(guide).toContainText("page or options changed")
+})
+
+test("owned synthesis failure leaves controls usable without automatic paid-model switching", async ({ page }) => {
+  await page.addInitScript(() => Object.defineProperty(window, "speechSynthesis", { configurable: true, value: { getVoices: () => [], cancel: () => {}, addEventListener: () => {}, removeEventListener: () => {} } }))
+  let synthesisRequests = 0
+  await page.route("**/api/assistant/voice", route => {
+    if (route.request().method() === "GET") return route.fulfill({ json: { available: true, asrLanguages: [], ttsLanguages: ["en"] } })
+    synthesisRequests++; return route.fulfill({ status: 503, json: { error: "Unavailable" } })
+  })
+  const guide = await openGuide(page)
+  await guide.getByRole("button", { name: "Listen again", exact: true }).click()
+  await expect.poll(() => synthesisRequests).toBeGreaterThan(0)
+  await send(page, "increase font size")
+  await expect(page.locator("html")).toHaveCSS("font-size", "18px")
+  await send(page, "page options")
+  await expect(guide.getByTestId("page-voice-options")).toBeVisible()
+})
+
 test("registered form fields update React state and secure fields stay outside chat", async ({ page }) => {
   await page.goto("/login")
   await page.getByTestId("assistant-open").click()

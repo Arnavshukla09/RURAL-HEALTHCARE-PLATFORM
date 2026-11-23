@@ -1,6 +1,6 @@
 # Project structure
 
-Updated 22 November 2026. This map describes the repository's source layout; dependencies, generated builds, local credentials and downloaded models are excluded.
+Updated 23 November 2026. This map describes the repository's source layout; dependencies, generated builds, local credentials and downloaded models are excluded.
 
 ```text
 RURAL-HEALTHCARE-PLATFORM/
@@ -17,10 +17,12 @@ RURAL-HEALTHCARE-PLATFORM/
 │   ├── assistant/               Source control registry, accessibility, 13-language catalogs and packs
 │   ├── voice/                   Browser PCM recording
 │   ├── offline/                 Account-owned queues, cleanup and replay executors
+│   ├── security/                Origin and log/publication boundaries
 │   ├── services/                Server authorization and validated business actions
 │   └── ai/, clinical/, symptoms/ Existing model adapters and clinical rules
 ├── services/voice/              Optional owned Python inference service
 │   ├── install_models.py        Explicit installation and repair at locked revisions
+│   ├── model_manifest.py        Independent manifest and snapshot integrity checks
 │   ├── model_runtime.py         Offline-only snapshot loading
 │   ├── server.py                Fixed v1 speech/conversation protocol
 │   └── tests/                   Dependency-free installation/access contracts

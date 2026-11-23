@@ -1,5 +1,7 @@
 # Repository Cleanup & Modularization Report
 
+> Historical evidence at the recorded baseline date. Current 23 November 2026 behavior, verification counts and residual risks are recorded in [FINAL_AUDIT.md](FINAL_AUDIT.md); this record is preserved for provenance, not current configuration.
+
 This report tracks the baseline metrics and empirical deltas across the cleanup, dependency pruning, asset optimisation, and modularization passes on the Rural Healthcare Platform.
 
 ---

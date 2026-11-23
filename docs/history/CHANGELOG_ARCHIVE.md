@@ -36,7 +36,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **Honest Conformance Claims:** Clarified all documentation to state that exports are modelled on NRCES ABDM profiles rather than officially certified against the national validator gateway.
 
 ### 4. Integration Testing & Production Database Safety
-- **Database Safety Guard (`tests/integration/db-safety-guard.ts`):** Integration test runner strictly halts if target database matches production project reference (`boyzdmlvzvcplzolenef`) or production URLs.
+- **Database Safety Guard (`tests/integration/db-safety-guard.ts`):** Integration test runner strictly halts if target database matches production project reference (`redacted-project-ref`) or production URLs.
 - **Offline Simulation Transparency:** Relabeled `scripts/benchmark_system_integration.mjs` as an offline algorithmic simulation runner.
 
 ### 5. Dependency Hardening & CI Enforcement

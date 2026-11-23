@@ -3,18 +3,8 @@ name: Continuous Integration (CI)
 on:
   push:
     branches: [main, "release/*", "hotfix/*", "chore/*", "portfolio/*"]
-    paths-ignore:
-      - '**.md'
-      - 'docs/**'
-      - 'LICENSE'
-      - '.agents/**'
   pull_request:
     branches: [main, "release/*", "hotfix/*", "chore/*", "portfolio/*"]
-    paths-ignore:
-      - '**.md'
-      - 'docs/**'
-      - 'LICENSE'
-      - '.agents/**'
   workflow_dispatch:
 
 permissions:
@@ -48,6 +38,15 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITLEAKS_CONFIG: .gitleaks.toml
+
+      - name: Publication safety metadata-only scan
+        run: node scripts/ci/publication_safety.mjs
+
+      - name: Client/server secret boundary gate
+        run: node scripts/ci/client_boundary_check.mjs
+
+      - name: Documentation local link gate
+        run: node scripts/ci/documentation_links.mjs
 
       - name: Security Vulnerability Audit & Expiring Allowlist Enforcement (High & Critical)
         run: node scripts/ci/audit_allowlist.mjs
@@ -132,6 +131,7 @@ jobs:
           API_URL=$(supabase status -o env | grep '^API_URL=' | cut -d= -f2 | tr -d '"' | tr -d '\r')
           ANON_KEY=$(supabase status -o env | grep '^ANON_KEY=' | cut -d= -f2 | tr -d '"' | tr -d '\r')
           SERVICE_KEY=$(supabase status -o env | grep '^SERVICE_ROLE_KEY=' | cut -d= -f2 | tr -d '"' | tr -d '\r')
+          echo "::add-mask::$SERVICE_KEY"
           NEXT_PUBLIC_SUPABASE_URL="$API_URL" \
           NEXT_PUBLIC_SUPABASE_ANON_KEY="$ANON_KEY" \
           SUPABASE_SERVICE_ROLE_KEY="$SERVICE_KEY" \
@@ -186,6 +186,11 @@ jobs:
           E2E_ADMIN_PWD=$(node -e "console.log('Adm!' + crypto.randomUUID().slice(0, 12))")
           E2E_DOCTOR_PWD=$(node -e "console.log('Doc!' + crypto.randomUUID().slice(0, 12))")
           E2E_PATIENT_PWD=$(node -e "console.log('Pat!' + crypto.randomUUID().slice(0, 12))")
+
+          # Mask generated local credentials before any later test/trace output.
+          for secret in "$SERVICE_KEY" "$E2E_ADMIN_PWD" "$E2E_DOCTOR_PWD" "$E2E_PATIENT_PWD"; do
+            echo "::add-mask::$secret"
+          done
 
           echo "NEXT_PUBLIC_SUPABASE_URL=$API_URL" >> $GITHUB_ENV
           echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$ANON_KEY" >> $GITHUB_ENV

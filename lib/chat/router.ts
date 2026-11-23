@@ -118,7 +118,7 @@ export async function routeChatMessage(input: RouteChatInput): Promise<ChatResul
         }
       }
     } catch (err) {
-      console.warn("[ChatRouter] Cache lookup skipped:", err)
+      console.warn("[ChatRouter] Cache lookup skipped")
     }
   }
 
@@ -178,7 +178,7 @@ export async function routeChatMessage(input: RouteChatInput): Promise<ChatResul
       }
     }
   } catch (apiErr) {
-    console.warn("[ChatRouter] Tier 3 API call failed, falling back to local guidance:", apiErr)
+    console.warn("[ChatRouter] API unavailable; using local guidance")
   }
 
   // ── 6. Fail-Safe Local Triage ──────────────────────────────────────────

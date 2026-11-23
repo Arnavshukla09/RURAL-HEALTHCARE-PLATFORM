@@ -1,9 +1,8 @@
 """Lazy local inference. This module never contacts a model host at runtime."""
-import json
 import os
-import re
 import threading
 from pathlib import Path
+from model_manifest import read_model_manifest, verify_snapshot
 
 os.environ["HF_HUB_OFFLINE"] = "1"
 os.environ["TRANSFORMERS_OFFLINE"] = "1"
@@ -17,18 +16,7 @@ _lock = threading.Lock()
 
 
 def manifest():
-    path = ROOT / "model-lock.json"
-    if not path.exists():
-        return {"models": {}}
-    value = json.loads(path.read_text(encoding="utf-8"))
-    if value.get("protocolVersion") != 1:
-        raise RuntimeError("Unsupported model manifest protocol")
-    for model in value.get("models", {}).values():
-        location = (ROOT / model.get("path", "")).resolve()
-        if not re.fullmatch(r"[a-f0-9]{40}", model.get("revision", "")) or not location.is_relative_to(ROOT.resolve()) or not location.is_dir():
-            raise RuntimeError("Pinned model snapshot missing")
-        model["path"] = str(location)
-    return value
+    return read_model_manifest(ROOT)
 
 
 def loaded(name):
@@ -41,6 +29,7 @@ def loaded(name):
         entry = installed.get("models", {}).get(name)
         if not entry:
             raise RuntimeError("Run the explicit model installer first")
+        verify_snapshot(entry)
         import torch
         from transformers import AutoModel, AutoModelForCausalLM, AutoTokenizer, WhisperForConditionalGeneration, WhisperProcessor
         device = "cuda" if torch.cuda.is_available() else "cpu"

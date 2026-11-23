@@ -1,0 +1,200 @@
+{
+  "date": "2026-11-23",
+  "baseCommit": "d4aeb5f",
+  "scope": "Current source inventory; no deployment identifiers, request data or environment values",
+  "pageEntries": 28,
+  "apiRoutes": 24,
+  "sourceCounts": {
+    "app": 61,
+    "components": 179,
+    "lib": 107,
+    "services/voice": 9,
+    "tests": 53,
+    "scripts": 25
+  },
+  "docs": 43,
+  "routes": [
+    {
+      "path": "/api/abdm/fhir-export",
+      "methods": [
+        "GET"
+      ],
+      "source": "app/api/abdm/fhir-export/route.ts"
+    },
+    {
+      "path": "/api/admin/doctor-provider-link",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "source": "app/api/admin/doctor-provider-link/route.ts"
+    },
+    {
+      "path": "/api/admin/erase-record",
+      "methods": [
+        "POST"
+      ],
+      "source": "app/api/admin/erase-record/route.ts"
+    },
+    {
+      "path": "/api/ai-chat",
+      "methods": [
+        "POST"
+      ],
+      "source": "app/api/ai-chat/route.ts"
+    },
+    {
+      "path": "/api/appointments",
+      "methods": [
+        "GET",
+        "POST",
+        "PATCH"
+      ],
+      "source": "app/api/appointments/route.ts"
+    },
+    {
+      "path": "/api/assistant/actions",
+      "methods": [
+        "POST"
+      ],
+      "source": "app/api/assistant/actions/route.ts"
+    },
+    {
+      "path": "/api/assistant/voice",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "source": "app/api/assistant/voice/route.ts"
+    },
+    {
+      "path": "/api/auth/ensure-patient",
+      "methods": [
+        "POST"
+      ],
+      "source": "app/api/auth/ensure-patient/route.ts"
+    },
+    {
+      "path": "/api/auth/login",
+      "methods": [
+        "POST"
+      ],
+      "source": "app/api/auth/login/route.ts"
+    },
+    {
+      "path": "/api/auth/profile",
+      "methods": [
+        "GET",
+        "PUT"
+      ],
+      "source": "app/api/auth/profile/route.ts"
+    },
+    {
+      "path": "/api/cache-status",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "source": "app/api/cache-status/route.ts"
+    },
+    {
+      "path": "/api/chat-cache",
+      "methods": [
+        "POST"
+      ],
+      "source": "app/api/chat-cache/route.ts"
+    },
+    {
+      "path": "/api/doctor-requests",
+      "methods": [
+        "GET",
+        "POST",
+        "PATCH"
+      ],
+      "source": "app/api/doctor-requests/route.ts"
+    },
+    {
+      "path": "/api/facilities/district/[districtCode]",
+      "methods": [
+        "GET"
+      ],
+      "source": "app/api/facilities/district/[districtCode]/route.ts"
+    },
+    {
+      "path": "/api/facilities/nearby",
+      "methods": [
+        "GET"
+      ],
+      "source": "app/api/facilities/nearby/route.ts"
+    },
+    {
+      "path": "/api/health",
+      "methods": [
+        "GET"
+      ],
+      "source": "app/api/health/route.ts"
+    },
+    {
+      "path": "/api/health-data",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "source": "app/api/health-data/route.ts"
+    },
+    {
+      "path": "/api/medical-records",
+      "methods": [
+        "GET",
+        "POST",
+        "DELETE",
+        "PATCH"
+      ],
+      "source": "app/api/medical-records/route.ts"
+    },
+    {
+      "path": "/api/notifications",
+      "methods": [
+        "GET",
+        "POST",
+        "PATCH"
+      ],
+      "source": "app/api/notifications/route.ts"
+    },
+    {
+      "path": "/api/offline-sync",
+      "methods": [
+        "POST"
+      ],
+      "source": "app/api/offline-sync/route.ts"
+    },
+    {
+      "path": "/api/providers",
+      "methods": [
+        "GET"
+      ],
+      "source": "app/api/providers/route.ts"
+    },
+    {
+      "path": "/api/ready",
+      "methods": [
+        "GET"
+      ],
+      "source": "app/api/ready/route.ts"
+    },
+    {
+      "path": "/api/symptom-analyze",
+      "methods": [
+        "POST"
+      ],
+      "source": "app/api/symptom-analyze/route.ts"
+    },
+    {
+      "path": "/api/teleconsult/room",
+      "methods": [
+        "POST"
+      ],
+      "source": "app/api/teleconsult/room/route.ts"
+    }
+  ]
+}

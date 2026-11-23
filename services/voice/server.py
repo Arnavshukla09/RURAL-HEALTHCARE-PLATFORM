@@ -13,7 +13,7 @@ import soundfile as sf
 from model_runtime import LANGUAGES, chat, manifest, transcribe
 from voice_auth import authorize_voice_client
 
-app = FastAPI(title="RuralHealth local voice", version="1.0.0", docs_url=None, redoc_url=None)
+app = FastAPI(title="RuralHealth local voice", version="1.0.0", docs_url=None, redoc_url=None, openapi_url=None)
 inference_lock = asyncio.Semaphore(1)
 token = os.getenv("VOICE_SERVICE_TOKEN", "")
 espeak = os.getenv("ESPEAK_NG_PATH") or shutil.which("espeak-ng")

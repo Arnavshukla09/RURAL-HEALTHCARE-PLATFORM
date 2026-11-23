@@ -1,5 +1,7 @@
 # Verification Test Evidence & Mutation Proofs
 
+> Historical evidence at the recorded baseline date. Current 23 November 2026 behavior, verification counts and residual risks are recorded in [FINAL_AUDIT.md](FINAL_AUDIT.md); this record is preserved for provenance, not current configuration.
+
 ## 1. Provider Foreign Key Alignment Contract Test
 - **File:** `tests/unit/provider-fk-alignment.test.ts`
 - **Tests Executed:**

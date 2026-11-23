@@ -51,7 +51,7 @@ export function readPageControls(): PageControl[] {
   })
 }
 export function unchanged(control: PageControl) {
-  return isVisible(control.element) && isEnabled(control.element) && control.element.dataset.voiceControl === control.id && controlFingerprint(control.element) === control.fingerprint
+  return isVisible(control.element) && isEnabled(control.element) && control.element.dataset.voiceControl === control.id && controlFingerprint(control.element) === control.fingerprint && readPageControls().some(current => current.element === control.element)
 }
 export function findPageControl(controls: PageControl[], name: string) {
   const normalized = normalizeAssistantText(name)

@@ -45,7 +45,7 @@ if (!SUPABASE_URL || !ANON_KEY) {
   console.error('Set SUPABASE_URL and SUPABASE_ANON_KEY (STAGING project).');
   process.exit(1);
 }
-const PROD_REF = process.env.PROD_SUPABASE_REF || 'boyzdmlvzvcplzolenef'; // your production project ref (public in your page source)
+const PROD_REF = process.env.PROD_SUPABASE_REF || 'redacted-project-ref'; // your production project ref (public in your page source)
 if (SUPABASE_URL.includes(PROD_REF) && process.env.ALLOW_PROD !== 'yes') {
   console.error('That looks like your PRODUCTION Supabase project. Use the staging project.');
   process.exit(1);

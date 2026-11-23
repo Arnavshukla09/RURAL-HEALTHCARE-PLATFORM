@@ -1,9 +1,11 @@
 # AI Clinical Safety, Rule Engine & Decision Table Specification
 
-**Date:** October 2026  
-**Subject:** Phase 6 Engineering Deliverable — AI and Clinical Safety Framework  
-**Clinical Protocol Rules Version:** `2026.10-v1.0`  
-**Target Model:** Google Gemini 1.5 Flash (Deterministic Circuit-Breaker Fallback Cascade)  
+Current status, 23 November 2026: deterministic rule and source tests are not clinical certification. Optional configured external candidates and pinned owned Qwen dialogue remain advisory; neither executes actions or replaces qualified clinical review. Actual native-language model quality, emergency wording and disability usability require independent validation. See [FINAL_AUDIT.md](FINAL_AUDIT.md).
+
+**Date:** October 2026
+**Subject:** Phase 6 Engineering Deliverable — AI and Clinical Safety Framework
+**Clinical Protocol Rules Version:** `2026.10-v1.0`
+**Target Model:** Google configured optional Gemini candidate (Deterministic Circuit-Breaker Fallback Cascade)
 **Primary Source Modules:**
 - `lib/chat/emergency.ts`
 - `lib/ai/medical-brain.ts`
@@ -22,26 +24,26 @@ The Rural Healthcare Platform treats conversational AI not as an unconstrained c
 flowchart TD
     UserInput["User Symptom / Question Input"] --> Sanitize["Input Normalization & PII Scrubbing"]
     Sanitize --> InjectionCheck{"Prompt Injection Detected?"}
-    
+
     InjectionCheck -- Yes --> FlagInjection["Flag Adversarial Payload\nNeutralize Override Instructions"]
     InjectionCheck -- No --> Gate0
     FlagInjection --> Gate0
-    
+
     Gate0{"Tier 0 Emergency Gate\n(Deterministic Regex & Allowlist)"}
-    
+
     Gate0 -- "Acute Emergency Detected\n(Cardiac, Stroke, Pediatric, Toxic, Crisis)" --> Siren["🚨 Immediate Emergency Siren\nHotline: 108 or Tele-MANAS 14416\nZERO LLM Intervention"]
-    
+
     Gate0 -- "No Emergency" --> InjCheck2{"Was Injection Flagged?"}
     InjCheck2 -- Yes --> SafeFallback["Neutralized Safe Fallback\nStandard Primary Care Response\n(No Prompt Execution)"]
     InjCheck2 -- No --> Gate1
-    
+
     Gate1{"Tier 1 Urgent Referral\n(NTEP TB Cough >= 2wks, Rabies PEP)"}
     Gate1 -- "Urgent Match" --> PHCReferral["⚠️ In-Person Clinical Referral\nDirect to nearest PHC/CHC within 24-48 hrs\nPrescription Masking Prohibited"]
-    
+
     Gate1 -- "Routine" --> Gate2{"Tier 2 Primary Care Knowledge Base\n(Fever, Headache, Diarrhea, Burns)"}
     Gate2 -- "Clinical Match" --> ConservativeHomeCare["Structured Home Care & Hydration\nAge/Weight Relative Guidance\nRed Flag Escalation Warnings"]
-    
-    Gate2 -- "General / Diet" --> Gate3["Tier 3 Educational Physiology & LLM\nCircuited via Gemini 1.5 Flash\nGuaranteed Zero-500 Fallback"]
+
+    Gate2 -- "General / Diet" --> Gate3["Tier 3 Educational Physiology & LLM\nCircuited via configured optional Gemini candidate\nGuaranteed Zero-500 Fallback"]
 ```
 
 ---

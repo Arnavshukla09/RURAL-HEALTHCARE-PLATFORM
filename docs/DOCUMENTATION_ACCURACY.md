@@ -1,5 +1,7 @@
 # Documentation accuracy against code — 22 November 2026
 
+> Historical review snapshot. Findings and line references below describe the review at its recorded date. For the current 23 November 2026 state and resolved findings, use [FINAL_AUDIT.md](FINAL_AUDIT.md), [ARCHITECTURE.md](ARCHITECTURE.md) and [MODEL_FALLBACK_AND_OPERATIONS.md](MODEL_FALLBACK_AND_OPERATIONS.md).
+
 This is the audit snapshot **before** the voice-assistant implementation. Several identified issues have since been corrected; see [VOICE_ASSISTANT_SETUP.md](VOICE_ASSISTANT_SETUP.md) and the backend/consultation/offline evidence documents for the resulting implementation. Remaining vendor/model/device limitations are explicitly retained.
 
 ## Verdict

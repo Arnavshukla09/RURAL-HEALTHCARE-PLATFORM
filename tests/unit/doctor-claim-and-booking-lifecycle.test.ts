@@ -9,7 +9,7 @@
  * 5. Medical Administrator review and approval gate
  */
 
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { REAL_DOCTORS } from '@/lib/data/real-doctors'
 import {
   generateDoctorClaimToken,
@@ -40,6 +40,15 @@ beforeEach(() => {
 
 describe('End-to-End Demo Booking, Tokenized Invite & Admin Approval Lifecycle', () => {
   const targetDoctor = REAL_DOCTORS[0] // Dr. Ajay Goenka (AIIMS Bhopal)
+
+  it('rejects all browser-local demo references and the legacy bypass in production', () => {
+    const reference = generateDoctorClaimToken(targetDoctor.id)
+    vi.stubEnv('NODE_ENV', 'production')
+    try {
+      expect(verifyDoctorClaimToken(targetDoctor.id, reference)).toBe(false)
+      expect(verifyDoctorClaimToken(targetDoctor.id, 'admin_bypass_verified')).toBe(false)
+    } finally { vi.unstubAllEnvs() }
+  })
 
   it('Step 1: Demo Patient generates booking payload with tokenized doctor claim link', () => {
     expect(targetDoctor).toBeDefined()

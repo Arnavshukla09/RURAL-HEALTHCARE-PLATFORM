@@ -134,7 +134,7 @@ export async function generateGeminiContent(
       if (err.name === "AbortError") {
         console.warn(`Gemini request for model ${model} timed out after ${MODEL_TIMEOUT_MS}ms`)
       } else {
-        console.warn(`Gemini request for model ${model} failed:`, err.message || err)
+        console.warn(`Gemini request for model ${model} failed`)
       }
     }
   }

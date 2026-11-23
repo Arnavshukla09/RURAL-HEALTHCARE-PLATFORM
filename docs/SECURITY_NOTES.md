@@ -1,5 +1,7 @@
 # Security Notes & Hardening Changelog (Phase 1)
 
+> Historical evidence at the recorded baseline date. Current 23 November 2026 behavior, verification counts and residual risks are recorded in [FINAL_AUDIT.md](FINAL_AUDIT.md); this record is preserved for provenance, not current configuration.
+
 > **Document Version:** 1.0.0  
 > **Date:** October 2026  
 > **Phase:** 1 (Critical Security Remediations: C1, C2, C5, H2, H3, H5, H7)  

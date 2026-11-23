@@ -1,6 +1,6 @@
 # Hands-free control inventory
 
-Source commit: `23768473b5ada99204f50a667bf49f0c93a63392`. Generated 22 November 2026.
+Source commit: `d4aeb5f58c54e5b489e2fcef08261d0c282deebb`. Generated 23 November 2026.
 
 **Implemented source registration inventory, not device or end-to-end coverage certification.** These are static JSX templates; one facility-card template may render many buttons. A reachable template can be hidden or disabled at runtime. Dispositions include executable controls, containers, avatar-owned controls and explicit handoffs. Role permissions must be evaluated by the server and active UI state.
 
@@ -799,8 +799,8 @@ Entry: `app/teleconsult/room/page.tsx`. Local reachable templates: 26. Shared co
 | app/teleconsult/room/rx-modal.tsx:157 | Button | {en ? "Print / Download PDF" : "प्रिंट / डाउनलोड पीडीएफ"} | onPrint | ui.f213ffd4ceb97f72 / confirm |
 | app/teleconsult/room/rx-modal.tsx:167 | Button | {savingRecord ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />} {en ? "Save to Patient Records" : "मेडिकल रिकॉर्ड में से | onSaveRecord | ui.30d625c54cd21538 / confirm |
 | app/teleconsult/room/rx-modal.tsx:176 | Button | {en ? "Close & Exit" : "बंद करें"} | onExit | ui.93c78565c6d15f15 / confirm |
-| components/JitsiMeeting.tsx:176 | Button | {t.retry} | window.location.reload | ui.691f2edc6e106166 / confirm |
-| components/JitsiMeeting.tsx:201 | Button | {t.leave} | onLeave | ui.e852313112d51e5a / confirm |
+| components/JitsiMeeting.tsx:165 | Button | {t.retry} | window.location.reload | ui.691f2edc6e106166 / confirm |
+| components/JitsiMeeting.tsx:190 | Button | {t.leave} | onLeave | ui.e852313112d51e5a / confirm |
 | components/voice-assistant/MeetingControls.tsx:9 | Button | {labels[0]} | onCommand | ui.e11ca77cc94ba14e / local |
 | components/voice-assistant/MeetingControls.tsx:10 | Button | {labels[1]} | onCommand | ui.6c267fe90208ccb5 / local |
 | components/voice-assistant/MeetingControls.tsx:11 | Button | {labels[2]} | onCommand | ui.b77405404fa375c1 / local |

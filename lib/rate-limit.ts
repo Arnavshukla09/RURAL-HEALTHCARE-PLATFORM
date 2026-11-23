@@ -3,7 +3,7 @@ import { Redis } from "@upstash/redis"
 import { NextResponse } from "next/server"
 import { isLoadTest } from "./loadtest"
 
-export type RouteClass = "auth" | "read" | "write" | "ai" | "public"
+export type RouteClass = "auth" | "read" | "write" | "ai" | "public" | "voice"
 
 export interface LimiterConfig {
   name: string
@@ -59,8 +59,8 @@ function getRedis(): Redis | null {
   ) {
     try {
       redisClient = Redis.fromEnv()
-    } catch (err) {
-      console.warn("[RateLimit] Upstash Redis initialization error:", err)
+    } catch {
+      console.warn("[RateLimit] Upstash Redis initialization failed")
       redisClient = null
     }
   }
@@ -106,8 +106,8 @@ export function createLimiter(config: LimiterConfig) {
           reset: res.reset,
           retryAfter: retryAfterSeconds,
         }
-      } catch (err) {
-        console.warn(`[RateLimit] Upstash error on ${name}, falling back to memory:`, err)
+      } catch {
+        console.warn(`[RateLimit] Upstash unavailable on ${name}; using bounded memory`)
       }
     }
 
@@ -159,6 +159,7 @@ export const routeLimiters: Record<RouteClass, (key: string) => Promise<RateLimi
   write: createLimiter({ name: "write", limit: 20, windowSeconds: 60 }),
   ai: createLimiter({ name: "ai", limit: 10, windowSeconds: 60 }),
   public: createLimiter({ name: "public", limit: 60, windowSeconds: 60 }),
+  voice: createLimiter({ name: "voice", limit: 30, windowSeconds: 60 }),
 }
 
 /**

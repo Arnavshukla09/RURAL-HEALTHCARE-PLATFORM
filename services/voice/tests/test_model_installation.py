@@ -20,15 +20,17 @@ class InstallationContractTests(unittest.TestCase):
         self.assertEqual(os.environ["HF_HUB_OFFLINE"], "1")
         self.assertEqual(os.environ["TRANSFORMERS_OFFLINE"], "1")
         with tempfile.TemporaryDirectory() as directory, patch.object(model_runtime, "ROOT", Path(directory)):
-            self.assertEqual(model_runtime.manifest(), {"models": {}})
+            self.assertEqual(model_runtime.manifest()["models"], {})
 
     def test_relocation_preserves_relative_locked_snapshots(self):
         with tempfile.TemporaryDirectory() as directory, patch.object(model_runtime, "ROOT", Path(directory)):
             root = Path(directory)
-            (root / "cache" / "snapshot").mkdir(parents=True)
-            lock = {"protocolVersion": 1, "models": {"english": {"revision": "a" * 40, "path": "cache/snapshot"}}}
+            location = root / "cache" / "models--openai--whisper-tiny" / "snapshots" / ("a" * 40)
+            location.mkdir(parents=True)
+            (location / "config.json").write_text("{}")
+            lock = {"protocolVersion": 1, "models": {"english": {"repository": "openai/whisper-tiny", "license": "apache-2.0", "revision": "a" * 40, "path": location.relative_to(root).as_posix()}}}
             (root / "model-lock.json").write_text(json.dumps(lock))
-            self.assertEqual(model_runtime.manifest()["models"]["english"]["path"], str((root / "cache" / "snapshot").resolve()))
+            self.assertEqual(model_runtime.manifest()["models"]["english"]["path"], str(location.resolve()))
 
     def test_modified_revision_or_path_escape_is_rejected(self):
         with tempfile.TemporaryDirectory() as directory, patch.object(model_runtime, "ROOT", Path(directory)):

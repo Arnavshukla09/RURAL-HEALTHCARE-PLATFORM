@@ -88,9 +88,9 @@ The immutability gate is implemented in [`scripts/check_migration_immutability.m
 
 ---
 
-## 6. Production Database Reconciliation Evidence (`boyzdmlvzvcplzolenef`)
+## 6. Production Database Reconciliation Evidence (`redacted-project-ref`)
 
-On 2026-10-17, live inspection of production Supabase database `boyzdmlvzvcplzolenef` revealed historical schema and policy divergence:
+On 2026-10-17, live inspection of production Supabase database `redacted-project-ref` revealed historical schema and policy divergence:
 - Only migrations `20260701000000` and `20260702000000` were tracked in `supabase_migrations.schema_migrations`.
 - Legacy permissive policies remained active (e.g., `doctor_read_all_medical_records`, `authenticated_insert_providers`, `Users can insert payments`).
 - Legacy diagnostic function `public.get_tables()` remained accessible.
@@ -104,7 +104,7 @@ On 2026-10-17, live inspection of production Supabase database `boyzdmlvzvcplzol
 5. Synchronized `supabase_migrations.schema_migrations` tracking table to version `20261018000200`.
 
 ### Current Verification Status:
-- `npx supabase migration list --project-ref boyzdmlvzvcplzolenef`: **All 19 migrations synchronized (local == remote)**.
+- `npx supabase migration list --project-ref redacted-project-ref`: **All 19 migrations synchronized (local == remote)**.
 - Query for policies with `user_metadata`: **0 rows (completely eliminated)**.
 - Supabase Security Advisors: **0 critical findings, 0 duplicate index warnings**.
 - Schema Drift Status: **RESOLVED & ZERO DRIFT CONFIRMED**.

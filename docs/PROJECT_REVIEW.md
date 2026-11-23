@@ -1,5 +1,7 @@
 # Project review — 22 November 2026
 
+> Historical review snapshot. Findings and line references below describe the review at its recorded date. For the current 23 November 2026 state and resolved findings, use [FINAL_AUDIT.md](FINAL_AUDIT.md), [ARCHITECTURE.md](ARCHITECTURE.md) and [MODEL_FALLBACK_AND_OPERATIONS.md](MODEL_FALLBACK_AND_OPERATIONS.md).
+
 This is the source-review snapshot before the voice-assistant implementation. Appointment/consultation acknowledgments, server authorization, clinical urgency floors, private-cache cleanup and offline replay have since been changed. See [VOICE_ASSISTANT_SETUP.md](VOICE_ASSISTANT_SETUP.md) and its evidence links for the current implementation; the findings below preserve the original review context.
 
 ## Overall assessment

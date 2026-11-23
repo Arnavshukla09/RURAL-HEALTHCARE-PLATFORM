@@ -86,7 +86,7 @@ export async function handleCreateAppointment(supabase: any, user: any, body: an
   try {
     await getAdminClient().from("notifications").insert([{ recipient_id: patient.id, recipient_type: "individual", title: "Appointment Requested", message: `You requested a ${parsed.data.consultation_type} consultation.`, type: "info" }])
   } catch (error) {
-    console.warn("[appointments:POST] Notification insert skipped:", error)
+    console.warn("[appointments:POST] Notification insert skipped")
   }
   return NextResponse.json({ appointment: data }, { status: 201, headers: { "Cache-Control": "private, no-store" } })
 }
@@ -119,7 +119,7 @@ export async function handlePatchAppointment(supabase: any, user: any, body: any
   try {
     await getAdminClient().from("notifications").insert([{ recipient_id: existingAppt.patient_id, recipient_type: "individual", title: `Appointment ${newStatus}`, message: `Your appointment status has been updated to ${newStatus}.`, type: newStatus === "cancelled" ? "warning" : "info" }])
   } catch (error) {
-    console.warn("[appointments:PATCH] Notification insert skipped:", error)
+    console.warn("[appointments:PATCH] Notification insert skipped")
   }
   return NextResponse.json({ appointment }, { headers: { "Cache-Control": "private, no-store" } })
 }

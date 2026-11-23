@@ -61,8 +61,8 @@ try {
 }
 
 if (!auditOutput) {
-  console.log("✔ npm audit returned empty output (clean).");
-  process.exit(0);
+  console.error("Audit unavailable: no registry report was returned.");
+  process.exit(1);
 }
 
 let auditReport;
@@ -74,6 +74,10 @@ try {
 }
 
 const vulnerabilities = auditReport.vulnerabilities || {};
+if (auditReport.error || !auditReport.metadata?.vulnerabilities || !auditReport.vulnerabilities) {
+  console.error("Audit unavailable: the registry did not return a valid vulnerability report.");
+  process.exit(1);
+}
 const unallowedHighOrCritical = [];
 const allowlistedMatches = [];
 

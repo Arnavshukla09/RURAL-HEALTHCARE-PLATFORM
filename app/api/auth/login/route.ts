@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     })
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 401 })
+      return NextResponse.json({ error: "Unable to sign in with those credentials" }, { status: 401 })
     }
 
     if (!data.user) {
@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
     })
   } catch (err: any) {
     return NextResponse.json(
-      { error: err?.message || "Internal server error during login" },
+      { error: "Login service unavailable" },
       { status: 500 }
     )
   }

@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
     } while (cursor !== 0)
 
     return NextResponse.json({ success: true, deleted, message: `Purged ${deleted} cached AI responses` })
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 })
+  } catch {
+    return NextResponse.json({ error: "Cache operation unavailable" }, { status: 500, headers: { "Cache-Control": "private, no-store" } })
   }
 }

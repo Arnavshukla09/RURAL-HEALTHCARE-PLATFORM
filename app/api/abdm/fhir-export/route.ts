@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
       return authErrorResponse(error)
     }
     return NextResponse.json(
-      { error: "Internal server error exporting FHIR bundle", detail: error?.message },
+      { error: "Internal server error exporting FHIR bundle" },
       { status: 500 }
     )
   }

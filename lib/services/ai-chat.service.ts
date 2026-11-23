@@ -216,7 +216,7 @@ export async function executeAiChat(request: NextRequest, body: any) {
       generateGeminiContent(contents, systemPrompt)
     )
   } catch (gwErr: any) {
-    console.warn("[ai-chat] AI Gateway bypassed to offline triage:", gwErr?.message || gwErr)
+    console.warn("[ai-chat] Gateway unavailable; using local triage")
     geminiResult = { reply: null, fallback: true, reason: gwErr?.code || "gateway-circuit" }
   }
 

@@ -1,299 +1,91 @@
 # Rural Healthcare Platform
 
-[![Continuous Integration (CI)](https://github.com/Arnavshukla09/RURAL-HEALTHCARE-PLATFORM/actions/workflows/ci.yml/badge.svg)](https://github.com/Arnavshukla09/RURAL-HEALTHCARE-PLATFORM/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Next.js 15](https://img.shields.io/badge/Next.js-15.5-black?logo=next.js)](https://nextjs.org/)
-[![Local PostgreSQL 15](https://img.shields.io/badge/Local_PostgreSQL-15_PostGIS-336791?logo=postgresql)](https://www.postgresql.org/)
-[![Tests Passing](https://img.shields.io/badge/Tests-310%20Passing-brightgreen)](docs/VOICE_ASSISTANT_SETUP.md)
+[![CI](https://github.com/Arnavshukla09/RURAL-HEALTHCARE-PLATFORM/actions/workflows/ci.yml/badge.svg)](https://github.com/Arnavshukla09/RURAL-HEALTHCARE-PLATFORM/actions/workflows/ci.yml)
 
-An offline-first, mobile Progressive Web Application (PWA) engineered for rural and resource-constrained healthcare environments in India. Built with a serverless Backend-For-Frontend (BFF) architecture, the platform provides atomic appointment scheduling, WebRTC teleconsultations, pan-India PostGIS facility lookups, emergency visual first-aid triage, offline mutation queuing with exponential backoff, and ABDM/HL7 FHIR R4 clinical document export.
+A mobile Next.js PWA for rural healthcare navigation, facility discovery, appointment requests, medical records, emergency guidance and teleconsultation. The floating assistant adds voice navigation, pictorial choices and shared accessibility controls. Updated **23 November 2026** against the current source.
 
-The persistent voice avatar now provides native guided workflows in all 13 selected languages, emergency-first local guidance, pictorial controls, and server-confirmed appointment actions. Speech depends on available device engines or the optional owned inference service. Model snapshots are pinned once; that service uses port **8765** and makes no runtime model downloads. See [one-time setup and verification limits](docs/VOICE_ASSISTANT_SETUP.md). Offline replay requires both new forward migrations described there; no unlimited hosted-service or background-microphone entitlement is implied.
+## Current working features
 
-The avatar now maps the website's current controls through “page options,” “more options,” numbered/name selection and field entry. Shared font/contrast/read controls and task replacement stay available during requests; supported native recognition also accepts wake-prefixed interruption during speech. [Implemented behavior, simple steps and outstanding audits](docs/HANDS_FREE_IMPLEMENTATION.md) distinguish source registration from real-device, all-language and clinical certification.
+| Feature | Implemented behavior | Practical boundary |
+|---|---|---|
+| Floating assistant | Separate Chat and Actions panels; settings, replay, Stop, Cancel and emergency controls | Active while the page is open; browser/OS suspension stops listening |
+| Website voice controller | Page options, five choices per batch, numbered/name selection, non-secret field editing, navigation and reviewed actions | Source-approved controls only; secure/device and unreviewed legacy operations require a handoff |
+| Accessibility | Shared font size, contrast, page reading, speech speed and reset controls | Reading private content asks for consent; actual disability usability needs user testing |
+| Task switching | New request/question and cancel task invalidate stale dialogue, reads and confirmations | Already submitted writes still require their authoritative result to be checked |
+| Languages | Native assistant catalogs for English, Hindi, Marathi, Bengali, Telugu, Tamil, Gujarati, Kannada, Punjabi, Odia, Malayalam, Assamese and Urdu | Speech needs a matching engine; many legacy page labels depend on online DOM translation |
+| Facilities and maps | Location/search → service filters → GPS/radius/Nearest; contextual results and map pan/zoom/recenter | External map tiles and fresh searches require connectivity; saved coverage is bounded |
+| Appointments | Authenticated guided drafts, signed confirmations, server-validated booking/cancellation receipts | Offline requests remain queued until acknowledged; provider listings do not prove clinic availability |
+| Offline resilience | Cached public assets, checksum-verified language packs, account-owned outbox and atomic replay | Private browser storage exists; no guarantee against cache eviction or background suspension |
+| Teleconsultation | Authorized room entry and first-party conferencing controls | Requires network, permissions and a compatible conferencing provider |
+| Clinical helpers | Deterministic symptom/emergency rules with optional model assistance | Decision support, not diagnosis, prescription, dispatch or clinical certification |
+| FHIR/ABDM | Local FHIR R4 bundle generation and ABHA format checks | National identity verification, consent exchange and gateway integration remain unimplemented |
 
-**Author & Lead Engineer:** Arnav Shukla ([@Arnavshukla09](https://github.com/Arnavshukla09))  
-**Repository:** [github.com/Arnavshukla09/RURAL-HEALTHCARE-PLATFORM](https://github.com/Arnavshukla09/RURAL-HEALTHCARE-PLATFORM)  
-**Live Production Deployment:** [rural-healthcare-platform.vercel.app](https://rural-healthcare-platform.vercel.app/)  
-**Security Inquiries & Disclosures:** [public/.well-known/security.txt](public/.well-known/security.txt)
+The controller inventory contains **509 registered source templates**, **499 reachable candidates**, **28 page entries** and **24 API routes**. These are source measurements, not proof that every live page state is independently hands-free. See the [implementation and operating steps](docs/HANDS_FREE_IMPLEMENTATION.md) and [per-control inventory](docs/HANDS_FREE_CONTROL_INVENTORY.md).
 
----
+## How to use the assistant
 
-## 1. Problem Statement & Healthcare Context
+1. Open the website/PWA, choose a language and activate voice. Grant microphone permission through the device.
+2. Say **page options**, **select one**, or **more options**. Open a menu or tab and ask again for its current options.
+3. Select a non-secret field and dictate its value. Use **next field**, **clear field**, or **new question …**.
+4. Use **increase font size**, **high contrast on**, **read page**, **speak slower**, **open chat**, **show actions**, or **open settings**. Native equivalents ship in all 13 catalogs.
+5. Say **cancel task** or **new request …** at any point. Supported native recognition also accepts a wake-prefixed interruption during speech after activation.
+6. Review consequential actions before saying yes. **Requested** and **queued** do not mean completed. Check the actual page/server receipt.
+7. Prepare offline packs while connected. Reopen/reactivate after the device suspends the app. A missing speech engine leaves text, pictorial, keyboard and switch-accessible controls available.
 
-Over 65% of India's population resides in rural regions where the primary healthcare infrastructure faces systemic hurdles:
-* **Intermittent or 2G/3G Connectivity:** Rural clinics and field workers experience frequent network dropouts, making traditional online-only EHR portals unusable.
-* **Geographic & Specialist Deficits:** Rural patients often travel 40–100 km to district headquarters for routine consultations, incurring catastrophic out-of-pocket travel and wage losses.
-* **Paper-Based Record Fragmentation:** Paper prescriptions and test receipts are easily damaged, misplaced, or lost, depriving emergency clinicians of critical medical histories.
-* **Language & Digital Literacy Barriers:** Complex English UI interfaces alienate non-English-literate patients, demanding intuitive multilingual support and visual first-aid guides.
+## Stable model setup and fallback
 
-The Rural Healthcare Platform was architected from the ground up to solve these challenges with an offline-resilient, mobile-first, and cryptographically secure digital health conduit.
+The core controller and emergency rules need no language model. Optional owned inference uses fixed protocol v1 and port **8765**; Next.js keeps port **3000**. Initial installation records immutable revisions for IndicConformer, Whisper tiny and optional Qwen3 0.6B. Runtime never downloads or resolves newer models. New locks record per-file SHA-256 digests; missing optional snapshots leave other models usable.
 
----
+Owned recognition failure falls back to supported device recognition when online or a verified local pack is available. Device synthesis failure can use reachable owned synthesis. Missing matching-language speech keeps the controls usable without substituting an English voice. Optional conversation failure returns deterministic assistance; model output cannot directly execute website actions.
 
-## 2. Intended Users & Primary Use Cases
+See [one-time setup](docs/VOICE_ASSISTANT_SETUP.md) and [model fallback and operations](docs/MODEL_FALLBACK_AND_OPERATIONS.md). Hugging Face weights are installed on an owned Python host, not embedded in the browser. Model assets and real inference have not been installed or certified by this source audit.
 
-```mermaid
-flowchart LR
-    Patient["Rural Patients & ASHA Workers"] -->|Offline Booking & Records| PWA["PWA Client"]
-    Doctor["Clinicians & Specialists"] -->|Teleconsultation & Patient Charts| PWA
-    Admin["Healthcare Administrators"] -->|Doctor Verification & Moderation| PWA
-    PWA --> API["BFF API Layer"]
-    API --> DB[("PostgreSQL 17 + PostGIS")]
-```
+## Local setup
 
-1. **Rural Patients & ASHA/ANM Field Health Workers:**
-   - Queue appointment requests offline in remote hamlets; mutations automatically synchronize via IndexedDB when network connectivity is restored.
-   - Discover nearest verified Ayushman Bharat PM-JAY empanelled hospitals, Community Health Centres (CHCs), and Primary Health Centres (PHCs) via PostGIS geospatial queries.
-   - Access offline visual first-aid triage protocols for acute emergencies (snakebites, maternal hemorrhage, heatstroke, pediatric asphyxia).
-   - Track national public health drives and immunizations (PMSMA, Pulse Polio, NDD) with 1-tap medical record integration.
+Use Node.js 22 and npm. Docker and the Supabase CLI are needed only for a disposable local database. Optional inference needs an isolated Python environment.
 
-2. **Clinicians & Medical Specialists:**
-   - Manage daily teleconsultation queues and review patient clinical histories strictly constrained by verified doctor-patient care relationships.
-   - Conduct WebRTC video consultations with zero native app installations required.
-   - Review patient medical history with strict read-only guarantees on historical records, preventing accidental or unauthorized alteration.
-
-3. **Platform Administrators:**
-   - Review and verify licensed medical practitioners against national health registry records.
-   - Perform legally mandated Right-to-Erasure operations via audited RPC procedures with mandatory reason logging.
-   - Strict database-level isolation: Administrators are cryptographically restricted from directly reading (`SELECT`) or modifying patient clinical notes.
-
----
-
-## 3. System Architecture & Engineering Choices
-
-```mermaid
-flowchart TD
-    subgraph ClientLayer["Client Layer (Offline-First Mobile PWA)"]
-        PWA["Serwist Service Worker & Cache (/sw.js)"]
-        IDB["IndexedDB Outbox (Idempotent Mutations)"]
-        UI["Next.js App Router Client Components"]
-    end
-
-    subgraph EdgePerimeter["Edge Perimeter (Vercel)"]
-        MW["Edge Middleware (x-request-id & Session Validation)"]
-        ISR["1-Hour Stale-While-Revalidate Edge Cache"]
-        RL["Upstash Redis Sliding-Window Rate Limiter"]
-    end
-
-    subgraph BackendServices["BFF Serverless API (Next.js)"]
-        AuthAPI["/api/auth (Strict Role Verification)"]
-        AppointAPI["/api/appointments (Atomic Slot Locking)"]
-        SyncAPI["/api/offline-sync (Idempotent Outbox Ingestion)"]
-        RecordsAPI["/api/medical-records (Care-Scoped CRUD)"]
-        GeoAPI["/api/facilities (PostGIS Spatial Queries)"]
-        FHIRAPI["/api/abdm/fhir-export (NRCES FHIR R4 Export)"]
-    end
-
-    subgraph DataLayer["Persistence & Security (Supabase / PostgreSQL 17)"]
-        DB[("PostgreSQL 17 + PostGIS\n- Spatial Indexes (GIST)\n- Unique Partial Index uq_provider_slot_scheduled")]
-        RLS["Row Level Security (RLS)\n- Role from public.patients.role\n- Care Relationship Scope public.has_care_relationship()"]
-        Audit["access_audit_log (Immutable Tamper Log)"]
-    end
-
-    UI --> PWA
-    UI --> IDB
-    PWA --> MW
-    MW --> ISR
-    MW --> RL
-    RL --> BackendServices
-    BackendServices --> DB
-    DB --> RLS
-    RLS --> Audit
-```
-
-### Architectural & Technology Rationale
-
-| Subsystem | Technology | Architectural Rationale |
-| :--- | :--- | :--- |
-| **Frontend Framework** | **Next.js 15 (App Router)** | Server-side rendering (SSR) for fast initial loads on low-power mobile devices; lean client components; API route handlers acting as a secure Backend-For-Frontend (BFF). |
-| **Offline Resilience** | **Serwist + IndexedDB Outbox** | Caches shell assets and read data via CacheFirst strategies; queues mutations in IndexedDB with exponential backoff (1s–32s cap) and server-side idempotency tracking (`processed_client_ops`). |
-| **Persistence & Spatial** | **PostgreSQL 17 + PostGIS** | Spatial bounding-box and radius queries (`ST_DWithin`, `ST_DistanceSphere`) indexed via GIST for instant discovery of 42,000+ national healthcare facilities. |
-| **Authorization & Security** | **PostgreSQL RLS & Triggers** | Security enforcement lives in the database kernel. Role derivation is strictly bound to `public.patients.role`, rendering client-writable JWT claims irrelevant. |
-| **Edge Protection** | **Upstash Redis + Middleware** | Distributed sliding-window rate limiting protects auth endpoints and public APIs against brute-force and DDoS vectors without cold-start penalties. |
-| **Teleconsultation** | **Jitsi Meet WebRTC** | Standardized WebRTC conferencing operable on standard mobile browsers without requiring proprietary app downloads. |
-| **Interoperability** | **HL7 FHIR R4 (NRCES)** | Exports standardized clinical summaries (DocumentBundles with LOINC and UCUM codes) compliant with India's Ayushman Bharat Digital Mission (ABDM). |
-
----
-
-## 4. Concrete Technical Contributions
-
-The following architectural and security capabilities were personally designed, implemented, and verified in this codebase:
-
-1. **Authoritative Role Isolation & Vulnerability Remediation (`SEC-2026-10-17-ROLE-TRUST`):**
-   - Eliminated reliance on client-controllable JWT metadata (`user_metadata`), which previously allowed unauthorized privilege escalation.
-   - Refactored all 23 database migrations and application queries to derive authorization strictly from `public.patients.role`.
-   - Implemented database trigger `guard_patient_privileges()` to prevent role mutation from authenticated user sessions.
-
-2. **Care-Relationship Scoped Clinical Access Control:**
-   - Authored PostgreSQL security function `public.has_care_relationship(patient_id, provider_user_id)` to enforce doctor-patient privilege boundaries.
-   - Ensured clinicians can only view medical records of patients who possess an active scheduled or completed appointment.
-   - Hardened medical records service layer (`lib/services/medical-records.service.ts`) with HTTP 403 `ACTION_NOT_PERMITTED` guards to prevent doctors from altering or deleting historical patient records.
-
-3. **Atomic Slot Concurrency & Anti-Double-Booking Engine:**
-   - Implemented partial unique index `uq_provider_slot_scheduled` on `appointments(provider_id, appointment_date)` filtering for scheduled status.
-   - Eliminated race conditions during simultaneous booking spikes, mapping concurrency collisions deterministically to HTTP 409 Conflict.
-   - Verified via integration tests subjecting the booking endpoint to 20 parallel simulated transactions.
-
-4. **Modular Architecture & Codebase Maintainability Standard:**
-   - Modularized monolithic components and services into clean feature packages (`components/<feature>/parts/`, `lib/services/`), strictly enforcing an architectural limit of $\le 400$ LOC per non-UI module and $< 150$ LOC per API route.
-   - Integrated `knip` in CI to continuously eliminate dead code, unused exports, and unreferenced dependencies.
-
-5. **Pan-India Facility Pipeline & Campaign System:**
-   - Ingested and validated 42,000+ PM-JAY empanelled hospitals with strict Indian geospatial bounding-box checks ($6.5^\circ\text{N} - 37.5^\circ\text{N}, 68.0^\circ\text{E} - 97.5^\circ\text{E}$).
-   - Built a hierarchical Local Government Directory (LGD) reference system covering all 36 States/UTs and 725 administrative districts.
-   - Built the national recurring health campaign directory with dynamic date rollups and 1-tap medical record integration.
-
-6. **Automated Multi-Stage CI/CD & Migration Immutability Gate:**
-   - Developed `scripts/db/check_migration_immutability.mjs` verifying all historical migration files against cryptographic SHA-256 manifests (`supabase/migrations.sha256`).
-   - Implemented `tests/integration/db-safety-guard.ts` guaranteeing that automated test runners never execute against unallowlisted or production databases.
-
----
-
-## 5. Security Model & Role Invariants
-
-All access control is governed at the PostgreSQL database layer via Row Level Security (RLS) policies and security definer functions:
-
-| Role | Permitted Actions | Prohibited Actions | Enforcement Mechanism |
-| :--- | :--- | :--- | :--- |
-| **Patient** | View/update own profile; view own appointments & medical records; queue bookings. | Self-elevating role; viewing other patients' records; completing consultations. | Trigger `guard_patient_privileges()`; RLS `patients_read_own_records`. |
-| **Doctor** | View health data and records **only** for patients with active care relationship. | Accessing unassigned patients; modifying or deleting historical patient records. | Function `public.has_care_relationship()`; Service HTTP 403 enforcement. |
-| **Admin** | Manage clinician verifications, monitor facility data, execute audited erasures. | Direct `SELECT` or `UPDATE` on confidential clinical notes and diagnostic records. | RLS denies Admin SELECT on `medical_records`; RPC `admin_erase_medical_record`. |
-
----
-
-## 6. Implementation Status Matrix
-
-| Feature / Subsystem | Status | Details & Implementation Notes |
-| :--- | :---: | :--- |
-| **Authoritative RBAC** | **Implemented** | Strict derivation from `public.patients.role`; client JWT claims ignored. |
-| **Doctor Care Scoping** | **Implemented** | `public.has_care_relationship()` enforced across DB policies and API services. |
-| **Concurrency Locking** | **Implemented** | Partial unique index `uq_provider_slot_scheduled` prevents double-booking. |
-| **Audited Right-to-Erasure** | **Implemented** | RPC `admin_erase_medical_record` logs mandatory erasure justifications. |
-| **Offline IndexedDB Outbox** | **Implemented** | Queues offline mutations with exponential backoff retry and server idempotency. |
-| **Pan-India Facility Lookup** | **Implemented** | PostGIS spatial queries across 42,000+ PM-JAY facilities and 725 LGD districts. |
-| **National Campaigns Hub** | **Implemented** | Curated directory of recurring drives (PMSMA, Polio, NDD) with LGD filters. |
-| **Teleconsultation Rooms** | **Implemented** | Jitsi Meet WebRTC integrated with dynamic meeting credentials and room routing. |
-| **13-Language Assistant Workflows** | **Implemented; speech device-dependent** | Native command/prompt catalogs and offline packs for English, Hindi, Marathi, Bengali, Telugu, Tamil, Gujarati, Kannada, Punjabi, Odia, Malayalam, Assamese and Urdu. Browser/owned speech-model availability and quality require device testing; general page translation also uses the existing Google DOM integration. |
-| **ABDM / FHIR R4 Export** | **Partially Implemented** | Fully validated NRCES DocumentBundle generator; operates in deterministic local mode pending live NHA production sandbox gateway keys. |
-| **Content Security Policy** | **Partially Implemented** | Running in `Report-Only` mode in `next.config.mjs` to monitor WebRTC and map tile connections without breaking client connectivity. |
-| **WebPush Notifications** | **Planned** | Native browser push notifications for appointment reminders and emergency broadcasts. |
-
----
-
-## 7. Local Setup & Safe Development Environment
-
-### Prerequisites
-* **Node.js:** `v22.x` or higher
-* **Docker Desktop:** Required for local Supabase test container
-* **Supabase CLI:** `v2.121.0` or higher (`npm install -g supabase` or via `npx`)
-
-### Quick Start
-```bash
-# 1. Clone the repository
+~~~bash
 git clone https://github.com/Arnavshukla09/RURAL-HEALTHCARE-PLATFORM.git
 cd RURAL-HEALTHCARE-PLATFORM
-
-# 2. Install pinned dependencies
 npm ci
-
-# 3. Configure local environment variables
 cp .env.example .env.local
-
-# 4. Start isolated local Supabase container (Never points to production)
-npx supabase start
-
-# 5. Apply migrations and seed realistic fixtures
-npx supabase db reset
-
-# 6. Launch Next.js development server
 npm run dev
-```
+~~~
 
-Open `http://localhost:3000` in your browser.
+Configure only the services you use. Open http://localhost:3000. Placeholder credentials allow source/build checks but do not provide authentication or data. For database-backed development start the disposable local Supabase stack and reset **that local stack only**. Never run tests, resets or SQL against production. The owner applies the [sealed migration rollout](docs/OFFLINE_SYNC_ROLLOUT.md), including atomic replay and expired-booking protection.
 
-> [!IMPORTANT]
-> **Production Database Isolation Invariant:**  
-> The repository includes an automated safety guard in `tests/integration/db-safety-guard.ts` that explicitly inspects the target database URL. If a non-local or unallowlisted database is detected, tests immediately abort with code 1. Never run migrations or test suites against a production database.
+## Verification and audit
 
----
-
-## 8. Verification & Testing Strategy
-
-The repository maintains an automated, multi-tiered verification pipeline. Live database and authenticated browser checks require a disposable local stack; skipped smoke-mode checks do not establish their behavior.
-
-```bash
-# Run unit & isolation tests (303 tests)
-npm run test:unit
-
-# Run database integration & RLS tests (29 cases; REQUIRE_DB=1 with local test keys)
-npm run test:integration
-
-# Run pre-commit component validation & migration immutability gate
+~~~bash
 npm run check:components
 npm run check:migrations
-
-# Run offline algorithmic subsystem benchmarks (21 checks)
-npm run benchmark:integration
-
-# Run dataset provenance audit
 npm run report:dataset
-
-# Run dead code & dependency analysis
-npm run knip
-
-# Run production Next.js build verification
+npm run benchmark:integration
+node scripts/data/register_voice_controls.mjs
+node scripts/ci/client_boundary_check.mjs
+node scripts/ci/publication_safety.mjs
+node scripts/ci/documentation_links.mjs
+python -m unittest discover -s services/voice/tests -v
 npm run build
-```
+npx playwright test
+~~~
 
-### Verification Matrix Summary
+The final source suite has **323 unit cases**, **20 Python contracts**, **24 browser journeys** and **29 required database/safety cases**. Local browser evidence is 21 passed and three authenticated-role cases deferred to CI's disposable accounts. Browser audio is mocked. CI must pass the seeded browser and database jobs for the finishing commit; exact results are recorded in the [final audit](docs/FINAL_AUDIT.md) and [machine-readable reports](docs/reports/FINAL_VERIFICATION.json).
 
-| Test Tier | Scope | Total Tests | Status |
-| :--- | :--- | :---: | :---: |
-| **Unit Tests (`npm run test:unit`)** | Existing subsystems plus assistant parsing/actions, audio races, account isolation, report gates and DOM lifecycle | **310** | **PASS locally** |
-| **Integration Tests (`npm run test:integration`)** | Live PostgreSQL RLS, care-relationship scoping, slot locking and atomic replay | **29** | **PASS in GitHub's disposable local Supabase job** |
-| **Assistant Browser Journeys** | Guided intake, offline emergency, language selection, denied rooms and explicit offline voice activation; speech mocked | **6** | **PASS locally; real speech remains unverified** |
-| **Optional Voice Contracts** | Pinned install/repair, explicit gated authentication, language declarations and local/token access | **15** | **PASS; no model inference performed** |
-| **Algorithmic Benchmarks (`npm run benchmark:integration`)** | PostGIS coordinates, AI safety prompt neutralization, backoff dynamics, ABHA format | **21** | **PASS** |
-| **Component Quality Gate (`npm run check:components`)** | Imports, export signatures, TypeScript typecheck, ESLint, LOC standards ($\le 400$) | **8 / 8 Gates** | **PASS** |
-| **Migration Immutability (`npm run check:migrations`)** | Cryptographic SHA-256 seal verification on all 25 migration files | **25 / 25 Files** | **PASS** |
+Security checks include exact-origin mutation checks, voice body/type/time limits, denied upstream redirects, server/client import boundaries, sanitized logging/errors, publication scanning, Gitleaks and behavioral vulnerability mutations. Public application paths and publishable client configuration are necessarily visible. Internal inference origins and service credentials remain server-only. No scan can prove that arbitrary future content will never contain a secret.
 
-For comprehensive test logs, mutation test traces, and failure analysis, see [`docs/TESTING.md`](docs/TESTING.md).
+## Operations and remaining release gates
 
----
+No required paid avatar or inference API was added. Owned hardware, electricity, bandwidth, hosting, model licenses and review have costs; hosted free quotas can change. Dependency pinning reduces surprise changes but cannot eliminate security maintenance. Five accepted high npm advisories currently expire **31 December 2026** and are enforced by CI; the audit does not claim zero advisories.
 
-## 9. Operational Limitations & Known Boundaries
+Before a production rollout, complete real-device speech tests, native-speaker review of all languages, clinical review, disability-usability sessions, every role/page/modal-state check, conferencing/device handoffs and recovery/hosting tests. Production deployment and database operations were not executed by this audit. Legacy browser-local doctor claim references are disabled in production and cannot provision a trusted doctor role.
 
-* **Free-Tier Deployment Constraints:** Built within Vercel Hobby ($0/mo), Supabase Free Tier (500 MB database, 200 pooler connections), and Upstash Redis Free quota.
-* **Content Security Policy Monitoring:** CSP is configured in `Report-Only` mode to accommodate third-party OpenStreetMap tile layers, Google Translate scripts, and Jitsi STUN/TURN servers.
-* **ABDM Gateway Bridge:** Operates deterministically with local NRCES FHIR schema generation. Live health repository bridge activation requires official NHA health facility registry credentials (`ABDM_CLIENT_ID`).
-* **PostGIS Extension Governance:** PostGIS system tables (`spatial_ref_sys`) are retained in the `public` schema in accordance with PostgreSQL extension design to prevent breaking geospatial spatial indexes.
+## Project documentation
 
-For in-depth operational considerations, refer to [`docs/LIMITATIONS.md`](docs/LIMITATIONS.md).
+- [Architecture](docs/ARCHITECTURE.md), [source tree](docs/PROJECT_STRUCTURE.md), [components](docs/COMPONENTS.md)
+- [API contract guide](docs/API_REFERENCE.md), [generated HTTP surface](docs/CURRENT_ENDPOINTS.md)
+- [Deployment](docs/DEPLOY.md), [testing](docs/TESTING.md), [limitations](docs/LIMITATIONS.md)
+- [Final audit](docs/FINAL_AUDIT.md), [clinical safety](docs/CLINICAL_SAFETY.md), [FHIR boundaries](docs/ABDM_FHIR_INTEROPERABILITY.md)
+- [Hands-free release checklist](docs/ASSISTANT_RELEASE_CHECKLIST.md), [changelog](docs/CHANGELOG.md)
 
----
-
-## 10. Documentation Index
-
-Detailed engineering documentation is maintained in the [`docs/`](docs/) directory:
-
-* **[Project Structure](docs/PROJECT_STRUCTURE.md):** Current folder tree and assistant integration points.
-* **[Assistant Setup & Release Checklist](docs/ASSISTANT_RELEASE_CHECKLIST.md):** Simple operation steps, deployment prerequisites and device/clinical/security audits.
-* **[Architecture Guide](docs/ARCHITECTURE.md):** Detailed system architecture, BFF design, and subsystem blueprints.
-* **[Database Reference](docs/DATABASE.md):** ER diagrams, table schemas, RLS policies, and periodic maintenance runbook.
-* **[Testing & Mutation Proofs](docs/TESTING.md):** QA test matrix, integration contract proofs, and behavioral mutation verifications.
-* **[Security Notes & Policy](docs/SECURITY_NOTES.md):** Vulnerability remediation changelog, incident response, and advisor resolutions.
-* **[Deployment Runbook](docs/DEPLOY.md):** Production rollout procedures, environment configuration, and verification checks.
-* **[Credential Rotation Checklist](docs/CREDENTIAL_ROTATION_CHECKLIST.md):** Key rotation procedures and security hygiene.
-* **[Dataset Provenance](docs/DATASETS.md):** Government registry sources, geospatial bounding boxes, and ETL pipelines.
-* **[ABDM & FHIR Conformance](docs/ABDM_FHIR_INTEROPERABILITY.md):** HL7 FHIR R4 Document Bundle specifications.
-* **[Clinical Safety Protocols](docs/CLINICAL_SAFETY.md):** Emergency triage decision tables and red-flag rules.
-* **[System Limitations](docs/LIMITATIONS.md):** Documented architectural and operational boundaries.
-* **[Changelog](docs/CHANGELOG.md):** Semantic version release history.
-
----
-
-## 11. License
-
-This project is open-source software licensed under the [MIT License](LICENSE).  
-Copyright (c) 2026 Arnav Shukla.
+Author: [Arnav Shukla](https://github.com/Arnavshukla09). License: [MIT](LICENSE), with separate terms for external services, datasets, models and voices. Security disclosures: [security.txt](public/.well-known/security.txt).

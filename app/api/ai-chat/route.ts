@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     return await executeAiChat(request, body)
   } catch (error: any) {
-    console.error("AI chat server error:", error)
+    console.error("AI chat server request failed")
     const errEn =
       "We are currently experiencing connectivity difficulties. If your symptoms are severe, please call 108 or visit your nearest Primary Health Centre."
     const errHi =

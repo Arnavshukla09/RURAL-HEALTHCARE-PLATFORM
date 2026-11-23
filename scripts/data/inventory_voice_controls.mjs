@@ -122,7 +122,7 @@ const commit = execFileSync('git', ['-c', 'core.fsmonitor=false', 'rev-parse', '
 const catalog = {
   sourceState: 'Implementation working tree; file hashes identify the scanned sources. generatedFromCommit is the base commit before this update.',
   sourceHashes: Object.fromEntries([...graph.entries()].map(([file, data]) => [relative(file), data.sha256])),
-  generatedFromCommit: commit, generatedAt: '2026-11-22', scope: 'Static first-party JSX interactive-control candidates, including forms/containers and local import reachability; no live DOM, authorization or runtime multiplicity certification',
+  generatedFromCommit: commit, generatedAt: '2026-11-23', scope: 'Static first-party JSX interactive-control candidates, including forms/containers and local import reachability; no live DOM, authorization or runtime multiplicity certification',
   exclusions: ['Shared UI primitives', 'Native browser/OS dialogs', 'Third-party Leaflet/Jitsi internals', 'Generated dependencies/builds'],
   counts: { routes: routes.length, controls: controls.length, globalControls: controls.filter(item => item.global).length, filesWithControls: new Set(controls.map(item => item.file)).size, unreachableTemplates: unmapped.length },
   routes: routes.map(route => ({ route: route.route, entry: route.entry, localControls: controls.filter(control => !control.global && control.routes.includes(route.route)).length })),
@@ -132,7 +132,7 @@ fs.writeFileSync('docs/HANDS_FREE_CONTROL_INVENTORY.json', JSON.stringify(catalo
 const escape = value => String(value || '—').replaceAll('|', '\\|').replaceAll('\n', ' ')
 const table = items => ['| Source / line | Control | Label or expression | Existing handler(s) | Registered target / disposition |', '|---|---|---|---|---|', ...items.map(item => `| ${item.file}:${item.line} | ${item.tag}${item.secureField ? ' (secure)' : ''} | ${escape(item.label)} | ${escape(item.events.flatMap(event => event.handlers).join(', ') || (item.href ? 'link navigation' : item.fieldType === 'submit' ? 'parent form submission' : 'no direct handler: inspect wiring'))} | ${item.runtimeId || 'unregistered'} / ${item.voicePolicy} |`)].join('\n')
 const markdown = [
-  '# Hands-free control inventory', '', `Source commit: \`${commit}\`. Generated 22 November 2026.`, '',
+  '# Hands-free control inventory', '', `Source commit: \`${commit}\`. Generated 23 November 2026.`, '',
   '**Implemented source registration inventory, not device or end-to-end coverage certification.** These are static JSX templates; one facility-card template may render many buttons. A reachable template can be hidden or disabled at runtime. Dispositions include executable controls, containers, avatar-owned controls and explicit handoffs. Role permissions must be evaluated by the server and active UI state.', '',
   `Scanned ${catalog.counts.routes} page entries, ${catalog.counts.controls} reachable control templates in ${catalog.counts.filesWithControls} source files, including ${catalog.counts.globalControls} shared/global templates.`, '',
   'The inventory excludes input values, credentials and conversation data. Handler names and label expressions are source references. Native dialogs and third-party widget controls need separate adapters/exclusions. File/line/column IDs identify audit candidates, not future stable runtime action IDs. The JSON companion preserves these IDs and route associations.', '',

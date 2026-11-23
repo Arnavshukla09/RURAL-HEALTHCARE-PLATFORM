@@ -1,125 +1,36 @@
-# Deployment, Operations & Production Readiness Runbook
+# Deployment and owner rollout
 
-This document is the definitive deployment and operational runbook for the **Rural Healthcare Platform**. It covers environment provisioning, Vercel edge configuration, Supabase database migrations, OAuth redirect setups, verification SQL queries, and safe rollback protocols.
+Updated 23 November 2026. This runbook describes required setup and gates; the final source audit did not deploy or execute SQL against a real project.
 
----
+## Web application
 
-## 1. Architecture & Infrastructure Posture
+1. Use Node.js 22, npm ci and the committed lockfile. Run quality/security/tests before building.
+2. Configure Supabase public URL/publishable browser key and server-only service role key in the hosting secret manager. Public client configuration is visible by design; it must never grant service-role authority.
+3. Set the exact canonical NEXT_PUBLIC_SITE_URL (or NEXT_PUBLIC_APP_URL if used). Configure exact approved auth redirect origins. Do not authorize every foreign preview using a wildcard domain.
+4. Configure optional Redis, conferencing and external AI only when required. Missing Redis uses process-local limits; missing external AI does not disable guided navigation. ABDM credentials do not activate the format-only stub. Bhashini live integration remains unimplemented.
+5. Build with npm run build; serve through the supported Next.js host. Verify login/role scope, cache rules, origin failures and accessible navigation in staging before owner release.
 
-The application runs on a serverless, 100% Free-Tier architecture:
-* **Frontend & BFF:** Vercel Hobby (Next.js 15 App Router, Edge Middleware, ISR caching).
-* **Database & BaaS:** Supabase Free Tier (PostgreSQL 17 + PostGIS, Supabase Auth, Storage).
-* **Caching & Rate Limiting:** Upstash Redis (Sliding-window rate limiter, memory fallback).
-* **Video Telemedicine:** Jitsi Meet WebRTC (`meet.jit.si`) with randomized cryptographic room tokens and lobby gating.
-* **AI Clinical Decision Support:** Google Gemini API with circuit breaker and localized regex triage fallback.
+Never place service/signing tokens in NEXT_PUBLIC variables, committed files, screenshots or audit traces. .env.example contains blanks/synthetic configuration only. Rotate credentials through the owner process if compromised; scans do not rotate or validate live credentials.
 
----
+## Database
 
-## 2. Environment Variables Configuration
+All **25 sealed migrations** are append-only and checked against supabase/migrations.sha256. Do not edit a historical file. Deliver future changes as chronological migrations. The owner runs [OFFLINE_SYNC_ROLLOUT.md](OFFLINE_SYNC_ROLLOUT.md), including the atomic replay migration followed by the expiry guard. Missing migration returns MIGRATION_REQUIRED and retains pending requests.
 
-Configure the following variables in the **Vercel Dashboard &rarr; Project Settings &rarr; Environment Variables**:
+Only disposable localhost Supabase may be started/reset for tests. REQUIRE_DB=1 and the report gate require 29 cases with no skipped assertions in CI. This audit never ran production SQL, migrations or resets. Review policies, backup/recovery and owner-specific data before applying rollout runbooks. Role authority is patients.role; approved doctor/admin provisioning must be a trusted server/database operation. Production rejects browser-local demo claim references; that UI is not a national clinician verification service.
 
-| Variable Name | Environments | Required | Description |
-| :--- | :--- | :---: | :--- |
-| `NEXT_PUBLIC_SUPABASE_URL` | Production, Preview, Dev | **Yes** | Supabase Project URL (`https://<project-ref>.supabase.co`) |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Production, Preview, Dev | **Yes** | Client publishable key (`sb_publishable_...` or anon JWT) |
-| `SUPABASE_SERVICE_ROLE_KEY` | Production, Preview, Dev | **Yes** | Secret server-only service-role key (Keep confidential) |
-| `GEMINI_API_KEY` | Production, Preview, Dev | **Yes** | Google AI Studio Gemini API Key |
-| `GEMINI_MODELS` | Production, Preview, Dev | **Yes** | Fallback cascade: `gemini-3.5-flash,gemini-3.1-flash-lite,gemini-2.5-flash` |
-| `DOCTOR_CLAIM_SECRET` | Production, Preview, Dev | **Yes** | 64-character hex secret for doctor onboarding HMAC signatures |
-| `NEXT_PUBLIC_APP_URL` | Production, Preview, Dev | **Yes** | Canonical URL (e.g. `https://rural-healthcare-platform.vercel.app`) |
-| `UPSTASH_REDIS_REST_URL` | Production, Preview, Dev | Optional | Upstash Redis REST endpoint for distributed rate limiting |
-| `UPSTASH_REDIS_REST_TOKEN` | Production, Preview, Dev | Optional | Upstash Redis authentication token |
+## Optional owned voice host
 
----
+Use [VOICE_ASSISTANT_SETUP.md](VOICE_ASSISTANT_SETUP.md) for commands and [MODEL_FALLBACK_AND_OPERATIONS.md](MODEL_FALLBACK_AND_OPERATIONS.md) for backups/integrity/failover. A serverless web deployment does not launch Python. Deploy an owned supervised host, restrict remote access, and configure a server-only HTTPS origin and matching VOICE_SERVICE_TOKEN. Bind unauthenticated local development to loopback only. Keep port 8765 and protocol v1 unless a deliberate operator decision changes configuration.
 
-## 3. Supabase Authentication & URL Configuration
+Do explicit model installation/license/code review once. Back up immutable snapshots/lock and dependency environment. Runtime does not download models. Test actual voices and inference on hardware; health/presence checks and mocked CI do not prove all-language speech quality. Models/hardware/electricity/hosting have separate costs. Provider free quotas and uptime cannot be guaranteed permanently.
 
-To avoid OAuth redirect mismatches and security warnings:
+## Release and recovery checklist
 
-1. **Supabase Dashboard &rarr; Authentication &rarr; URL Configuration**:
-   - **Site URL**: `https://<your-project>.vercel.app`
-   - **Redirect URLs**:
-     - `https://<your-project>.vercel.app/**`
-     - `https://*.vercel.app/**`
-     - `http://localhost:3000/**`
-2. **Google Cloud Console &rarr; OAuth 2.0 Client IDs**:
-   - Authorized redirect URI: `https://<supabase-project-id>.supabase.co/auth/v1/callback`
-   - *Never* place Vercel URLs directly in Google Cloud Console; all OAuth exchanges route through Supabase Auth Callback handler.
+- Require green finishing-commit CI for quality/build, all 29 local-database cases and all 24 seeded browser journeys.
+- Resolve new high/critical advisories; the five current high exceptions expire 31 December 2026. Review optional Python inference dependencies before deployment; standard-library contract tests do not vulnerability-scan an installed inference environment.
+- Test all roles/pages/modal states, native languages, low-end devices, disability access, denied permissions and secure/device handoffs.
+- Validate real conferencing, emergency clinical content, offline cache eviction, account switching, queued receipts and delayed result reconciliation.
+- Check secret manager permissions, server-only config, exact origins, backup restore and sanitized logs. CSP remains report-only until a separate staging enforcement review.
+- On inference loss, preserve core guided/text controls and deterministic emergency help; restore the same pinned snapshots, never silently repin. On database failure keep pending requests and check receipts after recovery.
 
----
-
-## 4. Database Migrations & Release Sequence
-
-All database migrations are strictly **append-only** and tracked in `supabase/migrations/`. 
-
-> [!CAUTION]
-> Never run `supabase db reset` against a live production environment.
-> Historical migrations (`20260701000000` through `20261018000200`) are locked by cryptographic SHA-256 manifest. All schema modifications must be applied via forward migrations.
-
-### Migration Application Order:
-1. `20260701000000_core_schema.sql` through `20260708000000_fix_permissions.sql` (Baseline tables, PostGIS facilities, camps, and doctor profiles).
-2. `20261011000000_scale_and_security.sql` (Unique slot booking index `uq_provider_slot_scheduled`, pagination composite indexes).
-3. `20261016000000_scope_doctor_access_and_audit.sql` (Access audit logging table `access_audit_log`).
-4. `20261017000000_provider_user_link.sql` through `20261017000500_comprehensive_security_and_rls_reconciliation.sql` (Care relationship functions, provider linking).
-5. `20261018000000_role_source_hotfix.sql` (Role authority restricted strictly to `public.patients.role`; client `user_metadata` trust removed).
-6. `20261018000100_admin_erasure_function.sql` (Audited `public.admin_erase_medical_record` RPC).
-7. `20261018000200_reconcile_security_state.sql` (Production policy reconciliation, purge of legacy permissive policies, drop of `public.get_tables()`).
-8. `20261019000000_housekeeping.sql` (Security tidy-up and clean search paths).
-9. `20261021000000_align_provider_fks.sql` (Foreign key realignment linking appointments and records strictly to `healthcare_providers`).
-10. `20261021000100_security_followups.sql` (Security hardening and index optimizations).
-11. `20261114000000_clinical_encounters_and_observations.sql` (Granular clinical encounters and LOINC-mapped observations with care-relationship RLS).
-
----
-
-## 5. Post-Deployment Verification Queries
-
-Run the following SQL queries in the Supabase SQL Editor after deployment to verify production invariants:
-
-```sql
--- 1. Confirm get_user_role() does NOT reference user_metadata
-SELECT pg_get_functiondef('public.get_user_role()'::regprocedure);
--- Expected: Reads strictly from public.patients.role.
-
--- 2. Verify 0 RLS policies reference user_metadata
-SELECT schemaname, tablename, policyname
-FROM pg_policies
-WHERE schemaname = 'public'
-  AND (qual ILIKE '%user_metadata%' OR with_check ILIKE '%user_metadata%');
--- Expected: 0 rows returned.
-
--- 3. Confirm public.get_tables() is permanently dropped
-SELECT routine_name 
-FROM information_schema.routines 
-WHERE routine_schema = 'public' AND routine_name = 'get_tables';
--- Expected: 0 rows returned.
-
--- 4. Verify medical_records policy configuration
-SELECT policyname, cmd, roles
-FROM pg_policies
-WHERE tablename = 'medical_records';
--- Expected: Exactly 4 policies (doctor_insert_care_records, doctor_read_care_records, medical_records_insert_patient, patients_read_own_records).
--- ZERO admin SELECT/UPDATE policies.
-
--- 5. Confirm admin_erase_medical_record exists and is restricted
-SELECT routine_name, security_type
-FROM information_schema.routines
-WHERE routine_schema = 'public' AND routine_name = 'admin_erase_medical_record';
--- Expected: SECURITY DEFINER present.
-```
-
----
-
-## 6. Safe Rollback Protocols
-
-If an operational regression occurs, roll back the application layer via Vercel:
-1. Navigate to **Vercel Dashboard &rarr; Deployments**.
-2. Locate the previous stable production deployment.
-3. Click **Instant Rollback**.
-
-### Database Safe Rollback Rule
-> [!IMPORTANT]
-> Never restore vulnerable legacy RLS policies (such as trusting `user_metadata` or granting blanket doctor access) as a rollback strategy. Any database fix must preserve the core security invariants:
-> 1. Role authority from `patients.role`.
-> 2. No administrative direct `SELECT` on medical records.
-> 3. Scoped doctor access via active care relationships.
+The keep-alive workflow uses repository secrets and logs no project URL. It is best-effort and cannot prevent a hosted free database from pausing indefinitely. See [FINAL_AUDIT.md](FINAL_AUDIT.md) for residual risks and evidence.

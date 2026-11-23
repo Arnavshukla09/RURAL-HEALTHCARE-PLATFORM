@@ -66,13 +66,13 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       // Gracefully handle if table does not yet exist
-      console.warn("[/api/chat-cache] Supabase insert skipped:", error.message)
+      console.warn("[/api/chat-cache] Cache insert skipped")
       return NextResponse.json({ success: false, reason: "table_unavailable" }, { status: 200 })
     }
 
     return NextResponse.json({ success: true, status: "pending" })
   } catch (err: any) {
-    console.error("[/api/chat-cache] Exception:", err)
+    console.error("[/api/chat-cache] Request failed")
     return NextResponse.json({ success: false }, { status: 200 })
   }
 }

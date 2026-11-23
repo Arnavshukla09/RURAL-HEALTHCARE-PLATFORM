@@ -125,7 +125,7 @@ export function authErrorResponse(err: unknown): NextResponse {
       { status: err.status }
     )
   }
-  console.error("[AuthGuard] Unexpected error:", err)
+  console.error("[AuthGuard] Unexpected authentication service error")
   return NextResponse.json(
     { error: "Internal server error", code: "INTERNAL_ERROR" },
     { status: 500 }

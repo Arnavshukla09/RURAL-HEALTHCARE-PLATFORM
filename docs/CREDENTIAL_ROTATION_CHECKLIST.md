@@ -1,9 +1,9 @@
 # Production Credential Rotation & Secret Remediation Checklist
 
-**Incident Reference:** Security Hygiene & Credential Remediation Pass  
-**Author:** Senior Security & Release Engineer  
-**Target Environment:** Production Supabase Project (`boyzdmlvzvcplzolenef`), Vercel Deployment, and External APIs  
-**Audience:** Repository Owner / Production Administrator (Manual Execution Required)  
+**Incident Reference:** Security Hygiene & Credential Remediation Pass
+**Author:** Senior Security & Release Engineer
+**Target Environment:** Production Supabase Project (`redacted-project-ref`), Vercel Deployment, and External APIs
+**Audience:** Repository Owner / Production Administrator (Manual Execution Required)
 
 ---
 

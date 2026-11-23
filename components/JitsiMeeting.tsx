@@ -136,23 +136,12 @@ export function JitsiMeeting({
 
         // Handle ready event
         api.addEventListener("videoConferenceJoined", () => {
-          console.log("[v0] Joined video conference")
           setLoading(false)
-        })
-
-        // Handle error events
-        api.addEventListener("onDisplayNameChange", (data: any) => {
-          console.log("[v0] Display name changed:", data)
-        })
-
-        // Handle participant left
-        api.addEventListener("participantLeft", (data: any) => {
-          console.log("[v0] Participant left:", data)
         })
 
       } catch (err) {
         if (disposed) return
-        console.error("Error initializing Jitsi:", err)
+        console.error("Unable to initialize the authorized conference")
         setError(language === "en" ? "Failed to load video conference" : "वीडियो कॉन्फ्रेंस लोड करने में विफल")
         setLoading(false)
       }

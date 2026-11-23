@@ -1,5 +1,6 @@
 import crypto from "crypto"
 import { type NextRequest } from "next/server"
+import { sanitizeLogContext, sanitizeLogText } from "./security/log-sanitizer"
 
 /**
  * lib/logger.ts
@@ -27,7 +28,7 @@ export function hashUserId(userId?: string | null): string | undefined {
 
 export function getRequestId(request: Request | NextRequest): string {
   const existing = request.headers.get("x-request-id")
-  if (existing) return existing
+  if (existing && /^[A-Za-z0-9_-]{1,64}$/.test(existing)) return existing
   return crypto.randomUUID()
 }
 
@@ -42,8 +43,7 @@ export function logWarn(message: string, context?: LogContext) {
 export function logError(message: string, context?: LogContext, error?: any) {
   const errDetails = error
     ? {
-        errorMessage: error?.message || String(error),
-        errorStack: process.env.NODE_ENV === "development" ? error?.stack : undefined,
+        errorName: typeof error?.name === "string" ? error.name : "Error",
       }
     : {}
   writeLog("error", message, { ...context, ...errDetails })
@@ -55,14 +55,14 @@ function writeLog(level: "info" | "warn" | "error", message: string, context: Lo
   const entry = {
     timestamp: new Date().toISOString(),
     level,
-    message,
-    requestId: requestId || undefined,
-    route: route || undefined,
+    message: sanitizeLogText(message),
+    requestId: requestId ? sanitizeLogText(requestId) : undefined,
+    route: route ? sanitizeLogText(route.split("?")[0]) : undefined,
     method: method || undefined,
     status: status !== undefined ? status : undefined,
     durationMs: durationMs !== undefined ? Math.round(durationMs) : undefined,
     userIdHash: hashUserId(userId),
-    ...extra,
+    ...sanitizeLogContext(extra),
   }
 
   const jsonStr = JSON.stringify(entry)

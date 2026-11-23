@@ -145,7 +145,7 @@ where schemaname='public' and (qual ilike '%user_metadata%' or with_check ilike 
 - **Definition of Done Verification:** All 10 security and engineering requirements verified.
 
 ### Step 7: Production Database Reconciliation & Release Verification - COMPLETED & INCIDENT CLOSED
-- **Live Database State Audit (`boyzdmlvzvcplzolenef`):** Audited live remote PostgreSQL 17.6 instance; identified unapplied migrations and legacy permissive RLS policies.
+- **Live Database State Audit (`redacted-project-ref`):** Audited live remote PostgreSQL 17.6 instance; identified unapplied migrations and legacy permissive RLS policies.
 - **Forward Reconciliation Migration (`20261018000200_reconcile_security_state.sql`):** Created and executed idempotent migration against production:
   - Purged all legacy permissive RLS policies across `medical_records`, `appointments`, `patients`, `health_data`, `chat_cache`, `providers`, `healthcare_providers`, `payments`, `offline_sync_log`.
   - Dropped insecure schema-enumerating function `public.get_tables()`.
@@ -175,6 +175,6 @@ where schemaname='public' and (qual ilike '%user_metadata%' or with_check ilike 
 | 8 | **Mutation Proofs Recorded** | 7 verifiable mutation proofs with exact error traces and restorations. | `docs/TEST_EVIDENCE.md` | **DONE** |
 | 9 | **Cryptographic Migration Immutability** | `supabase/migrations.sha256` manifest and `check_migration_immutability.mjs` gate in pre-commit and CI. | Commit `912bdcf` & Mutation 7 | **DONE** |
 | 10 | **Production Rollout Runbook** | Staging-first deployment, verification SQL, non-vulnerable rollback script. | `docs/ROLLOUT_RLS_FIX.md` | **DONE** |
-| 11 | **Production Database Reconciled** | Live database `boyzdmlvzvcplzolenef` reconciled with zero schema drift, zero user_metadata policies, get_tables dropped. | Live Supabase CLI Query | **DONE** |
+| 11 | **Production Database Reconciled** | Live database `redacted-project-ref` reconciled with zero schema drift, zero user_metadata policies, get_tables dropped. | Live Supabase CLI Query | **DONE** |
 
 

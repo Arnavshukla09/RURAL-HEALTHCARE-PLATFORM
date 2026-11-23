@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
       .select()
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ error: "Health data service unavailable" }, { status: 500 })
     }
 
     return NextResponse.json(data)

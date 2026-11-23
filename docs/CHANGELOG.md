@@ -1,5 +1,13 @@
 # Changelog
 
+## 23 November 2026 — finishing audit and documentation
+
+- Exact-origin mutation checks, bounded/redirect-denying private voice proxy, sanitized capabilities/logs/errors and public directory field boundaries.
+- Independent missing-model fallback, new snapshot digests and explicit same-revision integrity-checked repair; device/owned speech fallback keeps core controls available.
+- Revoked stale page selections after modal changes; production rejects browser-local demo claim references; ABDM remains explicitly format-only.
+- Added publication/client-boundary/docs-link gates, narrowed secret-scan exceptions and behavioral security mutations.
+- Reconciled README, architecture/API/deployment/components/limits/model operations with current source; published scoped audit and verification reports. See [FINAL_AUDIT.md](FINAL_AUDIT.md).
+
 All notable changes to the Rural Healthcare Platform are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
@@ -89,7 +97,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **Clinical Confidentiality Invariant:** Dropped direct administrative `SELECT` and `UPDATE` policies on `public.medical_records`.
 - **Audited Right-to-Erasure RPC:** Introduced `public.admin_erase_medical_record(p_record_id, p_reason)` with mandatory reason validation, atomic deletion, and tamper-resistant audit logging to `access_audit_log`.
 - **Doctor Care Relationship Scoping:** Replaced blanket clinician policies with `public.has_care_relationship(p_patient_id, p_doctor_id)`, granting doctors access only to patients with scheduled/in-progress consultations.
-- **Production Database Reconciliation:** Reconciled remote Supabase instance (`boyzdmlvzvcplzolenef`), purged legacy permissive policies, dropped diagnostic function `get_tables()`, and synchronized the migration ledger.
+- **Production Database Reconciliation:** Reconciled remote Supabase instance (`redacted-project-ref`), purged legacy permissive policies, dropped diagnostic function `get_tables()`, and synchronized the migration ledger.
 
 ### Clinical & Resilience Engineering
 - **Concurrency & Double-Booking Protection:** Added unique partial index `uq_provider_slot_scheduled` on `appointments` and implemented transactional optimistic concurrency control with HTTP 409 Conflict handling.

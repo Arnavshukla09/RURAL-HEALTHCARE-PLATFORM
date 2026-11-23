@@ -4,6 +4,7 @@
 
 # next.js build output
 .next/
+.vitest/
 
 # node modules
 node_modules/

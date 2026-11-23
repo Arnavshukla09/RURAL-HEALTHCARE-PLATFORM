@@ -1,6 +1,7 @@
 """One-time, explicit download. Runtime uses the installed immutable snapshots only."""
 import argparse
 import json
+import hashlib
 import os
 import re
 from pathlib import Path
@@ -48,6 +49,10 @@ def repair_locked_snapshots(lock_path, token=False):
         elif location.is_dir():
             # Older locks have no file inventory; detect absent weights or broken cached links.
             absent = absent or not any(file.is_file() and file.suffix in {".safetensors", ".bin", ".onnx"} for file in location.rglob("*"))
+        if not absent and entry.get("sha256") is not None:
+            from model_manifest import verify_snapshot
+            # Corruption fails closed. Restore a known-good backup; never silently trust new bytes.
+            verify_snapshot({**entry, "path": str(location)})
         if absent:
             missing.append((name, entry, location))
     if not missing:
@@ -60,6 +65,8 @@ def repair_locked_snapshots(lock_path, token=False):
             raise RuntimeError("Restored snapshot path differs from its unchanged lock")
         if not (restored / "config.json").is_file() or any(not (restored / file).is_file() for file in entry.get("files", [])):
             raise RuntimeError("Locked snapshot repair did not restore required files")
+        from model_manifest import verify_snapshot
+        verify_snapshot({**entry, "path": str(restored)})
         references = restored.parent.parent / "refs"
         references.mkdir(parents=True, exist_ok=True)
         (references / "main").write_text(entry["revision"], encoding="utf-8")
@@ -117,7 +124,11 @@ def main():
         references.mkdir(parents=True, exist_ok=True)
         (references / "main").write_text(revision, encoding="utf-8")
         files = sorted(file.relative_to(location).as_posix() for file in Path(location).rglob("*") if file.is_file())
-        lock["models"][name] = {"repository": repo_id, "revision": revision, "license": license_name, "path": Path(location).relative_to(MODEL_ROOT).as_posix(), "declaredLanguages": declared_languages, "languageSource": "operator-reviewed" if name == "indic" and reviewed_languages is not None else "model-metadata", "files": files}
+        hashes = {}
+        for file in files:
+            with (Path(location) / file).open("rb") as source:
+                hashes[file] = hashlib.file_digest(source, "sha256").hexdigest()
+        lock["models"][name] = {"repository": repo_id, "revision": revision, "license": license_name, "path": Path(location).relative_to(MODEL_ROOT).as_posix(), "declaredLanguages": declared_languages, "languageSource": "operator-reviewed" if name == "indic" and reviewed_languages is not None else "model-metadata", "files": files, "sha256": hashes}
         print(f"Installed {name}: {revision} ({license_name})")
     temporary = MODEL_ROOT / "model-lock.tmp"
     temporary.write_text(json.dumps(lock, indent=2), encoding="utf-8")

@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { createServerClient, type CookieOptions } from "@supabase/ssr"
+import { isRequestOriginAllowed } from "@/lib/security/request-origin"
 
 /**
  * middleware.ts
@@ -15,42 +16,6 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr"
  * 5. Auth Redirects: Logged-in users visiting /login or /auth are routed to their role-specific dashboard.
  */
 
-function isOriginAllowed(origin: string, request: NextRequest): boolean {
-  try {
-    const originUrl = new URL(origin)
-    const hostUrl = request.nextUrl
-
-    // 1. Same-origin match
-    if (originUrl.origin === hostUrl.origin) return true
-
-    // 2. Allow configured app URL if set
-    if (process.env.NEXT_PUBLIC_APP_URL) {
-      const appUrl = new URL(process.env.NEXT_PUBLIC_APP_URL)
-      if (originUrl.origin === appUrl.origin) return true
-    }
-
-    // 3. Allow local development hosts
-    if (
-      process.env.NODE_ENV !== "production" &&
-      (originUrl.hostname === "localhost" || originUrl.hostname === "127.0.0.1")
-    ) {
-      return true
-    }
-
-    // 4. Allow official production and vercel preview deployments
-    if (
-      originUrl.hostname === "rural-healthcare-platform.vercel.app" ||
-      originUrl.hostname.endsWith(".vercel.app")
-    ) {
-      return true
-    }
-
-    return false
-  } catch {
-    return false
-  }
-}
-
 export async function middleware(request: NextRequest) {
   // 1. Method guard: Reject unsafe HTTP methods
   if (["TRACE", "TRACK", "CONNECT"].includes(request.method)) {
@@ -65,8 +30,9 @@ export async function middleware(request: NextRequest) {
   // 2. API CORS & OPTIONS Handling
   if (pathname.startsWith("/api")) {
     const origin = request.headers.get("origin")
+    if (!["GET", "HEAD", "OPTIONS"].includes(request.method) && request.headers.get("sec-fetch-site") === "cross-site") return NextResponse.json({ error: "Cross-site request blocked" }, { status: 403 })
     if (request.method === "OPTIONS") {
-      if (origin && !isOriginAllowed(origin, request)) {
+      if (origin && !isRequestOriginAllowed(origin, request.url)) {
         return new NextResponse(null, { status: 403 })
       }
       const preflightHeaders = new Headers()
@@ -81,12 +47,13 @@ export async function middleware(request: NextRequest) {
       return new NextResponse(null, { status: 204, headers: preflightHeaders })
     }
 
-    if (origin && !isOriginAllowed(origin, request)) {
+    if (origin && !isRequestOriginAllowed(origin, request.url)) {
       return NextResponse.json({ error: "Cross-origin request blocked" }, { status: 403 })
     }
   }
 
-  const requestId = request.headers.get("x-request-id") || crypto.randomUUID()
+  const suppliedId = request.headers.get("x-request-id")
+  const requestId = suppliedId && /^[a-f0-9]{8}-[a-f0-9]{4}-[1-5][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(suppliedId) ? suppliedId : crypto.randomUUID()
   const requestHeaders = new Headers(request.headers)
   requestHeaders.set("x-request-id", requestId)
 
@@ -98,7 +65,7 @@ export async function middleware(request: NextRequest) {
   response.headers.set("x-request-id", requestId)
 
   const origin = request.headers.get("origin")
-  if (origin && pathname.startsWith("/api") && isOriginAllowed(origin, request)) {
+  if (origin && pathname.startsWith("/api") && isRequestOriginAllowed(origin, request.url)) {
     response.headers.set("Access-Control-Allow-Origin", origin)
     response.headers.set("Vary", "Origin")
   }

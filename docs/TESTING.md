@@ -1,5 +1,7 @@
 # Testing Strategy, Test Evidence & Behavioral Mutation Verification
 
+Updated 23 November 2026. Current counts and exact execution evidence are in [FINAL_AUDIT.md](FINAL_AUDIT.md) and [FINAL_VERIFICATION.json](reports/FINAL_VERIFICATION.json). Historical mutation records below retain their original scope and are not new production tests.
+
 This document provides the authoritative record of the testing architecture, quality assurance matrix, integration contract proofs, and behavioral mutation verifications for the **Rural Healthcare Platform**.
 
 ---
@@ -11,9 +13,9 @@ The platform employs a multi-tiered testing strategy spanning unit tests, live i
 ```mermaid
 flowchart TD
     subgraph TestingPyramid["Testing Pyramid"]
-        E2E["Playwright E2E\n(6 Assistant Journeys + 6 Public/Login Journeys)"]
+        E2E["Playwright E2E\n(18 Assistant Journeys + 6 Public/Login Journeys)"]
         Integration["Vitest Integration Suite (Live Local Supabase)\n(29 Cases: RLS, Care Scoping, Erasure, Atomic Replay, Expired Booking)"]
-        Unit["Vitest Unit Suite\n(303 Tests: Existing Subsystems, Assistant Actions, Speech Races, Offline Isolation)"]
+        Unit["Vitest Unit Suite\n(323 Tests: Existing Subsystems, Assistant Actions, Speech Races, Offline Isolation)"]
         Static["Pre-Commit & Immutability Gates\n(Component Checker, Migration SHA-256 Gate, Gitleaks, ESLint, TypeScript)"]
     end
 
@@ -24,7 +26,7 @@ flowchart TD
 
 ### Test Subsystems
 1. **Unit & Isolation Suite (`npm run test:unit`)**:
-   - 303 automated deterministic tests via Vitest. See [VOICE_ASSISTANT_SETUP.md](VOICE_ASSISTANT_SETUP.md) for current local evidence and limits.
+   - 323 automated deterministic tests via Vitest. See [VOICE_ASSISTANT_SETUP.md](VOICE_ASSISTANT_SETUP.md) for current local evidence and limits.
    - Covers ABDM FHIR R4 document schemas, clinical safety decision tables, offline IndexedDB relational queue, frontline decision support, clinical image compressor, patient clinical pretext extraction & sanitization, regional multilingual engine, and PII masking.
 2. **Integration & Behavioral RLS Suite (`npm run test:integration`)**:
    - Guarded by `tests/integration/db-safety-guard.ts` enforcing a strict local test container allowlist (`http://127.0.0.1:54321` or `http://localhost:54321`).
@@ -36,9 +38,9 @@ flowchart TD
    - Rejects any in-place historical edit or back-dated migration.
 4. **End-to-End Suite (`npx playwright test`)**:
    - Executes browser user journeys against the full local Next.js + Supabase stack.
-   - Six assistant journeys passed locally with mocked speech/service responses, plus unmocked login editability/public/security checks. Actual all-language microphones/models and real conferences remain manual release checks. The three role-login journeys require ephemeral local test accounts.
+   - Eighteen assistant journeys passed locally with mocked speech/service responses, plus unmocked login editability/public/security checks. Actual all-language microphones/models and real conferences remain manual release checks. The three role-login journeys require ephemeral local test accounts.
 5. **Owned Voice Contract Suite**:
-   - `python -m unittest discover -s services/voice/tests -v` runs 15 dependency-free installation/repair/offline/access/language-declaration tests. CI uses Python 3.11 and does not download model weights.
+   - `python -m unittest discover -s services/voice/tests -v` runs 20 dependency-free installation/repair/offline/access/language-declaration tests. CI uses Python 3.11 and does not download model weights.
 
 ---
 
@@ -173,6 +175,6 @@ To prove that the test suite detects unauthorized access or schema regressions, 
 
 ## 4. Verification & Continuous Integration Runs
 
-* **Quality Checks, Tests & Build:** 176 unit tests, ESLint, TypeScript, Gitleaks, Migration Immutability Gate.
-* **Real Database Tests:** 22/22 contract tests passing against live local PostgreSQL stack in CI (0 skipped).
-* **Playwright E2E:** 100% pass across chromium journeys.
+* **Quality Checks, Tests & Build:** 323 unit cases, ESLint, TypeScript, Gitleaks, Migration Immutability Gate.
+* **Real Database Tests:** 29/29 required cases passing against live local PostgreSQL stack in CI (0 skipped).
+* **Playwright E2E:** 24 required journeys in seeded CI; 21 local passes and 3 role skips without disposable accounts.

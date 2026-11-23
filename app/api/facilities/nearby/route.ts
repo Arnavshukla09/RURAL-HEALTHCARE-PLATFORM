@@ -75,7 +75,7 @@ export async function GET(req: NextRequest) {
   })
 
   if (error) {
-    console.error("[/api/facilities/nearby] RPC error:", error.message)
+    console.error("[/api/facilities/nearby] Facility query unavailable")
     return NextResponse.json(
       { error: "Unable to retrieve nearby facilities. Please try again later." },
       { status: 500 }
