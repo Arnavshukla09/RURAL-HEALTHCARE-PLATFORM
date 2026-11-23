@@ -1,0 +1,20 @@
+{
+  "date": "2026-11-23",
+  "baseCommit": "d909403aa267cd58134c21ae0b7d1011e31759ab",
+  "restoredStructureFrom": "d4aeb5f",
+  "scope": "Documentation only; original README structure retained and current project behavior added",
+  "files": ["README.md", "docs/ARCHITECTURE.md", "docs/ABDM_FHIR_INTEROPERABILITY.md", "docs/CHANGELOG.md"],
+  "verification": {
+    "originalReadmeSectionsRetained": 11,
+    "mermaidParser": "11.12.0",
+    "mermaidSyntax": "passed",
+    "diagrams": {"README.md": 5, "docs/ARCHITECTURE.md": 7, "docs/ABDM_FHIR_INTEROPERABILITY.md": 4},
+    "brokenLocalDocumentLinks": 0,
+    "publicationScanFindings": 0,
+    "secretScan": "Current source and retained history passed existing reviewed exceptions; no raw matches published",
+    "applicationSourceChanges": 0,
+    "modelOrPortChanges": 0,
+    "databaseMigrationChanges": 0
+  },
+  "limits": "Diagrams explain implemented source contracts; dashed national integration is explicitly planned. Syntax/link checks do not certify production, clinical, device or language behavior. Existing implementation CI evidence remains linked."
+}

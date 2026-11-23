@@ -1,5 +1,13 @@
 # Changelog
 
+## 23 November 2026 — restored project documentation structure
+
+- Restored the original README's 11 sections, badges, full-project overview and detailed tables, adding current assistant/security/model information within that structure.
+- Restored architecture subsystem coverage and Mermaid diagrams for users, BFF/data boundaries, offline replay, notifications, page controls, task ownership, speech fallback and FHIR export.
+- Expanded the FHIR guide with current resource/export diagrams and a clearly planned national-integration flow; retained verification and clinical/identity boundaries.
+- Documentation-only correction; application code, model identifiers, ports and database migrations are unchanged.
+- Verified all 16 restored/added Mermaid diagrams and local document links; [restoration evidence](reports/DOCUMENTATION_RESTORATION.json) records the documentation scope.
+
 ## 23 November 2026 — finishing audit and documentation
 
 - Exact-origin mutation checks, bounded/redirect-denying private voice proxy, sanitized capabilities/logs/errors and public directory field boundaries.
