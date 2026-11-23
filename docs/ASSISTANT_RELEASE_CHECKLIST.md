@@ -1,6 +1,6 @@
 # Assistant: simple setup, operation and release checks
 
-Updated 22 November 2026. The code is integrated into the existing project. Production database rollout, heavyweight model installation and real-device/native-language certification are separate release steps.
+Updated 23 November 2026. The code is integrated into the existing project. Production database rollout, heavyweight model installation and real-device/native-language certification are separate release steps. The current [final audit](FINAL_AUDIT.md), [verification report](reports/FINAL_VERIFICATION.json) and [model operations guide](MODEL_FALLBACK_AND_OPERATIONS.md) record security fixes, patched dependency pins, fallback behavior and remaining gates.
 
 ## How it works
 

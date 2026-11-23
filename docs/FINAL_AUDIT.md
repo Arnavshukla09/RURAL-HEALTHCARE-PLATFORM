@@ -12,7 +12,7 @@ Audit date: **23 November 2026**. Base revision: `d4aeb5f`. Scope: the current w
 | Raw database/exception logging and responses | Static failures across changed endpoints/services, dropped sensitive/nested logger payloads, recognized credential/URL/email redaction and request-ID/query bounds. Arbitrary free text still needs care. |
 | Public directory enriched private patient contacts | Explicit public provider-field selection; removed patient-profile enrichment. Behavioral select-all mutation fails the boundary test. |
 | Legacy browser claim secret/bypass | Removed server secret reference from demo module, removed constant bypass and rejected local claim references in production. Production-disable mutation fails. This does not implement trusted clinician invitation issuance. |
-| ABI/identity stub overclaimed live service | ABDM format stub always simulated/isLive false, including configured credentials; output explains identity is unverified. |
+| ABHA identity stub overclaimed live service | ABDM format stub always simulated/isLive false, including configured credentials; output explains identity is unverified. |
 | One missing optional snapshot disabled all models | Independent usable/unavailable manifest entries; untrusted manifest fails closed; missing Indic leaves English/chat usable. |
 | Snapshot bytes had no integrity inventory | New installations record per-file SHA-256; load and explicit repair verify hashes. Older locks remain compatible with weaker integrity evidence. Corrupt present snapshots fail closed. |
 | Speech-engine failure blocked output/input path | Session device fallback after owned ASR failure; owned TTS after supported device failure; unavailable native speech leaves controls usable. Core controller/emergency help does not depend on dialogue models. |
@@ -72,3 +72,7 @@ Five npm high exceptions remain for Serwist build packages, bundled Zod and Post
 - Owner-controlled migration/deployment, credentials and monitoring; CSP remains report-only and rate-limit memory fallback is per process.
 
 No permanent background PWA microphone or unlimited free hosting is guaranteed. No required paid avatar/inference API was added; hardware, electricity, bandwidth, hosting and review still have costs. See [MODEL_FALLBACK_AND_OPERATIONS.md](MODEL_FALLBACK_AND_OPERATIONS.md), [DEPLOY.md](DEPLOY.md) and [ASSISTANT_RELEASE_CHECKLIST.md](ASSISTANT_RELEASE_CHECKLIST.md).
+
+## Finishing implementation CI
+
+Implementation commit [4c03bec](https://github.com/Arnavshukla09/RURAL-HEALTHCARE-PLATFORM/commit/4c03bec2ead060f603f59b58ee582d4953f39e20) passed [GitHub Actions run 45142447684](https://github.com/Arnavshukla09/RURAL-HEALTHCARE-PLATFORM/actions/runs/45142447684): quality/tests/build, all 29 required database/safety cases and the full 24-journey seeded browser job. Disposable accounts/databases and mocked audio preserve the release limits above. This evidence update changes documentation/reports only.
