@@ -15,11 +15,23 @@ node_modules/
 # vscode
 .vscode/
 
+# Local editor and coding-tool state (not application AI features)
+.agents/
+.codex/
+.claude/
+.gemini/
+.cursor/
+.aider*
+*.code-workspace
+
 # playwright
 test-results/
 playwright-report/
 blob-report/
 playwright/.cache/
+coverage/
+vitest*-report.json
+*.log
 
 # benchmark output files (may contain sensitive data)
 scripts/lighthouse_report.json
@@ -56,3 +68,5 @@ public/serwist-*.js
 services/voice/.models/
 .voice-venv/
 **/__pycache__/
+.pytest_cache/
+services/voice/.venv/

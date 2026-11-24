@@ -1,6 +1,6 @@
 # Testing Strategy, Test Evidence & Behavioral Mutation Verification
 
-Updated 23 November 2026. Current counts and exact execution evidence are in [FINAL_AUDIT.md](FINAL_AUDIT.md) and [FINAL_VERIFICATION.json](reports/FINAL_VERIFICATION.json). Historical mutation records below retain their original scope and are not new production tests.
+Updated 24 November 2026. The maintenance pass locally passed 326 unit tests across 49 files, including three new source-checker regressions, and 20 Python contracts. TypeScript, lint, migration integrity, Knip, documentation/publication/client-boundary checks and production build also passed. New database/browser CI was not run in this pass. Earlier full CI evidence remains dated in [FINAL_AUDIT.md](FINAL_AUDIT.md) and [FINAL_VERIFICATION.json](reports/FINAL_VERIFICATION.json); fresh maintenance scope is in [the changelog](CHANGELOG.md). Historical mutation records below retain their original scope and are not new production tests.
 
 This document provides the authoritative record of the testing architecture, quality assurance matrix, integration contract proofs, and behavioral mutation verifications for the **Rural Healthcare Platform**.
 
@@ -8,15 +8,15 @@ This document provides the authoritative record of the testing architecture, qua
 
 ## 1. Test Suite Architecture
 
-The platform employs a multi-tiered testing strategy spanning unit tests, live integration contract tests, pre-commit component static analysis, and end-to-end browser journeys.
+The platform employs a multi-tiered testing strategy spanning unit tests, live integration contract tests, explicit/CI source static analysis, and end-to-end browser journeys. No tracked pre-commit hook exists.
 
 ```mermaid
 flowchart TD
     subgraph TestingPyramid["Testing Pyramid"]
         E2E["Playwright E2E\n(18 Assistant Journeys + 6 Public/Login Journeys)"]
         Integration["Vitest Integration Suite (Live Local Supabase)\n(29 Cases: RLS, Care Scoping, Erasure, Atomic Replay, Expired Booking)"]
-        Unit["Vitest Unit Suite\n(323 Tests: Existing Subsystems, Assistant Actions, Speech Races, Offline Isolation)"]
-        Static["Pre-Commit & Immutability Gates\n(Component Checker, Migration SHA-256 Gate, Gitleaks, ESLint, TypeScript)"]
+        Unit["Vitest Unit Suite\n(326 Tests: Existing Subsystems, Assistant Actions, Speech Races, Offline Isolation, Source Checks)"]
+        Static["Explicit and CI Quality Gates\n(Component Checker, Migration SHA-256 Gate, Gitleaks, ESLint, TypeScript)"]
     end
 
     Static --> Unit
@@ -26,7 +26,7 @@ flowchart TD
 
 ### Test Subsystems
 1. **Unit & Isolation Suite (`npm run test:unit`)**:
-   - 323 automated deterministic tests via Vitest. See [VOICE_ASSISTANT_SETUP.md](VOICE_ASSISTANT_SETUP.md) for current local evidence and limits.
+   - 326 automated deterministic tests via Vitest. Three maintenance regressions cover parsed imports, exports and narrowly scoped size limits. See [the maintenance guide](REPOSITORY_MAINTENANCE.md) for the latest scope and [VOICE_ASSISTANT_SETUP.md](VOICE_ASSISTANT_SETUP.md) for earlier voice evidence and limits.
    - Covers ABDM FHIR R4 document schemas, clinical safety decision tables, offline IndexedDB relational queue, frontline decision support, clinical image compressor, patient clinical pretext extraction & sanitization, regional multilingual engine, and PII masking.
 2. **Integration & Behavioral RLS Suite (`npm run test:integration`)**:
    - Guarded by `tests/integration/db-safety-guard.ts` enforcing a strict local test container allowlist (`http://127.0.0.1:54321` or `http://localhost:54321`).

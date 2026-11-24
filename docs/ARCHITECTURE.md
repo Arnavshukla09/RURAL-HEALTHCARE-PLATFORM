@@ -1,6 +1,6 @@
 # Architecture Document: Rural Healthcare Platform
 
-Updated **23 November 2026** against the current source and verified implementation/evidence commits. The original subsystem structure is retained and expanded with the assistant, model fallback and current security boundaries. This is a source architecture guide; it does not attest the live deployment, all devices or clinical certification.
+Updated **24 November 2026** for repository maintenance. Application architecture is unchanged from the recorded implementation/evidence baseline. The original subsystem structure is retained and expanded with the assistant, model fallback and current security boundaries. This is a source architecture guide; it does not attest the live deployment, all devices or clinical certification.
 
 ---
 
@@ -65,6 +65,8 @@ Public routes such as /, /campaigns, /camps, /directory, /emergency, /health-inf
 ### 2.2 First-Load JavaScript & Feature Modules
 
 Maps and the floating client use dynamic loading where configured so browser-only APIs do not execute during server rendering. The current production build's shared first-load JavaScript was about **105 kB**; individual page totals vary and this is a build measurement, not a network/hardware performance guarantee. The module checker enforces imports, exports, type/lint correctness, feature size limits and unused-dependency checks.
+
+Validation tooling is separate from product modules: `scripts/ci/check_components.mjs` runs the quality commands and `component-checks.mjs` analyzes imports/exports and size limits using TypeScript's parser. The existing feature paths, runtime data and migration history are unchanged. [Contributor rules](../CONTRIBUTING.md), [repository maintenance](REPOSITORY_MAINTENANCE.md) and [the study guide](STUDY_GUIDE.md) describe maintenance and learning workflows. No tracked pre-commit hook exists.
 
 ### 2.3 PWA Service Worker & Storage Classes
 

@@ -1,8 +1,6 @@
-# Project Documentation & Engineering Guidelines
+# Contributing
 
-- **Role:** You are the long-term software engineering and security partner for this repository.
-- **Primary Responsibility:** Maintain high-quality project documentation alongside secure, modular code.
-- **No shallow summaries:** Documentation must be comprehensive, deep, and backed by verifiable code and CI evidence.
+Maintain secure, modular code and documentation backed by the implementation and scoped test evidence. Read [the architecture](docs/ARCHITECTURE.md), [database reference](docs/DATABASE.md) and [known limitations](docs/LIMITATIONS.md) before changing cross-cutting behavior.
 
 ---
 
@@ -11,7 +9,7 @@
 1. **Append-Only Database Migrations:**
    - Historical migrations (`supabase/migrations/` up to baseline) are cryptographically locked via `supabase/migrations.sha256`.
    - Never modify or delete an existing migration file in-place.
-   - All schema, policy, or function changes must be implemented as forward-only, append-only migrations with forward-chronological timestamps (`scripts/check_migration_immutability.mjs`).
+   - All schema, policy, or function changes must be implemented as forward-only, append-only migrations with forward-chronological timestamps (`scripts/db/check_migration_immutability.mjs`).
 
 2. **Single Authoritative Role Source:**
    - Authorization is derived **strictly from `public.patients.role`** (or trusted server-issued JWT claims).
@@ -45,3 +43,24 @@ Whenever authoring or updating documentation:
 - **Treat the repository as the source of truth.**
 - **Clearly distinguish status:** Implemented, Partially implemented, Planned.
 - Use GitHub Flavored Markdown with headings, tables, and Mermaid sequence/architecture diagrams where appropriate.
+
+## 3. Local Workflow
+
+1. Inspect `git status` and preserve unrelated local changes.
+2. Keep edits within the affected feature. Preserve compatibility exports unless all consumers have been migrated.
+3. Run `npm run check:components` for import/export, types, lint, unit tests, sealed migrations, unused files/dependencies and module limits.
+4. Run `npm run check:docs`, `npm run check:boundaries` and `npm run check:publication` when changing documentation or client/server boundaries.
+5. Run `npm run build` before proposing deployment. Database and authenticated browser verification require a disposable local stack; a skipped test is not a pass.
+6. Record behavior changes and verification limits in [the changelog](docs/CHANGELOG.md). Keep historical audit evidence dated; do not rewrite old reports as new results.
+
+There is no tracked pre-commit hook. These commands run explicitly and in GitHub Actions; a local Git commit alone does not execute them.
+
+## 4. Repository Hygiene
+
+- Commit application source, required public assets, migration history, reproducible generators, tests and useful technical documentation.
+- Do not commit credentials, patient data, recordings, model weights, downloaded raw datasets, generated builds or local editor/tool state.
+- Keep existing license, dataset/model attribution and incident history. Do not claim a different authorship or remove security disclosures for presentation purposes.
+- Regenerate public assistant packs after changing their catalogs. Review generated diffs rather than removing assets that the offline application needs.
+- Read [the repository maintenance guide](docs/REPOSITORY_MAINTENANCE.md) before deleting or relocating files.
+
+For a code-first learning path, start with [the study guide](docs/STUDY_GUIDE.md).

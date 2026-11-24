@@ -1,6 +1,6 @@
 # Current component and module reference
 
-Updated 23 November 2026. [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) provides the folder map; [SOURCE_INVENTORY.json](reports/SOURCE_INVENTORY.json) provides generated counts. Props are owned by the current source interfaces/context; historical prop examples are not API contracts.
+Updated 24 November 2026. [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) provides the folder map; [SOURCE_INVENTORY.json](reports/SOURCE_INVENTORY.json) provides dated generated counts. Props are owned by the current source interfaces/context; historical prop examples are not API contracts. The maintenance pass preserves all application modules and compatibility exports.
 
 | Area | Modules and responsibility |
 |---|---|
@@ -22,3 +22,5 @@ Updated 23 November 2026. [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) provides 
 The component checker enforces valid imports/exports, hooks/lint/type correctness and ≤400 LOC module/page limits with lean API handlers <150 LOC. Pure data/UI exclusions follow the checker source. The source control registry verifies first-party stamped JSX; it does not introspect or execute third-party widget DOM. Read [HANDS_FREE_IMPLEMENTATION.md](HANDS_FREE_IMPLEMENTATION.md) before changing control dispositions, task ownership or acknowledgment semantics.
 
 Current browser evidence uses mocked audio; dynamic role/page states, device controls, every native language and real disability usage remain release checks. See [FINAL_AUDIT.md](FINAL_AUDIT.md).
+
+`scripts/ci/check_components.mjs` orchestrates the existing checks. Its pure source-analysis module, `scripts/ci/component-checks.mjs`, uses the TypeScript parser for local imports, re-exports, literal dynamic imports and export forms; it also checks strict size ceilings. `npm run check:source` runs that portion alone. No tracked pre-commit hook exists. See [repository maintenance](REPOSITORY_MAINTENANCE.md) and [the study guide](STUDY_GUIDE.md).

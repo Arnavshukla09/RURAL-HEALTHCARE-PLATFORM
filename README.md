@@ -4,9 +4,9 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Next.js 15](https://img.shields.io/badge/Next.js-15.5-black?logo=next.js)](https://nextjs.org/)
 [![Local PostgreSQL 15](https://img.shields.io/badge/Local_PostgreSQL-15_PostGIS-336791?logo=postgresql)](https://www.postgresql.org/)
-[![Tests Passing](https://img.shields.io/badge/Tests-323%20Passing-brightgreen)](docs/VOICE_ASSISTANT_SETUP.md)
+[![Test Evidence](https://img.shields.io/badge/Tests-Verification%20Evidence-brightgreen)](docs/TESTING.md)
 
-Updated **23 November 2026** against implementation commit `4c03bec` and verified evidence commit `d909403`. This README retains the original project overview, numbered sections and diagrams, with current behavior added throughout.
+Updated **24 November 2026** for repository maintenance against local baseline `97036cd`. Implementation/evidence commits `4c03bec` and `d909403` remain the recorded source of earlier full CI results; this cleanup has separate local verification. The project overview, all 11 numbered sections and diagrams are retained.
 
 An offline-first, mobile Progressive Web Application (PWA) engineered for rural and resource-constrained healthcare environments in India. Built with a serverless Backend-For-Frontend (BFF) architecture, the platform provides atomic appointment scheduling, WebRTC teleconsultations, pan-India PostGIS facility lookups, emergency visual first-aid triage, offline mutation queuing with exponential backoff, and local HL7 FHIR R4 clinical document export modeled on ABDM/NRCES profiles. National gateway integration and identity verification remain separate work.
 
@@ -189,7 +189,7 @@ The following architectural and security capabilities are implemented in the rep
 
 4. **Modular Architecture & Codebase Maintainability Standard:**
    - Modularized monolithic components and services into clean feature packages (`components/<feature>/parts/`, `lib/services/`), strictly enforcing an architectural limit of $\le 400$ LOC per non-UI module and $< 150$ LOC per API route.
-   - Integrated `knip` in CI to continuously eliminate dead code, unused exports, and unreferenced dependencies.
+   - Integrated `knip` in CI to flag unused files and dependencies. Unused export/type reporting is disabled in the current configuration; the gate does not prove those are absent.
 
 5. **Pan-India Facility Pipeline & Campaign System:**
    - Validated **42,321 raw PM-JAY facility rows** in the local file audit with strict Indian geospatial bounding-box checks ($6.5^\circ\text{N} - 37.5^\circ\text{N}, 68.0^\circ\text{E} - 97.5^\circ\text{E}$).
@@ -340,13 +340,13 @@ flowchart TD
 The repository maintains an automated, multi-tiered verification pipeline. Live database and authenticated browser checks require a disposable local stack; skipped smoke-mode checks do not establish their behavior.
 
 ```bash
-# Run unit & isolation tests (323 cases)
+# Run unit & isolation tests (see current output for counts)
 npm run test:unit
 
 # Run database integration & RLS tests (29 cases; REQUIRE_DB=1 with local test keys)
 npm run test:integration
 
-# Run pre-commit component validation & migration immutability gate
+# Run explicit component validation & migration immutability gate
 npm run check:components
 npm run check:migrations
 
@@ -372,14 +372,14 @@ node scripts/ci/documentation_links.mjs
 python -m unittest discover -s services/voice/tests -v
 
 # Browser suite: seeded disposable accounts needed for all role journeys
-npx playwright test
+npm run test:e2e
 ```
 
 ### Verification Matrix Summary
 
 | Test Tier | Scope | Total Tests | Status |
 | :--- | :--- | :---: | :---: |
-| **Unit Tests (`npm run test:unit`)** | Existing subsystems plus assistant parsing/actions, audio races, account isolation, report gates and DOM lifecycle | **323** | **PASS locally and in CI** |
+| **Unit Tests (`npm run test:unit`)** | Existing subsystems plus assistant parsing/actions, audio races, account isolation, report gates, DOM lifecycle and source-checker regressions | **326** | **PASS locally on 24 November; earlier CI baseline was 323** |
 | **Integration Tests (`npm run test:integration`)** | Live PostgreSQL RLS, care-relationship scoping, slot locking and atomic replay | **29** | **PASS in GitHub's disposable local Supabase job** |
 | **Full Browser Suite** | 18 assistant and 6 public/login journeys; audio mocked | **24** | **PASS in seeded CI; 21 local passes and 3 role skips** |
 | **Optional Voice Contracts** | Install/repair, integrity, independent absence, declared languages and service access | **20** | **PASS; no model inference performed** |
@@ -389,7 +389,7 @@ npx playwright test
 
 The latest complete source/evidence CI for [d909403 passed](https://github.com/Arnavshukla09/RURAL-HEALTHCARE-PLATFORM/actions/runs/45144330920), including quality/build, all 29 database cases and all 24 seeded browser journeys. The five new source-security mutations failed as expected and passed after restoration. Secret/publication scans reported zero findings under documented exceptions.
 
-This documentation restoration retains all 11 original README sections and verifies **16 Mermaid diagrams** across this README, the architecture guide and FHIR guide. See [documentation restoration evidence](docs/reports/DOCUMENTATION_RESTORATION.json).
+The preceding documentation restoration retained all 11 original README sections and recorded **16 Mermaid diagrams** across this README, the architecture guide and FHIR guide. See [dated restoration evidence](docs/reports/DOCUMENTATION_RESTORATION.json). This maintenance pass preserves those sections and diagrams, adds a current study guide, and modularizes validation tooling. See [repository maintenance](docs/REPOSITORY_MAINTENANCE.md) for scope and [the changelog](docs/CHANGELOG.md) for fresh local checks. No tracked pre-commit hook is installed; validation runs explicitly and in CI.
 
 For scoped logs, mutation evidence and limitations, see [TESTING.md](docs/TESTING.md), [FINAL_AUDIT.md](docs/FINAL_AUDIT.md) and [metadata reports](docs/reports/FINAL_VERIFICATION.json). Documentation-only changes do not establish new live device/production evidence.
 
@@ -417,6 +417,9 @@ For detailed boundaries, use [LIMITATIONS.md](docs/LIMITATIONS.md), [DEPLOY.md](
 Detailed engineering documentation is maintained in the [`docs/`](docs/) directory:
 
 * **[Project Structure](docs/PROJECT_STRUCTURE.md):** Current folder tree and assistant integration points.
+* **[Contributing](CONTRIBUTING.md):** Engineering/security invariants, safe workflow and repository hygiene.
+* **[Study Guide](docs/STUDY_GUIDE.md):** Ordered learning path, code references, local exercises and interview self-checks.
+* **[Repository Maintenance](docs/REPOSITORY_MAINTENANCE.md):** Cleanup scope, preserved components and modular validation tooling.
 * **[Assistant Setup & Release Checklist](docs/ASSISTANT_RELEASE_CHECKLIST.md):** Simple operation steps, deployment prerequisites and device/clinical/security audits.
 * **[Architecture Guide](docs/ARCHITECTURE.md):** Detailed system architecture, BFF design, and subsystem blueprints.
 * **[Database Reference](docs/DATABASE.md):** ER diagrams, table schemas, RLS policies, and periodic maintenance runbook.

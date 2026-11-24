@@ -1,5 +1,17 @@
 # Changelog
 
+## 24 November 2026 - repository maintenance and study guide
+
+- Preserved all application components, compatibility exports, route paths, public/offline assets, dataset inputs, model adapters, migrations, license and historical audit evidence. No production database operation, push, deployment or Git history rewrite was performed.
+- Moved repository-only agent guidelines into `CONTRIBUTING.md` without dropping security/engineering invariants; ignored local editor/coding-tool folders and additional generated test/cache outputs.
+- Modularized the component quality checker into command orchestration and TypeScript-parser source checks. Kept all quality categories; added coverage for multiline imports, re-exports, literal dynamic imports, export forms and strict size exemptions. Removed hardcoded fallback counts and nonexistent pre-commit-hook claims.
+- Added direct npm commands for source, types, docs, publication, client boundaries and browser tests. Existing `check:components` callers and CI remain compatible.
+- Added `STUDY_GUIDE.md` with prerequisites, code references, nine subsystem lessons, safe exercises, a four-week schedule and interview checkpoints. It restores the useful topics from the removed older guide while correcting obsolete role policies, paths, concurrency examples and unsupported accuracy/certification/cost claims.
+- Updated README, architecture, component reference, testing and folder map while retaining the README's 11 sections, diagrams, attribution and earlier CI evidence. Added `REPOSITORY_MAINTENANCE.md` to document preservation/cleanup decisions.
+- Deleted only named disposable local outputs: `.vitest/`, `test-results/`, `tsconfig.tsbuildinfo`, root/CI benchmark result JSON and CI Lighthouse report JSON. Verified targets stayed inside the repository and contained no reparse points. Preserved raw CSVs, scratch inputs, environments, dependencies, models and the ignored verified production build/service worker.
+- Local verification: **326 unit tests / 49 files**, **20 Python contracts**, TypeScript, ESLint, **25 sealed migrations**, Knip, **349 parsed source files with zero findings**, **38 documentation files with no broken local links**, client boundary (**152 entries / 264 modules**, zero findings), publication scan (zero findings) and production build passed.
+- Build emitted non-fatal webpack cache snapshot warnings. Existing Next lint deprecation, Vite config modernization warning and Knip configuration hints remain maintenance items, not failing checks. Fresh database/E2E, real-device speech, model inference, production configuration and clinical review were not performed; earlier dated CI evidence is unchanged.
+
 ## 23 November 2026 — restored project documentation structure
 
 - Restored the original README's 11 sections, badges, full-project overview and detailed tables, adding current assistant/security/model information within that structure.
